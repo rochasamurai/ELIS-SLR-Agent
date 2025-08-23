@@ -1,0 +1,56 @@
+{
+  "metadata": {
+    "name": "InclusionExclusion",
+    "version": "1.0",
+    "description": "ELIS Appendix B - InclusionExclusion dataset",
+    "generated": "2025-08-19"
+  },
+  "config": {
+    "primary_key": "study_id",
+    "required": [
+      "study_id",
+      "included",
+      "exclusion_reason",
+      "reviewer",
+      "decision_date"
+    ]
+  },
+  "fields": [
+    {
+      "name": "study_id",
+      "type": "string"
+    },
+    {
+      "name": "included",
+      "type": "string"
+    },
+    {
+      "name": "exclusion_reason",
+      "type": "string"
+    },
+    {
+      "name": "reviewer",
+      "type": "string"
+    },
+    {
+      "name": "decision_date",
+      "type": "string"
+    }
+  ],
+  "records": [
+    {
+      "timestamp": "2025-08-21T19:57:09Z",
+      "record_id": "REC-0001",
+      "reviewer_id": "rev_02",
+      "title": "Risk-limiting audits in contemporary elections",
+      "authors": "Smith J.; Patel R.",
+      "year": 2021,
+      "source": "Journal of Election Technology",
+      "decision_final": "include",
+      "reason_inclusion": "Meets PICOC; empirical evaluation of RLA.",
+      "reason_exclusion": "",
+      "conflict_flag": false,
+      "notes": "Final inclusion after full text."
+    }
+  ]
+}

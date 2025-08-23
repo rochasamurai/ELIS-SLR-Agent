@@ -1,0 +1,16 @@
+[
+  {
+    "timestamp": "2025-08-21T19:57:09Z",
+    "record_id": "REC-0001",
+    "reviewer_id": "rev_02",
+    "title": "Risk-limiting audits in contemporary elections",
+    "authors": "Smith J.; Patel R.",
+    "year": 2021,
+    "source": "Journal of Election Technology",
+    "decision_final": "include",
+    "reason_inclusion": "Meets PICOC; empirical evaluation of RLA.",
+    "reason_exclusion": "",
+    "conflict_flag": false,
+    "notes": "Final inclusion after full text."
+  }
+]

@@ -1,0 +1,93 @@
+{
+  "__description__": "Appendix B — Screening Parameters for the Electoral Integrity Systematic Literature Review (ELIS SLR). This JSON documents the screening workflow, reviewer assignments, eligibility stages, and decision rules. It reflects ELIS Protocol v1.4 (16 Aug 2025). Human reviewers make all final decisions; AI assistance is logged but not decisive.",
+  "project": {
+    "name": "Electoral Integrity Systematic Literature Review (ELIS)",
+    "appendix": "B — Screening Parameters",
+    "protocol_version": "1.4",
+    "last_updated": "2025-08-16"
+  },
+  "screening_stages": [
+    {
+      "id": "S1",
+      "name": "Title and Abstract Screening",
+      "description": "Initial filtering of studies based on title and abstract only.",
+      "decisions": [
+        "include",
+        "exclude",
+        "maybe"
+      ],
+      "reviewers_required": 2
+    },
+    {
+      "id": "S2",
+      "name": "Full-Text Screening",
+      "description": "Eligibility check based on full-text reading of the article.",
+      "decisions": [
+        "include",
+        "exclude"
+      ],
+      "reviewers_required": 2
+    }
+  ],
+  "conflict_resolution": {
+    "method": "consensus",
+    "tie_breaker": "third_reviewer"
+  },
+  "reviewers": [
+    {
+      "id": "R1",
+      "name": "Lead Reviewer",
+      "role": "final arbiter of disagreements"
+    },
+    {
+      "id": "R2",
+      "name": "Second Reviewer",
+      "role": "independent screening"
+    },
+    {
+      "id": "R3",
+      "name": "Third Reviewer",
+      "role": "conflict resolution"
+    }
+  ],
+  "tools": {
+    "platform": "Rayyan",
+    "features": [
+      "collaborative screening",
+      "blinded decisions",
+      "tagging"
+    ]
+  },
+  "llm_assist": {
+    "tools": [
+      "ChatGPT",
+      "Claude.ai"
+    ],
+    "allowed_actions": [
+      "summarise abstracts",
+      "cluster articles by theme"
+    ],
+    "prohibited_actions": [
+      "make inclusion/exclusion decisions"
+    ],
+    "logging": "All AI-assisted steps recorded in Appendix F — AI Agents Log"
+  },
+  "notes": "This screening setup follows PRISMA guidelines. Screening logs and inter-rater reliability scores (Cohen’s kappa) should be preserved.",
+  "records": [
+    {
+      "timestamp": "2025-08-21T19:57:09Z",
+      "record_id": "REC-0001",
+      "reviewer_id": "rev_01",
+      "title": "Risk-limiting audits in contemporary elections",
+      "authors": "Smith J.; Patel R.",
+      "abstract": "Study of RLA implementations across jurisdictions; mixed methods.",
+      "source": "Journal of Election Technology",
+      "decision_stage1": "include",
+      "full_text_available": true,
+      "decision_stage2": "include",
+      "reason_exclusion": "",
+      "conflict_flag": false,
+      "notes": "Clear relevance to auditability."
+    }
+  ]
+}

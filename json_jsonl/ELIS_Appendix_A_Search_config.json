@@ -1,0 +1,209 @@
+{
+  "__description__": "Appendix A — Search Parameters for the ELIS (Electoral Integrity Systematic Literature Review). This JSON documents the databases, queries, eligibility criteria, tooling, and governance rules used to reproduce searches. It reflects ELIS Protocol v1.4 (16 Aug 2025), which frames research since 1990, includes EN/FR/ES/PT sources, and requires human validation of any AI-assisted steps.",
+  "project": {
+    "name": "Electoral Integrity Systematic Literature Review (ELIS)",
+    "appendix": "A — Search Parameters",
+    "protocol_version": "1.4",
+    "last_updated": "2025-08-16"
+  },
+  "date_range": {
+    "from": 1990,
+    "to": 2025
+  },
+  "research_questions": [
+    {
+      "id": "PRQ",
+      "text": "What operational and technological strategies have demonstrably improved the integrity or auditability of electoral systems since 1990?"
+    },
+    {
+      "id": "MSQ",
+      "text": "What types of empirical designs and evaluation frameworks have been used to assess the effectiveness of electoral integrity strategies since 1990?"
+    }
+  ],
+  "analytical_subquestions": [
+    "Which technological/operational mechanisms are associated with increased auditability or verifiability?",
+    "Under what institutional, legal, or regulatory conditions were these mechanisms implemented?",
+    "How did these strategies influence public trust or perceived legitimacy?",
+    "What regional patterns or cross-national differences are observed?"
+  ],
+  "languages": [
+    "English",
+    "French",
+    "Spanish",
+    "Portuguese"
+  ],
+  "inclusion_criteria": [
+    "Peer-reviewed or preprint academic studies (1990–2025)",
+    "Empirical designs (quantitative, qualitative, or mixed) assessing integrity, auditability, transparency, or trust",
+    "English, French, Spanish, or Portuguese"
+  ],
+  "exclusion_criteria": [
+    "Opinion/editorial pieces without empirical basis",
+    "Purely theoretical essays lacking methodological rigour",
+    "Studies only about party politics/turnout with no link to voting system design",
+    "Unverifiable or AI-generated items without traceable sources",
+    "Any inclusion/exclusion decision made solely by AI without human reviewer confirmation"
+  ],
+  "information_sources": [
+    {
+      "name": "Scopus",
+      "coverage": "Multidisciplinary journals",
+      "enabled": true
+    },
+    {
+      "name": "Web of Science",
+      "coverage": "High-impact journals + citations",
+      "enabled": true
+    },
+    {
+      "name": "Google Scholar",
+      "coverage": "Grey literature & working papers",
+      "enabled": true
+    },
+    {
+      "name": "IEEE Xplore",
+      "coverage": "Technical e-voting, crypto, auditability",
+      "enabled": true
+    },
+    {
+      "name": "ACM Digital Library",
+      "coverage": "HCI, systems, usability",
+      "enabled": true
+    },
+    {
+      "name": "Electoral Integrity Project (EIP)",
+      "coverage": "Comparative datasets & studies",
+      "enabled": true
+    },
+    {
+      "name": "International IDEA",
+      "coverage": "Policy reports, datasets, guidelines",
+      "enabled": true
+    },
+    {
+      "name": "OSCE/ODIHR",
+      "coverage": "Observation & legal assessments",
+      "enabled": true
+    },
+    {
+      "name": "JSTOR",
+      "coverage": "Foundational/history literature",
+      "enabled": true
+    },
+    {
+      "name": "SAGE Journals",
+      "coverage": "Political science & governance",
+      "enabled": true
+    },
+    {
+      "name": "Latin American sources (OAS, FLACSO, TSE Brazil)",
+      "coverage": "Regional materials",
+      "enabled": true
+    }
+  ],
+  "search_strategy": {
+    "principles": [
+      "AI may draft candidate strings; a human validates and finalises all queries",
+      "Boolean structure targets voting technology + auditability + evaluation terms",
+      "Search logs and filters are versioned for reproducibility"
+    ],
+    "example_query_generic": {
+      "must_include_any": [
+        "\"electoral integrity\"",
+        "\"e-voting security\"",
+        "\"ballot auditability\"",
+        "\"electronic voting trust\""
+      ],
+      "mechanisms_any": [
+        "\"VVPAT\"",
+        "\"end-to-end verifiability\"",
+        "\"risk-limiting audit\"",
+        "\"cryptographic audit\"",
+        "\"blockchain voting\""
+      ],
+      "evaluation_any": [
+        "evaluation",
+        "\"empirical study\"",
+        "\"comparative analysis\""
+      ]
+    },
+    "example_query_strings": {
+      "scopus": "TITLE-ABS-KEY((\"electoral integrity\" OR \"e-voting\" OR \"electronic voting\" OR \"ballot auditability\" OR \"voting trust\") AND (\"VVPAT\" OR \"end-to-end verifiability\" OR \"risk-limiting audit\" OR \"cryptographic\" OR \"blockchain\") AND (evaluation OR \"empirical study\" OR \"comparative analysis\")) AND PUBYEAR > 1989",
+      "wos": "TS=((\"electoral integrity\" OR \"electronic voting\" OR e-voting OR \"ballot auditability\" OR \"voting trust\") AND (VVPAT OR \"end-to-end verifiability\" OR \"risk-limiting audit\" OR cryptographic OR blockchain) AND (evaluation OR \"empirical study\" OR \"comparative analysis\")) AND PY=1990-2025",
+      "google_scholar": "\"electoral integrity\" (VVPAT OR \"end-to-end verifiability\" OR \"risk-limiting audit\" OR cryptographic OR blockchain) (evaluation OR \"empirical study\" OR \"comparative analysis\") since:1990",
+      "ieee": "(\"electronic voting\" OR e-voting) AND (auditability OR verifiability OR \"risk-limiting audit\" OR cryptographic OR VVPAT) AND (evaluation OR implementation OR case study) Year:1990-2025",
+      "acm": "(\"electronic voting\" OR e-voting) AND (auditability OR verifiability OR VVPAT OR cryptographic) AND (evaluation OR usability OR case study) Year:1990-2025"
+    }
+  },
+  "study_records": {
+    "data_management": [
+      "Zotero"
+    ],
+    "screening": [
+      "Rayyan"
+    ],
+    "extraction_store": [
+      "Google Sheets"
+    ],
+    "llm_assist": {
+      "tools": [
+        "ChatGPT",
+        "Claude.ai",
+        "NotebookLM"
+      ],
+      "allowed_actions": [
+        "draft candidate queries",
+        "group titles/abstracts thematically",
+        "pre-fill extraction fields"
+      ],
+      "prohibited_actions": [
+        "final inclusion decisions",
+        "interpretation without human verification"
+      ],
+      "logging": "All AI-assisted steps recorded in Appendix F — AI Agents Log"
+    }
+  },
+  "extraction_fields": [
+    "bibliographic_data",
+    "method_type",
+    "voting_system_type",
+    "institutional_context",
+    "technical_mechanisms",
+    "reported_outcomes",
+    "policy_implications"
+  ],
+  "quality_and_bias": {
+    "checklists": [
+      "PRISMA",
+      "Cochrane (adapted)",
+      "Norris 2014 (adapted)"
+    ],
+    "confidence_framework": "Modified GRADE-CERQual for qualitative findings",
+    "assessor": "Lead reviewer (human)"
+  },
+  "governance": {
+    "reproducibility": [
+      "versioned search logs",
+      "documented filters/limits"
+    ],
+    "amendments": "Changes captured in changelog and mirrored to OSF registration",
+    "human_in_charge": true
+  },
+  "notes": "Scopus/WoS/IEEE/ACM syntax varies by platform; refine operators per database interface before execution.",
+  "records": [
+    {
+      "timestamp": "2025-08-21T19:57:09Z",
+      "search_id": "SRCH-0001",
+      "reviewer_id": "rev_01",
+      "date_run": "2025-08-21",
+      "database": "Scopus",
+      "search_string": "(\"electoral integrity\" OR \"election audit\") AND (technology OR ICT) AND year:>=1990",
+      "filters": "English; 1990–2025; Peer-reviewed",
+      "results_count": 124,
+      "status": "completed",
+      "export_file": "scopus_export_2025-08-19.csv",
+      "error_log_ref": "",
+      "notes": "Pilot search run."
+    }
+  ]
+}

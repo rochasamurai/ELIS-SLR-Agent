@@ -1,0 +1,62 @@
+[
+  {
+    "code_id": "MECH_VVPAT",
+    "label": "VVPAT Deployment",
+    "definition": "Use of voter-verified paper audit trails in electronic voting systems to enable independent audits.",
+    "inclusion_criteria": "Studies evaluating VVPAT effects on auditability, error detection, or public trust.",
+    "exclusion_criteria": "Purely technical printer reliability without audit implications.",
+    "examples": [
+      "Post-election audits using VVPAT in state-level elections"
+    ],
+    "parent_code": null,
+    "children": [
+      "AUDIT_RLA"
+    ],
+    "aliases": [
+      "Paper trail",
+      "Printed ballot verification"
+    ],
+    "notes": "Map to audit mechanisms during extraction.",
+    "version": "1.0",
+    "last_updated": "2025-08-19",
+    "status": "active"
+  },
+  {
+    "code_id": "AUDIT_RLA",
+    "label": "Risk-Limiting Audit",
+    "definition": "A post-election audit that provides a pre-specified minimum chance of correcting a wrong electoral outcome.",
+    "inclusion_criteria": "Studies implementing RLA pilots or evaluating statistical properties or outcomes.",
+    "exclusion_criteria": "Audits that do not quantify risk or do not allow outcome correction.",
+    "examples": [
+      "Ballot-polling RLA in municipal elections"
+    ],
+    "parent_code": "MECH_VVPAT",
+    "children": [],
+    "aliases": [
+      "RLA"
+    ],
+    "notes": "Track methodology (ballot-polling vs. ballot-comparison).",
+    "version": "1.0",
+    "last_updated": "2025-08-19",
+    "status": "active"
+  },
+  {
+    "code_id": "ID_BIOMETRICS",
+    "label": "Biometric Voter Registration",
+    "definition": "Use of biometric identifiers to register or authenticate voters.",
+    "inclusion_criteria": "Studies assessing accuracy, inclusion effects, or integrity outcomes of biometric systems.",
+    "exclusion_criteria": "Pilot descriptions without evaluation outcomes.",
+    "examples": [
+      "Fingerprint-based registration impact on duplicate entries"
+    ],
+    "parent_code": null,
+    "children": [],
+    "aliases": [
+      "BVR"
+    ],
+    "notes": "Capture privacy and inclusion risks.",
+    "version": "1.0",
+    "last_updated": "2025-08-19",
+    "status": "active"
+  }
+]

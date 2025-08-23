@@ -1,0 +1,67 @@
+{
+  "elis_version": "2025-08-19",
+  "run_id": "elis-run-6bbba95b",
+  "started_at": "2025-08-19T16:59:00Z",
+  "ended_at": null,
+  "model": "GPT-5",
+  "tools": [
+    "WebSearch",
+    "Zotero",
+    "Rayyan",
+    "Sheets"
+  ],
+  "appendices_required": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F"
+  ],
+  "appendices_versions": {
+    "A": "v1.0",
+    "B": "v1.0",
+    "C": "v1.0",
+    "D": "v1.0",
+    "E": "v1.0",
+    "F": "v1.0"
+  },
+  "budgets": {
+    "search_queries_per_block": 20,
+    "max_tokens_per_extraction_note": 1600,
+    "max_items_per_batch_screen": 200
+  },
+  "policy": {
+    "hierarchy": [
+      "ELIS_Protocol",
+      "Maintainer",
+      "User",
+      "Tools"
+    ],
+    "refusal_policies": {
+      "copyright": true,
+      "privacy": true,
+      "info_hazards": true
+    },
+    "uncertainty_reporting": "required",
+    "objectivity_required": true,
+    "clarifications": {
+      "ask_only_if_blocked": true,
+      "log_in_appendix_d": true
+    },
+    "validation": {
+      "schema_reference": "docs/Schema_Reference_v1.0.md",
+      "enforce_before_use": true
+    },
+    "log_rotation": {
+      "max_size_mb": 5,
+      "retain_last_n": 5,
+      "logfile": "json_jsonl/ELIS_Error_Log.jsonl"
+    },
+    "google_sheets": {
+      "spreadsheet_id": "",
+      "validation_tab": "ValidationErrors"
+    }
+  },
+  "notes": "Soft launch configuration for ELIS Agent."
+}

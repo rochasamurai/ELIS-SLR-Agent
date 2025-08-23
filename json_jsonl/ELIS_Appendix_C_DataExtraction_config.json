@@ -1,0 +1,442 @@
+{
+  "__description__": "Appendix C — Data Extraction Configuration for the Electoral Integrity Systematic Literature Review (ELIS SLR). Defines the extraction template, codebooks, computed fields, quality appraisal, and governance. Mirrors ELIS Protocol v1.4 (16 Aug 2025). Human reviewers extract and validate data; AI assistance is logged but not decisive.",
+  "project": {
+    "name": "Electoral Integrity Systematic Literature Review (ELIS)",
+    "appendix": "C — Data Extraction",
+    "protocol_version": "1.4",
+    "last_updated": "2025-08-16"
+  },
+  "extraction_template": {
+    "__comment__": "Field-by-field template. Each field includes id, label, type, requirement, and guidance.",
+    "fields": [
+      {
+        "id": "study_id",
+        "label": "Study ID",
+        "type": "string",
+        "required": true,
+        "guidance": "Unique identifier assigned by the project (e.g., ZTR-000123)."
+      },
+      {
+        "id": "doi",
+        "label": "DOI",
+        "type": "string",
+        "required": false,
+        "guidance": "Digital Object Identifier, if available (e.g., 10.1016/j.electstud.2024.102789)."
+      },
+      {
+        "id": "bibliographic_data",
+        "label": "Bibliographic Data",
+        "type": "object",
+        "required": true,
+        "schema": {
+          "title": "string",
+          "authors": "array<string>",
+          "year": "integer",
+          "venue": "string",
+          "publisher": "string"
+        },
+        "guidance": "Use the official citation; verify author order and year."
+      },
+      {
+        "id": "country_region",
+        "label": "Country / Region",
+        "type": "array",
+        "required": true,
+        "allowed_values_ref": "codebook.countries",
+        "guidance": "Select all countries/regions covered by the study."
+      },
+      {
+        "id": "study_design",
+        "label": "Study Design",
+        "type": "string",
+        "required": true,
+        "allowed_values_ref": "codebook.study_designs",
+        "guidance": "Primary methodological design (choose one)."
+      },
+      {
+        "id": "method_type",
+        "label": "Method Type",
+        "type": "string",
+        "required": true,
+        "allowed_values_ref": "codebook.method_types",
+        "guidance": "Quantitative, Qualitative, or Mixed."
+      },
+      {
+        "id": "voting_system_type",
+        "label": "Voting System Type",
+        "type": "array",
+        "required": true,
+        "allowed_values_ref": "codebook.voting_system_types",
+        "guidance": "Select all that apply (e.g., DRE, optical scan, paper, Internet voting)."
+      },
+      {
+        "id": "technical_mechanisms",
+        "label": "Technical/Operational Mechanisms",
+        "type": "array",
+        "required": true,
+        "allowed_values_ref": "codebook.mechanisms",
+        "guidance": "Mechanisms intended to improve integrity/auditability (e.g., VVPAT, E2E, RLA)."
+      },
+      {
+        "id": "institutional_context",
+        "label": "Institutional/Legal Context",
+        "type": "array",
+        "required": false,
+        "allowed_values_ref": "codebook.institutional_context",
+        "guidance": "Summarise the regulatory and administrative environment."
+      },
+      {
+        "id": "datasets",
+        "label": "Datasets / Materials",
+        "type": "array",
+        "required": false,
+        "items": {
+          "type": "string"
+        },
+        "guidance": "Name datasets or repositories used (e.g., logs, ballots, surveys, Git repos)."
+      },
+      {
+        "id": "outcomes_reported",
+        "label": "Outcomes Reported",
+        "type": "array",
+        "required": true,
+        "allowed_values_ref": "codebook.outcomes",
+        "guidance": "Primary outcomes (audit success, error rates, trust metrics, turnout effects, etc.)."
+      },
+      {
+        "id": "effect_sizes",
+        "label": "Effect Sizes / Key Estimates",
+        "type": "array",
+        "required": false,
+        "items_schema": {
+          "measure": "string",
+          "value": "number",
+          "ci_lower": "number",
+          "ci_upper": "number",
+          "unit": "string",
+          "notes": "string"
+        },
+        "guidance": "Record effect measure and confidence intervals when available."
+      },
+      {
+        "id": "implementation_details",
+        "label": "Implementation Details",
+        "type": "string",
+        "required": false,
+        "guidance": "Deployment scale, pilots vs. national rollouts, training, logistics."
+      },
+      {
+        "id": "limitations",
+        "label": "Limitations (Authors')",
+        "type": "string",
+        "required": false,
+        "guidance": "Quoted or paraphrased limitations stated by the authors."
+      },
+      {
+        "id": "risk_of_bias",
+        "label": "Risk of Bias (Reviewer)",
+        "type": "string",
+        "required": true,
+        "allowed_values_ref": "codebook.risk_of_bias",
+        "guidance": "Reviewer appraisal per Appendix E (Low/Moderate/High/Unclear)."
+      },
+      {
+        "id": "quality_appraisal",
+        "label": "Quality Appraisal Checklist",
+        "type": "object",
+        "required": true,
+        "schema_ref": "quality_appraisal.checklists.PRISMA_core",
+        "guidance": "Mark each item Yes/No/Partial/NA; add notes."
+      },
+      {
+        "id": "funding",
+        "label": "Funding",
+        "type": "string",
+        "required": false,
+        "guidance": "State funders; note potential conflicts of interest."
+      },
+      {
+        "id": "data_availability",
+        "label": "Data/Code Availability",
+        "type": "string",
+        "required": false,
+        "guidance": "Replication materials, URLs, repositories, or statement of unavailability."
+      },
+      {
+        "id": "policy_implications",
+        "label": "Policy/Practice Implications",
+        "type": "string",
+        "required": false,
+        "guidance": "Actionable takeaways for electoral bodies/policymakers."
+      },
+      {
+        "id": "extracted_by",
+        "label": "Extracted by (Reviewer ID)",
+        "type": "string",
+        "required": true,
+        "guidance": "Reviewer code (e.g., R1, R2)."
+      },
+      {
+        "id": "verified_by",
+        "label": "Verified by (Reviewer ID)",
+        "type": "string",
+        "required": true,
+        "guidance": "Second reviewer verification (double extraction)."
+      },
+      {
+        "id": "notes",
+        "label": "Reviewer Notes",
+        "type": "string",
+        "required": false,
+        "guidance": "Free-form observations, anomalies, cross-references."
+      }
+    ]
+  },
+  "codebook": {
+    "__comment__": "Controlled vocabularies and enumerations referenced by the template.",
+    "countries": [
+      "Global",
+      "Argentina",
+      "Australia",
+      "Brazil",
+      "Canada",
+      "Germany",
+      "India",
+      "Kenya",
+      "UK",
+      "USA",
+      "Other"
+    ],
+    "study_designs": [
+      "RCT",
+      "Quasi-experimental",
+      "Regression discontinuity",
+      "Difference-in-differences",
+      "Observational",
+      "Case study",
+      "Survey",
+      "Experiment (lab/online)",
+      "Simulation/Modeling",
+      "Systematic review",
+      "Other"
+    ],
+    "method_types": [
+      "Quantitative",
+      "Qualitative",
+      "Mixed"
+    ],
+    "voting_system_types": [
+      "Paper (hand count)",
+      "Paper + optical scan",
+      "DRE (no paper trail)",
+      "DRE + VVPAT",
+      "E2E verifiable",
+      "Internet/remote voting",
+      "Hybrid/other"
+    ],
+    "mechanisms": [
+      "VVPAT",
+      "Risk-limiting audit (RLA)",
+      "End-to-end verifiability (E2E)",
+      "Cryptographic audit",
+      "Parity/consistency checks",
+      "Chain-of-custody controls",
+      "Open data/log disclosure",
+      "Independent certification/ISO 27001",
+      "Public logic & accuracy testing",
+      "Other"
+    ],
+    "institutional_context": [
+      "Independent election agency",
+      "Judicially administered elections",
+      "Mixed administration",
+      "International observation (OSCE/OAS)",
+      "ISO 27001-certified SGSI",
+      "Other"
+    ],
+    "outcomes": [
+      "Audit success/coverage",
+      "Error rates/miscounts",
+      "Detection of anomalies",
+      "Public trust/legitimacy",
+      "Usability/accessibility",
+      "Turnout or participation",
+      "Cost/time efficiency",
+      "Legal compliance",
+      "Security assurance",
+      "Other"
+    ],
+    "risk_of_bias": [
+      "Low",
+      "Moderate",
+      "High",
+      "Unclear"
+    ]
+  },
+  "quality_appraisal": {
+    "__comment__": "Checklists mapped to ELIS quality framework (Appendix E).",
+    "checklists": {
+      "PRISMA_core": {
+        "items": [
+          {
+            "id": "Q1",
+            "label": "Clear research question/objective",
+            "scale": [
+              "Yes",
+              "Partial",
+              "No",
+              "NA"
+            ]
+          },
+          {
+            "id": "Q2",
+            "label": "Appropriate study design for question",
+            "scale": [
+              "Yes",
+              "Partial",
+              "No",
+              "NA"
+            ]
+          },
+          {
+            "id": "Q3",
+            "label": "Transparent data/methods",
+            "scale": [
+              "Yes",
+              "Partial",
+              "No",
+              "NA"
+            ]
+          },
+          {
+            "id": "Q4",
+            "label": "Adequate handling of bias/confounders",
+            "scale": [
+              "Yes",
+              "Partial",
+              "No",
+              "NA"
+            ]
+          },
+          {
+            "id": "Q5",
+            "label": "Robustness checks/replicability",
+            "scale": [
+              "Yes",
+              "Partial",
+              "No",
+              "NA"
+            ]
+          },
+          {
+            "id": "Q6",
+            "label": "Clear limitations and external validity",
+            "scale": [
+              "Yes",
+              "Partial",
+              "No",
+              "NA"
+            ]
+          }
+        ],
+        "output": {
+          "rating_rule": "Majority rule across items; ties resolved by reviewer judgement.",
+          "map_to_risk_of_bias": {
+            "Yes": 0,
+            "Partial": 1,
+            "No": 2,
+            "NA": 1
+          }
+        }
+      }
+    }
+  },
+  "computed_fields": {
+    "__comment__": "Derived fields auto-calculated by the agent after extraction.",
+    "rules": [
+      {
+        "id": "has_vvpat",
+        "expression": "technical_mechanisms includes 'VVPAT'",
+        "type": "boolean"
+      },
+      {
+        "id": "is_e2e",
+        "expression": "technical_mechanisms includes 'End-to-end verifiability (E2E)'",
+        "type": "boolean"
+      },
+      {
+        "id": "admin_model",
+        "expression": "institutional_context first non-'Other'",
+        "type": "string"
+      }
+    ]
+  },
+  "workflow": {
+    "__comment__": "Extraction process steps and inter-rater checks.",
+    "double_extraction": true,
+    "disagreements": "consensus_then_third_reviewer",
+    "metrics": [
+      "Cohen_kappa",
+      "percent_agreement"
+    ]
+  },
+  "storage": {
+    "__comment__": "Where extracted data live and in what format(s).",
+    "primary_store": "Google Sheets",
+    "exports": [
+      "CSV",
+      "JSONL"
+    ],
+    "backup": "Zotero notes + attachments"
+  },
+  "llm_assist": {
+    "__comment__": "AI may draft summaries or pre-fill obvious metadata; humans verify everything.",
+    "tools": [
+      "ChatGPT",
+      "Claude.ai",
+      "NotebookLM"
+    ],
+    "allowed_actions": [
+      "draft abstract summary",
+      "suggest codebook tags",
+      "pre-fill bibliographic_data from DOI"
+    ],
+    "prohibited_actions": [
+      "final extraction without human verification",
+      "quality/risk ratings"
+    ],
+    "logging": "All AI-assisted steps recorded in Appendix F — AI Agents Log"
+  },
+  "governance": {
+    "__comment__": "Reproducibility, change control, and human oversight.",
+    "versioning": [
+      "timestamped snapshots",
+      "Git history for JSON configs"
+    ],
+    "amendments": "Record any template changes in the changelog and OSF registration.",
+    "human_in_charge": true
+  },
+  "notes": "Tailor codebooks to regional contexts as needed. Keep enumerations stable across the review to preserve consistency.",
+  "records": [
+    {
+      "timestamp": "2025-08-21T19:57:09Z",
+      "record_id": "REC-0001",
+      "reviewer_id": "rev_02",
+      "citation": "Smith, J., & Patel, R. (2021). Risk-limiting audits... JET 15(2): 45–68.",
+      "year": 2021,
+      "country_context": "USA",
+      "electoral_system": "Plurality",
+      "intervention_type": "Post-election audit (RLA)",
+      "technology_features": "Ballot-level comparison; open-source tool",
+      "governance_features": "Statutory mandate; public audit logs",
+      "methodology": "Mixed methods; quasi-experiment",
+      "sample_size": "n=42 counties",
+      "data_sources": "Official tally; audit reports; interviews",
+      "outcomes_measured": "Error rate; audit workload; public trust",
+      "key_findings": "RLA reduced error rate; improved transparency.",
+      "limitations": "Limited generalisability beyond pilot counties.",
+      "quality_appraisal": "Moderate",
+      "notes": "Extracted with dual review."
+    }
+  ]
+}
