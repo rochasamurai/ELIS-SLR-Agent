@@ -1,0 +1,82 @@
+{
+  "__comment__": "Schema for one ELIS Agent validation log entry. Each line in the JSONL file must validate against this schema.",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://elis.example.org/schemas/ELIS_Agent_LogEntry.schema.json",
+  "title": "ELIS Agent — Log Entry (Schema)",
+  "description": "Validates a single log object written by the ELIS Agent (validation or runtime diagnostics).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ts",
+    "level",
+    "file",
+    "message"
+  ],
+  "properties": {
+    "ts": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC ISO 8601, e.g., 2025-08-16T14:32:05Z"
+    },
+    "level": {
+      "type": "string",
+      "enum": [
+        "INFO",
+        "WARNING",
+        "ERROR"
+      ]
+    },
+    "file": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Config or data file targeted by this log entry."
+    },
+    "component": {
+      "type": "string",
+      "description": "Agent component (validator, search, screening, extraction, etc.)."
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._-]{6,64}$",
+      "description": "Group entries from one run."
+    },
+    "agent_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Semantic version of the agent."
+    },
+    "protocol_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+$",
+      "description": "ELIS Protocol version expected by the agent."
+    },
+    "path": {
+      "type": "array",
+      "description": "JSON path to failing element (if applicable).",
+      "items": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "integer"
+          }
+        ]
+      }
+    },
+    "message": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Human-readable message."
+    },
+    "hint": {
+      "type": "string",
+      "description": "Optional quick fix suggestion."
+    },
+    "details": {
+      "type": "object",
+      "description": "Optional extra fields (expected/actual/etc.).",
+      "additionalProperties": true
+    }
+  }
+}

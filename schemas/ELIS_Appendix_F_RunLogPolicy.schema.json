@@ -1,0 +1,234 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ELIS Appendix F — Run Log & Policy Config",
+  "description": "Schema for ELIS Agent runtime configuration and per-run metadata.",
+  "type": "object",
+  "required": [
+    "elis_version",
+    "run_id",
+    "started_at",
+    "model",
+    "policy",
+    "budgets",
+    "appendices_required"
+  ],
+  "properties": {
+    "elis_version": {
+      "type": "string",
+      "description": "ELIS pack version/date string (e.g., 2025-08-19)"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Unique identifier for the run/session"
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC start timestamp ISO 8601"
+    },
+    "ended_at": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time",
+      "description": "UTC end timestamp ISO 8601 when available"
+    },
+    "model": {
+      "type": "string",
+      "description": "Model identifier (e.g., GPT-5)"
+    },
+    "tools": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Enabled tools for this run (e.g., WebSearch, Zotero, Rayyan, Sheets)"
+    },
+    "appendices_required": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ]
+      },
+      "minItems": 3
+    },
+    "appendices_versions": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "description": "Map Appendix->version string (e.g., {\"A\":\"v1.0\"})"
+    },
+    "budgets": {
+      "type": "object",
+      "required": [
+        "search_queries_per_block",
+        "max_tokens_per_extraction_note",
+        "max_items_per_batch_screen"
+      ],
+      "properties": {
+        "search_queries_per_block": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_tokens_per_extraction_note": {
+          "type": "integer",
+          "minimum": 100
+        },
+        "max_items_per_batch_screen": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "policy": {
+      "type": "object",
+      "required": [
+        "hierarchy",
+        "refusal_policies",
+        "uncertainty_reporting",
+        "objectivity_required",
+        "clarifications",
+        "validation",
+        "log_rotation",
+        "google_sheets"
+      ],
+      "properties": {
+        "hierarchy": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "ELIS_Protocol",
+              "Maintainer",
+              "User",
+              "Tools"
+            ]
+          },
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "refusal_policies": {
+          "type": "object",
+          "required": [
+            "copyright",
+            "privacy",
+            "info_hazards"
+          ],
+          "properties": {
+            "copyright": {
+              "type": "boolean"
+            },
+            "privacy": {
+              "type": "boolean"
+            },
+            "info_hazards": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "uncertainty_reporting": {
+          "type": "string",
+          "enum": [
+            "required",
+            "optional"
+          ]
+        },
+        "objectivity_required": {
+          "type": "boolean"
+        },
+        "clarifications": {
+          "type": "object",
+          "required": [
+            "ask_only_if_blocked",
+            "log_in_appendix_d"
+          ],
+          "properties": {
+            "ask_only_if_blocked": {
+              "type": "boolean"
+            },
+            "log_in_appendix_d": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "validation": {
+          "type": "object",
+          "required": [
+            "schema_reference",
+            "enforce_before_use"
+          ],
+          "properties": {
+            "schema_reference": {
+              "type": "string",
+              "default": "docs/Schema_Reference_v1.0.md"
+            },
+            "enforce_before_use": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "log_rotation": {
+          "type": "object",
+          "required": [
+            "max_size_mb",
+            "retain_last_n",
+            "logfile"
+          ],
+          "properties": {
+            "max_size_mb": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 5
+            },
+            "retain_last_n": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 5
+            },
+            "logfile": {
+              "type": "string",
+              "default": "json_jsonl/ELIS_Error_Log.jsonl"
+            }
+          },
+          "additionalProperties": false
+        },
+        "google_sheets": {
+          "type": "object",
+          "required": [
+            "validation_tab"
+          ],
+          "properties": {
+            "spreadsheet_id": {
+              "type": "string"
+            },
+            "validation_tab": {
+              "type": "string",
+              "default": "ValidationErrors"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "notes": {
+      "type": "string",
+      "description": "Free-form notes for this run"
+    }
+  },
+  "additionalProperties": false
+}

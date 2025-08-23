@@ -1,0 +1,82 @@
+{
+  "__comment__": "Schema for ELIS_Agent_LogRotationPolicy.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://elis.example.org/schemas/ELIS_Agent_LogRotationPolicy.schema.json",
+  "title": "ELIS Agent — Log Rotation Policy (Schema)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "folder",
+    "prefix",
+    "strategy"
+  ],
+  "properties": {
+    "folder": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Target directory for logs."
+    },
+    "prefix": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Base filename prefix for rotated logs."
+    },
+    "strategy": {
+      "type": "string",
+      "enum": [
+        "daily",
+        "size"
+      ],
+      "description": "Rotation method."
+    },
+    "keep_days": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3650,
+      "description": "Days to keep when strategy=='daily'."
+    },
+    "size_bytes": {
+      "type": "integer",
+      "minimum": 1024,
+      "maximum": 1073741824,
+      "description": "Max file size before rotation when strategy=='size'."
+    },
+    "backups": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100,
+      "description": "Number of backup files to keep when strategy=='size'."
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "strategy": {
+            "const": "daily"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "keep_days"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "strategy": {
+            "const": "size"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "size_bytes",
+          "backups"
+        ]
+      }
+    }
+  ]
+}

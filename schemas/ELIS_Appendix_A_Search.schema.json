@@ -1,0 +1,120 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ELIS_Appendix_A_Search.schema.json (from sheet 'Search')",
+  "description": "Auto-generated from ELIS workbook 'ELIS_Data_Sheets_2025-08-19_v1.0.xlsx' on 2025-08-21 — properties mirror spreadsheet column titles exactly.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "timestamp": {
+        "type": [
+          "string",
+          "number",
+          "integer",
+          "boolean",
+          "null"
+        ]
+      },
+      "search_id": {
+        "type": [
+          "string",
+          "number",
+          "integer",
+          "boolean",
+          "null"
+        ]
+      },
+      "reviewer_id": {
+        "type": [
+          "string",
+          "number",
+          "integer",
+          "boolean",
+          "null"
+        ]
+      },
+      "date_run": {
+        "type": [
+          "string",
+          "number",
+          "integer",
+          "boolean",
+          "null"
+        ]
+      },
+      "database": {
+        "type": [
+          "string",
+          "number",
+          "integer",
+          "boolean",
+          "null"
+        ]
+      },
+      "search_string": {
+        "type": [
+          "string",
+          "number",
+          "integer",
+          "boolean",
+          "null"
+        ]
+      },
+      "filters": {
+        "type": [
+          "string",
+          "number",
+          "integer",
+          "boolean",
+          "null"
+        ]
+      },
+      "results_count": {
+        "type": [
+          "string",
+          "number",
+          "integer",
+          "boolean",
+          "null"
+        ]
+      },
+      "status": {
+        "type": [
+          "string",
+          "number",
+          "integer",
+          "boolean",
+          "null"
+        ]
+      },
+      "export_file": {
+        "type": [
+          "string",
+          "number",
+          "integer",
+          "boolean",
+          "null"
+        ]
+      },
+      "error_log_ref": {
+        "type": [
+          "string",
+          "number",
+          "integer",
+          "boolean",
+          "null"
+        ]
+      },
+      "notes": {
+        "type": [
+          "string",
+          "number",
+          "integer",
+          "boolean",
+          "null"
+        ]
+      }
+    },
+    "additionalProperties": false
+  }
+}

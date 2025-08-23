@@ -1,0 +1,119 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ELIS Appendix D — Audit Log (Entry)",
+  "description": "Schema for a single audit log entry recorded by the ELIS SLR Agent.",
+  "type": "object",
+  "required": [
+    "timestamp",
+    "run_id",
+    "action",
+    "level",
+    "actor",
+    "message"
+  ],
+  "properties": {
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC timestamp ISO 8601"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Run/session identifier linking steps and logs"
+    },
+    "validation_id": {
+      "type": "string",
+      "description": "Optional validation event identifier"
+    },
+    "record_id": {
+      "type": "string",
+      "description": "Optional record (study/document) identifier"
+    },
+    "action": {
+      "type": "string",
+      "description": "What happened (e.g., SEARCH_EXECUTED, SCREEN_DECISION, EXTRACTION_SAVED, VALIDATION_FAILED, CONFLICT_REPORTED)"
+    },
+    "level": {
+      "type": "string",
+      "enum": [
+        "INFO",
+        "WARNING",
+        "ERROR"
+      ],
+      "description": "Severity level"
+    },
+    "actor": {
+      "type": "string",
+      "enum": [
+        "AI",
+        "HUMAN",
+        "SYSTEM"
+      ],
+      "description": "Who performed the action"
+    },
+    "file": {
+      "type": "string",
+      "description": "Path or logical name of related file (if any)"
+    },
+    "message": {
+      "type": "string",
+      "description": "Human-readable summary of the event"
+    },
+    "details": {
+      "type": [
+        "string",
+        "object",
+        "array"
+      ],
+      "description": "Structured details or payload excerpt"
+    },
+    "citations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "References/locators relevant to the event, if applicable"
+    },
+    "confidence": {
+      "type": "string",
+      "enum": [
+        "High",
+        "Medium",
+        "Low"
+      ],
+      "description": "Confidence related to the decision/event (if applicable)"
+    },
+    "limitations": {
+      "type": "string",
+      "description": "Short note on uncertainty/limitations"
+    },
+    "hierarchy_conflict": {
+      "type": "boolean",
+      "description": "True if Protocol vs Maintainer vs User vs Tools conflict occurred"
+    },
+    "clarification_question": {
+      "type": "string",
+      "description": "If a clarification was asked, capture the question"
+    },
+    "refusal_code": {
+      "type": "string",
+      "enum": [
+        "COPY",
+        "PRIV",
+        "HAZ",
+        "OOS",
+        "AMB"
+      ],
+      "description": "Reason code if a refusal occurred"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Free-form tags for filtering"
+    }
+  },
+  "additionalProperties": false
+}

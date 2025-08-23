@@ -1,0 +1,120 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ELIS_Appendix_B_InclusionExclusion.schema.json (from sheet 'InclusionExclusion')",
+  "description": "Auto-generated from ELIS workbook 'ELIS_Data_Sheets_2025-08-19_v1.0.xlsx' on 2025-08-21 — properties mirror spreadsheet column titles exactly.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "timestamp": {
+        "type": [
+          "string",
+          "number",
+          "integer",
+          "boolean",
+          "null"
+        ]
+      },
+      "record_id": {
+        "type": [
+          "string",
+          "number",
+          "integer",
+          "boolean",
+          "null"
+        ]
+      },
+      "reviewer_id": {
+        "type": [
+          "string",
+          "number",
+          "integer",
+          "boolean",
+          "null"
+        ]
+      },
+      "title": {
+        "type": [
+          "string",
+          "number",
+          "integer",
+          "boolean",
+          "null"
+        ]
+      },
+      "authors": {
+        "type": [
+          "string",
+          "number",
+          "integer",
+          "boolean",
+          "null"
+        ]
+      },
+      "year": {
+        "type": [
+          "string",
+          "number",
+          "integer",
+          "boolean",
+          "null"
+        ]
+      },
+      "source": {
+        "type": [
+          "string",
+          "number",
+          "integer",
+          "boolean",
+          "null"
+        ]
+      },
+      "decision_final": {
+        "type": [
+          "string",
+          "number",
+          "integer",
+          "boolean",
+          "null"
+        ]
+      },
+      "reason_inclusion": {
+        "type": [
+          "string",
+          "number",
+          "integer",
+          "boolean",
+          "null"
+        ]
+      },
+      "reason_exclusion": {
+        "type": [
+          "string",
+          "number",
+          "integer",
+          "boolean",
+          "null"
+        ]
+      },
+      "conflict_flag": {
+        "type": [
+          "string",
+          "number",
+          "integer",
+          "boolean",
+          "null"
+        ]
+      },
+      "notes": {
+        "type": [
+          "string",
+          "number",
+          "integer",
+          "boolean",
+          "null"
+        ]
+      }
+    },
+    "additionalProperties": false
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "__comment__": "Schema for a single ELIS Agent validation log entry. Use it to validate each line in the JSONL file.",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://elis.example.org/schemas/ELIS_Agent_ValidationErrors.schema.json",
+  "title": "ELIS Agent — Validation Log Entry (Schema)",
+  "description": "Validates one log object written by the ELIS Agent during pre-run JSON/Schema validation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ts",
+    "level",
+    "file",
+    "message"
+  ],
+  "properties": {
+    "ts": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC timestamp in ISO 8601, e.g., 2025-08-16T14:32:05Z"
+    },
+    "level": {
+      "type": "string",
+      "enum": [
+        "INFO",
+        "WARNING",
+        "ERROR"
+      ]
+    },
+    "file": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Filename being validated (e.g., ELIS_Appendix_A_Search.json)"
+    },
+    "run_id": {
+      "type": "string",
+      "description": "Identifier for this agent run to group multiple log lines.",
+      "pattern": "^[A-Za-z0-9._-]{6,64}$"
+    },
+    "agent_version": {
+      "type": "string",
+      "description": "Semantic version of the ELIS Agent.",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "protocol_version": {
+      "type": "string",
+      "description": "ELIS Protocol version the agent expects (e.g., 1.4).",
+      "pattern": "^\\d+\\.\\d+$"
+    },
+    "path": {
+      "type": "array",
+      "description": "JSON pointer path to the failing element.",
+      "items": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "integer"
+          }
+        ]
+      }
+    },
+    "message": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Validator error or informational message."
+    },
+    "hint": {
+      "type": "string",
+      "description": "Optional quick fix suggestion."
+    },
+    "details": {
+      "type": "object",
+      "description": "Optional extra fields (e.g., expected, actual).",
+      "additionalProperties": true
+    }
+  }
+}

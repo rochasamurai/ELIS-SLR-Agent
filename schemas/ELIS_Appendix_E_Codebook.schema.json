@@ -1,0 +1,89 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ELIS Appendix E — Thematic Codebook (Entry)",
+  "description": "Schema for a single thematic code entry used during qualitative coding.",
+  "type": "object",
+  "required": [
+    "code_id",
+    "label",
+    "definition",
+    "version",
+    "last_updated"
+  ],
+  "properties": {
+    "code_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Stable identifier for the code"
+    },
+    "label": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Short human-readable name"
+    },
+    "definition": {
+      "type": "string",
+      "description": "Authoritative definition in UK English"
+    },
+    "inclusion_criteria": {
+      "type": "string",
+      "description": "What qualifies instances under this code"
+    },
+    "exclusion_criteria": {
+      "type": "string",
+      "description": "What should not be coded here"
+    },
+    "examples": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Quoted examples or synthetic exemplars"
+    },
+    "parent_code": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Optional parent code_id for hierarchy"
+    },
+    "children": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Optional child code_ids"
+    },
+    "aliases": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Synonyms/near-synonyms"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Editorial or methodological notes"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^v?\\d+\\.\\d+(\\.\\d+)?$",
+      "description": "Semantic-style version (e.g., 1.0 or v1.2.3)"
+    },
+    "last_updated": {
+      "type": "string",
+      "format": "date",
+      "description": "YYYY-MM-DD in project timezone"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "deprecated"
+      ],
+      "default": "active",
+      "description": "Lifecycle status of the code"
+    }
+  },
+  "additionalProperties": false
+}
