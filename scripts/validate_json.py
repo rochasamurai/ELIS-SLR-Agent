@@ -17,6 +17,10 @@ Usage:
   python scripts/validate_json.py --include-config
 Exit codes: 0 = success, 1 = validation error, 2 = IO/config error
 """
+
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+
 import sys, os, re, json, argparse
 from pathlib import Path
 from typing import Optional, Tuple, Dict, Any, List
