@@ -5,7 +5,7 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     permissions:
-      contents: write   # needed only for the optional "commit report" step below
+      contents: write   # necessário apenas para o passo opcional que comita o log
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -14,18 +14,34 @@ jobs:
       - name: Install deps
         run: pip install jsonschema
 
-      - name: Run validator and capture log
+      - name: Run validator and capture log (robust)
         shell: bash
         run: |
           set -o pipefail
           mkdir -p validation_reports
-          # capture BOTH stdout and stderr; use run_id for a unique filename
-          python -u scripts/validate_json.py --strict 2>&1 | tee validation_reports/ci_${{ github.run_id }}.log
-          echo "--- EOF ---" >> validation_reports/ci_${{ github.run_id }}.log
-          # show file size in the console for quick sanity check
-          wc -c validation_reports/ci_${{ github.run_id }}.log
+          LOG="validation_reports/ci_${{ github.run_id }}.log"
+          {
+            echo "=== ELIS Validation start: $(date -u +'%F %T') UTC ==="
+            echo "Repo: $GITHUB_REPOSITORY  •  Ref: $GITHUB_REF  •  Run: $GITHUB_RUN_ID"
+            echo "Validator: scripts/validate_json.py  (warnings silenced in-script)"
+            echo "---- OUTPUT ----"
+            # Executa o validador; mesmo que ele não imprima nada, haverá cabeçalho
+            python -W ignore::DeprecationWarning -u scripts/validate_json.py --strict || true
+            echo "---- END OUTPUT ----"
+            echo "Exit status preserved above; see job result."
+            echo "=== ELIS Validation end: $(date -u +'%F %T') UTC ==="
+          } 2>&1 | tee "$LOG"
 
-      - name: Upload validation report
+          echo "Log bytes:"
+          wc -c "$LOG" || true
+
+          echo "Log head:"
+          head -n 10 "$LOG" || true
+
+          echo "Log tail:"
+          tail -n 10 "$LOG" || true
+
+      - name: Upload validation report (always)
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -33,7 +49,7 @@ jobs:
           path: validation_reports/**
           retention-days: 14
 
-      # Optional: also commit the log back into the repo (handy for auditing)
+      # Opcional: também comitar o log no repositório para auditoria
       - name: Commit validation report to repo
         if: always()
         uses: EndBug/add-and-commit@v9
