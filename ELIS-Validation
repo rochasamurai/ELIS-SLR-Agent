@@ -1,0 +1,18 @@
+name: ELIS Validation
+on: [push, pull_request, workflow_dispatch]
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install jsonschema
+      - run: |
+          mkdir -p validation_reports
+          python scripts/validate_json.py --strict | tee validation_reports/ci_$(date +%F).log
+      - uses: actions/upload-artifact@v4
+        with:
+          name: validation-report
+          path: validation_reports/*.log
