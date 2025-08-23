@@ -1,5 +1,4 @@
 {
-  "__description__": "Rotation policy for ELIS Agent JSONL logs. The agent should read this file at startup and apply the policy to all log writers.",
   "folder": "ELIS_Protocol",
   "prefix": "ELIS_Agent_ValidationErrors",
   "strategy": "daily",
