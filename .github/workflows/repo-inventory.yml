@@ -1,0 +1,16 @@
+name: Repo Inventory
+on: [push, workflow_dispatch]
+permissions: { contents: write }
+jobs:
+  manifest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - run: |
+          git ls-files > MANIFEST.txt
+          find . -type f -printf '%10s  %p\n' | sort -nr > MANIFEST_sizes.txt
+      - uses: EndBug/add-and-commit@v9
+        with:
+          add: "MANIFEST*.txt"
+          message: "chore: update repo manifest [skip ci]"
