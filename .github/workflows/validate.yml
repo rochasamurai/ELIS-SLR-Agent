@@ -1,18 +1,42 @@
 name: ELIS Validation
 on: [push, pull_request, workflow_dispatch]
+
 jobs:
   validate:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write   # needed only for the optional "commit report" step below
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: pip install jsonschema
-      - run: |
+      - name: Install deps
+        run: pip install jsonschema
+
+      - name: Run validator and capture log
+        shell: bash
+        run: |
+          set -o pipefail
           mkdir -p validation_reports
-          python scripts/validate_json.py --strict | tee validation_reports/ci_$(date +%F).log
-      - uses: actions/upload-artifact@v4
+          # capture BOTH stdout and stderr; use run_id for a unique filename
+          python -u scripts/validate_json.py --strict 2>&1 | tee validation_reports/ci_${{ github.run_id }}.log
+          echo "--- EOF ---" >> validation_reports/ci_${{ github.run_id }}.log
+          # show file size in the console for quick sanity check
+          wc -c validation_reports/ci_${{ github.run_id }}.log
+
+      - name: Upload validation report
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          name: validation-report
-          path: validation_reports/*.log
+          name: validation-report-${{ github.run_number }}
+          path: validation_reports/**
+          retention-days: 14
+
+      # Optional: also commit the log back into the repo (handy for auditing)
+      - name: Commit validation report to repo
+        if: always()
+        uses: EndBug/add-and-commit@v9
+        with:
+          add: "validation_reports/*.log"
+          message: "chore: CI validation report [skip ci]"
