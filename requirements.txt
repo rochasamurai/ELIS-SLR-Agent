@@ -1,0 +1,3 @@
+# Minimal dependencies for ELIS Agent CI
+
+jsonschema>=4.20,<5  # CI validator; pin to 4.x to avoid breaking changes
