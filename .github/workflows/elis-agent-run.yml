@@ -9,12 +9,11 @@ on:
       - "docs/**"
       - "examples/**"
       - ".github/workflows/elis-agent-run.yml"
-  # (Optional) schedule if you want a daily run
   # schedule:
-  #   - cron: "0 6 * * *"
+  #   - cron: "0 6 * * *"   # optional daily run
 
 permissions:
-  contents: write           # needed to push a branch and open PRs
+  contents: write
   pull-requests: write
   issues: write
 
@@ -48,7 +47,7 @@ jobs:
 
       - name: Run ELIS Agent (writes to json_jsonl/)
         env:
-          # Add any API keys later if/when the agent calls external services:
+          # Add API keys later if needed:
           # OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           # CROSSREF_API_KEY: ${{ secrets.CROSSREF_API_KEY }}
           # RAYYAN_API_KEY: ${{ secrets.RAYYAN_API_KEY }}
@@ -56,6 +55,7 @@ jobs:
           python scripts/agent.py --out json_jsonl
 
       - name: Create PR with results
+        id: cpr
         uses: peter-evans/create-pull-request@v6
         with:
           commit-message: "ELIS Agent: update artefacts in json_jsonl/"
@@ -73,3 +73,19 @@ jobs:
           branch: bot/elis-agent-update
           delete-branch: true
           labels: automated, elis-agent
+
+      - name: Auto-approve PR
+        if: ${{ steps.cpr.outputs.pull-request-number != '' }}
+        uses: hmarr/auto-approve-action@v4
+        with:
+          pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Enable auto-merge (squash)
+        if: ${{ steps.cpr.outputs.pull-request-number != '' }}
+        uses: peter-evans/enable-pull-request-automerge@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
+          merge-method: squash
