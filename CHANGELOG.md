@@ -7,15 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ---
 
 ## [Unreleased]
+### Planned
+- Validate JSON files in `json_jsonl/` against schemas (Appendices A–C).
+- Correct any misalignments directly in canonical JSON files.
+- Generate validation report into `validation_reports/`.
+- Confirm ELIS Agent readiness by running a minimal end-to-end test with one mock article.
+
+---
+
+## [2.0.5] - 2025-08-23
 ### Added
-- Initial structure for CHANGELOG tracking.
-- Guidelines for documenting future updates.
+- Example rows inserted into canonical JSON files:
+  - `ELIS_Appendix_A_Search.json`
+  - `ELIS_Appendix_B_Screening.json`
+  - `ELIS_Appendix_B_InclusionExclusion.json`
+  - `ELIS_Appendix_C_DataExtraction.json`
+- Records aligned with Excel workbook headers (`ELIS_Data_Sheets_2025-08-19_v1.0.xlsx`) to allow ELIS Agent execution.
 
 ### Changed
-- N/A
+- JSON design locked: one canonical file per Appendix (A–C) with top-level object and `records` array.
+- Governance rule: **no additional derivative files** unless explicitly required.
+- Validation policy: schemas used internally for checks only; no redundant schema copies stored.
 
-### Fixed
-- N/A
+### Validation
+- Confirmed headers from workbook tabs (Search, Screening, InclusionExclusion, DataExtraction).
+- Updated JSONs passed alignment check after adding records arrays.
+
+### Notes
+- Next step: run ELIS Agent on Appendix A Search to test round-trip into Excel + JSON.
+- All files maintained in **UK English**.
 
 ---
 
@@ -149,3 +169,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **ELIS_Senior_Researcher_v2.0.md** initial draft.
 - **ELIS_SLR_Agent_Prompt_v1.0.md** first version of agent prompt.
 - Supporting protocol docs in `/docs`.
+
