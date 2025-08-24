@@ -1,0 +1,82 @@
+name: ELIS — Agent Run
+
+on:
+  workflow_dispatch:          # manual run from Actions tab
+  schedule:
+    - cron: "0 6 * * *"       # daily at 06:00 UTC (adjust)
+  push:
+    paths:
+      - "schemas/**"
+      - "examples/**"
+      - "scripts/**"
+      - "docs/**"
+
+permissions:
+  contents: write           # allow commit/PR
+  pull-requests: write
+  issues: write
+
+jobs:
+  run-agent:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ runner.os }}-${{ hashFiles('**/requirements.txt') }}
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run ELIS Agent
+        env:
+          # pass secrets to your agent as env vars
+          CROSSREF_API_KEY: ${{ secrets.CROSSREF_API_KEY }}
+          RAYYAN_API_KEY: ${{ secrets.RAYYAN_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python scripts/agent.py --input schemas --examples examples --out outputs
+
+      - name: Summarize run (markdown)
+        run: |
+          python scripts/summarize_run.py --in outputs --out run_summary.md
+
+      # Option A: Create/Update PR with any file changes
+      - name: Create PR with results
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "ELIS Agent: update outputs"
+          title: "ELIS Agent: automated update"
+          body: |
+            This PR was created by the ELIS Agent workflow.
+            See run summary below.
+
+            ```
+            ${{ steps.summary.outputs.text }}
+            ```
+          branch: bot/elis-agent-update
+          delete-branch: true
+          labels: |
+            automated
+            elis-agent
+
+      # Option B (alternative): direct commit to a bot branch (less recommended)
+      # - name: Auto-commit (if no PRs desired)
+      #   uses: stefanzweifel/git-auto-commit-action@v5
+      #   with:
+      #     commit_message: "ELIS Agent: update outputs"
+      #     branch: bot/elis-agent-update
