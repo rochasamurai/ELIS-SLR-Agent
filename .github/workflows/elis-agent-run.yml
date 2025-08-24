@@ -1,18 +1,20 @@
 name: ELIS — Agent Run
 
 on:
-  workflow_dispatch:          # manual run from Actions tab
-  schedule:
-    - cron: "0 6 * * *"       # daily at 06:00 UTC (adjust)
+  workflow_dispatch:        # manual trigger from the Actions tab
   push:
     paths:
       - "schemas/**"
-      - "examples/**"
       - "scripts/**"
       - "docs/**"
+      - "examples/**"
+      - ".github/workflows/elis-agent-run.yml"
+  # (Optional) schedule if you want a daily run
+  # schedule:
+  #   - cron: "0 6 * * *"
 
 permissions:
-  contents: write           # allow commit/PR
+  contents: write           # needed to push a branch and open PRs
   pull-requests: write
   issues: write
 
@@ -36,47 +38,38 @@ jobs:
         with:
           path: ~/.cache/pip
           key: pip-${{ runner.os }}-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            pip-${{ runner.os }}-
 
-      - name: Install deps
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run ELIS Agent
+      - name: Run ELIS Agent (writes to json_jsonl/)
         env:
-          # pass secrets to your agent as env vars
-          CROSSREF_API_KEY: ${{ secrets.CROSSREF_API_KEY }}
-          RAYYAN_API_KEY: ${{ secrets.RAYYAN_API_KEY }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          # Add any API keys later if/when the agent calls external services:
+          # OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          # CROSSREF_API_KEY: ${{ secrets.CROSSREF_API_KEY }}
+          # RAYYAN_API_KEY: ${{ secrets.RAYYAN_API_KEY }}
         run: |
-          python scripts/agent.py --input schemas --examples examples --out outputs
+          python scripts/agent.py --out json_jsonl
 
-      - name: Summarize run (markdown)
-        run: |
-          python scripts/summarize_run.py --in outputs --out run_summary.md
-
-      # Option A: Create/Update PR with any file changes
       - name: Create PR with results
         uses: peter-evans/create-pull-request@v6
         with:
-          commit-message: "ELIS Agent: update outputs"
-          title: "ELIS Agent: automated update"
+          commit-message: "ELIS Agent: update artefacts in json_jsonl/"
+          title: "ELIS Agent: automated update (Option A: json_jsonl/)"
           body: |
-            This PR was created by the ELIS Agent workflow.
-            See run summary below.
+            This PR was created by the ELIS — Agent Run workflow.
 
-            ```
-            ${{ steps.summary.outputs.text }}
-            ```
+            **What’s included**
+            - Generated/updated artefacts in `json_jsonl/` following Option A
+            - Aligned with `validate_json.py` routing patterns
+
+            **How to verify**
+            1) Check the files under `json_jsonl/**`
+            2) Ensure the “ELIS — Validate” workflow runs and passes
           branch: bot/elis-agent-update
           delete-branch: true
-          labels: |
-            automated
-            elis-agent
-
-      # Option B (alternative): direct commit to a bot branch (less recommended)
-      # - name: Auto-commit (if no PRs desired)
-      #   uses: stefanzweifel/git-auto-commit-action@v5
-      #   with:
-      #     commit_message: "ELIS Agent: update outputs"
-      #     branch: bot/elis-agent-update
+          labels: automated, elis-agent
