@@ -1,0 +1,42 @@
+name: ELIS — Slash Commands
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  on-comment:
+    if: contains(github.event.comment.body, '/run-elis')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run ELIS Agent
+        env:
+          CROSSREF_API_KEY: ${{ secrets.CROSSREF_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python scripts/agent.py --input schemas --examples examples --out outputs
+
+      - name: Create PR with results
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "ELIS Agent: update outputs (slash)"
+          title: "ELIS Agent: update (triggered by /run-elis)"
+          body: "Triggered by /run-elis in #${{ github.event.issue.number }}"
+          branch: bot/elis-agent-update
+          delete-branch: true
