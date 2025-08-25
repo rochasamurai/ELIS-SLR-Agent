@@ -13,6 +13,7 @@ permissions:
   contents: write
   pull-requests: write
   issues: write
+  checks: read
 
 jobs:
   run-agent:
@@ -46,19 +47,18 @@ jobs:
         run: |
           python scripts/agent.py --out json_jsonl
 
-      # --- Debug quick view (helps if something still fails)
-      - name: Show repo status
+      - name: Show repo status (debug)
         run: |
-          git status --porcelain
-          ls -la
+          git status --porcelain || true
           echo "Changed files:"
           git diff --name-only || true
+          ls -la json_jsonl || true
 
       - name: Create PR with results
         id: cpr
         uses: peter-evans/create-pull-request@v6
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}   # explicit
+          token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "ELIS Agent: update artefacts in json_jsonl/"
           title: "ELIS Agent: automated update (Option A: json_jsonl/)"
           body: |
@@ -78,7 +78,7 @@ jobs:
       - name: Auto-approve PR
         if: ${{ steps.cpr.outputs.pull-request-number != '' }}
         uses: hmarr/auto-approve-action@v4
-        continue-on-error: true       # do not fail the job if approval is blocked
+        continue-on-error: true
         with:
           pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
         env:
@@ -87,8 +87,66 @@ jobs:
       - name: Enable auto-merge (squash)
         if: ${{ steps.cpr.outputs.pull-request-number != '' }}
         uses: peter-evans/enable-pull-request-automerge@v3
-        continue-on-error: true       # do not fail the job if auto-merge can't be enabled yet
+        continue-on-error: true
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
           merge-method: squash
+
+      - name: Verify PR (wait for ELIS — Validate and report)
+        if: ${{ steps.cpr.outputs.pull-request-number != '' }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const prNumber = Number('${{ steps.cpr.outputs.pull-request-number }}');
+
+            const wait = (ms) => new Promise(r => setTimeout(r, ms));
+
+            let status = 'not-found';
+            let conclusion = 'n/a';
+
+            try {
+              for (let i = 0; i < 30; i++) { // ~15 min total
+                const { data: pr } = await github.rest.pulls.get({ owner, repo, pull_number: prNumber });
+                const ref = pr.head.sha;
+
+                const { data: checks } = await github.rest.checks.listForRef({ owner, repo, ref });
+                const run = (checks.check_runs || []).find(c =>
+                  (c.name || '').toLowerCase().includes('validate')
+                );
+
+                if (run) {
+                  status = run.status || 'unknown';
+                  conclusion = run.conclusion || 'pending';
+                  if (status === 'completed') break;
+                }
+                await wait(30000); // 30s
+              }
+            } catch (e) {
+              core.warning(`Error while polling checks: ${e.message}`);
+            }
+
+            let merged = false;
+            let autoMergeEnabled = false;
+            try {
+              const { data: pr2 } = await github.rest.pulls.get({ owner, repo, pull_number: prNumber });
+              merged = Boolean(pr2.merged);
+              autoMergeEnabled = Boolean(pr2.auto_merge);
+            } catch (e) {
+              core.warning(`Error reading PR state: ${e.message}`);
+            }
+
+            await core.summary
+              .addHeading('ELIS Agent Verification')
+              .addTable([
+                [{ data: 'PR #', header: true }, String(prNumber)],
+                [{ data: 'Validate status', header: true }, status],
+                [{ data: 'Validate conclusion', header: true }, conclusion],
+                [{ data: 'Auto-merge enabled', header: true }, String(autoMergeEnabled)],
+                [{ data: 'Merged', header: true }, String(merged)],
+              ])
+              .write();
+
+            core.info(`Summary → PR #${prNumber} | Validate=${status}/${conclusion} | autoMerge=${autoMergeEnabled} | merged=${merged}`);
