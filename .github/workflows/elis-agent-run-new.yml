@@ -7,7 +7,7 @@ on:
       - "scripts/**"
       - "docs/**"
       - "examples/**"
-      - ".github/workflows/elis-agent-run-main.yml"
+      - ".github/workflows/elis-agent-run-new.yml"
 
 permissions:
   contents: write
@@ -74,15 +74,6 @@ jobs:
           branch: bot/elis-agent-update
           delete-branch: true
           labels: automated, elis-agent
-
-      - name: Auto-approve PR
-        if: ${{ steps.cpr.outputs.pull-request-number != '' }}
-        uses: hmarr/auto-approve-action@v4
-        continue-on-error: true
-        with:
-          pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Enable auto-merge (squash)
         if: ${{ steps.cpr.outputs.pull-request-number != '' }}
