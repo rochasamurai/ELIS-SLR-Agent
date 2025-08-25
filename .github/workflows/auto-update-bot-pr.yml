@@ -1,4 +1,4 @@
-name: ELIS — Auto-update bot PR
+name: ELIS - Auto-update bot PR
 
 on:
   push:
