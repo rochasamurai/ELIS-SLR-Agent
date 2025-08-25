@@ -1,6 +1,6 @@
 name: ELIS - Agent Run
 on:
-  workflow_dispatch:        # manual trigger from the Actions tab
+  workflow_dispatch:
   push:
     paths:
       - "schemas/**"
@@ -46,10 +46,19 @@ jobs:
         run: |
           python scripts/agent.py --out json_jsonl
 
+      # --- Debug quick view (helps if something still fails)
+      - name: Show repo status
+        run: |
+          git status --porcelain
+          ls -la
+          echo "Changed files:"
+          git diff --name-only || true
+
       - name: Create PR with results
         id: cpr
         uses: peter-evans/create-pull-request@v6
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}   # explicit
           commit-message: "ELIS Agent: update artefacts in json_jsonl/"
           title: "ELIS Agent: automated update (Option A: json_jsonl/)"
           body: |
@@ -69,6 +78,7 @@ jobs:
       - name: Auto-approve PR
         if: ${{ steps.cpr.outputs.pull-request-number != '' }}
         uses: hmarr/auto-approve-action@v4
+        continue-on-error: true       # do not fail the job if approval is blocked
         with:
           pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
         env:
@@ -77,6 +87,7 @@ jobs:
       - name: Enable auto-merge (squash)
         if: ${{ steps.cpr.outputs.pull-request-number != '' }}
         uses: peter-evans/enable-pull-request-automerge@v3
+        continue-on-error: true       # do not fail the job if auto-merge can't be enabled yet
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
