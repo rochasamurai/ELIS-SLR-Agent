@@ -1,4 +1,4 @@
-name: ELIS — Validate
+name: ELIS - Validate
 
 on:
   pull_request:
