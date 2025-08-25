@@ -1,0 +1,83 @@
+name: ELIS - Agent Run
+on:
+  workflow_dispatch:        # manual trigger from the Actions tab
+  push:
+    paths:
+      - "schemas/**"
+      - "scripts/**"
+      - "docs/**"
+      - "examples/**"
+      - ".github/workflows/elis-agent-run-main.yml"
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  run-agent:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ runner.os }}-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            pip-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run ELIS Agent (writes to json_jsonl/)
+        run: |
+          python scripts/agent.py --out json_jsonl
+
+      - name: Create PR with results
+        id: cpr
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "ELIS Agent: update artefacts in json_jsonl/"
+          title: "ELIS Agent: automated update (Option A: json_jsonl/)"
+          body: |
+            This PR was created by the ELIS - Agent Run workflow.
+
+            What's included
+            - Generated/updated artefacts in `json_jsonl/` following Option A
+            - Aligned with `validate_json.py` routing patterns
+
+            How to verify
+            1) Check the files under `json_jsonl/**`
+            2) Ensure the “ELIS — Validate” workflow runs and passes
+          branch: bot/elis-agent-update
+          delete-branch: true
+          labels: automated, elis-agent
+
+      - name: Auto-approve PR
+        if: ${{ steps.cpr.outputs.pull-request-number != '' }}
+        uses: hmarr/auto-approve-action@v4
+        with:
+          pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Enable auto-merge (squash)
+        if: ${{ steps.cpr.outputs.pull-request-number != '' }}
+        uses: peter-evans/enable-pull-request-automerge@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
+          merge-method: squash
