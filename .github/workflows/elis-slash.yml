@@ -1,4 +1,4 @@
-name: ELIS — Slash Commands
+name: ELIS - Slash Commands
 
 on:
   issue_comment:
