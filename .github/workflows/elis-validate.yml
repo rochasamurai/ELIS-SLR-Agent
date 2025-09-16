@@ -1,61 +1,81 @@
 # ============================================================
-# Workflow: ELIS - Validate (PR-based, respects branch protection)
+# Workflow: ELIS - Validate
 # Purpose:
-#   - Run the validation script and ensure a Markdown report exists.
+#   - Run the validation script (validate_json.py).
+#   - Ensure a Markdown report always exists in validation_reports/.
 #   - Upload the report as an artifact.
-#   - Open a Pull Request with the report and merge it automatically via API.
-#   - Verify the report has landed in validation_reports/ on main.
+#   - Open a Pull Request with the report.
+#   - Try to auto-merge the PR via REST API (squash); if review is required,
+#     leave the PR open and request review automatically.
+#   - Verify that the report actually landed on main (only if merge succeeded).
 # ============================================================
 
 name: ELIS - Validate
 
+# ------------------------------------------------------------
+# Triggers
+# ------------------------------------------------------------
 on:
-  push:
+  push:                         # When a push occurs on main
     branches: [main]
-    paths:
+    paths:                      # Only if critical files are modified
       - 'scripts/validate_json.py'
       - '.github/workflows/elis-validate.yml'
       - 'docs/**'
       - 'schemas/**'
       - 'json_jsonl/**'
-  workflow_dispatch:
+  workflow_dispatch:             # Allows manual execution via GitHub UI
 
+# ------------------------------------------------------------
+# Permissions required
+# ------------------------------------------------------------
 permissions:
-  contents: write        # commit/merge
-  pull-requests: write   # open/merge PRs
+  contents: write       # Needed to commit/merge reports
+  pull-requests: write  # Needed to open/merge PRs
 
 jobs:
   validate:
-    # Prevent loops (ignore the Actions bot)
+    # Avoid duplicate runs when triggered by GitHub bot itself
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
 
+    # Ensure concurrency: only one workflow of this type runs at a time
     concurrency:
       group: elis-validate
       cancel-in-progress: true
 
     steps:
-      # --- Checkout repository ---
+      # --------------------------------------------------------
+      # Checkout repository
+      # --------------------------------------------------------
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0   # Full history is required for commits
 
-      # --- Python toolchain ---
+      # --------------------------------------------------------
+      # Setup Python 3.11
+      # --------------------------------------------------------
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
-      # --- Install dependencies ---
+      # --------------------------------------------------------
+      # Install dependencies
+      # --------------------------------------------------------
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+        run: python -m pip install --upgrade pip && pip install -r requirements.txt
 
-      # --- Run validator; do not fail on non-blocking findings ---
+      # --------------------------------------------------------
+      # Run validator
+      # Will not fail the workflow on warnings (exit code tolerated)
+      # --------------------------------------------------------
       - name: Run validator (always continue)
         run: python scripts/validate_json.py || echo "::warning ::validator returned non-zero"
 
-      # --- Ensure a report exists; create a fallback if missing ---
+      # --------------------------------------------------------
+      # Ensure that a report exists (.md)
+      # If missing, create a fallback report
+      # --------------------------------------------------------
       - name: Ensure report exists (or create fallback)
         run: |
           mkdir -p validation_reports
@@ -66,7 +86,9 @@ jobs:
           fi
           echo "==> validation_reports content:"; ls -la validation_reports
 
-      # --- Publish artifact for convenient download ---
+      # --------------------------------------------------------
+      # Upload report as artifact
+      # --------------------------------------------------------
       - name: Upload report artifact
         uses: actions/upload-artifact@v4
         with:
@@ -74,7 +96,9 @@ jobs:
           path: validation_reports/*.md
           if-no-files-found: error
 
-      # --- Create a PR with the report (handles protected main) ---
+      # --------------------------------------------------------
+      # Create a Pull Request with the report
+      # --------------------------------------------------------
       - name: Create PR with report
         id: cpr
         uses: peter-evans/create-pull-request@v6
@@ -86,15 +110,38 @@ jobs:
           add-paths: validation_reports/*.md
           delete-branch: true
 
-      # --- Show PR outputs (useful for debugging/no-op) ---
+      # --------------------------------------------------------
+      # Show PR outputs (debug info)
+      # --------------------------------------------------------
       - name: Show PR outputs
         run: |
-          echo "operation  : ${{ steps.cpr.outputs.pull-request-operation }}"   # created/updated/closed/none
-          echo "PR number  : ${{ steps.cpr.outputs.pull-request-number }}"
-          echo "PR url     : ${{ steps.cpr.outputs.pull-request-url }}"
+          echo "PR number: ${{ steps.cpr.outputs.pull-request-number }}"
+          echo "PR url   : ${{ steps.cpr.outputs.pull-request-url }}"
+          echo "Changes? : ${{ steps.cpr.outputs.pull-request-operation }}"  # created/updated/closed/none
 
-      # --- Merge the PR via REST API (squash); respects branch protection rules ---
-      - name: Merge PR via REST API (squash)
+      # --------------------------------------------------------
+      # Request review automatically from repo owner
+      # --------------------------------------------------------
+      - name: Request review on PR
+        if: steps.cpr.outputs.pull-request-number != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ steps.cpr.outputs.pull-request-number }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          curl -sS -X POST \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${REPO}/pulls/${PR_NUMBER}/requested_reviewers" \
+            -d "{\"reviewers\":[\"${OWNER}\"]}" || true
+
+      # --------------------------------------------------------
+      # Try to merge PR automatically
+      # If review is required, do NOT fail; leave PR open
+      # --------------------------------------------------------
+      - name: Merge PR via REST API (squash; tolerate review requirement)
+        id: merge
         if: steps.cpr.outputs.pull-request-number != ''
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -107,14 +154,27 @@ jobs:
             -H "Authorization: Bearer ${GH_TOKEN}" \
             -H "Accept: application/vnd.github+json" \
             "https://api.github.com/repos/${REPO}/pulls/${PR_NUMBER}/merge" \
-            -d '{"merge_method":"squash","commit_title":"chore: add validation report [skip ci]"}')
+            -d '{"merge_method":"squash","commit_title":"chore: add validation report [skip ci]"}' || true)
           echo "$resp"
-          echo "$resp" | grep -q '"merged": true' || { echo "::error ::PR merge failed"; exit 1; }
+          if echo "$resp" | grep -q '"merged": true'; then
+            echo "merged=true" >> "$GITHUB_OUTPUT"
+          elif echo "$resp" | grep -q 'approving review is required'; then
+            echo "::notice ::PR #${PR_NUMBER} awaiting required approval; leaving it open."
+            echo "merged=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error ::PR merge failed for another reason."
+            exit 1
+          fi
 
-      # --- Verify the report landed on main after the merge ---
+      # --------------------------------------------------------
+      # Verify that the report actually landed on main
+      # Run only if the PR was merged
+      # --------------------------------------------------------
       - name: Verify report landed on main
+        if: steps.merge.outputs.merged == 'true'
         run: |
           git fetch origin main --depth=1
           git checkout main
+          echo "==> HEAD of main:"; git log -1 --pretty=oneline
           echo "==> Files in validation_reports on main:"; ls -la validation_reports
           test -n "$(ls -1 validation_reports/*.md 2>/dev/null)" || { echo "::error ::No .md report on main"; exit 1; }
