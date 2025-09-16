@@ -24,8 +24,7 @@ jobs:
         run: |
           mkdir -p validation_reports
           if ! ls validation_reports/*.md 1>/dev/null 2>&1; then
-            ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-            fn="validation_reports/$(date +%Y-%m-%d)_validation_report.md"
+            ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"; fn="validation_reports/$(date +%Y-%m-%d)_validation_report.md"
             printf "# 📑 ELIS Validation Report\n**Generated:** %s  \n**Note:** fallback report.\n" "$ts" > "$fn"
           fi
           ls -la validation_reports
@@ -35,7 +34,7 @@ jobs:
           name: validation_report
           path: validation_reports/*.md
           if-no-files-found: error
-      - name: Create PR with report (handles protected main)
+      - name: Create PR with report (auto-merge)
         uses: peter-evans/create-pull-request@v6
         with:
           branch: ci/validation-report
@@ -44,3 +43,8 @@ jobs:
           body: "Automatic validation report."
           add-paths: |
             validation_reports/*.md
+          labels: ci, automation
+          draft: false
+          auto-merge: true
+          merge-method: squash
+          delete-branch: true
