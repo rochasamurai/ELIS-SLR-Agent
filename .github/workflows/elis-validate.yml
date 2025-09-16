@@ -1,21 +1,16 @@
 # ============================================================
-# Workflow: ELIS - Validate
+# Workflow: ELIS - Validate (final)
 # Purpose:
-#   - Run the JSON validation script (validate_json.py).
-#   - Ensure a Markdown report is always generated under validation_reports/.
+#   - Run the validation script and always produce a Markdown report.
 #   - Upload the report as an artifact.
-#   - Commit the report directly into the main branch (no PR needed).
+#   - Commit the report directly to the main branch (no PR), avoiding loops.
 #   - Verify that the report actually landed in the repository.
 # ============================================================
 
 name: ELIS - Validate
 
-# ------------------------------------------------------------
-# Triggers
-#   - On push to main when critical files change.
-#   - Manual trigger via GitHub UI.
-# ------------------------------------------------------------
 on:
+  # Run automatically when relevant areas change on main
   push:
     branches: [main]
     paths:
@@ -24,67 +19,47 @@ on:
       - 'docs/**'
       - 'schemas/**'
       - 'json_jsonl/**'
+  # Allow manual execution from the Actions tab
   workflow_dispatch:
 
-# ------------------------------------------------------------
-# Required permissions
-# ------------------------------------------------------------
 permissions:
-  contents: write   # Needed to commit reports back into main
+  contents: write   # required for committing the report back to the repo
 
 jobs:
   validate:
-    # --------------------------------------------------------
-    # Prevent loops:
-    #   - Ignore commits made by the bot itself.
-    #   - Ignore commits containing [report-bot] tag.
-    # --------------------------------------------------------
+    # Prevent infinite loops (skip bot commits and report-bot commits)
     if: |
       !contains(github.event.head_commit.message, '[report-bot]') &&
       github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
 
-    # --------------------------------------------------------
-    # Concurrency control: only one run at a time
-    # --------------------------------------------------------
+    # Ensure only one run of this workflow executes at a time
     concurrency:
       group: elis-validate
       cancel-in-progress: true
 
     steps:
-      # --------------------------------------------------------
-      # Checkout repository
-      # --------------------------------------------------------
+      # --- Checkout repository (full history for verification) ---
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # Full history is required for verification
+          fetch-depth: 0
 
-      # --------------------------------------------------------
-      # Setup Python 3.11
-      # --------------------------------------------------------
+      # --- Python toolchain ---
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      # --------------------------------------------------------
-      # Install dependencies
-      # --------------------------------------------------------
+      # --- Install dependencies ---
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # --------------------------------------------------------
-      # Run validator
-      #   - Does not fail the workflow on warnings.
-      # --------------------------------------------------------
+      # --- Run validator; do not fail job on non-blocking findings ---
       - name: Run validator (always continue)
         run: python scripts/validate_json.py || echo "::warning ::validator returned non-zero"
 
-      # --------------------------------------------------------
-      # Ensure report exists
-      #   - If the script did not create a report, generate a fallback.
-      # --------------------------------------------------------
+      # --- Ensure a report exists; create a fallback if missing ---
       - name: Ensure report exists (or create fallback)
         run: |
           mkdir -p validation_reports
@@ -93,12 +68,9 @@ jobs:
             fn="validation_reports/$(date +%Y-%m-%d_%H%M%S)_validation_report.md"
             printf "# 📑 ELIS Validation Report\n**Generated:** %s  \n**Note:** fallback report.\n" "$ts" > "$fn"
           fi
-          echo "==> validation_reports content:"
-          ls -la validation_reports
+          echo "==> validation_reports content:"; ls -la validation_reports
 
-      # --------------------------------------------------------
-      # Upload report as artifact
-      # --------------------------------------------------------
+      # --- Publish the report as an artifact (for easy download) ---
       - name: Upload report artifact
         uses: actions/upload-artifact@v4
         with:
@@ -106,9 +78,7 @@ jobs:
           path: validation_reports/*.md
           if-no-files-found: error
 
-      # --------------------------------------------------------
-      # Commit the report directly into main
-      # --------------------------------------------------------
+      # --- Commit the report directly to main (no PR; avoids duplication) ---
       - name: Commit report to main (direct, no PR)
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
@@ -117,15 +87,11 @@ jobs:
           branch: main
           push_options: --no-verify
 
-      # --------------------------------------------------------
-      # Verify that the report actually landed on main
-      # --------------------------------------------------------
+      # --- Verify the report actually landed on main ---
       - name: Verify report landed on main
         run: |
           git fetch origin main --depth=1
           git checkout main
-          echo "==> HEAD of main:"
-          git log -1 --pretty=oneline
-          echo "==> Files in validation_reports on main:"
-          ls -la validation_reports
+          echo "==> HEAD of main:"; git log -1 --pretty=oneline
+          echo "==> Files in validation_reports on main:"; ls -la validation_reports
           test -n "$(ls -1 validation_reports/*.md 2>/dev/null)" || { echo "::error ::No .md report on main"; exit 1; }
