@@ -3,15 +3,15 @@
 ELIS Validation Script (Extended, fail-only-on-BLOCKER)
 
 What it does
-- Scans basic repo structure (docs/, schemas/, json_jsonl/, validation_reports/).
+------------
+- Scans repository structure (docs/, schemas/, json_jsonl/, validation_reports/).
 - Checks presence of key docs (README.md, CHANGELOG.md, XLSX canonical in /docs).
 - Writes a human-readable Markdown report to validation_reports/YYYY-MM-DD_validation_report.md.
-- Exits with code 1 ONLY if a BLOCKER is found; otherwise exits 0 (so CI stays green on non-critical issues).
+- Exits with code 1 ONLY if a [BLOCKER] is found; otherwise exits 0
+  (so CI passes even with minor warnings).
 """
 
-from __future__ import annotations
 import sys
-import json
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import List
@@ -22,7 +22,7 @@ DOCS_DIR = ROOT / "docs"
 SCHEMAS_DIR = ROOT / "schemas"
 DATA_DIR = ROOT / "json_jsonl"
 REPORTS_DIR = ROOT / "validation_reports"
-CANON_XLSX = DOCS_DIR / "ELIS_Data_Sheets_2025-08-19_v1.0.xlsx"  # canonical reference
+CANON_XLSX = DOCS_DIR / "ELIS_Data_Sheets_2025-08-19_v1.0.xlsx"
 
 # ---- Utils ----
 def utc_now() -> str:
@@ -31,32 +31,33 @@ def utc_now() -> str:
 def today_str() -> str:
     return datetime.now().strftime("%Y-%m-%d")
 
-# ---- Validation steps (lightweight; schema/data deep checks can be added later) ----
+# ---- Validation ----
 def scan_repository() -> List[str]:
     findings: List[str] = []
+
     # Required directories
     for d in (DOCS_DIR, SCHEMAS_DIR, DATA_DIR, REPORTS_DIR):
         if not d.exists():
             findings.append(f"[BLOCKER] Missing required directory: {d.relative_to(ROOT)}")
 
-    # Required top-level docs
+    # Root docs
     if not (ROOT / "README.md").exists():
         findings.append("[MINOR] Missing README.md at repo root")
     if not (ROOT / "CHANGELOG.md").exists():
         findings.append("[MINOR] Missing CHANGELOG.md at repo root")
 
-    # Canonical XLSX presence
+    # Canonical XLSX
     if not CANON_XLSX.exists():
         findings.append(f"[BLOCKER] Canonical XLSX not found: {CANON_XLSX.relative_to(ROOT)}")
 
-    # Quick housekeeping
+    # Obsolete files
     for junk in (DATA_DIR / "desktop.ini", SCHEMAS_DIR / "desktop.ini"):
         if junk.exists():
-            findings.append(f"[MINOR] Obsolete file present: {junk.relative_to(ROOT)} (remove)")
+            findings.append(f"[MINOR] Obsolete file present: {junk.relative_to(ROOT)}")
 
     return findings
 
-# ---- Report generation ----
+# ---- Report ----
 def generate_report(findings: List[str]) -> Path:
     REPORTS_DIR.mkdir(parents=True, exist_ok=True)
     out = REPORTS_DIR / f"{today_str()}_validation_report.md"
@@ -105,7 +106,7 @@ def main() -> int:
     findings = scan_repository()
     generate_report(findings)
 
-    # Fail CI only when a BLOCKER exists
+    # Fail CI only on Blockers
     if any("BLOCKER" in f for f in findings):
         return 1
     return 0
