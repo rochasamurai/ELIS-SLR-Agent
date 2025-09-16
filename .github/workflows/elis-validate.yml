@@ -1,81 +1,68 @@
 # ============================================================
 # Workflow: ELIS - Validate
-# Objetivo:
-#   - Rodar o script de validação (validate_json.py).
-#   - Garantir que sempre exista um relatório .md em validation_reports/.
-#   - Publicar o relatório como artefato.
-#   - Criar um Pull Request com o relatório.
-#   - Mesclar o PR automaticamente via API (se aprovado pelas regras).
-#   - Verificar que o relatório realmente entrou na branch main.
+# Purpose:
+#   - Run the validator script to produce a timestamped Markdown report.
+#   - Always ensure a report exists and publish it as an artifact.
+#   - Open a PR with the report and merge it via GitHub REST API.
+#   - Verify the report actually landed on main (fail if not).
+# Notes:
+#   - UK English comments for maintainability and auditability.
 # ============================================================
 
 name: ELIS - Validate
 
-# ------------------------------------------------------------
-# Disparadores (triggers)
-# ------------------------------------------------------------
+# Run on pushes that affect relevant paths, and allow manual runs.
 on:
-  push:                         # Quando houver push na branch main
+  push:
     branches: [main]
-    paths:                      # Somente se arquivos críticos forem alterados
+    paths:
       - 'scripts/validate_json.py'
       - '.github/workflows/elis-validate.yml'
       - 'docs/**'
       - 'schemas/**'
       - 'json_jsonl/**'
-  workflow_dispatch:             # Permite execução manual via GitHub UI
+  workflow_dispatch:
 
-# ------------------------------------------------------------
-# Permissões necessárias para o job rodar corretamente
-# ------------------------------------------------------------
+# Token permissions required for commits/PRs and the merge API call.
 permissions:
-  contents: write       # Necessário para commit/merge de relatórios
-  pull-requests: write  # Necessário para abrir/mesclar PRs
+  contents: write
+  pull-requests: write
 
 jobs:
   validate:
-    # Evita execução duplicada quando o autor é o próprio bot do GitHub
+    # Avoid loops if the actor is the Actions bot itself.
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
 
-    # Concurrency garante que apenas 1 workflow deste tipo rode por vez
+    # Ensure only one validation job runs at a time for this repo.
     concurrency:
       group: elis-validate
       cancel-in-progress: true
 
     steps:
-      # --------------------------------------------------------
-      # Checkout do repositório
-      # --------------------------------------------------------
+      # --- Checkout full history (needed for post-merge verification) ---
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # Necessário para histórico completo
+          fetch-depth: 0
 
-      # --------------------------------------------------------
-      # Setup Python 3.11
-      # --------------------------------------------------------
+      # --- Python toolchain ---
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      # --------------------------------------------------------
-      # Instala dependências do projeto
-      # --------------------------------------------------------
-      - name: Install deps
-        run: python -m pip install --upgrade pip && pip install -r requirements.txt
+      # --- Install dependencies ---
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
-      # --------------------------------------------------------
-      # Executa o script de validação
-      # Não falha o pipeline em caso de erro menor (warnings apenas)
-      # --------------------------------------------------------
+      # --- Run validator (do not fail job on non-blocking findings) ---
       - name: Run validator (always continue)
-        run: python scripts/validate_json.py || echo "::warning ::validator returned non-zero"
+        run: |
+          python scripts/validate_json.py || echo "::warning ::validator returned non-zero"
 
-      # --------------------------------------------------------
-      # Garante que sempre exista um relatório .md
-      # Se o script não gerar, cria um fallback
-      # --------------------------------------------------------
-      - name: Ensure report (create if missing) + list
+      # --- Ensure a report exists; create a fallback if missing ---
+      - name: Ensure report exists (or create fallback)
         run: |
           mkdir -p validation_reports
           if ! ls validation_reports/*.md 1>/dev/null 2>&1; then
@@ -85,9 +72,7 @@ jobs:
           fi
           echo "==> validation_reports content:"; ls -la validation_reports
 
-      # --------------------------------------------------------
-      # Publica o relatório como artifact
-      # --------------------------------------------------------
+      # --- Publish the report as a run artifact (for easy download) ---
       - name: Upload report artifact
         uses: actions/upload-artifact@v4
         with:
@@ -95,9 +80,7 @@ jobs:
           path: validation_reports/*.md
           if-no-files-found: error
 
-      # --------------------------------------------------------
-      # Cria um Pull Request com o relatório
-      # --------------------------------------------------------
+      # --- Create a PR with the report (handles protected main) ---
       - name: Create PR with report
         id: cpr
         uses: peter-evans/create-pull-request@v6
@@ -109,23 +92,18 @@ jobs:
           add-paths: validation_reports/*.md
           delete-branch: true
 
-      # --------------------------------------------------------
-      # Exibe informações do PR criado
-      # --------------------------------------------------------
+      # --- Log useful details about the created/updated PR ---
       - name: Show PR outputs
         run: |
           echo "PR number: ${{ steps.cpr.outputs.pull-request-number }}"
           echo "PR url   : ${{ steps.cpr.outputs.pull-request-url }}"
-          echo "Changes? : ${{ steps.cpr.outputs.pull-request-operation }}"  # created/updated/closed/none
+          echo "Operation: ${{ steps.cpr.outputs.pull-request-operation }}"  # created/updated/closed/none
 
-      # --------------------------------------------------------
-      # Mescla o PR automaticamente via API REST do GitHub
-      # Usa squash para manter histórico limpo
-      # --------------------------------------------------------
+      # --- Merge the PR via the official GitHub REST API using GITHUB_TOKEN ---
       - name: Merge PR via REST API (squash)
         if: steps.cpr.outputs.pull-request-number != ''
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}     # ephemeral token with the permissions above
           PR_NUMBER: ${{ steps.cpr.outputs.pull-request-number }}
           REPO: ${{ github.repository }}
         run: |
@@ -139,10 +117,7 @@ jobs:
           echo "$resp"
           echo "$resp" | grep -q '"merged": true' || { echo "::error ::PR merge failed"; exit 1; }
 
-      # --------------------------------------------------------
-      # Verifica se o relatório realmente entrou na branch main
-      # Se não houver .md, falha o job
-      # --------------------------------------------------------
+      # --- Verify the report is present on main after the merge ---
       - name: Verify report landed on main
         run: |
           git fetch origin main --depth=1
