@@ -1,9 +1,20 @@
 # ============================================================
-# Workflow: ELIS - Validate (direct commit to main, no PR)
+# Workflow: ELIS - Validate
+# Purpose:
+#   - Run the JSON validation script (validate_json.py).
+#   - Ensure a Markdown report is always generated under validation_reports/.
+#   - Upload the report as an artifact.
+#   - Commit the report directly into the main branch (no PR needed).
+#   - Verify that the report actually landed in the repository.
 # ============================================================
 
 name: ELIS - Validate
 
+# ------------------------------------------------------------
+# Triggers
+#   - On push to main when critical files change.
+#   - Manual trigger via GitHub UI.
+# ------------------------------------------------------------
 on:
   push:
     branches: [main]
@@ -15,38 +26,65 @@ on:
       - 'json_jsonl/**'
   workflow_dispatch:
 
+# ------------------------------------------------------------
+# Required permissions
+# ------------------------------------------------------------
 permissions:
-  contents: write
+  contents: write   # Needed to commit reports back into main
 
 jobs:
   validate:
-    # Skip if this is our own report commit to prevent loops
+    # --------------------------------------------------------
+    # Prevent loops:
+    #   - Ignore commits made by the bot itself.
+    #   - Ignore commits containing [report-bot] tag.
+    # --------------------------------------------------------
     if: |
       !contains(github.event.head_commit.message, '[report-bot]') &&
-      !contains(github.event.head_commit.message, 'add validation report') &&
       github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
 
+    # --------------------------------------------------------
+    # Concurrency control: only one run at a time
+    # --------------------------------------------------------
     concurrency:
       group: elis-validate
       cancel-in-progress: true
 
     steps:
+      # --------------------------------------------------------
+      # Checkout repository
+      # --------------------------------------------------------
       - uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
+        with:
+          fetch-depth: 0   # Full history is required for verification
 
+      # --------------------------------------------------------
+      # Setup Python 3.11
+      # --------------------------------------------------------
       - uses: actions/setup-python@v5
-        with: { python-version: "3.11" }
+        with:
+          python-version: '3.11'
 
+      # --------------------------------------------------------
+      # Install dependencies
+      # --------------------------------------------------------
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      # --------------------------------------------------------
+      # Run validator
+      #   - Does not fail the workflow on warnings.
+      # --------------------------------------------------------
       - name: Run validator (always continue)
-        run: |
-          python scripts/validate_json.py || echo "::warning ::validator returned non-zero"
+        run: python scripts/validate_json.py || echo "::warning ::validator returned non-zero"
 
+      # --------------------------------------------------------
+      # Ensure report exists
+      #   - If the script did not create a report, generate a fallback.
+      # --------------------------------------------------------
       - name: Ensure report exists (or create fallback)
         run: |
           mkdir -p validation_reports
@@ -55,8 +93,12 @@ jobs:
             fn="validation_reports/$(date +%Y-%m-%d_%H%M%S)_validation_report.md"
             printf "# 📑 ELIS Validation Report\n**Generated:** %s  \n**Note:** fallback report.\n" "$ts" > "$fn"
           fi
-          echo "==> validation_reports content:"; ls -la validation_reports
+          echo "==> validation_reports content:"
+          ls -la validation_reports
 
+      # --------------------------------------------------------
+      # Upload report as artifact
+      # --------------------------------------------------------
       - name: Upload report artifact
         uses: actions/upload-artifact@v4
         with:
@@ -64,8 +106,10 @@ jobs:
           path: validation_reports/*.md
           if-no-files-found: error
 
-      # ⬇️ Commit the report directly to main (guarded by the job-level IF above)
-      - name: Commit report to main (bot)
+      # --------------------------------------------------------
+      # Commit the report directly into main
+      # --------------------------------------------------------
+      - name: Commit report to main (direct, no PR)
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "chore: add validation report [skip ci][report-bot]"
@@ -73,10 +117,15 @@ jobs:
           branch: main
           push_options: --no-verify
 
-      # Sanity check: fail if file did not land
+      # --------------------------------------------------------
+      # Verify that the report actually landed on main
+      # --------------------------------------------------------
       - name: Verify report landed on main
         run: |
           git fetch origin main --depth=1
           git checkout main
-          echo "==> Files in validation_reports on main:"; ls -la validation_reports
+          echo "==> HEAD of main:"
+          git log -1 --pretty=oneline
+          echo "==> Files in validation_reports on main:"
+          ls -la validation_reports
           test -n "$(ls -1 validation_reports/*.md 2>/dev/null)" || { echo "::error ::No .md report on main"; exit 1; }
