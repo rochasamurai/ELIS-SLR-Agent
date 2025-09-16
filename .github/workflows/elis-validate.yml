@@ -1,39 +1,81 @@
+# ============================================================
+# Workflow: ELIS - Validate
+# Objetivo:
+#   - Rodar o script de validação (validate_json.py).
+#   - Garantir que sempre exista um relatório .md em validation_reports/.
+#   - Publicar o relatório como artefato.
+#   - Criar um Pull Request com o relatório.
+#   - Mesclar o PR automaticamente via API (se aprovado pelas regras).
+#   - Verificar que o relatório realmente entrou na branch main.
+# ============================================================
+
 name: ELIS - Validate
 
+# ------------------------------------------------------------
+# Disparadores (triggers)
+# ------------------------------------------------------------
 on:
-  push: { branches: [main] }           # roda em push na main
-  pull_request: { branches: [main] }   # roda em PRs contra main
-  workflow_dispatch:                   # permite rodar manualmente
+  push:                         # Quando houver push na branch main
+    branches: [main]
+    paths:                      # Somente se arquivos críticos forem alterados
+      - 'scripts/validate_json.py'
+      - '.github/workflows/elis-validate.yml'
+      - 'docs/**'
+      - 'schemas/**'
+      - 'json_jsonl/**'
+  workflow_dispatch:             # Permite execução manual via GitHub UI
 
-# O GitHub Actions injeta um token temporário em cada run: secrets.GITHUB_TOKEN
-# As permissões abaixo definem o que esse token pode fazer via API:
+# ------------------------------------------------------------
+# Permissões necessárias para o job rodar corretamente
+# ------------------------------------------------------------
 permissions:
-  contents: write          # criar commits/arquivos no repositório
-  pull-requests: write     # abrir/atualizar/mesclar PRs
+  contents: write       # Necessário para commit/merge de relatórios
+  pull-requests: write  # Necessário para abrir/mesclar PRs
 
 jobs:
   validate:
+    # Evita execução duplicada quando o autor é o próprio bot do GitHub
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
 
+    # Concurrency garante que apenas 1 workflow deste tipo rode por vez
+    concurrency:
+      group: elis-validate
+      cancel-in-progress: true
+
     steps:
-      # 1) Checkout do repositório
+      # --------------------------------------------------------
+      # Checkout do repositório
+      # --------------------------------------------------------
       - uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
+        with:
+          fetch-depth: 0   # Necessário para histórico completo
 
-      # 2) Python 3.11
+      # --------------------------------------------------------
+      # Setup Python 3.11
+      # --------------------------------------------------------
       - uses: actions/setup-python@v5
-        with: { python-version: "3.11" }
+        with:
+          python-version: "3.11"
 
-      # 3) Dependências
+      # --------------------------------------------------------
+      # Instala dependências do projeto
+      # --------------------------------------------------------
       - name: Install deps
         run: python -m pip install --upgrade pip && pip install -r requirements.txt
 
-      # 4) Roda o validador (não falha o job se retornar código != 0)
+      # --------------------------------------------------------
+      # Executa o script de validação
+      # Não falha o pipeline em caso de erro menor (warnings apenas)
+      # --------------------------------------------------------
       - name: Run validator (always continue)
         run: python scripts/validate_json.py || echo "::warning ::validator returned non-zero"
 
-      # 5) Garante que exista um relatório (cria fallback com timestamp se faltou)
-      - name: Ensure report (or create fallback)
+      # --------------------------------------------------------
+      # Garante que sempre exista um relatório .md
+      # Se o script não gerar, cria um fallback
+      # --------------------------------------------------------
+      - name: Ensure report (create if missing) + list
         run: |
           mkdir -p validation_reports
           if ! ls validation_reports/*.md 1>/dev/null 2>&1; then
@@ -41,9 +83,11 @@ jobs:
             fn="validation_reports/$(date +%Y-%m-%d_%H%M%S)_validation_report.md"
             printf "# 📑 ELIS Validation Report\n**Generated:** %s  \n**Note:** fallback report.\n" "$ts" > "$fn"
           fi
-          echo "==> Files in validation_reports"; ls -la validation_reports
+          echo "==> validation_reports content:"; ls -la validation_reports
 
-      # 6) Publica o relatório como artifact do run (opcional, para download)
+      # --------------------------------------------------------
+      # Publica o relatório como artifact
+      # --------------------------------------------------------
       - name: Upload report artifact
         uses: actions/upload-artifact@v4
         with:
@@ -51,31 +95,58 @@ jobs:
           path: validation_reports/*.md
           if-no-files-found: error
 
-      # 7) Cria um PR contendo o(s) relatório(s) gerado(s)
+      # --------------------------------------------------------
+      # Cria um Pull Request com o relatório
+      # --------------------------------------------------------
       - name: Create PR with report
         id: cpr
         uses: peter-evans/create-pull-request@v6
         with:
-          branch: ci/validation-report                # branch temporária
+          branch: ci/validation-report
           title: "chore: add validation report"
           commit-message: "chore: add validation report [skip ci]"
           body: "Automatic validation report generated by workflow."
           add-paths: validation_reports/*.md
           delete-branch: true
 
-      # 8) Mescla o PR chamando a API REST do GitHub com o GITHUB_TOKEN
-      #    - GH_TOKEN recebe secrets.GITHUB_TOKEN (token temporário da run)
-      #    - PUT /repos/{owner}/{repo}/pulls/{number}/merge (rota oficial)
-      - name: Merge PR via REST API
+      # --------------------------------------------------------
+      # Exibe informações do PR criado
+      # --------------------------------------------------------
+      - name: Show PR outputs
+        run: |
+          echo "PR number: ${{ steps.cpr.outputs.pull-request-number }}"
+          echo "PR url   : ${{ steps.cpr.outputs.pull-request-url }}"
+          echo "Changes? : ${{ steps.cpr.outputs.pull-request-operation }}"  # created/updated/closed/none
+
+      # --------------------------------------------------------
+      # Mescla o PR automaticamente via API REST do GitHub
+      # Usa squash para manter histórico limpo
+      # --------------------------------------------------------
+      - name: Merge PR via REST API (squash)
         if: steps.cpr.outputs.pull-request-number != ''
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}                 # token injetado pela plataforma
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ steps.cpr.outputs.pull-request-number }}
-          REPO: ${{ github.repository }}                        # owner/repo atual
+          REPO: ${{ github.repository }}
         run: |
+          set -euo pipefail
           echo "Merging PR #${PR_NUMBER} in ${REPO}"
-          curl -sS -X PUT \
+          resp=$(curl -sS -X PUT \
             -H "Authorization: Bearer ${GH_TOKEN}" \
             -H "Accept: application/vnd.github+json" \
             "https://api.github.com/repos/${REPO}/pulls/${PR_NUMBER}/merge" \
-            -d '{"merge_method":"squash","commit_title":"chore: add validation report [skip ci]"}'
+            -d '{"merge_method":"squash","commit_title":"chore: add validation report [skip ci]"}')
+          echo "$resp"
+          echo "$resp" | grep -q '"merged": true' || { echo "::error ::PR merge failed"; exit 1; }
+
+      # --------------------------------------------------------
+      # Verifica se o relatório realmente entrou na branch main
+      # Se não houver .md, falha o job
+      # --------------------------------------------------------
+      - name: Verify report landed on main
+        run: |
+          git fetch origin main --depth=1
+          git checkout main
+          echo "==> HEAD of main:"; git log -1 --pretty=oneline
+          echo "==> Files in validation_reports on main:"; ls -la validation_reports
+          test -n "$(ls -1 validation_reports/*.md 2>/dev/null)" || { echo "::error ::No .md report on main"; exit 1; }
