@@ -31,7 +31,7 @@ jobs:
             fn="validation_reports/$(date +%Y-%m-%d_%H%M%S)_validation_report.md"
             printf "# 📑 ELIS Validation Report\n**Generated:** %s  \n**Note:** fallback report.\n" "$ts" > "$fn"
           fi
-          ls -la validation_reports
+          echo "==> Files in validation_reports"; ls -la validation_reports
 
       - name: Upload report artifact
         uses: actions/upload-artifact@v4
@@ -40,6 +40,7 @@ jobs:
           path: validation_reports/*.md
           if-no-files-found: error
 
+      # 1) Cria PR com o relatório
       - name: Create PR with report
         id: cpr
         uses: peter-evans/create-pull-request@v6
@@ -51,10 +52,16 @@ jobs:
           add-paths: validation_reports/*.md
           delete-branch: true
 
-      - name: Enable auto-merge
+      - name: Log PR info
+        run: |
+          echo "PR number: ${{ steps.cpr.outputs.pull-request-number }}"
+          echo "PR url:    ${{ steps.cpr.outputs.pull-request-url }}"
+
+      # 2) Mescla o PR imediatamente (dispensa auto-merge)
+      - name: Merge PR now
         if: steps.cpr.outputs.pull-request-number != ''
-        uses: peter-evans/enable-pull-request-automerge@v3
+        uses: peter-evans/merge-pull-request@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
+          pull-request: ${{ steps.cpr.outputs.pull-request-number }}
           merge-method: squash
