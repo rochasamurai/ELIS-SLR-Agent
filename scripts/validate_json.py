@@ -2,14 +2,16 @@
 """
 ELIS Validation Script (Extended, fail-only-on-BLOCKER)
 
-What it does
-------------
-- Scans repository structure (docs/, schemas/, json_jsonl/, validation_reports/).
-- Checks presence of key docs (README.md, CHANGELOG.md, XLSX canonical in /docs).
-- Writes a human-readable Markdown report to
-  validation_reports/YYYY-MM-DD_HHMMSS_validation_report.md (unique per run).
-- Exits with code 1 ONLY if a [BLOCKER] is found; otherwise exits 0
-  (so CI passes even with minor warnings).
+Purpose
+-------
+1. Check the minimal repository structure (directories and key files).
+2. Verify the presence of the canonical XLSX file in /docs.
+3. Generate a Markdown report under validation_reports/ with a unique timestamped name.
+4. Exit with code 1 only if a [BLOCKER] issue is found; otherwise exit 0.
+
+Usage
+-----
+python scripts/validate_json.py
 """
 
 from __future__ import annotations
@@ -18,7 +20,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import List
 
-# --- Paths ---
+# ---------- Repository paths ----------
 ROOT = Path(__file__).resolve().parent.parent
 DOCS_DIR = ROOT / "docs"
 SCHEMAS_DIR = ROOT / "schemas"
@@ -26,14 +28,20 @@ DATA_DIR = ROOT / "json_jsonl"
 REPORTS_DIR = ROOT / "validation_reports"
 CANON_XLSX = DOCS_DIR / "ELIS_Data_Sheets_2025-08-19_v1.0.xlsx"
 
-# --- Time helpers ---
+# ---------- Time helpers ----------
 utc_now = lambda: datetime.now(timezone.utc)
-ts_date = lambda: utc_now().strftime("%Y-%m-%d")
-ts_full = lambda: utc_now().strftime("%Y-%m-%d_%H%M%S")
-ts_isoz = lambda: utc_now().strftime("%Y-%m-%dT%H:%M:%SZ")
+ts_isoz = lambda: utc_now().strftime("%Y-%m-%dT%H:%M:%SZ")     # e.g. 2025-09-16T15:42:10Z
+ts_date = lambda: utc_now().strftime("%Y-%m-%d")               # e.g. 2025-09-16
+ts_full = lambda: utc_now().strftime("%Y-%m-%d_%H%M%S")        # e.g. 2025-09-16_154210
 
-# --- Validation ---
+# ---------- Validation checks ----------
 def scan() -> List[str]:
+    """
+    Perform structural checks and return a list of findings.
+    Prefixes:
+      - [BLOCKER] → must fail the CI (exit 1)
+      - [MINOR]   → advisory only
+    """
     findings: List[str] = []
 
     # Required directories
@@ -41,35 +49,42 @@ def scan() -> List[str]:
         if not d.exists():
             findings.append(f"[BLOCKER] Missing required directory: {d.relative_to(ROOT)}")
 
-    # Root docs
+    # Required root-level files
     if not (ROOT / "README.md").exists():
-        findings.append("[MINOR] Missing README.md at repo root")
+        findings.append("[MINOR] Missing README.md at repository root")
     if not (ROOT / "CHANGELOG.md").exists():
-        findings.append("[MINOR] Missing CHANGELOG.md at repo root")
+        findings.append("[MINOR] Missing CHANGELOG.md at repository root")
 
     # Canonical XLSX
     if not CANON_XLSX.exists():
         findings.append(f"[BLOCKER] Canonical XLSX not found: {CANON_XLSX.relative_to(ROOT)}")
 
-    # Obsolete files
+    # Obsolete files to be removed
     for junk in (DATA_DIR / "desktop.ini", SCHEMAS_DIR / "desktop.ini"):
         if junk.exists():
             findings.append(f"[MINOR] Obsolete file present: {junk.relative_to(ROOT)}")
 
     return findings
 
-# --- Report ---
+# ---------- Report writer ----------
 def write_report(findings: List[str]) -> Path:
+    """
+    Write a Markdown validation report with a unique timestamp.
+    Returns the path to the generated file.
+    """
     REPORTS_DIR.mkdir(parents=True, exist_ok=True)
     out = REPORTS_DIR / f"{ts_date()}_{ts_full()}_validation_report.md"
 
-    lines: List[str] = []
-    lines.append("# 📑 ELIS Validation Report\n")
-    lines.append(f"**Generated:** {ts_isoz()}  \n")
-    lines.append("**Scope:** Automatic repository validation (structure, canonical docs)\n\n")
-    lines.append("---\n\n")
+    # Header and metadata
+    lines: List[str] = [
+        "# 📑 ELIS Validation Report\n",
+        f"**Generated:** {ts_isoz()}  \n",
+        "**Scope:** Automatic repository validation (structure, canonical docs)\n\n",
+        "---\n\n",
+        "## ✅ Summary\n",
+    ]
 
-    lines.append("## ✅ Summary\n")
+    # Overall status
     if any("BLOCKER" in f for f in findings):
         lines.append("- Status: **Issues detected (BLOCKER present)**\n")
     elif findings:
@@ -78,33 +93,42 @@ def write_report(findings: List[str]) -> Path:
         lines.append("- Status: **All critical checks passed**\n")
     lines.append("\n---\n\n")
 
-    lines.append("## 1) Checks Executed\n")
-    lines.append("- Directories present: `docs/`, `schemas/`, `json_jsonl/`, `validation_reports/`\n")
-    lines.append("- Root docs present: `README.md`, `CHANGELOG.md`\n")
-    lines.append(f"- Canonical XLSX: `{CANON_XLSX.name}` in `/docs`\n")
-    lines.append("\n---\n\n")
+    # Checks executed
+    lines += [
+        "## 1) Checks Executed\n",
+        "- Directories: `docs/`, `schemas/`, `json_jsonl/`, `validation_reports/`\n",
+        "- Root files: `README.md`, `CHANGELOG.md`\n",
+        f"- Canonical XLSX: `{CANON_XLSX.name}` in `/docs`\n",
+        "\n---\n\n",
+    ]
 
+    # Findings
     lines.append("## 2) Findings\n")
     if findings:
         for f in findings:
             lines.append(f"- {f}\n")
     else:
         lines.append("- No issues found.\n")
-    lines.append("\n---\n\n")
-
-    lines.append("## 3) Next Steps\n")
-    lines.append("1. Remove obsolete files (e.g., `desktop.ini`).\n")
-    lines.append("2. Keep the canonical XLSX in `/docs` and updated.\n")
-    lines.append("3. (Optional) Extend checks to validate JSON/JSONL against schemas/XLSX.\n")
-    lines.append("\n---\n\n")
-    lines.append("*Aligned with ELIS Protocol v1.41 and Agent Prompt v2.0.*\n")
+    lines += [
+        "\n---\n\n",
+        "## 3) Next Steps\n",
+        "1. Remove obsolete files (e.g., `desktop.ini`).\n",
+        "2. Keep the canonical XLSX in `/docs` and updated.\n",
+        "3. (Optional) Extend validation to check JSON/JSONL against schemas/XLSX.\n",
+        "\n---\n\n",
+        "*Aligned with ELIS Protocol v1.41 and Agent Prompt v2.0.*\n",
+    ]
 
     out.write_text("".join(lines), encoding="utf-8")
-    print(f"Validation report written to {out}")
+    print(f"Validation report written to {out}")  # Log for Actions
     return out
 
-# --- Main ---
+# ---------- Main ----------
 def main() -> int:
+    """
+    Execute the checks and generate the report.
+    Returns 1 if a [BLOCKER] is found, otherwise 0 (pipeline passes with warnings).
+    """
     findings = scan()
     write_report(findings)
     return 1 if any("BLOCKER" in f for f in findings) else 0
