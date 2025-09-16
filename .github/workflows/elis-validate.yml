@@ -1,17 +1,17 @@
 # ============================================================
 # Workflow: ELIS - Validate
 # Purpose:
-#   - Run the validator script to produce a timestamped Markdown report.
+#   - Run the validator and generate a timestamped Markdown report.
 #   - Always ensure a report exists and publish it as an artifact.
 #   - Open a PR with the report and merge it via GitHub REST API.
 #   - Verify the report actually landed on main (fail if not).
 # Notes:
-#   - UK English comments for maintainability and auditability.
+#   - Single trigger (push) to avoid duplicate runs with pull_request.
+#   - UK English comments for maintainability/auditability.
 # ============================================================
 
 name: ELIS - Validate
 
-# Run on pushes that affect relevant paths, and allow manual runs.
 on:
   push:
     branches: [main]
@@ -23,18 +23,15 @@ on:
       - 'json_jsonl/**'
   workflow_dispatch:
 
-# Token permissions required for commits/PRs and the merge API call.
 permissions:
   contents: write
   pull-requests: write
 
 jobs:
   validate:
-    # Avoid loops if the actor is the Actions bot itself.
-    if: github.actor != 'github-actions[bot]'
+    if: github.actor != 'github-actions[bot]'   # prevent loop when PR is merged by the bot
     runs-on: ubuntu-latest
 
-    # Ensure only one validation job runs at a time for this repo.
     concurrency:
       group: elis-validate
       cancel-in-progress: true
@@ -72,7 +69,7 @@ jobs:
           fi
           echo "==> validation_reports content:"; ls -la validation_reports
 
-      # --- Publish the report as a run artifact (for easy download) ---
+      # --- Publish the report as an artifact ---
       - name: Upload report artifact
         uses: actions/upload-artifact@v4
         with:
@@ -80,7 +77,7 @@ jobs:
           path: validation_reports/*.md
           if-no-files-found: error
 
-      # --- Create a PR with the report (handles protected main) ---
+      # --- Create PR with the report (handles protected main) ---
       - name: Create PR with report
         id: cpr
         uses: peter-evans/create-pull-request@v6
@@ -92,18 +89,18 @@ jobs:
           add-paths: validation_reports/*.md
           delete-branch: true
 
-      # --- Log useful details about the created/updated PR ---
+      # --- Log PR details (for audit) ---
       - name: Show PR outputs
         run: |
           echo "PR number: ${{ steps.cpr.outputs.pull-request-number }}"
           echo "PR url   : ${{ steps.cpr.outputs.pull-request-url }}"
           echo "Operation: ${{ steps.cpr.outputs.pull-request-operation }}"  # created/updated/closed/none
 
-      # --- Merge the PR via the official GitHub REST API using GITHUB_TOKEN ---
+      # --- Merge the PR via REST API (squash). Do not fail if there is nothing to merge. ---
       - name: Merge PR via REST API (squash)
         if: steps.cpr.outputs.pull-request-number != ''
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}     # ephemeral token with the permissions above
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ steps.cpr.outputs.pull-request-number }}
           REPO: ${{ github.repository }}
         run: |
@@ -113,11 +110,20 @@ jobs:
             -H "Authorization: Bearer ${GH_TOKEN}" \
             -H "Accept: application/vnd.github+json" \
             "https://api.github.com/repos/${REPO}/pulls/${PR_NUMBER}/merge" \
-            -d '{"merge_method":"squash","commit_title":"chore: add validation report [skip ci]"}')
+            -d '{"merge_method":"squash","commit_title":"chore: add validation report [skip ci]"}' \
+            || true)
           echo "$resp"
-          echo "$resp" | grep -q '"merged": true' || { echo "::error ::PR merge failed"; exit 1; }
 
-      # --- Verify the report is present on main after the merge ---
+          # Treat common no-op conditions as success
+          if echo "$resp" | grep -qi '"message": *"Nothing to merge"\|"message": *"Pull request is not mergeable"\|"merged": *false'; then
+            echo "::notice ::PR had no changes to merge or is temporarily non-mergeable; continuing."
+            exit 0
+          fi
+
+          # Otherwise require merged:true
+          echo "$resp" | grep -q '"merged": *true' || { echo "::error ::PR merge failed"; exit 1; }
+
+      # --- Verify the report is present on main after merge (or no-op merge) ---
       - name: Verify report landed on main
         run: |
           git fetch origin main --depth=1
