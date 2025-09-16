@@ -7,16 +7,16 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+permissions:
+  contents: write   # permite commit/push do relatório
+
 jobs:
   validate:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
@@ -29,8 +29,19 @@ jobs:
         run: |
           python scripts/validate_json.py
 
-      - name: Upload validation report
+      - name: Upload validation report (artifact)
         uses: actions/upload-artifact@v4
         with:
           name: validation_report
           path: validation_reports/*.md
+
+      - name: Commit validation report to repo
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if ls validation_reports/*.md 1> /dev/null 2>&1; then
+            git add validation_reports/*.md
+            git commit -m "chore: add validation report [skip ci]" || echo "No changes to commit"
+            git push
+          fi
