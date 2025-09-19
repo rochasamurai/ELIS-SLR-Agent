@@ -1,6 +1,5 @@
 # ELIS - Bot Commit and PR (auto-merge, no-PAT)
-# Paste raw code in `content_raw` -> branch -> PR -> auto-merge into main.
-# Uses GitHub's built-in GITHUB_TOKEN; no PAT required.
+# Paste raw code -> branch -> PR -> auto-merge into main using GITHUB_TOKEN.
 
 name: ELIS - Bot Commit and PR (auto-merge, no-PAT)
 
@@ -33,12 +32,13 @@ jobs:
   commit-and-pr:
     runs-on: ubuntu-latest
 
-    # Minimal permissions needed to push commits and open PRs.
+    # Minimal permissions needed for pushing and opening PRs.
     permissions:
       contents: write
       pull-requests: write
 
     env:
+      GH_TOKEN: ${{ github.token }}   # Token for gh CLI in later steps
       GIT_AUTHOR_NAME: ELIS Bot
       GIT_AUTHOR_EMAIL: 233278419+elis-bot@users.noreply.github.com
       GIT_COMMITTER_NAME: ELIS Bot
@@ -65,26 +65,22 @@ jobs:
 
       - name: Write file content (raw text)
         shell: bash
+        env:
+          IN_PATH: ${{ inputs.file_path }}
+          CONTENT_RAW: ${{ inputs.content_raw }}
         run: |
           set -euo pipefail
-          # Sanitize path: drop accidental "file_path:" prefix, trim spaces, collapse slashes.
-          raw_path="${{ inputs.file_path }}"
-          fp="${raw_path#file_path: }"
+          # Sanitise path: drop "file_path:" prefix, trim spaces, collapse slashes.
+          fp="$IN_PATH"
+          fp="${fp#file_path: }"
           fp="$(printf '%s' "$fp" | sed -E 's#[[:space:]]+$##; s#//+#/#g')"
           mkdir -p "$(dirname "$fp")"
-
-          # Write the provided raw content verbatim using a quoted heredoc.
-          # Quoted delimiter ('__CONTENT__') prevents the shell from interpreting the payload.
-          cat > "$fp" <<'__CONTENT__'
-${{ inputs.content_raw }}
-__CONTENT__
-
-          # Ensure a trailing newline for POSIX-friendly tools.
+          # Write exact content from input (supports multi-line).
+          printf '%s' "$CONTENT_RAW" > "$fp"
+          # Ensure trailing newline for POSIX tools.
           tail -c1 "$fp" | read -r _ || echo >> "$fp"
-
-          # Basic guard: file must not be empty.
+          # Guard: file must not be empty.
           test -s "$fp" || { echo "File is empty"; exit 1; }
-
           git status --porcelain
 
       - name: Commit changes
@@ -99,8 +95,6 @@ __CONTENT__
         run: git push --set-upstream origin "${{ steps.prep.outputs.branch }}"
 
       - name: Create Pull Request
-        env:
-          GH_TOKEN: ${{ github.token }}   # Provided automatically to the job
         shell: bash
         run: |
           gh pr create \
@@ -110,8 +104,6 @@ __CONTENT__
             --head  "${{ steps.prep.outputs.branch }}"
 
       - name: Enable auto-merge (squash)
-        env:
-          GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           pr_url="$(gh pr view --json url -q .url)"
