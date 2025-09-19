@@ -1,114 +1,96 @@
-# ELIS - Bot Commit and PR (auto-merge, no-PAT)
-# One-step workflow: reads content_raw, creates branch, commits file, opens PR, enables auto-merge.
+# ELIS - Bot Commit (direct to elis-bot)
+# Paste raw code -> commit directly to a persistent integration branch (elis-bot).
+# Keeps main protected and removes PR/auto-merge overhead on every file.
 
-name: ELIS - Bot Commit and PR (auto-merge, no-PAT)
+name: ELIS - Bot Commit (direct to elis-bot)
 
 on:
   workflow_dispatch:
     inputs:
       file_path:
-        description: "Path to create/update (e.g., scripts/hello_bot.py)"
+        description: "Path to create/update (e.g., scripts/validate_json_jsonl.py)"
         required: true
       content_raw:
         description: "Raw file content (paste full code here)"
         required: true
       commit_message:
-        description: "Concise commit message"
+        description: "Concise commit message (e.g., feat: add validator)"
         required: true
-      target_branch:
-        description: "Base branch (blank = repo default)"
+      base_branch:
+        description: "Base to initialise elis-bot from (blank = repository default)"
         required: false
         default: ""
-      pr_title:
-        description: "Pull Request title"
-        required: false
-        default: "Automated update"
-      pr_body:
-        description: "Pull Request body"
-        required: false
-        default: "Automated update by ELIS Bot."
 
 jobs:
-  commit-and-pr:
+  commit-direct:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      pull-requests: write
+      contents: write   # required to write to the repository
 
     steps:
-      - name: Commit, PR and auto-merge (github-script)
+      - name: Commit directly to elis-bot (github-script, stable)
         uses: actions/github-script@v7
         with:
           github-token: ${{ github.token }}
           script: |
-            // Inputs injected as JSON-safe strings
+            // ---- Read and validate inputs -----------------------------------
             const inPath  = ( ${{ toJson(inputs.file_path) }}      || "" ).trim();
-            const inRaw   =   ${{ toJson(inputs.content_raw) }};           // keep newlines verbatim
+            const inRaw   =   ${{ toJson(inputs.content_raw) }};            // keep newlines verbatim
             const inMsg   = ( ${{ toJson(inputs.commit_message) }} || "" ).trim();
-            const inBase  = ( ${{ toJson(inputs.target_branch) }}  || "" ).trim();
-            const prTitle = ( ${{ toJson(inputs.pr_title) }}       || "Automated update" ).trim();
-            const prBody  = ( ${{ toJson(inputs.pr_body) }}        || "Automated update by ELIS Bot." ).trim();
+            const inBase  = ( ${{ toJson(inputs.base_branch) }}    || "" ).trim();
 
-            if (!inPath) core.setFailed("file_path is empty");
-            if (!inRaw)  core.setFailed("content_raw is empty");
-            if (!inMsg)  core.setFailed("commit_message is empty");
+            if (!inPath)  core.setFailed("file_path is empty");
+            if (!inRaw)   core.setFailed("content_raw is empty");
+            if (!inMsg)   core.setFailed("commit_message is empty");
 
-            // Sanitize path
+            // Sanitise path and normalise slashes
             const filePath = inPath.replace(/^file_path:\s*/i, "").replace(/\/+/g, "/").replace(/^\/|\/$/g, "");
             const { owner, repo } = context.repo;
 
-            // Resolve base branch (repo default if blank)
+            // ---- Resolve repository default branch if base not provided ------
             let baseBranch = inBase;
             if (!baseBranch) {
               const { data: repoInfo } = await github.rest.repos.get({ owner, repo });
               baseBranch = repoInfo.default_branch || "main";
             }
-            core.info(`Using base branch: ${baseBranch}`);
+            core.info(`Base branch: ${baseBranch}`);
 
-            // Get base SHA
-            const { data: ref } = await github.rest.git.getRef({ owner, repo, ref: `heads/${baseBranch}` });
-            const baseSha = ref.object.sha;
+            // ---- Ensure integration branch 'elis-bot' exists -----------------
+            const integBranch = "elis-bot";
+            const integRef = `heads/${integBranch}`;
 
-            // Create bot branch
-            const ts = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0,14);
-            const safe = (inMsg.replace(/[^a-zA-Z0-9-_ ]/g,"").replace(/\s+/g,"-") || "update");
-            const newBranch = `bot/${safe}-${ts}`;
-            await github.rest.git.createRef({ owner, repo, ref: `refs/heads/${newBranch}`, sha: baseSha });
+            async function ensureIntegBranch() {
+              try {
+                const { data: ref } = await github.rest.git.getRef({ owner, repo, ref: integRef });
+                core.info(`Using existing branch '${integBranch}' @ ${ref.object.sha}`);
+              } catch (e) {
+                if (e.status !== 404) throw e;
+                const { data: baseRef } = await github.rest.git.getRef({ owner, repo, ref: `heads/${baseBranch}` });
+                await github.rest.git.createRef({
+                  owner, repo, ref: `refs/${integRef}`, sha: baseRef.object.sha
+                });
+                core.info(`Created branch '${integBranch}' from '${baseBranch}'`);
+              }
+            }
+            await ensureIntegBranch();
 
-            // Check if file exists on new branch (to supply sha on update)
+            // ---- Create or update the target file on 'elis-bot' --------------
             let currentSha;
             try {
-              const { data: existing } = await github.rest.repos.getContent({ owner, repo, path: filePath, ref: newBranch });
+              const { data: existing } = await github.rest.repos.getContent({
+                owner, repo, path: filePath, ref: integBranch
+              });
               if (!Array.isArray(existing)) currentSha = existing.sha;
             } catch (e) {
-              if (e.status !== 404) throw e; // ignore not found
+              if (e.status !== 404) throw e; // ignore Not Found
             }
 
-            // Create or update file (content_raw encoded to base64 internally)
             await github.rest.repos.createOrUpdateFileContents({
-              owner, repo, path: filePath, branch: newBranch,
+              owner, repo, path: filePath, branch: integBranch,
               message: inMsg,
               content: Buffer.from(inRaw, "utf8").toString("base64"),
               sha: currentSha,
               committer: { name: "ELIS Bot", email: "233278419+elis-bot@users.noreply.github.com" },
               author:    { name: "ELIS Bot", email: "233278419+elis-bot@users.noreply.github.com" }
             });
-
-            // Open PR
-            const { data: pr } = await github.rest.pulls.create({
-              owner, repo, title: prTitle, body: prBody, head: newBranch, base: baseBranch
-            });
-            core.info(`PR #${pr.number} → ${pr.html_url}`);
-
-            // Enable auto-merge (squash)
-            try {
-              await github.graphql(
-                `mutation($prId: ID!) {
-                  enablePullRequestAutoMerge(input:{ pullRequestId: $prId, mergeMethod: SQUASH }) { clientMutationId }
-                }`,
-                { prId: pr.node_id }
-              );
-              core.info("Auto-merge enabled (SQUASH).");
-            } catch (e) {
-              core.warning(`Auto-merge not enabled (check repo setting): ${e.message}`);
-            }
+            core.info(`Committed to '${integBranch}': ${filePath}`);
