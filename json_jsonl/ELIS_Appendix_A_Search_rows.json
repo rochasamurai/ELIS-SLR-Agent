@@ -1,16 +1,14 @@
-[
-  {
-    "timestamp": "2025-08-21T19:57:09Z",
-    "search_id": "SRCH-0001",
-    "reviewer_id": "rev_01",
-    "date_run": "2025-08-21",
-    "database": "Scopus",
-    "search_string": "(\"electoral integrity\" OR \"election audit\") AND (technology OR ICT) AND year:>=1990",
-    "filters": "English; 1990–2025; Peer-reviewed",
-    "results_count": 124,
-    "status": "completed",
-    "export_file": "scopus_export_2025-08-19.csv",
-    "error_log_ref": "",
-    "notes": "Pilot search run."
-  }
-]
+{
+  "appendix": "Appendix_A",
+  "generated_at": "2025-09-16T19:20:07Z",
+  "rows": [
+    {
+      "field_a": "value1",
+      "field_b": 123
+    },
+    {
+      "field_a": "value2",
+      "field_b": 456
+    }
+  ]
+}
