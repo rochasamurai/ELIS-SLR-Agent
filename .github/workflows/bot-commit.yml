@@ -1,7 +1,7 @@
-# ELIS - Bot Commit and PR (auto-merge, no-PAT)
-# Allows the PM to paste raw code and get: branch -> PR -> auto-merge into main.
-
 name: ELIS - Bot Commit and PR (auto-merge, no-PAT)
+
+# ELIS - Bot Commit and PR (auto-merge, no-PAT)
+# Paste raw code (content_raw) -> branch -> PR -> auto-merge into main.
 
 on:
   workflow_dispatch:
@@ -32,13 +32,13 @@ jobs:
   commit-and-pr:
     runs-on: ubuntu-latest
 
-    # Minimal permissions needed to push and create PRs.
+    # Minimal permissions to push and create PRs.
     permissions:
       contents: write
       pull-requests: write
 
     env:
-      GH_TOKEN: ${{ github.token }} # Built-in token for this repo/run
+      GH_TOKEN: ${{ github.token }}  # Built-in token scoped to this repo
       GIT_AUTHOR_NAME: ELIS Bot
       GIT_AUTHOR_EMAIL: 233278419+elis-bot@users.noreply.github.com
       GIT_COMMITTER_NAME: ELIS Bot
@@ -70,18 +70,25 @@ jobs:
           IN_RAW: ${{ inputs.content_raw }}
         run: |
           set -euo pipefail
-          # Sanitize path: remove accidental "file_path:" prefix, trim spaces, collapse slashes.
+          # Sanitise path: drop "file_path:" prefix, trim spaces, collapse slashes.
           SAN_PATH="$(printf '%s' "$IN_PATH" | sed -E 's/^file_path:[[:space:]]*//; s#[[:space:]]+$##; s#//+#/#g')"
           mkdir -p "$(dirname "$SAN_PATH")"
-          # Use Python to write UTF-8 text with LF EOL and ensure trailing newline.
+          # Export for the Python step to read.
+          echo "SAN_PATH=$SAN_PATH" >> "$GITHUB_ENV"
+          echo "IN_RAW_SET=1" >> "$GITHUB_ENV"
+
+      - name: Persist file (UTF-8 LF, ensure trailing newline)
+        shell: bash
+        run: |
+          set -euo pipefail
           python - << 'PY'
-import os, sys
+import os
 path = os.environ["SAN_PATH"]
-raw  = os.environ["IN_RAW"]
-# Write file with LF endings
+raw  = os.environ.get("IN_RAW", "") or """${{ inputs.content_raw }}"""
+# Write with LF endings
 with open(path, "w", encoding="utf-8", newline="\n") as f:
     f.write(raw)
-# Ensure trailing newline for POSIX tools
+# Ensure trailing newline
 with open(path, "rb+") as f:
     f.seek(0, 2)
     if f.tell() > 0:
