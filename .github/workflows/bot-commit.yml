@@ -3,58 +3,35 @@ name: ELIS - Bot Commit and PR (no-PAT)
 on:
   workflow_dispatch:
     inputs:
-      file_path:
-        description: "Path to create/update (e.g., scripts/validate_json.py)"
-        required: true
-      content_base64:
-        description: "Base64-encoded file content"
-        required: true
-      commit_message:
-        description: "Commit message"
-        required: true
-      target_branch:
-        description: "Base branch (default: main)"
-        required: false
-        default: "main"
-      pr_title:
-        description: "Pull Request title"
-        required: false
-        default: "Automated update"
-      pr_body:
-        description: "Pull Request body"
-        required: false
-        default: "Automated update by ELIS Bot."
+      file_path: {description: "Path to create/update", required: true}
+      content_base64: {description: "Base64-encoded file content", required: true}
+      commit_message: {description: "Commit message", required: true}
+      target_branch: {description: "Base branch", required: false, default: "main"}
+      pr_title: {description: "PR title", required: false, default: "Automated update"}
+      pr_body: {description: "PR body", required: false, default: "Automated update by ELIS Bot."}
 
 jobs:
   commit-and-pr:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write         # allow pushing commits
-      pull-requests: write    # allow creating PRs
+    permissions: {contents: write, pull-requests: write}
     env:
-      GH_TOKEN: ${{ github.token }}  # built-in token for this repo
+      GH_TOKEN: ${{ github.token }}
       GIT_AUTHOR_NAME: ELIS Bot
       GIT_AUTHOR_EMAIL: 233278419+elis-bot@users.noreply.github.com
       GIT_COMMITTER_NAME: ELIS Bot
       GIT_COMMITTER_EMAIL: 233278419+elis-bot@users.noreply.github.com
 
     steps:
-      - name: Checkout base branch
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.target_branch }}
+      - uses: actions/checkout@v4
+        with: {ref: ${{ inputs.target_branch }}}
 
-      - name: Prepare new branch name
-        id: prep
-        shell: bash
+      - id: prep
         run: |
-          set -euo pipefail
-          ts="$(date -u +'%Y%m%d-%H%M%S')"
-          safe="$(echo "${{ inputs.commit_message }}" | tr ' ' '-' | tr -cd '[:alnum:]-_')"
-          echo "branch=bot/${safe:-update}-${ts}" >> "$GITHUB_OUTPUT"
+          ts=$(date -u +'%Y%m%d-%H%M%S')
+          safe=$(echo "${{ inputs.commit_message }}" | tr ' ' '-' | tr -cd '[:alnum:]-_')
+          echo "branch=bot/${safe:-update}-${ts}" >> $GITHUB_OUTPUT
 
-      - name: Create working branch
-        run: git switch -c "${{ steps.prep.outputs.branch }}"
+      - run: git switch -c "${{ steps.prep.outputs.branch }}"
 
       - name: Write file content
         shell: bash
@@ -62,22 +39,21 @@ jobs:
           set -euo pipefail
           fp="${{ inputs.file_path }}"
           mkdir -p "$(dirname "$fp")"
-          echo "${{ inputs.content_base64 }}" | base64 -d > "$fp"
-          # Ensure trailing newline for POSIX-friendly tools
+          # Decode allowing stray whitespace/linebreaks pasted in the UI.
+          printf '%s' "${{ inputs.content_base64 }}" | base64 --decode --ignore-garbage > "$fp"
+          # Ensure trailing newline for POSIX-friendly tools.
           tail -c1 "$fp" | read -r _ || echo >> "$fp"
+          # Quick sanity check: non-empty file
+          test -s "$fp" || { echo "Decoded file is empty"; exit 1; }
           git status --porcelain
 
-      - name: Commit changes
-        run: |
+      - run: |
           git add "${{ inputs.file_path }}"
-          git -c user.name="$GIT_AUTHOR_NAME" -c user.email="$GIT_AUTHOR_EMAIL" \
-              commit -m "${{ inputs.commit_message }}"
+          git -c user.name="$GIT_AUTHOR_NAME" -c user.email="$GIT_AUTHOR_EMAIL" commit -m "${{ inputs.commit_message }}"
 
-      - name: Push branch
-        run: git push --set-upstream origin "${{ steps.prep.outputs.branch }}"
+      - run: git push --set-upstream origin "${{ steps.prep.outputs.branch }}"
 
-      - name: Create Pull Request
-        run: |
+      - run: |
           gh pr create \
             --title "${{ inputs.pr_title }}" \
             --body "${{ inputs.pr_body }}" \
