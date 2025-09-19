@@ -1,8 +1,8 @@
+name: ELIS - Bot Commit and PR (auto-merge, no-PAT)
+
 # ELIS - Bot Commit and PR (auto-merge, no-PAT)
 # Purpose: allow the PM to paste raw code (text) and get a branch, PR, and auto-merge into main.
 # Security: uses GitHub's built-in GITHUB_TOKEN (least privilege to this repo). No PAT needed.
-
-name: ELIS - Bot Commit and PR (auto-merge, no-PAT)
 
 on:
   workflow_dispatch:
