@@ -1,4 +1,4 @@
-name: Bot Commit and PR (no-PAT)
+name: ELIS - Bot Commit and PR (no-PAT)
 
 on:
   workflow_dispatch:
