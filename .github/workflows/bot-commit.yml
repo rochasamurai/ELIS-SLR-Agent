@@ -1,4 +1,4 @@
-name: ELIS - Bot Commit and PR (no-PAT)
+name: ELIS - Bot Commit and PR (auto-merge, no-PAT)
 
 on:
   workflow_dispatch:
@@ -13,7 +13,7 @@ on:
         description: "Commit message"
         required: true
       target_branch:
-        description: "Base branch to branch off"
+        description: "Base branch"
         required: false
         default: "main"
       pr_title:
@@ -29,13 +29,14 @@ jobs:
   commit-and-pr:
     runs-on: ubuntu-latest
 
-    # Explicit permissions for this job; GitHub provides github.token with these scopes.
+    # Requires repo settings: Actions → Workflow permissions = Read & write,
+    # and General → Pull Requests → Enable auto-merge (ON).
     permissions:
       contents: write
       pull-requests: write
 
     env:
-      GH_TOKEN: ${{ github.token }}  # Built-in token for this repo
+      GH_TOKEN: ${{ github.token }}  # Built-in token for this repository
       GIT_AUTHOR_NAME: ELIS Bot
       GIT_AUTHOR_EMAIL: 233278419+elis-bot@users.noreply.github.com
       GIT_COMMITTER_NAME: ELIS Bot
@@ -63,19 +64,21 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          fp="${{ inputs.file_path }}"
+          # Sanitize path: drop accidental "file_path:" prefix, trim spaces, squash //.
+          raw="${{ inputs.file_path }}"
+          fp="$(printf '%s' "$raw" | sed -E 's/^file_path:[[:space:]]*//; s#[[:space:]]+$##; s#//+#/#g')"
           mkdir -p "$(dirname "$fp")"
-          # Decode allowing stray whitespace/linebreaks pasted in the UI.
+          # Decode allowing stray whitespace pasted in the UI.
           printf '%s' "${{ inputs.content_base64 }}" | base64 --decode --ignore-garbage > "$fp"
-          # Ensure trailing newline for POSIX-friendly tools.
+          # Ensure trailing newline (POSIX-friendly).
           tail -c1 "$fp" | read -r _ || echo >> "$fp"
-          # Quick sanity check: non-empty file.
+          # Quick sanity checks.
           test -s "$fp" || { echo "Decoded file is empty"; exit 1; }
           git status --porcelain
 
       - name: Commit changes
         run: |
-          git add "${{ inputs.file_path }}"
+          git add -A
           git -c user.name="$GIT_AUTHOR_NAME" -c user.email="$GIT_AUTHOR_EMAIL" \
               commit -m "${{ inputs.commit_message }}"
 
@@ -84,10 +87,19 @@ jobs:
 
       - name: Create Pull Request
         env:
-          GH_TOKEN: ${{ github.token }}  # Ensure gh CLI sees a token
+          GH_TOKEN: ${{ github.token }}
         run: |
           gh pr create \
             --title "${{ inputs.pr_title }}" \
             --body "${{ inputs.pr_body }}" \
             --base "${{ inputs.target_branch }}" \
             --head "${{ steps.prep.outputs.branch }}"
+
+      - name: Enable auto-merge (squash) and complete if checks pass
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Get PR URL and enable auto-merge with squash strategy.
+          pr_url="$(gh pr view --json url -q .url)"
+          gh pr merge "$pr_url" --squash --auto
+          echo "Auto-merge enabled for: $pr_url"
