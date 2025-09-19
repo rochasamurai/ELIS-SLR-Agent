@@ -1,7 +1,7 @@
-name: ELIS - Bot Commit and PR (auto-merge, no-PAT)
-
 # ELIS - Bot Commit and PR (auto-merge, no-PAT)
-# Paste raw code (content_raw) -> branch -> PR -> auto-merge into main.
+# Paste raw code -> branch -> PR -> auto-merge into main.
+
+name: ELIS - Bot Commit and PR (auto-merge, no-PAT)
 
 on:
   workflow_dispatch:
@@ -63,69 +63,15 @@ jobs:
         shell: bash
         run: git switch -c "${{ steps.prep.outputs.branch }}"
 
+      - name: Sanitise path input
+        id: path
+        shell: bash
+        run: |
+          set -euo pipefail
+          IN_PATH="${{ inputs.file_path }}"
+          SAN_PATH="$(printf '%s' "$IN_PATH" | sed -E 's/^file_path:[[:space:]]*//; s#[[:space:]]+$##; s#//+#/#g')"
+          echo "path=$SAN_PATH" >> "$GITHUB_OUTPUT"
+
       - name: Write file content (raw text)
         shell: bash
         env:
-          IN_PATH: ${{ inputs.file_path }}
-          IN_RAW: ${{ inputs.content_raw }}
-        run: |
-          set -euo pipefail
-          # Sanitise path: drop "file_path:" prefix, trim spaces, collapse slashes.
-          SAN_PATH="$(printf '%s' "$IN_PATH" | sed -E 's/^file_path:[[:space:]]*//; s#[[:space:]]+$##; s#//+#/#g')"
-          mkdir -p "$(dirname "$SAN_PATH")"
-          # Export for the Python step to read.
-          echo "SAN_PATH=$SAN_PATH" >> "$GITHUB_ENV"
-          echo "IN_RAW_SET=1" >> "$GITHUB_ENV"
-
-      - name: Persist file (UTF-8 LF, ensure trailing newline)
-        shell: bash
-        run: |
-          set -euo pipefail
-          python - << 'PY'
-import os
-path = os.environ["SAN_PATH"]
-raw  = os.environ.get("IN_RAW", "") or """${{ inputs.content_raw }}"""
-# Write with LF endings
-with open(path, "w", encoding="utf-8", newline="\n") as f:
-    f.write(raw)
-# Ensure trailing newline
-with open(path, "rb+") as f:
-    f.seek(0, 2)
-    if f.tell() > 0:
-        f.seek(-1, 2)
-        if f.read(1) != b"\n":
-            f.write(b"\n")
-PY
-          test -s "$SAN_PATH" || { echo "File is empty"; exit 1; }
-          git status --porcelain
-
-      - name: Commit changes
-        shell: bash
-        run: |
-          git add -A
-          git -c user.name="$GIT_AUTHOR_NAME" -c user.email="$GIT_AUTHOR_EMAIL" \
-              commit -m "${{ inputs.commit_message }}"
-
-      - name: Push branch
-        shell: bash
-        run: git push --set-upstream origin "${{ steps.prep.outputs.branch }}"
-
-      - name: Create Pull Request
-        env:
-          GH_TOKEN: ${{ github.token }}
-        shell: bash
-        run: |
-          gh pr create \
-            --title "${{ inputs.pr_title }}" \
-            --body  "${{ inputs.pr_body }}" \
-            --base  "${{ inputs.target_branch }}" \
-            --head  "${{ steps.prep.outputs.branch }}"
-
-      - name: Enable auto-merge (squash)
-        env:
-          GH_TOKEN: ${{ github.token }}
-        shell: bash
-        run: |
-          pr_url="$(gh pr view --json url -q .url)"
-          gh pr merge "$pr_url" --squash --auto
-          echo "Auto-merge enabled for: $pr_url"
