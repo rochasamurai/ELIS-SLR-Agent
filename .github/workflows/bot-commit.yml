@@ -1,8 +1,5 @@
 # ELIS - Bot Commit and PR (auto-merge, no-PAT)
-# Single-step implementation using actions/github-script:
-# - Reads raw text from workflow inputs
-# - Creates a branch, commits the file, opens a PR and enables auto-merge (squash)
-# - Uses the built-in GITHUB_TOKEN; no PAT required
+# Robust: discovers default branch, logs clear errors, uses github-script only.
 
 name: ELIS - Bot Commit and PR (auto-merge, no-PAT)
 
@@ -19,9 +16,9 @@ on:
         description: "Concise commit message (e.g., chore: add validator)"
         required: true
       target_branch:
-        description: "Base branch"
+        description: "Base branch (leave blank to use repository default)"
         required: false
-        default: "main"
+        default: ""
       pr_title:
         description: "Pull Request title"
         required: false
@@ -39,83 +36,124 @@ jobs:
       pull-requests: write
 
     steps:
-      - name: Commit, PR and enable auto-merge (github-script)
+      - name: Commit, PR, auto-merge (github-script, robust)
         uses: actions/github-script@v7
         with:
           github-token: ${{ github.token }}
           script: |
-            // ---- Read and sanitise inputs -----------------------------------
-            const pathInput = `${{ toJson(inputs.file_path) }}`.trim();
-            const contentRaw = `${{ toJson(inputs.content_raw) }}`; // keep newlines verbatim
-            const commitMessage = `${{ toJson(inputs.commit_message) }}`.trim();
-            const baseBranch = `${{ toJson(inputs.target_branch) }}`.trim() || "main";
-            const prTitle = `${{ toJson(inputs.pr_title) }}`.trim() || "Automated update";
-            const prBody  = `${{ toJson(inputs.pr_body) }}`.trim()  || "Automated update by ELIS Bot.";
+            const core = require('@actions/core');
 
-            // Drop accidental "file_path:" prefix and collapse slashes
-            const filePath = pathInput.replace(/^file_path:\s*/i, "").replace(/\/+/g, "/").replace(/^\/|\/$/g, "");
-            if (!filePath) core.setFailed("file_path is empty");
-            if (!contentRaw) core.setFailed("content_raw is empty");
+            // ---- Read inputs -------------------------------------------------
+            const inPath  = String(${{ toJson(inputs.file_path) }} || '').trim();
+            const inRaw   = String(${{ toJson(inputs.content_raw) }} || '');
+            const inMsg   = String(${{ toJson(inputs.commit_message) }} || '').trim();
+            const inBase  = String(${{ toJson(inputs.target_branch) }} || '').trim();
+            const prTitle = String(${{ toJson(inputs.pr_title) }} || 'Automated update').trim();
+            const prBody  = String(${{ toJson(inputs.pr_body) }} || 'Automated update by ELIS Bot.').trim();
 
+            if (!inPath) core.setFailed("file_path is empty");
+            if (!inRaw)  core.setFailed("content_raw is empty");
+            if (!inMsg)  core.setFailed("commit_message is empty");
+
+            // ---- Sanitise path ----------------------------------------------
+            const filePath = inPath.replace(/^file_path:\s*/i, '').replace(/\/+/g, '/').replace(/^\/|\/$/g, '');
             const owner = context.repo.owner;
             const repo  = context.repo.repo;
 
-            // ---- Resolve base branch SHA -------------------------------------
-            const { data: refData } = await github.rest.git.getRef({
-              owner, repo, ref: `heads/${baseBranch}`
-            });
-            const baseSha = refData.object.sha;
+            // ---- Detect base branch (fallback to repository default) --------
+            let baseBranch = inBase;
+            try {
+              if (!baseBranch) {
+                const { data: r } = await github.rest.repos.get({ owner, repo });
+                baseBranch = r.default_branch || 'main';
+                core.info(`Default branch detected: ${baseBranch}`);
+              } else {
+                core.info(`Using provided base branch: ${baseBranch}`);
+              }
+            } catch (e) {
+              core.setFailed(`Failed to resolve repository info: ${e.message}`);
+            }
 
-            // ---- Create a new branch name ------------------------------------
+            // ---- Resolve base branch SHA ------------------------------------
+            let baseSha;
+            try {
+              const { data: ref } = await github.rest.git.getRef({ owner, repo, ref: `heads/${baseBranch}` });
+              baseSha = ref.object.sha;
+              core.info(`Base SHA: ${baseSha}`);
+            } catch (e) {
+              core.setFailed(`Base branch '${baseBranch}' not found (getRef): ${e.message}`);
+            }
+
+            // ---- Create new branch from base --------------------------------
             const ts = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0,14);
-            const safe = commitMessage.replace(/[^a-zA-Z0-9-_ ]/g,"").replace(/\s+/g,"-") || "update";
+            const safe = inMsg.replace(/[^a-zA-Z0-9-_ ]/g, "").replace(/\s+/g, "-") || "update";
             const newBranch = `bot/${safe}-${ts}`;
 
-            await github.rest.git.createRef({
-              owner, repo,
-              ref: `refs/heads/${newBranch}`,
-              sha: baseSha
-            });
+            try {
+              await github.rest.git.createRef({
+                owner, repo, ref: `refs/heads/${newBranch}`, sha: baseSha
+              });
+              core.info(`Created branch: ${newBranch}`);
+            } catch (e) {
+              core.setFailed(`Failed to create branch '${newBranch}': ${e.message}`);
+            }
 
-            // ---- Create or update the file on the new branch -----------------
-            // Get the file if it exists (to supply its sha), otherwise create new
+            // ---- Check if file exists on the new branch (to get its sha) ----
             let currentSha = undefined;
             try {
               const { data: existing } = await github.rest.repos.getContent({
                 owner, repo, path: filePath, ref: newBranch
               });
-              if (Array.isArray(existing)) throw new Error("Path is a directory");
-              currentSha = existing.sha;
+              if (!Array.isArray(existing)) currentSha = existing.sha;
+              core.info(`Target exists; updating file with sha ${currentSha}`);
             } catch (e) {
-              // 404 means new file; ignore
+              if (e.status === 404) {
+                core.info("Target does not exist; creating new file.");
+              } else {
+                core.setFailed(`Failed to inspect target path: ${e.message}`);
+              }
             }
 
-            await github.rest.repos.createOrUpdateFileContents({
-              owner, repo, path: filePath, branch: newBranch,
-              message: commitMessage,
-              content: Buffer.from(contentRaw, "utf8").toString("base64"),
-              sha: currentSha,
-              committer: { name: "ELIS Bot", email: "233278419+elis-bot@users.noreply.github.com" },
-              author:    { name: "ELIS Bot", email: "233278419+elis-bot@users.noreply.github.com" }
-            });
+            // ---- Create or update file content ------------------------------
+            try {
+              await github.rest.repos.createOrUpdateFileContents({
+                owner, repo, path: filePath, branch: newBranch,
+                message: inMsg,
+                content: Buffer.from(inRaw, "utf8").toString("base64"),
+                sha: currentSha,
+                committer: { name: "ELIS Bot", email: "233278419+elis-bot@users.noreply.github.com" },
+                author:    { name: "ELIS Bot", email: "233278419+elis-bot@users.noreply.github.com" }
+              });
+              core.info(`Wrote file: ${filePath}`);
+            } catch (e) {
+              core.setFailed(`Failed to write file '${filePath}': ${e.message}`);
+            }
 
-            // ---- Open the PR -------------------------------------------------
-            const { data: pr } = await github.rest.pulls.create({
-              owner, repo,
-              title: prTitle, body: prBody,
-              head: newBranch, base: baseBranch
-            });
+            // ---- Open PR -----------------------------------------------------
+            let pr;
+            try {
+              const { data } = await github.rest.pulls.create({
+                owner, repo, title: prTitle, body: prBody,
+                head: newBranch, base: baseBranch
+              });
+              pr = data;
+              core.info(`PR #${pr.number} created: ${pr.html_url}`);
+            } catch (e) {
+              core.setFailed(`Failed to open PR: ${e.message}`);
+            }
 
-            core.info(`PR #${pr.number} created: ${pr.html_url}`);
-
-            // ---- Enable auto-merge (squash) ----------------------------------
-            // Requires Auto-merge enabled in repo settings and permissions above.
-            const enableAutoMerge = `
-              mutation($prId: ID!) {
-                enablePullRequestAutoMerge(input:{
-                  pullRequestId: $prId,
-                  mergeMethod: SQUASH
-                }) { clientMutationId }
-              }`;
-            await github.graphql(enableAutoMerge, { prId: pr.node_id });
-            core.info("Auto-merge enabled; PR will merge after required checks (if any).");
+            // ---- Enable auto-merge (squash) ---------------------------------
+            try {
+              const enableAutoMerge = `
+                mutation($prId: ID!) {
+                  enablePullRequestAutoMerge(input:{
+                    pullRequestId: $prId,
+                    mergeMethod: SQUASH
+                  }) { clientMutationId }
+                }`;
+              await github.graphql(enableAutoMerge, { prId: pr.node_id });
+              core.info("Auto-merge enabled; PR will merge after required checks.");
+            } catch (e) {
+              // If auto-merge is not enabled at repo level, log a notice instead of failing the run
+              core.warning(`Could not enable auto-merge (check repo settings): ${e.message}`);
+            }
