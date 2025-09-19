@@ -1,6 +1,7 @@
 # ELIS - Bot Commit (direct to elis-bot via GitHub App)
-# Paste raw code -> commit directly to the persistent integration branch "elis-bot".
-# Uses a short-lived installation token minted from your GitHub App (repo-scoped, safer than PAT).
+# Commits directly to the "elis-bot" branch using a repo-scoped installation token.
+# The token is minted by the GitHub App using APP_ID + PRIVATE_KEY. No installation-id is needed;
+# the action auto-detects the installation for the current repository.
 
 name: ELIS - Bot Commit (direct to elis-bot via GitHub App)
 
@@ -24,47 +25,34 @@ on:
 jobs:
   commit-direct:
     runs-on: ubuntu-latest
-
-    # We only need read here; writes are performed via the App installation token.
     permissions:
-      contents: read
+      contents: read  # writes are performed via the App token
 
     steps:
-      # 1) Mint a repo-scoped installation token from the GitHub App
       - name: Mint installation token (GitHub App)
         id: app-token
         uses: actions/create-github-app-token@v1
         with:
           app-id: ${{ secrets.ELIS_APP_ID }}
           private-key: ${{ secrets.ELIS_APP_PRIVATE_KEY }}
-          installation-id: ${{ secrets.ELIS_INSTALLATION_ID }}
 
-      # 2) Commit the provided file directly to the "elis-bot" branch
       - name: Commit directly to elis-bot (github-script)
         uses: actions/github-script@v7
         with:
           github-token: ${{ steps.app-token.outputs.token }}
           script: |
-            // ---- Read inputs (kept JSON-safe by toJson) ---------------------
             const inPath  = ( ${{ toJson(inputs.file_path) }}      || "" ).trim();
             const inRaw   =   ${{ toJson(inputs.content_raw) }};
             const inMsg   = ( ${{ toJson(inputs.commit_message) }} || "" ).trim();
             const inBase  = ( ${{ toJson(inputs.base_branch) }}    || "" ).trim();
+            if (!inPath)  { core.setFailed("file_path is empty"); return; }
+            if (!inRaw)   { core.setFailed("content_raw is empty"); return; }
+            if (!inMsg)   { core.setFailed("commit_message is empty"); return; }
 
-            // Basic guards (fail early)
-            if (!inPath) { core.setFailed("file_path is empty"); return; }
-            if (!inRaw)  { core.setFailed("content_raw is empty"); return; }
-            if (!inMsg)  { core.setFailed("commit_message is empty"); return; }
-
-            // ---- Sanitise and normalise path --------------------------------
-            const filePath = inPath
-              .replace(/^file_path:\s*/i, "")
-              .replace(/\/+/g, "/")
-              .replace(/^\/|\/$/g, "");
-
+            const filePath = inPath.replace(/^file_path:\s*/i, "").replace(/\/+/g, "/").replace(/^\/|\/$/g, "");
             const { owner, repo } = context.repo;
 
-            // ---- Resolve base branch (use repository default if blank) -------
+            // Resolve default base branch when blank
             let baseBranch = inBase;
             if (!baseBranch) {
               const { data: repoInfo } = await github.rest.repos.get({ owner, repo });
@@ -72,32 +60,24 @@ jobs:
             }
             core.info(`Base branch: ${baseBranch}`);
 
-            // ---- Ensure integration branch 'elis-bot' exists -----------------
+            // Ensure integration branch exists
             const integBranch = "elis-bot";
             try {
               await github.rest.git.getRef({ owner, repo, ref: `heads/${integBranch}` });
               core.info(`Using existing branch '${integBranch}'.`);
             } catch (e) {
-              if (e.status !== 404) throw e; // unexpected error
-              const { data: baseRef } = await github.rest.git.getRef({
-                owner, repo, ref: `heads/${baseBranch}`
-              });
-              await github.rest.git.createRef({
-                owner, repo, ref: `refs/heads/${integBranch}`, sha: baseRef.object.sha
-              });
+              if (e.status !== 404) throw e;
+              const { data: baseRef } = await github.rest.git.getRef({ owner, repo, ref: `heads/${baseBranch}` });
+              await github.rest.git.createRef({ owner, repo, ref: `refs/heads/${integBranch}`, sha: baseRef.object.sha });
               core.info(`Created branch '${integBranch}' from '${baseBranch}'.`);
             }
 
-            // ---- Create or update the target file on 'elis-bot' --------------
+            // Upsert file on 'elis-bot'
             let currentSha;
             try {
-              const { data: existing } = await github.rest.repos.getContent({
-                owner, repo, path: filePath, ref: integBranch
-              });
-              if (!Array.isArray(existing)) currentSha = existing.sha; // update case
-            } catch (e) {
-              if (e.status !== 404) throw e; // ignore Not Found (new file)
-            }
+              const { data: existing } = await github.rest.repos.getContent({ owner, repo, path: filePath, ref: integBranch });
+              if (!Array.isArray(existing)) currentSha = existing.sha;
+            } catch (e) { if (e.status !== 404) throw e; }
 
             await github.rest.repos.createOrUpdateFileContents({
               owner, repo, path: filePath, branch: integBranch,
@@ -107,5 +87,4 @@ jobs:
               committer: { name: "ELIS Bot", email: "233278419+elis-bot@users.noreply.github.com" },
               author:    { name: "ELIS Bot", email: "233278419+elis-bot@users.noreply.github.com" }
             });
-
             core.notice(`Committed to '${integBranch}': ${filePath}`);
