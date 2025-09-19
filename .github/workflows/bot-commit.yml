@@ -1,6 +1,5 @@
 # ELIS - Bot Commit and PR (auto-merge, no-PAT)
-# Purpose: allow the PM to paste raw code (text) and get a branch, PR, and auto-merge into main.
-# Security: uses GitHub's built-in GITHUB_TOKEN (least privilege to this repo). No PAT needed.
+# Allows the PM to paste raw code and get: branch -> PR -> auto-merge into main.
 
 name: ELIS - Bot Commit and PR (auto-merge, no-PAT)
 
@@ -11,16 +10,13 @@ on:
         description: "Path to create/update (e.g., scripts/validate_json.py)"
         required: true
       content_raw:
-        description: "Raw file content (recommended). Leave empty if using base64."
-        required: false
-      content_base64:
-        description: "Base64 file content (optional fallback for binaries/edge cases)."
-        required: false
+        description: "Raw file content (paste full code here)"
+        required: true
       commit_message:
-        description: "Concise commit message (e.g., chore: add validator)"
+        description: "Concise commit message"
         required: true
       target_branch:
-        description: "Base branch to branch off"
+        description: "Base branch"
         required: false
         default: "main"
       pr_title:
@@ -36,15 +32,13 @@ jobs:
   commit-and-pr:
     runs-on: ubuntu-latest
 
-    # Grant only what is needed to push commits and open PRs.
+    # Minimal permissions needed to push and create PRs.
     permissions:
       contents: write
       pull-requests: write
 
     env:
-      # Built-in token scoped to this repository run. Safer than PAT for this use case.
-      GH_TOKEN: ${{ github.token }}
-      # Use the bot identity (noreply) to avoid exposing real e-mail addresses.
+      GH_TOKEN: ${{ github.token }} # Built-in token for this repo/run
       GIT_AUTHOR_NAME: ELIS Bot
       GIT_AUTHOR_EMAIL: 233278419+elis-bot@users.noreply.github.com
       GIT_COMMITTER_NAME: ELIS Bot
@@ -54,7 +48,6 @@ jobs:
       - name: Checkout base branch
         uses: actions/checkout@v4
         with:
-          # Always start from the selected base branch.
           ref: ${{ inputs.target_branch }}
 
       - name: Prepare working branch name
@@ -62,7 +55,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          # Build a deterministic, safe branch name from the commit message and a UTC timestamp.
           ts="$(date -u +'%Y%m%d-%H%M%S')"
           safe_msg="$(echo "${{ inputs.commit_message }}" | tr ' ' '-' | tr -cd '[:alnum:]-_')"
           echo "branch=bot/${safe_msg:-update}-${ts}" >> "$GITHUB_OUTPUT"
@@ -71,64 +63,38 @@ jobs:
         shell: bash
         run: git switch -c "${{ steps.prep.outputs.branch }}"
 
-      - name: Write file content (prefers raw; falls back to base64)
+      - name: Write file content (raw text)
         shell: bash
         env:
-          FILE_PATH: ${{ inputs.file_path }}
-          CONTENT_RAW: ${{ inputs.content_raw }}
-          CONTENT_B64: ${{ inputs.content_base64 }}
+          IN_PATH: ${{ inputs.file_path }}
+          IN_RAW: ${{ inputs.content_raw }}
         run: |
           set -euo pipefail
-
-          # Sanitize accidental prefixes and path mishaps from UI input.
-          # - strip accidental "file_path:" prefixes
-          # - trim trailing spaces
-          # - collapse multiple slashes
-          fp="$(printf '%s' "$FILE_PATH" | sed -E 's/^file_path:[[:space:]]*//; s#[[:space:]]+$##; s#//+#/#g')"
-          mkdir -p "$(dirname "$fp")"
-
-          # Use Python to reliably handle UTF-8, ensure trailing LF, and decode base64 when needed.
+          # Sanitize path: remove accidental "file_path:" prefix, trim spaces, collapse slashes.
+          SAN_PATH="$(printf '%s' "$IN_PATH" | sed -E 's/^file_path:[[:space:]]*//; s#[[:space:]]+$##; s#//+#/#g')"
+          mkdir -p "$(dirname "$SAN_PATH")"
+          # Use Python to write UTF-8 text with LF EOL and ensure trailing newline.
           python - << 'PY'
-import os, sys, base64, binascii
-
-fp  = os.environ["FILE_PATH"]
-raw = os.environ.get("CONTENT_RAW") or ""
-b64 = os.environ.get("CONTENT_B64") or ""
-
-def write_text(txt: str) -> None:
-    # Write with LF endings and ensure a trailing newline for POSIX tools.
-    with open(fp, "w", encoding="utf-8", newline="\n") as f:
-        f.write(txt)
-    with open(fp, "rb+") as f:
-        f.seek(0, 2)
-        if f.tell() > 0:
-            f.seek(-1, 2)
-            if f.read(1) != b"\n":
-                f.write(b"\n")
-
-if raw.strip():
-    # Preferred path: plain text is simpler and less error-prone than base64.
-    write_text(raw)
-elif b64.strip():
-    # Fallback: accept strict base64 first; if it fails, try a tolerant decode.
-    try:
-        data = base64.b64decode(b64, validate=True)
-    except (binascii.Error, ValueError):
-        data = base64.b64decode(b64)
-    write_text(data.decode("utf-8", errors="replace"))
-else:
-    print("ERROR: Provide content_raw or content_base64.", file=sys.stderr)
-    sys.exit(1)
+import os, sys
+path = os.environ["SAN_PATH"]
+raw  = os.environ["IN_RAW"]
+# Write file with LF endings
+with open(path, "w", encoding="utf-8", newline="\n") as f:
+    f.write(raw)
+# Ensure trailing newline for POSIX tools
+with open(path, "rb+") as f:
+    f.seek(0, 2)
+    if f.tell() > 0:
+        f.seek(-1, 2)
+        if f.read(1) != b"\n":
+            f.write(b"\n")
 PY
-
-          # Guard against empty/failed writes.
-          test -s "$fp" || { echo "Decoded file is empty"; exit 1; }
+          test -s "$SAN_PATH" || { echo "File is empty"; exit 1; }
           git status --porcelain
 
       - name: Commit changes
         shell: bash
         run: |
-          # Stage and commit using the bot identity configured in env.
           git add -A
           git -c user.name="$GIT_AUTHOR_NAME" -c user.email="$GIT_AUTHOR_EMAIL" \
               commit -m "${{ inputs.commit_message }}"
@@ -142,7 +108,6 @@ PY
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
-          # Open a PR from the bot branch to the chosen base branch.
           gh pr create \
             --title "${{ inputs.pr_title }}" \
             --body  "${{ inputs.pr_body }}" \
@@ -154,7 +119,6 @@ PY
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
-          # Turn on auto-merge; GitHub will merge once checks (if any) pass.
           pr_url="$(gh pr view --json url -q .url)"
           gh pr merge "$pr_url" --squash --auto
           echo "Auto-merge enabled for: $pr_url"
