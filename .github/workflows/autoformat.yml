@@ -1,62 +1,74 @@
 # ELIS - Autoformat: runs Black on branch 'elis-bot' and commits changes via GitHub App.
-
+# This version improves logs: prints a no-op message or the new commit SHA when changes occur.
 name: ELIS - Autoformat
 
 on:
-  workflow_dispatch: {}  # Manual trigger shown in the Actions UI
+  workflow_dispatch: {}  # Manual trigger in Actions UI
 
 jobs:
   autoformat:
     runs-on: ubuntu-latest
     permissions:
-      contents: read  # Write is performed using the GitHub App token below
+      contents: read  # We use the GitHub App token for write operations
 
     steps:
-      # Mint installation token from the installed GitHub App (elis-bot-commits)
+      # 1) Mint an installation token for the installed GitHub App (elis-bot-commits)
       - name: Mint installation token (GitHub App)
         id: app
         uses: actions/create-github-app-token@v1
         with:
           app-id: ${{ secrets.ELIS_APP_ID }}
           private-key: ${{ secrets.ELIS_APP_PRIVATE_KEY }}
-          owner: rochasamurai
-          repositories: ELIS-SLR-AgenT
+          # owner/repositories omitted → token is scoped to the current repository
 
-      # Checkout target branch where formatting will be applied
+      # 2) Checkout the automation branch where formatting is applied
       - name: Checkout elis-bot
         uses: actions/checkout@v4
         with:
           ref: elis-bot
           token: ${{ steps.app.outputs.token }}
 
-      # Use the same Python version as CI to avoid formatting drift
+      # 3) Use same Python as CI to avoid formatter drift
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
+      # 4) Install Black
       - name: Install Black
         run: |
           python -m pip install --upgrade pip
           pip install black
 
+      # 5) Run Black in-place
       - name: Run Black (format in-place)
         run: black .
 
-      # Commit only if there are changes after Black
+      # 6) Commit only if there are changes (improved logging + SHA output)
       - name: Commit changes (if any)
         id: commit
+        shell: bash
         run: |
+          set -euo pipefail
           git config user.name  "ELIS Bot"
           git config user.email "233278419+elis-bot@users.noreply.github.com"
           if git diff --quiet; then
-            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No formatting changes detected."
           else
             git add -A
             git commit -m "chore(format): apply Black autoformat"
-            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+            echo "Committed $(git rev-parse --short HEAD)"
           fi
 
+      # 7) Push the commit back to the automation branch
       - name: Push back to elis-bot
         if: steps.commit.outputs.changed == 'true'
         run: git push origin HEAD:elis-bot
+
+      # 8) Surface the commit SHA clearly in the logs
+      - name: Show commit SHA
+        if: steps.commit.outputs.changed == 'true'
+        run: echo "Autoformat commit SHA: ${{ steps.commit.outputs.sha }}"
