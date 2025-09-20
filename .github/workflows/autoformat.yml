@@ -1,0 +1,10 @@
+name: ELIS - Autoformat
+on:
+  workflow_dispatch:
+
+jobs:
+  sanity:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Echo
+        run: echo "yaml ok"
