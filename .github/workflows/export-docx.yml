@@ -1,0 +1,48 @@
+# ELIS - Export Docx: converts a Markdown file to .docx and publishes it as a workflow artifact.
+name: ELIS - Export Docx
+
+on:
+  workflow_dispatch:
+    inputs:
+      md_path:
+        description: "Path to the Markdown file (.md)"
+        required: true
+        default: "docs/Technical_Development_Plan_ELIS_SLR_Agent.md"
+      docx_name:
+        description: "Output .docx file name (without extension)"
+        required: false
+        default: "ELIS_Technical_Development_Plan"
+
+jobs:
+  export-docx:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install pandoc
+        # Using apt to keep the workflow lightweight and reproducible.
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pandoc
+
+      - name: Convert Markdown to DOCX
+        # Uses GitHub Flavoured Markdown as input for better GitHub compatibility.
+        run: |
+          set -euo pipefail
+          MD_PATH="${{ inputs.md_path }}"
+          OUT_BASENAME="${{ inputs.docx_name }}"
+          mkdir -p out
+          pandoc "$MD_PATH" \
+            --from=gfm \
+            --to=docx \
+            --output "out/${OUT_BASENAME}.docx" \
+            --metadata=title:"${OUT_BASENAME//_/ }" \
+            --standalone
+
+      - name: Upload DOCX artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.docx_name }}.docx
+          path: out/${{ inputs.docx_name }}.docx
+          if-no-files-found: error
