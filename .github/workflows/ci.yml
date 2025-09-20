@@ -1,7 +1,7 @@
 # ELIS SLR Agent — CI (stable triggers) 
 # Lint (ruff), format check (black), tests (pytest) e validação do repositório.  
 
-name: ELIS SLR Agent - CI   
+name: ELIS - CI   
 
 on:
   push:
