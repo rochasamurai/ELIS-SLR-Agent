@@ -1,66 +1,10 @@
-# ELIS - Autoformat: runs Black on branch 'elis-bot' and commits changes via GitHub App.
-# This version improves logs: prints a no-op message or the new commit SHA when changes occur.
-
-name: ELIS - Autoformat
-
+name: ELIS - Autoformat (diag)
 on:
   workflow_dispatch:
 
 jobs:
-  autoformat:
+  sanity:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read  # write via GitHub App token
-
     steps:
-      - name: Mint installation token (GitHub App)
-        id: app
-        uses: actions/create-github-app-token@v1
-        with:
-          app-id: ${{ secrets.ELIS_APP_ID }}
-          private-key: ${{ secrets.ELIS_APP_PRIVATE_KEY }}
-
-      - name: Checkout elis-bot
-        uses: actions/checkout@v4
-        with:
-          ref: elis-bot
-          token: ${{ steps.app.outputs.token }}
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install Black
-        run: |
-          python -m pip install --upgrade pip
-          pip install black==24.8.0
-
-      - name: Run Black (format in-place)
-        run: black .
-
-      - name: Detect changes
-        id: changes
-        run: |
-          if git diff --quiet; then
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-            echo "No formatting changes detected."
-          else
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Commit and push (if changed)
-        if: ${{ steps.changes.outputs.changed == 'true' }}
-        id: commit
-        run: |
-          set -euo pipefail
-          git config user.name "ELIS Bot"
-          git config user.email "233278419+elis-bot@users.noreply.github.com"
-          git add -A
-          git commit -m "chore(format): apply Black autoformat"
-          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-          git push origin HEAD:elis-bot
-
-      - name: Show commit SHA
-        if: ${{ steps.changes.outputs.changed == 'true' }}
-        run: echo "Autoformat commit SHA: ${{ steps.commit.outputs.sha }}"
+      - name: Echo
+        run: echo "YAML OK"
