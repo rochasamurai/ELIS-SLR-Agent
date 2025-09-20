@@ -7,19 +7,19 @@
 name: ELIS - Autoformat
 
 on:
-  workflow_dispatch:  # Visible "Run workflow" button in Actions UI
+  workflow_dispatch: {}
 
 jobs:
   autoformat:
     runs-on: ubuntu-latest
     permissions:
-      contents: read  # Writes are done with the GitHub App token
+      contents: read
     defaults:
       run:
         shell: bash
 
     steps:
-      # 1) Acquire an installation token from the installed GitHub App (elis-bot-commits)
+      # 1) Mint an installation token from the installed GitHub App (elis-bot-commits)
       - name: Mint installation token (GitHub App)
         id: app
         uses: actions/create-github-app-token@v1
@@ -27,37 +27,34 @@ jobs:
           app-id: ${{ secrets.ELIS_APP_ID }}
           private-key: ${{ secrets.ELIS_APP_PRIVATE_KEY }}
 
-      # 2) Check out the automation branch where formatting is applied
+      # 2) Checkout the automation branch where formatting will be applied
       - name: Checkout branch elis-bot
         uses: actions/checkout@v4
         with:
           ref: elis-bot
           token: ${{ steps.app.outputs.token }}
 
-      # 3) Use the same Python version as CI to avoid formatter drift
+      # 3) Set up Python
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: '3.11'
 
-      # 4) Install Black (pin for reproducibility)
+      # 4) Install Black (pinned version for reproducibility)
       - name: Install Black
         run: |
-          set -euo pipefail
           python -m pip install --upgrade pip
           pip install black==24.8.0
 
       # 5) Run Black in-place across the repository
       - name: Run Black (format in-place)
         run: |
-          set -euo pipefail
           black .
 
-      # 6) Detect changes and surface a clear no-op message if none
+      # 6) Detect changes and output a clear no-op message if none
       - name: Detect changes
         id: changes
         run: |
-          set -euo pipefail
           if git diff --quiet; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "No formatting changes detected."
@@ -65,20 +62,22 @@ jobs:
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
 
-      # 7) Commit and push only when changes exist; expose the commit SHA for traceability
+      # 7) Commit and push only when changes exist, and expose the commit SHA
       - name: Commit and push (if changed)
         if: ${{ steps.changes.outputs.changed == 'true' }}
         id: commit
         run: |
-          set -euo pipefail
-          git config user.name  "ELIS Bot"
+          git config user.name "ELIS Bot"
           git config user.email "233278419+elis-bot@users.noreply.github.com"
           git add -A
           git commit -m "chore(format): apply Black autoformat"
           echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
           git push origin HEAD:elis-bot
 
-      # 8) Print the commit SHA prominently in the logs (helps reviewers)
+      # 8) Print the commit SHA in the logs for reviewers (use env to avoid template in run line)
       - name: Show commit SHA
         if: ${{ steps.changes.outputs.changed == 'true' }}
-        run: echo "Autoformat commit SHA: ${{ steps.commit.outputs.sha }}"
+        env:
+          COMMIT_SHA: ${{ steps.commit.outputs.sha }}
+        run: |
+          echo "Autoformat commit SHA: ${COMMIT_SHA}"
