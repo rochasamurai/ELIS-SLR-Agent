@@ -1,14 +1,18 @@
+# ELIS - Autoformat: runs Black on branch 'elis-bot' and commits changes via GitHub App.
+
 name: ELIS - Autoformat
+
 on:
-  workflow_dispatch:
+  workflow_dispatch: {}  # Manual trigger shown in the Actions UI
 
 jobs:
   autoformat:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: read  # Write is performed using the GitHub App token below
 
     steps:
+      # Mint installation token from the installed GitHub App (elis-bot-commits)
       - name: Mint installation token (GitHub App)
         id: app
         uses: actions/create-github-app-token@v1
@@ -16,14 +20,16 @@ jobs:
           app-id: ${{ secrets.ELIS_APP_ID }}
           private-key: ${{ secrets.ELIS_APP_PRIVATE_KEY }}
           owner: rochasamurai
-          repositories: ELIS-SLR-Agent
+          repositories: ELIS-SLR-AgenT
 
+      # Checkout target branch where formatting will be applied
       - name: Checkout elis-bot
         uses: actions/checkout@v4
         with:
           ref: elis-bot
           token: ${{ steps.app.outputs.token }}
 
+      # Use the same Python version as CI to avoid formatting drift
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -37,6 +43,7 @@ jobs:
       - name: Run Black (format in-place)
         run: black .
 
+      # Commit only if there are changes after Black
       - name: Commit changes (if any)
         id: commit
         run: |
@@ -44,7 +51,6 @@ jobs:
           git config user.email "233278419+elis-bot@users.noreply.github.com"
           if git diff --quiet; then
             echo "changed=false" >> $GITHUB_OUTPUT
-            echo "No formatting changes."
           else
             git add -A
             git commit -m "chore(format): apply Black autoformat"
