@@ -1,12 +1,11 @@
 # ============================================================
 # Workflow: ELIS - Bot Commit (direct to elis-bot via GitHub App)
 # Purpose:
-#   - Write/update a file on a working branch (default: elis-bot)
-#   - Commit & push changes
-#   - Optionally open a PR to main
+#   - Create/update a file on a working branch (default: elis-bot),
+#     commit & push, and optionally open a PR to main.
 # Notes:
-#   - Uses a GitHub App token (no PAT).
-#   - Verbose logs + defensive checks.
+#   - Uses GitHub App token (no PAT).
+#   - Verbose logs + defensive checks; Black-friendly trailing newline.
 # ============================================================
 
 name: ELIS - Bot Commit (direct to elis-bot via GitHub App)
@@ -72,17 +71,17 @@ jobs:
 
       # 3) Create/switch work branch
       - name: Create/switch working branch
+        env:
+          BASE: ${{ inputs.base_branch }}
+          WORK: ${{ inputs.work_branch }}
         run: |
           set -euo pipefail
-          base="${{ inputs.base_branch }}"
-          work="${{ inputs.work_branch }}"
-          git fetch origin "$base" --depth=1
-          if git ls-remote --exit-code --heads origin "$work" >/dev/null 2>&1; then
-            git checkout "$work"
-            # Fast-forward with main (no conflict if branch was just recreated)
-            git merge --ff-only "origin/$base" || true
+          git fetch origin "$BASE" --depth=1
+          if git ls-remote --exit-code --heads origin "$WORK" >/dev/null 2>&1; then
+            git checkout "$WORK"
+            git merge --ff-only "origin/$BASE" || true
           else
-            git checkout -b "$work" "origin/$base"
+            git checkout -b "$WORK" "origin/$BASE"
           fi
           echo "On branch: $(git rev-parse --abbrev-ref HEAD)"
 
@@ -93,11 +92,11 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p "$(dirname "$FP")"
-          # Write content verbatim
+          # Write content verbatim (no base64).
           cat > "$FP" <<'EOF'
 ${{ inputs.content_raw }}
 EOF
-          # Ensure trailing newline
+          # Ensure trailing newline (POSIX-friendly diffs)
           tail -c1 "$FP" | read -r _ || echo >> "$FP"
           # Must exist and be non-empty
           test -s "$FP" || { echo "::error ::File not written: $FP"; exit 1; }
@@ -107,11 +106,10 @@ EOF
 
       # 5) Stage, detect changes (indexed), commit & push
       - name: Commit & push (only if changed)
-        id: commit
+        id: commit_push
         env:
           WORK_BRANCH: ${{ inputs.work_branch }}
           COMMIT_MSG: ${{ inputs.commit_message }}
-          FP: ${{ inputs.file_path }}
         run: |
           set -euo pipefail
           git add -A
@@ -132,20 +130,29 @@ EOF
 
       # 6) Create/reuse PR (optional)
       - name: Open/refresh PR (work -> base)
-        if: ${{ inputs.open_pr && steps.commit.outputs.changed == 'true' }}
+        if: ${{ inputs.open_pr && steps.commit_push.outputs.changed == 'true' }}
         uses: actions/github-script@v7
+        env:
+          HEAD_BRANCH: ${{ inputs.work_branch }}
+          BASE_BRANCH: ${{ inputs.base_branch }}
+          PR_TITLE: ${{ inputs.commit_message }}
         with:
           github-token: ${{ steps.app.outputs.token }}
           script: |
             const { owner, repo } = context.repo;
-            const head = "${{ inputs.work_branch }}";
-            const base = "${{ inputs.base_branch }}";
-            const title = "${{ inputs.commit_message }}";
-            const body  = "Automated update by ELIS Bot.";
-            const existing = await github.rest.pulls.list({ owner, repo, state: "open", head: `${owner}:${head}`, base });
+            const headRef = `${owner}:${process.env.HEAD_BRANCH}`;
+            const baseRef = process.env.BASE_BRANCH;
+            const title   = process.env.PR_TITLE;
+            const body    = 'Automated update by ELIS Bot.';
+
+            const existing = await github.rest.pulls.list({
+              owner, repo, state: 'open', head: headRef, base: baseRef
+            });
             if (existing.data.length) {
               core.notice(`PR already open: #${existing.data[0].number}`);
             } else {
-              const pr = await github.rest.pulls.create({ owner, repo, head, base, title, body });
+              const pr = await github.rest.pulls.create({
+                owner, repo, head: process.env.HEAD_BRANCH, base: baseRef, title, body
+              });
               core.notice(`PR created: #${pr.data.number}`);
             }
