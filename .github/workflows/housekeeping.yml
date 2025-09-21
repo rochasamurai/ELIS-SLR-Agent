@@ -1,0 +1,172 @@
+# ============================================================
+# Workflow: ELIS - Housekeeping
+# Purpose:
+#   - Clean up old workflow runs and artifacts to keep the repo lean.
+#   - Default: delete COMPLETED runs and artifacts older than N days.
+# Triggers:
+#   - Manual (workflow_dispatch) with options.
+#   - Weekly schedule (Sunday early morning UTC) — safe window.
+# Permissions:
+#   - actions: write (required to delete runs/artifacts)
+#   - contents: read
+# Notes:
+#   - Comments in UK English. Paste this file as:
+#       .github/workflows/housekeeping.yml
+#   - Uses the built-in GITHUB_TOKEN; no extra secrets required.
+#   - Dry-run supported to preview deletions.
+# ============================================================
+
+name: ELIS - Housekeeping
+
+on:
+  # Manual trigger with inputs
+  workflow_dispatch:
+    inputs:
+      retention_days:
+        description: "Delete items older than this many days"
+        type: number
+        default: 14
+        required: true
+      delete_runs:
+        description: "Delete COMPLETED workflow runs older than retention_days"
+        type: boolean
+        default: true
+        required: true
+      delete_artifacts:
+        description: "Delete artifacts older than retention_days"
+        type: boolean
+        default: true
+        required: true
+      dry_run:
+        description: "Preview only (do not delete)"
+        type: boolean
+        default: true
+        required: true
+
+  # Weekly, Sunday 06:00 UTC (early morning UK/Europe)
+  schedule:
+    - cron: "0 6 * * 0"
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  housekeeping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve inputs / defaults
+        id: cfg
+        env:
+          RET_DAYS_IN: ${{ inputs.retention_days }}
+          DEL_RUNS_IN: ${{ inputs.delete_runs }}
+          DEL_ARTS_IN: ${{ inputs.delete_artifacts }}
+          DRY_RUN_IN:  ${{ inputs.dry_run }}
+        run: |
+          set -euo pipefail
+          # Fallbacks when scheduled (no workflow_dispatch inputs)
+          RETENTION_DAYS="${RET_DAYS_IN:-14}"
+          DELETE_RUNS="${DEL_RUNS_IN:-true}"
+          DELETE_ARTIFACTS="${DEL_ARTS_IN:-true}"
+          DRY_RUN="${DRY_RUN_IN:-false}"
+
+          echo "retention_days=${RETENTION_DAYS}" >> "$GITHUB_OUTPUT"
+          echo "delete_runs=${DELETE_RUNS}"       >> "$GITHUB_OUTPUT"
+          echo "delete_artifacts=${DELETE_ARTIFACTS}" >> "$GITHUB_OUTPUT"
+          echo "dry_run=${DRY_RUN}"               >> "$GITHUB_OUTPUT"
+
+          echo "Configuration:"
+          echo "  retention_days = ${RETENTION_DAYS}"
+          echo "  delete_runs    = ${DELETE_RUNS}"
+          echo "  delete_artifacts = ${DELETE_ARTIFACTS}"
+          echo "  dry_run        = ${DRY_RUN}"
+
+      - name: Housekeep workflow RUNS
+        if: ${{ steps.cfg.outputs.delete_runs == 'true' }}
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const retentionDays = parseInt(core.getInput('retention_days', { required: true }));
+            const dryRun        = core.getInput('dry_run', { required: true }) === 'true';
+            const cutoffMs      = Date.now() - retentionDays*24*60*60*1000;
+
+            core.info(`Deleting COMPLETED workflow runs older than ${retentionDays} days (dry_run=${dryRun})`);
+
+            const { owner, repo } = context.repo;
+            let deleted = 0, scanned = 0, page = 1;
+
+            while (true) {
+              const { data } = await github.rest.actions.listWorkflowRunsForRepo({
+                owner, repo, per_page: 100, page, status: 'completed'  // only COMPLETED
+              });
+              if (!data.workflow_runs?.length) break;
+
+              for (const run of data.workflow_runs) {
+                scanned++;
+                const updatedAt = new Date(run.updated_at).getTime();
+                if (updatedAt < cutoffMs) {
+                  core.info(`- OLD run #${run.id} (${run.name}) updated_at=${run.updated_at}`);
+                  if (!dryRun) {
+                    await github.rest.actions.deleteWorkflowRun({ owner, repo, run_id: run.id });
+                  }
+                  deleted++;
+                }
+              }
+              page++;
+            }
+
+            core.notice(`Runs scanned: ${scanned} | Runs deleted: ${deleted} | dry_run=${dryRun}`);
+
+        env:
+          retention_days: ${{ steps.cfg.outputs.retention_days }}
+          dry_run:        ${{ steps.cfg.outputs.dry_run }}
+
+      - name: Housekeep ARTIFACTS
+        if: ${{ steps.cfg.outputs.delete_artifacts == 'true' }}
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const retentionDays = parseInt(core.getInput('retention_days', { required: true }));
+            const dryRun        = core.getInput('dry_run', { required: true }) === 'true';
+            const cutoffMs      = Date.now() - retentionDays*24*60*60*1000;
+
+            core.info(`Deleting artifacts older than ${retentionDays} days (dry_run=${dryRun})`);
+
+            const { owner, repo } = context.repo;
+            let deleted = 0, scanned = 0, page = 1;
+
+            while (true) {
+              const { data } = await github.rest.actions.listArtifactsForRepo({
+                owner, repo, per_page: 100, page
+              });
+              if (!data.artifacts?.length) break;
+
+              for (const art of data.artifacts) {
+                scanned++;
+                const updatedAt = new Date(art.updated_at).getTime();
+                if (updatedAt < cutoffMs) {
+                  core.info(`- OLD artifact #${art.id} name=${art.name} updated_at=${art.updated_at}`);
+                  if (!dryRun) {
+                    await github.rest.actions.deleteArtifact({ owner, repo, artifact_id: art.id });
+                  }
+                  deleted++;
+                }
+              }
+              page++;
+            }
+
+            core.notice(`Artifacts scanned: ${scanned} | Artifacts deleted: ${deleted} | dry_run=${dryRun}`);
+
+        env:
+          retention_days: ${{ steps.cfg.outputs.retention_days }}
+          dry_run:        ${{ steps.cfg.outputs.dry_run }}
+
+      - name: Summary
+        run: |
+          echo "Housekeeping completed."
+          echo "Retention: ${{ steps.cfg.outputs.retention_days }} days"
+          echo "Deleted runs? ${{ steps.cfg.outputs.delete_runs }}"
+          echo "Deleted artifacts? ${{ steps.cfg.outputs.delete_artifacts }}"
+          echo "Dry run: ${{ steps.cfg.outputs.dry_run }}"
