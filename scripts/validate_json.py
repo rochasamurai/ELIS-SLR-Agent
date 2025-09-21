@@ -64,7 +64,9 @@ def scan() -> List[str]:
     # Required directories
     for d in (DOCS_DIR, SCHEMAS_DIR, DATA_DIR, REPORTS_DIR):
         if not d.exists():
-            findings.append(f"[BLOCKER] Missing required directory: {d.relative_to(ROOT)}")
+            findings.append(
+                f"[BLOCKER] Missing required directory: {d.relative_to(ROOT)}"
+            )
 
     # Required root-level files
     if not (ROOT / "README.md").exists():
@@ -74,7 +76,9 @@ def scan() -> List[str]:
 
     # Canonical XLSX
     if not CANON_XLSX.exists():
-        findings.append(f"[BLOCKER] Canonical XLSX not found: {CANON_XLSX.relative_to(ROOT)}")
+        findings.append(
+            f"[BLOCKER] Canonical XLSX not found: {CANON_XLSX.relative_to(ROOT)}"
+        )
 
     # Obsolete files to be removed
     for junk in (DATA_DIR / "desktop.ini", SCHEMAS_DIR / "desktop.ini"):
