@@ -15,6 +15,7 @@ python scripts/validate_json.py
 """
 
 from __future__ import annotations
+
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -29,7 +30,7 @@ REPORTS_DIR = ROOT / "validation_reports"
 CANON_XLSX = DOCS_DIR / "ELIS_Data_Sheets_2025-08-19_v1.0.xlsx"
 
 
-# ---------- Time helpers (rewritten to def to satisfy Ruff E731) ----------
+# ---------- Time helpers (def instead of lambda: Ruff E731 compliant) ----------
 def utc_now() -> datetime:
     """Return current UTC datetime (timezone-aware)."""
     return datetime.now(timezone.utc)
@@ -137,11 +138,10 @@ def write_report(findings: List[str]) -> Path:
     ]
 
     out.write_text("".join(lines), encoding="utf-8")
-    print(f"Validation report written to {out}")  # Log for Actions
+    print(f"Validation report written to {out}")
     return out
 
 
-# ---------- Main ----------
 def main() -> int:
     """
     Execute the checks and generate the report.
