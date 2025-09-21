@@ -1,48 +1,99 @@
-# ELIS - Export Docx: converts a Markdown file to .docx and publishes it as a workflow artifact.
+# ELIS - Export Docx
+# Purpose:
+#   Convert a Markdown file to .docx using Pandoc and commit the output
+#   (default path under docs/) to the 'elis-bot' branch via the GitHub App,
+#   optionally opening a PR.
+
 name: ELIS - Export Docx
 
 on:
   workflow_dispatch:
     inputs:
       md_path:
-        description: "Path to the Markdown file (.md)"
+        description: "Source Markdown path (e.g., docs/Technical Development Plan – ELIS SLR Agent 2025-09-20.md)"
+        type: string
         required: true
-        default: "docs/Technical_Development_Plan_ELIS_SLR_Agent.md"
-      docx_name:
-        description: "Output .docx file name (without extension)"
+      docx_path:
+        description: "Destination .docx path (e.g., docs/Technical Development Plan – ELIS SLR Agent.docx)"
+        type: string
+        required: true
+      target_branch:
+        description: "Branch to commit the .docx"
+        type: string
         required: false
-        default: "ELIS_Technical_Development_Plan"
+        default: "elis-bot"
+      open_pr:
+        description: "Open PR to main after committing?"
+        type: boolean
+        required: false
+        default: true
 
 jobs:
-  export-docx:
+  export:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    defaults:
+      run:
+        shell: bash
     steps:
-      - name: Checkout repository
+      - name: Mint installation token (GitHub App)
+        id: app
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.ELIS_APP_ID }}
+          private-key: ${{ secrets.ELIS_APP_PRIVATE_KEY }}
+
+      - name: Checkout target branch
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.target_branch }}
+          token: ${{ steps.app.outputs.token }}
 
-      - name: Install pandoc
-        # Using apt to keep the workflow lightweight and reproducible.
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y pandoc
+      - name: Install Pandoc
+        run: sudo apt-get update && sudo apt-get install -y pandoc
 
-      - name: Convert Markdown to DOCX
-        # Uses GitHub Flavoured Markdown as input for better GitHub compatibility.
+      - name: Convert Markdown to Docx
         run: |
           set -euo pipefail
-          MD_PATH="${{ inputs.md_path }}"
-          OUT_BASENAME="${{ inputs.docx_name }}"
-          mkdir -p out
-          pandoc "$MD_PATH" \
-            --from=gfm \
-            --to=docx \
-            --output "out/${OUT_BASENAME}.docx" \
-            --metadata=title:"${OUT_BASENAME//_/ }" \
-            --standalone
+          src="${{ inputs.md_path }}"
+          dst="${{ inputs.docx_path }}"
+          mkdir -p "$(dirname "$dst")"
+          pandoc "$src" -o "$dst"
+          test -s "$dst" || { echo "Docx not created"; exit 1; }
 
-      - name: Upload DOCX artifact
-        uses: actions/upload-artifact@v4
+      - name: Commit and push .docx
+        run: |
+          git config user.name  "ELIS Bot"
+          git config user.email "233278419+elis-bot@users.noreply.github.com"
+          git add "${{ inputs.docx_path }}"
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            git commit -m "docs(export): update ${{ inputs.docx_path }} via Pandoc"
+            git push origin "HEAD:${{ inputs.target_branch }}"
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create Pull Request (optional)
+        if: ${{ inputs.open_pr && steps.commit_and_push.outputs.changed != 'false' }}
+        uses: actions/github-script@v7
         with:
-          name: ${{ inputs.docx_name }}.docx
-          path: out/${{ inputs.docx_name }}.docx
-          if-no-files-found: error
+          github-token: ${{ steps.app.outputs.token }}
+          script: |
+            const { owner, repo } = context.repo;
+            const head = '${{ inputs.target_branch }}';
+            const base = 'main';
+            const title = 'docs(export): update DOCX via Pandoc';
+            const body  = 'Automated export of Markdown to DOCX by ELIS Bot.';
+            const existing = await github.rest.pulls.list({
+              owner, repo, state: 'open', head: `${owner}:${head}`, base
+            });
+            if (existing.data.length === 0) {
+              const pr = await github.rest.pulls.create({ owner, repo, head, base, title, body });
+              core.notice(`PR created: #${pr.data.number}`);
+            } else {
+              core.notice(`PR already open: #${existing.data[0].number}`);
+            }
