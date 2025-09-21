@@ -1,14 +1,11 @@
 # ============================================================
-# Workflow: ELIS - Bot Commit (direct to elis-bot via GitHub App)
-# Purpose:
-#   - Create/update a file in a working branch (default: elis-bot),
-#     commit & push, e opcionalmente abrir PR para main.
-# Notes:
-#   - Usa GitHub App (ELIS) via actions/create-github-app-token.
-#   - Logs verbosos e checagens defensivas.
+# ELIS - Bot Commit (direct to elis-bot via GitHub App)
+# - Cria/atualiza arquivo em uma branch de trabalho (elis-bot),
+#   comita e envia, e (opcional) abre PR para main.
+# - Usa GitHub App (token via create-github-app-token).
 # ============================================================
 
-name: ELIS - Bot Commit (direct to elis-bot via GitHub App)
+name: "ELIS - Bot Commit (direct to elis-bot via GitHub App)"
 
 on:
   workflow_dispatch:
@@ -53,8 +50,8 @@ jobs:
         shell: bash
 
     steps:
-      # 1) Token do GitHub App
-      - name: Mint installation token (GitHub App)
+      # 1) Obter token do GitHub App
+      - name: "Mint installation token (GitHub App)"
         id: app
         uses: actions/create-github-app-token@v1
         with:
@@ -62,7 +59,7 @@ jobs:
           private-key: ${{ secrets.ELIS_APP_PRIVATE_KEY }}
 
       # 2) Checkout da base
-      - name: Checkout base branch
+      - name: "Checkout base branch"
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.base_branch }}
@@ -70,7 +67,7 @@ jobs:
           fetch-depth: 0
 
       # 3) Criar/trocar para a working branch
-      - name: Create/switch working branch
+      - name: "Create/switch working branch"
         env:
           BASE: ${{ inputs.base_branch }}
           WORK: ${{ inputs.work_branch }}
@@ -86,7 +83,7 @@ jobs:
           echo "On branch: $(git rev-parse --abbrev-ref HEAD)"
 
       # 4) Escrever conteúdo do arquivo
-      - name: Write file content
+      - name: "Write file content"
         env:
           FP: ${{ inputs.file_path }}
           CONTENT: ${{ inputs.content_raw }}
@@ -100,7 +97,7 @@ jobs:
           git status --porcelain
 
       # 5) Commit & push apenas se houver mudanças
-      - name: Commit & push (only if changed)
+      - name: "Commit & push (only if changed)"
         id: commit_push
         env:
           WORK_BRANCH: ${{ inputs.work_branch }}
@@ -124,7 +121,7 @@ jobs:
           echo "Pushed commit: $(git rev-parse --short HEAD)"
 
       # 6) Abrir/reativar PR (se houver mudanças)
-      - name: Open/refresh PR (work -> base)
+      - name: "Open/refresh PR (work -> base)"
         if: ${{ inputs.open_pr && steps.commit_push.outputs.changed == 'true' }}
         uses: actions/github-script@v7
         env:
@@ -139,7 +136,6 @@ jobs:
             const base = process.env.BASE_BRANCH;
             const title = process.env.PR_TITLE;
             const body  = 'Automated update by ELIS Bot.';
-            // Se já existe PR aberto para este head->base, reaproveita
             const existing = await github.rest.pulls.list({
               owner, repo, state: 'open', head: `${owner}:${head}`, base
             });
