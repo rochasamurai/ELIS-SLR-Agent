@@ -28,19 +28,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List
 
-
-# ---------- Paths ----------------------------------------------------------------
-
-
 ROOT: Path = Path(__file__).resolve().parents[1]
 DATA_DIR: Path = ROOT / "json_jsonl"
 
 A_PATH: Path = DATA_DIR / "ELIS_Appendix_A_Search_rows.json"
 B_PATH: Path = DATA_DIR / "ELIS_Appendix_B_Screening_rows.json"
 C_PATH: Path = DATA_DIR / "ELIS_Appendix_C_DataExtraction_rows.json"
-
-
-# ---------- Helpers --------------------------------------------------------------
 
 
 def now_iso_z() -> str:
@@ -56,9 +49,6 @@ def ensure_dirs() -> None:
 def write_json_array(path: Path, rows: List[Dict]) -> None:
     """Serialise a list of dict rows to JSON with a trailing newline."""
     path.write_text(json.dumps(rows, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-
-
-# ---------- Toy content ----------------------------------------------------------
 
 
 def build_row(stage: str, note: str) -> Dict:
@@ -107,14 +97,9 @@ def make_toy_artefacts() -> None:
     write_json_array(C_PATH, c_rows)
 
 
-# ---------- CLI ------------------------------------------------------------------
-
-
 def main() -> int:
     """Entry point used by CI and manual runs."""
     make_toy_artefacts()
-
-    # Concise summary printed for CI logs.
     print("Toy run completed:")
     print(f"  - wrote: {A_PATH.relative_to(ROOT)}")
     print(f"  - wrote: {B_PATH.relative_to(ROOT)}")
