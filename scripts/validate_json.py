@@ -28,11 +28,27 @@ DATA_DIR = ROOT / "json_jsonl"
 REPORTS_DIR = ROOT / "validation_reports"
 CANON_XLSX = DOCS_DIR / "ELIS_Data_Sheets_2025-08-19_v1.0.xlsx"
 
-# ---------- Time helpers ----------
-utc_now = lambda: datetime.now(timezone.utc)
-ts_isoz = lambda: utc_now().strftime("%Y-%m-%dT%H:%M:%SZ")     # e.g. 2025-09-16T15:42:10Z
-ts_date = lambda: utc_now().strftime("%Y-%m-%d")               # e.g. 2025-09-16
-ts_full = lambda: utc_now().strftime("%Y-%m-%d_%H%M%S")        # e.g. 2025-09-16_154210
+
+# ---------- Time helpers (rewritten to def to satisfy Ruff E731) ----------
+def utc_now() -> datetime:
+    """Return current UTC datetime (timezone-aware)."""
+    return datetime.now(timezone.utc)
+
+
+def ts_isoz() -> str:
+    """Return current UTC time as ISO 8601 string with Z suffix."""
+    return utc_now().strftime("%Y-%m-%dT%H:%M:%SZ")  # e.g. 2025-09-16T15:42:10Z
+
+
+def ts_date() -> str:
+    """Return current UTC date as YYYY-MM-DD."""
+    return utc_now().strftime("%Y-%m-%d")  # e.g. 2025-09-16
+
+
+def ts_full() -> str:
+    """Return compact UTC timestamp suitable for filenames."""
+    return utc_now().strftime("%Y-%m-%d_%H%M%S")  # e.g. 2025-09-16_154210
+
 
 # ---------- Validation checks ----------
 def scan() -> List[str]:
@@ -65,6 +81,7 @@ def scan() -> List[str]:
             findings.append(f"[MINOR] Obsolete file present: {junk.relative_to(ROOT)}")
 
     return findings
+
 
 # ---------- Report writer ----------
 def write_report(findings: List[str]) -> Path:
@@ -123,6 +140,7 @@ def write_report(findings: List[str]) -> Path:
     print(f"Validation report written to {out}")  # Log for Actions
     return out
 
+
 # ---------- Main ----------
 def main() -> int:
     """
@@ -132,6 +150,7 @@ def main() -> int:
     findings = scan()
     write_report(findings)
     return 1 if any("BLOCKER" in f for f in findings) else 0
+
 
 if __name__ == "__main__":
     sys.exit(main())
