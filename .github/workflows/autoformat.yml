@@ -1,3 +1,5 @@
+name: ELIS - Autoformat
+
 # ============================================================
 # ELIS - Autoformat
 # Purpose:
@@ -7,8 +9,6 @@
 #   - Uses the ELIS GitHub App token (installation).
 #   - Syncs elis-bot with main (fast-forward) before formatting.
 # ============================================================
-
-name: ELIS - Autoformat
 
 on:
   workflow_dispatch: {}
