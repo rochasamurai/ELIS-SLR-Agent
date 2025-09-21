@@ -1,7 +1,13 @@
 # ELIS - Bot Commit (direct to elis-bot via GitHub App)
-# Commits directly to the "elis-bot" branch using a repo-scoped installation token.
-# The token is minted by the GitHub App using APP_ID + PRIVATE_KEY. No installation-id is needed;
-# the action auto-detects the installation for the current repository.
+# Purpose:
+#   Write/replace a single file with raw content, commit to the chosen branch,
+#   and optionally open a PR to main.
+# Inputs:
+#   - file_path:     Repository-relative path to write.
+#   - content_raw:   Raw file content (multi-line supported).
+#   - commit_message:Concise commit message.
+#   - target_branch: Branch to commit to (default: elis-bot).
+#   - open_pr:       true/false to open PR elis-bot -> main (default: false).
 
 name: ELIS - Bot Commit (direct to elis-bot via GitHub App)
 
@@ -9,82 +15,94 @@ on:
   workflow_dispatch:
     inputs:
       file_path:
-        description: "Path to create/update (e.g., scripts/validate_json.py)"
+        description: "Repository path of the file to write"
+        type: string
         required: true
       content_raw:
-        description: "Raw file content (paste the full code here)"
+        description: "Raw file content (multi-line allowed)"
+        type: string
         required: true
       commit_message:
-        description: "Concise commit message (e.g., feat: add validator)"
+        description: "Concise commit message"
+        type: string
         required: true
-      base_branch:
-        description: "Base branch to initialise elis-bot from (blank = repository default)"
+      target_branch:
+        description: "Branch to commit to"
+        type: string
         required: false
-        default: ""
+        default: "elis-bot"
+      open_pr:
+        description: "Open PR to main after commit?"
+        type: boolean
+        required: false
+        default: false
 
 jobs:
-  commit-direct:
+  commit-and-pr:
     runs-on: ubuntu-latest
     permissions:
-      contents: read  # writes are performed via the App token
-
+      contents: write
+      pull-requests: write
+    defaults:
+      run:
+        shell: bash
     steps:
       - name: Mint installation token (GitHub App)
-        id: app-token
+        id: app
         uses: actions/create-github-app-token@v1
         with:
           app-id: ${{ secrets.ELIS_APP_ID }}
           private-key: ${{ secrets.ELIS_APP_PRIVATE_KEY }}
 
-      - name: Commit directly to elis-bot (github-script)
+      - name: Checkout target branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.target_branch }}
+          token: ${{ steps.app.outputs.token }}
+
+      - name: Write file content
+        run: |
+          set -euo pipefail
+          fp="${{ inputs.file_path }}"
+          mkdir -p "$(dirname "$fp")"
+          cat > "$fp" <<'EOF'
+${{ inputs.content_raw }}
+EOF
+          # Ensure trailing newline for POSIX-friendly tools.
+          tail -c1 "$fp" | read -r _ || echo >> "$fp"
+          git status --porcelain
+
+      - name: Commit changes
+        run: |
+          git config user.name  "ELIS Bot"
+          git config user.email "233278419+elis-bot@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            git commit -m "${{ inputs.commit_message }}"
+            git push origin "HEAD:${{ inputs.target_branch }}"
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create Pull Request (optional)
+        if: ${{ inputs.open_pr && steps.commit-changes.outputs.changed != 'false' }}
         uses: actions/github-script@v7
         with:
-          github-token: ${{ steps.app-token.outputs.token }}
+          github-token: ${{ steps.app.outputs.token }}
           script: |
-            const inPath  = ( ${{ toJson(inputs.file_path) }}      || "" ).trim();
-            const inRaw   =   ${{ toJson(inputs.content_raw) }};
-            const inMsg   = ( ${{ toJson(inputs.commit_message) }} || "" ).trim();
-            const inBase  = ( ${{ toJson(inputs.base_branch) }}    || "" ).trim();
-            if (!inPath)  { core.setFailed("file_path is empty"); return; }
-            if (!inRaw)   { core.setFailed("content_raw is empty"); return; }
-            if (!inMsg)   { core.setFailed("commit_message is empty"); return; }
-
-            const filePath = inPath.replace(/^file_path:\s*/i, "").replace(/\/+/g, "/").replace(/^\/|\/$/g, "");
             const { owner, repo } = context.repo;
-
-            // Resolve default base branch when blank
-            let baseBranch = inBase;
-            if (!baseBranch) {
-              const { data: repoInfo } = await github.rest.repos.get({ owner, repo });
-              baseBranch = repoInfo.default_branch || "main";
-            }
-            core.info(`Base branch: ${baseBranch}`);
-
-            // Ensure integration branch exists
-            const integBranch = "elis-bot";
-            try {
-              await github.rest.git.getRef({ owner, repo, ref: `heads/${integBranch}` });
-              core.info(`Using existing branch '${integBranch}'.`);
-            } catch (e) {
-              if (e.status !== 404) throw e;
-              const { data: baseRef } = await github.rest.git.getRef({ owner, repo, ref: `heads/${baseBranch}` });
-              await github.rest.git.createRef({ owner, repo, ref: `refs/heads/${integBranch}`, sha: baseRef.object.sha });
-              core.info(`Created branch '${integBranch}' from '${baseBranch}'.`);
-            }
-
-            // Upsert file on 'elis-bot'
-            let currentSha;
-            try {
-              const { data: existing } = await github.rest.repos.getContent({ owner, repo, path: filePath, ref: integBranch });
-              if (!Array.isArray(existing)) currentSha = existing.sha;
-            } catch (e) { if (e.status !== 404) throw e; }
-
-            await github.rest.repos.createOrUpdateFileContents({
-              owner, repo, path: filePath, branch: integBranch,
-              message: inMsg,
-              content: Buffer.from(inRaw, "utf8").toString("base64"),
-              sha: currentSha,
-              committer: { name: "ELIS Bot", email: "233278419+elis-bot@users.noreply.github.com" },
-              author:    { name: "ELIS Bot", email: "233278419+elis-bot@users.noreply.github.com" }
+            const head = '${{ inputs.target_branch }}';
+            const base = 'main';
+            const title = '${{ inputs.commit_message }}';
+            const body  = 'Automated update by ELIS Bot.';
+            const existing = await github.rest.pulls.list({
+              owner, repo, state: 'open', head: `${owner}:${head}`, base
             });
-            core.notice(`Committed to '${integBranch}': ${filePath}`);
+            if (existing.data.length === 0) {
+              const pr = await github.rest.pulls.create({ owner, repo, head, base, title, body });
+              core.notice(`PR created: #${pr.data.number}`);
+            } else {
+              core.notice(`PR already open: #${existing.data[0].number}`);
+            }
