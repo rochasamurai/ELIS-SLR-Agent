@@ -1,3 +1,5 @@
+name: ELIS - Autoformat
+
 # ELIS - Autoformat
 # Purpose:
 #   Manually run Black on branch "elis-bot". If formatting changes occur,
@@ -6,8 +8,6 @@
 #   - Uses the installed GitHub App (elis-bot-commits) to mint a fine-grained token.
 #   - Logs show an explicit no-op message when nothing changes and print the
 #     commit SHA when a commit is created.
-
-name: ELIS - Autoformat
 
 on:
   workflow_dispatch: {}
