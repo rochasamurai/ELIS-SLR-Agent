@@ -1,13 +1,16 @@
 # ============================================================
 # Workflow: ELIS - Validate
 # Purpose:
-#   - Run the validation script (validate_json.py).
-#   - Ensure a Markdown report always exists in validation_reports/.
+#   - Run the validation script (scripts/validate_json.py).
+#   - Ensure a Markdown report exists in validation_reports/.
 #   - Upload the report as an artifact.
 #   - Open a Pull Request with the report.
-#   - Try to auto-merge the PR via REST API (squash); if review is required,
-#     leave the PR open and request review automatically.
-#   - Verify that the report actually landed on main (only if merge succeeded).
+#   - Attempt auto-merge (squash) via REST API; if review is required,
+#     leave the PR open and auto-request review.
+#   - Verify that the report actually landed on main (only if merged).
+# Notes:
+#   - Comments in UK English. Ready to paste into .github/workflows/.
+#   - Uses only the built-in GITHUB_TOKEN (no extra secrets).
 # ============================================================
 
 name: ELIS - Validate
@@ -16,78 +19,91 @@ name: ELIS - Validate
 # Triggers
 # ------------------------------------------------------------
 on:
-  push:                         # When a push occurs on main
-    branches: [main]
-    paths:                      # Only if critical files are modified
+  push:                         # Run on pushes to main that affect key paths
+    branches: [ main ]
+    paths:
       - 'scripts/validate_json.py'
       - '.github/workflows/elis-validate.yml'
       - 'docs/**'
       - 'schemas/**'
       - 'json_jsonl/**'
-  workflow_dispatch:             # Allows manual execution via GitHub UI
+  workflow_dispatch: {}         # Allow manual execution from GitHub UI
 
 # ------------------------------------------------------------
-# Permissions required
+# Permissions (workflow-level)
 # ------------------------------------------------------------
 permissions:
-  contents: write       # Needed to commit/merge reports
-  pull-requests: write  # Needed to open/merge PRs
+  contents: write       # Needed to push/merge changes via PR
+  pull-requests: write  # Needed to create/request-review/merge PRs
 
 jobs:
   validate:
-    # Avoid duplicate runs when triggered by GitHub bot itself
+    # Avoid self-trigger loops when the workflow creates commits as github-actions[bot]
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
 
-    # Ensure concurrency: only one workflow of this type runs at a time
+    # Only one validation run at a time (new run cancels the previous one)
     concurrency:
       group: elis-validate
       cancel-in-progress: true
 
+    # Reinforce permissions at job level (defensive; mirrors workflow-level)
+    permissions:
+      contents: write
+      pull-requests: write
+
     steps:
       # --------------------------------------------------------
-      # Checkout repository
+      # Checkout repository (full history required for PR ops)
       # --------------------------------------------------------
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # Full history is required for commits
+          fetch-depth: 0
 
       # --------------------------------------------------------
       # Setup Python 3.11
       # --------------------------------------------------------
-      - uses: actions/setup-python@v5
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
       # --------------------------------------------------------
-      # Install dependencies
+      # Install dependencies (tolerant if requirements.txt absent)
       # --------------------------------------------------------
-      - name: Install dependencies
-        run: python -m pip install --upgrade pip && pip install -r requirements.txt
+      - name: Install dependencies (tolerant)
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          else
+            echo "No requirements.txt; continuing."
+          fi
 
       # --------------------------------------------------------
-      # Run validator
-      # Will not fail the workflow on warnings (exit code tolerated)
+      # Run validator (do not fail the workflow on non-zero exit)
       # --------------------------------------------------------
       - name: Run validator (always continue)
-        run: python scripts/validate_json.py || echo "::warning ::validator returned non-zero"
+        run: |
+          python scripts/validate_json.py || echo "::warning ::validator returned non-zero"
 
       # --------------------------------------------------------
-      # Ensure that a report exists (.md)
-      # If missing, create a fallback report
+      # Ensure at least one Markdown report exists; create fallback if missing
       # --------------------------------------------------------
       - name: Ensure report exists (or create fallback)
         run: |
+          set -euo pipefail
           mkdir -p validation_reports
           if ! ls validation_reports/*.md 1>/dev/null 2>&1; then
             ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-            fn="validation_reports/$(date +%Y-%m-%d_%H%M%S)_validation_report.md"
+            fn="validation_reports/$(date -u +%Y-%m-%d_%H%M%S)_validation_report.md"
             printf "# 📑 ELIS Validation Report\n**Generated:** %s  \n**Note:** fallback report.\n" "$ts" > "$fn"
           fi
           echo "==> validation_reports content:"; ls -la validation_reports
 
       # --------------------------------------------------------
-      # Upload report as artifact
+      # Upload report(s) as a workflow artifact (for easy download)
       # --------------------------------------------------------
       - name: Upload report artifact
         uses: actions/upload-artifact@v4
@@ -97,7 +113,7 @@ jobs:
           if-no-files-found: error
 
       # --------------------------------------------------------
-      # Create a Pull Request with the report
+      # Create a PR with the report (branch auto-created; auto-deleted on merge)
       # --------------------------------------------------------
       - name: Create PR with report
         id: cpr
@@ -111,7 +127,7 @@ jobs:
           delete-branch: true
 
       # --------------------------------------------------------
-      # Show PR outputs (debug info)
+      # Show create-pull-request outputs (debug visibility)
       # --------------------------------------------------------
       - name: Show PR outputs
         run: |
@@ -120,7 +136,7 @@ jobs:
           echo "Changes? : ${{ steps.cpr.outputs.pull-request-operation }}"  # created/updated/closed/none
 
       # --------------------------------------------------------
-      # Request review automatically from repo owner
+      # Request review automatically from repository owner
       # --------------------------------------------------------
       - name: Request review on PR
         if: steps.cpr.outputs.pull-request-number != ''
@@ -137,8 +153,8 @@ jobs:
             -d "{\"reviewers\":[\"${OWNER}\"]}" || true
 
       # --------------------------------------------------------
-      # Try to merge PR automatically
-      # If review is required, do NOT fail; leave PR open
+      # Try to auto-merge the PR (squash). If approval is required,
+      # do not fail the run; leave the PR open and exit gracefully.
       # --------------------------------------------------------
       - name: Merge PR via REST API (squash; tolerate review requirement)
         id: merge
@@ -167,8 +183,7 @@ jobs:
           fi
 
       # --------------------------------------------------------
-      # Verify that the report actually landed on main
-      # Run only if the PR was merged
+      # Verify that the report actually landed on main (only if merged)
       # --------------------------------------------------------
       - name: Verify report landed on main
         if: steps.merge.outputs.merged == 'true'
