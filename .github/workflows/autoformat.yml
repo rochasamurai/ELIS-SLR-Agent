@@ -3,7 +3,7 @@
 #   Manually run Black on branch "elis-bot". If formatting changes occur,
 #   push the commit and open a Pull Request from "elis-bot" -> "main".
 # Notes:
-#   - Uses the installed GitHub App (elis-bot-commits) to obtain a token.
+#   - Uses the installed GitHub App (elis-bot-commits) to mint a fine-grained token.
 #   - Logs show an explicit no-op message when nothing changes and print the
 #     commit SHA when a commit is created.
 
@@ -16,7 +16,7 @@ jobs:
   autoformat:
     runs-on: ubuntu-latest
     permissions:
-      contents: read    # writes performed with the GitHub App token
+      contents: write          # writes performed with the GitHub App token
       pull-requests: write
     defaults:
       run:
@@ -52,8 +52,7 @@ jobs:
 
       # 5) Run Black in-place across the repo
       - name: Run Black (format in-place)
-        run: |
-          black .
+        run: black .
 
       # 6) Detect whether Black changed anything
       - name: Detect changes
@@ -82,8 +81,7 @@ jobs:
         if: ${{ steps.changes.outputs.changed == 'true' }}
         env:
           COMMIT_SHA: ${{ steps.commit.outputs.sha }}
-        run: |
-          echo "Autoformat commit SHA: ${COMMIT_SHA}"
+        run: echo "Autoformat commit SHA: ${COMMIT_SHA}"
 
       # 8) Create or reuse a PR from elis-bot -> main (only if there were changes)
       - name: Create Pull Request (elis-bot -> main)
@@ -97,22 +95,15 @@ jobs:
             const base = 'main';
             const title = 'chore(format): apply Black autoformat';
             const body  = 'Automated formatting by ELIS Bot (Black).';
-
-            // If an identical PR is already open, do not create another.
             const existing = await github.rest.pulls.list({
               owner, repo, state: 'open', head: `${owner}:${head}`, base
             });
-
             if (existing.data.length > 0) {
-              const pr = existing.data[0];
-              core.notice(`PR already open: #${pr.number}`);
+              core.notice(`PR already open: #${existing.data[0].number}`);
             } else {
               const pr = await github.rest.pulls.create({ owner, repo, head, base, title, body });
               core.notice(`PR created: #${pr.data.number}`);
-
-              // Optional: label the PR for clarity
               await github.rest.issues.addLabels({
-                owner, repo, issue_number: pr.data.number,
-                labels: ['bot', 'format']
+                owner, repo, issue_number: pr.data.number, labels: ['bot','format']
               });
             }
