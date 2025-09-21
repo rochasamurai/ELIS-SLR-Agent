@@ -1,21 +1,20 @@
-name: ELIS - Autoformat
-
 # ============================================================
 # ELIS - Autoformat
 # Purpose:
-#   - Run Black on the working branch (default: elis-bot).
-#   - If formatting changes occur, commit & push and open a PR to main.
+#   - Run Black on branch "elis-bot".
+#   - If there are changes, commit & push to "elis-bot".
 # Notes:
-#   - Uses the ELIS GitHub App token (installation).
-#   - Syncs elis-bot with main (fast-forward) before formatting.
+#   - Uses GitHub App token (no PAT).
+#   - Intentionally no PR creation here (keep it stable).
 # ============================================================
+
+name: ELIS - Autoformat
 
 on:
   workflow_dispatch: {}
 
 permissions:
   contents: write
-  pull-requests: write
 
 jobs:
   autoformat:
@@ -25,7 +24,7 @@ jobs:
         shell: bash
 
     steps:
-      # 1) GitHub App token
+      # 1) Mint an installation token for the ELIS GitHub App
       - name: Mint installation token (GitHub App)
         id: app
         uses: actions/create-github-app-token@v1
@@ -33,95 +32,53 @@ jobs:
           app-id: ${{ secrets.ELIS_APP_ID }}
           private-key: ${{ secrets.ELIS_APP_PRIVATE_KEY }}
 
-      # 2) Checkout elis-bot
-      - name: Checkout branch elis-bot
+      # 2) Check out the working branch "elis-bot"
+      - name: Checkout elis-bot
         uses: actions/checkout@v4
         with:
           ref: elis-bot
           token: ${{ steps.app.outputs.token }}
           fetch-depth: 0
 
-      # 3) Ensure elis-bot is up-to-date with main (fast-forward if possible)
-      - name: Fast-forward elis-bot from main (if possible)
+      # 3) Fast-forward elis-bot from main (if possible)
+      - name: Sync with main (fast-forward if possible)
         run: |
           set -euo pipefail
           git fetch origin main --depth=1
-          # Try to fast-forward; if not possible, just continue (we won't fail here)
-          if git merge-base --is-ancestor HEAD origin/main; then
-            echo "elis-bot is already up-to-date with main."
-          else
-            git merge --ff-only origin/main || echo "::notice ::Fast-forward not possible; continuing with current elis-bot."
-          fi
+          # If elis-bot is behind, try a fast-forward; ignore if not possible
+          git merge --ff-only origin/main || echo "Notice: fast-forward not possible; continuing."
 
-      # 4) Set up Python and Black
+      # 4) Set up Python and install Black (pinned)
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Install Black
         run: |
           python -m pip install --upgrade pip
           pip install black==24.8.0
 
-      # 5) Run Black
+      # 5) Run Black in place
       - name: Run Black (format in-place)
-        run: |
-          black .
+        run: black .
 
-      # 6) Detect changes (fixed if/fi block)
-      - name: Detect changes
-        id: changes
+      # 6) Commit & push only if there are changes
+      - name: Commit and push if changed
+        env:
+          BOT_NAME: "ELIS Bot"
+          BOT_EMAIL: "233278419+elis-bot@users.noreply.github.com"
         run: |
           set -euo pipefail
+          echo "---- git status (after Black) ----"
+          git status --porcelain
           if git diff --quiet; then
-            echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "No formatting changes detected."
-          else
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-            echo "Formatting changes detected."
+            exit 0
           fi
-
-      # 7) Commit & push if changed
-      - name: Commit and push (if changed)
-        if: ${{ steps.changes.outputs.changed == 'true' }}
-        id: commit
-        run: |
-          set -euo pipefail
-          git config user.name  "ELIS Bot"
-          git config user.email "233278419+elis-bot@users.noreply.github.com"
+          git config user.name  "$BOT_NAME"
+          git config user.email "$BOT_EMAIL"
           git add -A
           git commit -m "chore(format): apply Black autoformat"
-          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
           git push origin HEAD:elis-bot
           echo "Pushed: $(git rev-parse --short HEAD)"
-
-      # 8) Show commit SHA if created
-      - name: Show commit SHA
-        if: ${{ steps.changes.outputs.changed == 'true' }}
-        run: echo "Autoformat commit SHA: ${{ steps.commit.outputs.sha }}"
-
-      # 9) Create PR elis-bot -> main (only if there were changes)
-      - name: Create Pull Request (elis-bot -> main)
-        if: ${{ steps.changes.outputs.changed == 'true' }}
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ steps.app.outputs.token }}
-          script: |
-            const { owner, repo } = context.repo;
-            const head = 'elis-bot';
-            const base = 'main';
-            const title = 'chore(format): apply Black autoformat';
-            const body  = 'Automated formatting by ELIS Bot (Black).';
-            const existing = await github.rest.pulls.list({
-              owner, repo, state: 'open', head: `${owner}:${head}`, base
-            });
-            if (existing.data.length > 0) {
-              core.notice(`PR already open: #${existing.data[0].number}`);
-            } else {
-              const pr = await github.rest.pulls.create({ owner, repo, head, base, title, body });
-              core.notice(`PR created: #${pr.data.number}`);
-              await github.rest.issues.addLabels({
-                owner, repo, issue_number: pr.data.number, labels: ['bot','format']
-              });
-            }
