@@ -1,0 +1,74 @@
+name: ELIS Project Auto-Add
+
+on:
+  issues:
+    types: [opened, labeled, reopened]
+  pull_request:
+    types: [opened, reopened, labeled]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+  project: write
+
+jobs:
+  add_and_set_status:
+    runs-on: ubuntu-latest
+    env:
+      PROJECT_ID: ${{ vars.PROJECT_ID }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Determine content node id (issue or PR)
+        id: ids
+        run: |
+          if [ "${{ github.event_name }}" = "issues" ]; then
+            echo "TYPE=issue" >> $GITHUB_OUTPUT
+            CID=$(gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }} --jq .node_id)
+          else
+            echo "TYPE=pr" >> $GITHUB_OUTPUT
+            CID=$(gh api repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }} --jq .node_id)
+          fi
+          echo "CID=$CID" >> $GITHUB_OUTPUT
+
+      - name: Check labels and add to Project when matching
+        id: add
+        run: |
+          CID="${{ steps.ids.outputs.CID }}"
+          # Coleta labels do item
+          LABS=$(gh api graphql -f query='query($id:ID!){ node(id:$id){ ... on Labelable{ labels(first:100){ nodes{ name } } } } }' -f id="$CID" --jq '.data.node.labels.nodes[].name' | tr '\n' ' ' | tr -s ' ')
+          echo "Labels: $LABS"
+          case " $LABS " in
+            *" ELIS-Validation "*|*" ci "*)
+              # Adiciona ao Project (idempotente)
+              gh api graphql -f query='mutation($pid:ID!,$cid:ID!){ addProjectV2ItemById(input:{projectId:$pid,contentId:$cid}){ item { id } } }' -f pid="$PROJECT_ID" -f cid="$CID" || true
+            ;;
+            *)
+              echo "No matching labels; skipping add."
+            ;;
+          esac
+
+      - name: Set Status for PR opened/reopened -> In review
+        if: steps.ids.outputs.TYPE == 'pr' && (github.event.action == 'opened' || github.event.action == 'reopened')
+        run: |
+          # Descobre o item do Project para este PR
+          CID="${{ steps.ids.outputs.CID }}"
+          ITEM_ID=$(gh api graphql -f query='query($pid:ID!,$cid:ID!){ node(id:$pid){ ... on ProjectV2 { items(first:100, query:"contentId:$cid"){ nodes{ id } } } } }' -f pid="$PROJECT_ID" -f cid="$CID" --jq '.data.node.items.nodes[0].id')
+          # Pega o field "Status" e a opção "In review"
+          STATUS_FIELD=$(gh api graphql -f query='query($pid:ID!){ node(id:$pid){ ... on ProjectV2 { fields(first:50){ nodes{ __typename id name ... on ProjectV2SingleSelectField { options { id name } } } } } } }' -f pid="$PROJECT_ID")
+          STATUS_FIELD_ID=$(echo "$STATUS_FIELD" | jq -r '.data.node.fields.nodes[] | select(.name=="Status") | .id')
+          INREVIEW_ID=$(echo "$STATUS_FIELD" | jq -r '.data.node.fields.nodes[] | select(.name=="Status") | .options[] | select(.name=="In review") | .id')
+          # Atualiza o Status
+          gh api graphql -f query='mutation($pid:ID!,$iid:ID!,$fid:ID!,$oid:ID!){ updateProjectV2ItemFieldValue(input:{projectId:$pid,itemId:$iid,fieldId:$fid,value:{singleSelectOptionId:$oid}}){ projectV2Item{ id } } }' \
+            -f pid="$PROJECT_ID" -f iid="$ITEM_ID" -f fid="$STATUS_FIELD_ID" -f oid="$INREVIEW_ID"
+
+      - name: Set Status for Issue opened/reopened -> To do
+        if: steps.ids.outputs.TYPE == 'issue' && (github.event.action == 'opened' || github.event.action == 'reopened')
+        run: |
+          CID="${{ steps.ids.outputs.CID }}"
+          ITEM_ID=$(gh api graphql -f query='query($pid:ID!,$cid:ID!){ node(id:$pid){ ... on ProjectV2 { items(first:100, query:"contentId:$cid"){ nodes{ id } } } } }' -f pid="$PROJECT_ID" -f cid="$CID" --jq '.data.node.items.nodes[0].id')
+          STATUS_FIELD=$(gh api graphql -f query='query($pid:ID!){ node(id:$pid){ ... on ProjectV2 { fields(first:50){ nodes{ __typename id name ... on ProjectV2SingleSelectField { options { id name } } } } } } }' -f pid="$PROJECT_ID")
+          STATUS_FIELD_ID=$(echo "$STATUS_FIELD" | jq -r '.data.node.fields.nodes[] | select(.name=="Status") | .id')
+          TODO_ID=$(echo "$STATUS_FIELD" | jq -r '.data.node.fields.nodes[] | select(.name=="Status") | .options[] | select(.name=="To do") | .id')
+          gh api graphql -f query='mutation($pid:ID!,$iid:ID!,$fid:ID!,$oid:ID!){ updateProjectV2ItemFieldValue(input:{projectId:$pid,itemId:$iid,fieldId:$fid,value:{singleSelectOptionId:$oid}}){ projectV2Item{ id } } }' \
+            -f pid="$PROJECT_ID" -f iid="$ITEM_ID" -f fid="$STATUS_FIELD_ID" -f oid="$TODO_ID"
