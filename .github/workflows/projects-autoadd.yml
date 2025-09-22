@@ -8,14 +8,13 @@
 #       - Issues        → Status = "To do"
 #
 # Requirements
-#   1) Repository variable:  PROJECT_ID  → your Project (v2) ID (e.g., PVT_xxx…)
+#   1) Repository variable: PROJECT_ID → your Project (v2) ID (e.g., PVT_xxx…)
 #      Settings → Secrets and variables → Actions → Variables → New → PROJECT_ID
-#   2) (Recommended) Repo secret:  PROJECTS_TOKEN  → classic PAT with scopes: repo, project
-#      Needed for user-owned Projects v2 to avoid “Resource not accessible by integration”.
-#      If not set, we fall back to GITHUB_TOKEN (may be insufficient on user-owned Projects).
+#   2) (Recommended) Repo secret: PROJECTS_TOKEN → classic PAT with scopes: repo, project
+#      Needed for user-owned Projects v2; otherwise you may see “Resource not accessible by integration”.
 #
 # Notes
-#   • Safe to re-run: all mutations are idempotent.
+#   • Mutations are idempotent (safe if retried).
 #   • Uses `gh` (GitHub CLI) + GraphQL and `jq` for JSON extraction.
 
 name: ELIS - Projects Auto-Add
@@ -30,14 +29,14 @@ permissions:
   contents: read
   issues: write
   pull-requests: write
-  repository-projects: write  # required to write to Projects via GraphQL
+  repository-projects: write  # GraphQL project write via GITHUB_TOKEN/PAT
 
 jobs:
   add_and_set_status:
     runs-on: ubuntu-latest
     env:
       PROJECT_ID: ${{ vars.PROJECT_ID }}
-      # Prefer the PAT if provided; otherwise fall back to GITHUB_TOKEN
+      # Prefer a PAT (PROJECTS_TOKEN); otherwise fall back to GITHUB_TOKEN
       GH_TOKEN: ${{ secrets.PROJECTS_TOKEN != '' && secrets.PROJECTS_TOKEN || secrets.GITHUB_TOKEN }}
 
     steps:
@@ -65,7 +64,6 @@ jobs:
         id: add
         run: |
           CID="${{ steps.ids.outputs.CID }}"
-
           # Collect labels (Issues and PRs are Labelable)
           LABS=$(gh api graphql -f query='
             query($id:ID!){
@@ -94,7 +92,6 @@ jobs:
         id: item
         run: |
           CID="${{ steps.ids.outputs.CID }}"
-
           # Helper to fetch ITEM_ID (try twice to avoid race conditions)
           find_item () {
             gh api graphql -f query='
@@ -116,18 +113,16 @@ jobs:
               }' -f pid="$PROJECT_ID" \
             | jq -r --arg CID "$CID" '.data.node.items.nodes[] | select(.content.id==$CID) | .id' | head -n1
           }
-
           ITEM_ID="$(find_item)"
           if [ -z "$ITEM_ID" ]; then
             echo "Item not found yet; waiting briefly and retrying…"
             sleep 5
             ITEM_ID="$(find_item)"
           fi
-
           echo "ITEM_ID=$ITEM_ID" >> $GITHUB_OUTPUT
           echo "ITEM_ID=$ITEM_ID"
 
-      - name: Cache Status field + option ids (union-safe)
+      - name: Cache Status field + option ids (exact fragments per GitHub Docs)
         id: statusmeta
         run: |
           META=$(gh api graphql -f query='
@@ -136,14 +131,11 @@ jobs:
                 ... on ProjectV2{
                   fields(first:50){
                     nodes{
-                      __typename
-                      # IMPORTANT: You cannot select fields on the union directly.
-                      # Narrow to the concrete single-select type first:
-                      ... on ProjectV2SingleSelectField {
-                        id
-                        name
-                        options { id name }
-                      }
+                      # IMPORTANT: this is a union (ProjectV2FieldConfiguration).
+                      # You MUST narrow via inline fragments; do not select on the union directly.
+                      ... on ProjectV2Field { id name }
+                      ... on ProjectV2SingleSelectField { id name options { id name } }
+                      ... on ProjectV2IterationField { id name configuration { iterations { id startDate } } }
                     }
                   }
                 }
@@ -156,6 +148,8 @@ jobs:
 
           if [ -z "$STATUS_FIELD_ID" ] || [ -z "$INREVIEW_ID" ] || [ -z "$TODO_ID" ]; then
             echo "Failed to resolve Status field/options. Is this a Project (v2) with a Status field?"
+            echo "Raw META:"
+            echo "$META" | sed -e 's/\"token\":\"[^\"]*\"/\"token\":\"***\"/g' || true
             exit 1
           fi
 
@@ -172,7 +166,6 @@ jobs:
             echo "No Project item resolved yet; skipping."
             exit 0
           fi
-
           # Confirm label policy before setting Status
           CID="${{ steps.ids.outputs.CID }}"
           LABS=$(gh api graphql -f query='
@@ -221,7 +214,6 @@ jobs:
             echo "No Project item resolved yet; skipping."
             exit 0
           fi
-
           CID="${{ steps.ids.outputs.CID }}"
           LABS=$(gh api graphql -f query='
             query($id:ID!){
