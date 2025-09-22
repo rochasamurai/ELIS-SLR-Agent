@@ -22,3 +22,5 @@ All execution artefacts (**Rows**) must validate against the schemas via the val
 - Config files (`*_config.json`) are authoring artefacts and **not** used at runtime.
 - Codebook: root is **array**; each item validated against `schemas/ELIS_Appendix_E_Codebook.schema.json`.
 - Dates/times: ISO 8601 (UTC). Free text in UK English.
+
+## Smoke test - PR Path
