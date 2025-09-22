@@ -1,22 +1,22 @@
 # .github/workflows/projects-autoadd.yml
 # ELIS — Projects Auto-Add
 #
-# What this does (fully automated):
+# Purpose
 #   • When an Issue/PR is OPENED, REOPENED, or LABELLED with `ELIS-Validation` or `ci`,
-#     it is added to your ELIS Project (v2) and given a sensible Status.
-#       - PR  → Status = "In review"
-#       - Issue → Status = "To do"
+#     automatically add it to the ELIS Project (v2) and set a sensible Status.
+#       - Pull requests → Status = "In review"
+#       - Issues        → Status = "To do"
 #
-# Requirements (explained here so you have everything in one place):
-#   1) Repository variable  PROJECT_ID  set to your Project (v2) ID.
-#   2) A classic PAT (personal access token) stored as a repo secret  PROJECTS_TOKEN
-#      with scopes:  repo , project  (needed for user-owned Projects v2).
-#      The workflow will automatically fall back to GITHUB_TOKEN if the secret
-#      is missing, but you will otherwise see “Resource not accessible by integration”.
+# Requirements
+#   1) Repository variable:  PROJECT_ID  → your Project (v2) ID (e.g., PVT_xxx…)
+#      Settings → Secrets and variables → Actions → Variables → New → PROJECT_ID
+#   2) (Recommended) Repo secret:  PROJECTS_TOKEN  → classic PAT with scopes: repo, project
+#      Needed for user-owned Projects v2 to avoid “Resource not accessible by integration”.
+#      If not set, we fall back to GITHUB_TOKEN (may be insufficient on user-owned Projects).
 #
-# Notes:
+# Notes
 #   • Safe to re-run: all mutations are idempotent.
-#   • Uses the GitHub CLI (`gh`) + GraphQL; jq is used to extract IDs.
+#   • Uses `gh` (GitHub CLI) + GraphQL and `jq` for JSON extraction.
 
 name: ELIS - Projects Auto-Add
 
@@ -30,23 +30,23 @@ permissions:
   contents: read
   issues: write
   pull-requests: write
-  repository-projects: write  # classic repo projects; PAT covers Projects v2
+  repository-projects: write  # required to write to Projects via GraphQL
 
 jobs:
   add_and_set_status:
     runs-on: ubuntu-latest
     env:
       PROJECT_ID: ${{ vars.PROJECT_ID }}
-      # Prefer PAT (PROJECTS_TOKEN). If not set, fall back to GITHUB_TOKEN.
+      # Prefer the PAT if provided; otherwise fall back to GITHUB_TOKEN
       GH_TOKEN: ${{ secrets.PROJECTS_TOKEN != '' && secrets.PROJECTS_TOKEN || secrets.GITHUB_TOKEN }}
 
     steps:
-      - name: Tooling
+      - name: Tooling check
         run: |
           gh --version
           jq --version
 
-      - name: Determine item type and node id
+      - name: Resolve content type and node id
         id: ids
         run: |
           if [ "${{ github.event_name }}" = "issues" ]; then
@@ -77,7 +77,8 @@ jobs:
 
           case " $LABS " in
             *" ELIS-Validation "*|*" ci "*)
-              echo "→ Matching label found; making sure the item is in the Project."
+              echo "→ Matching label found; ensuring Project membership…"
+              # Idempotent: re-adding is fine; ignore error if already present
               gh api graphql -f query='mutation($pid:ID!,$cid:ID!){
                 addProjectV2ItemById(input:{projectId:$pid,contentId:$cid}){ item { id } }
               }' -f pid="$PROJECT_ID" -f cid="$CID" >/dev/null 2>&1 || true
@@ -89,14 +90,13 @@ jobs:
             ;;
           esac
 
-      # ─────────────────────────────────────────────────────────────────────
-      # Helper: find the Project item for this content node id (CID)
-      - name: Resolve Project item id
+      - name: Resolve Project item id (robust, union-safe)
         id: item
         run: |
           CID="${{ steps.ids.outputs.CID }}"
-          # List items and pick the one whose content.id equals our node id
-          ITEM_ID=$(
+
+          # Helper to fetch ITEM_ID (try twice to avoid race conditions)
+          find_item () {
             gh api graphql -f query='
               query($pid:ID!){
                 node(id:$pid){
@@ -115,16 +115,19 @@ jobs:
                 }
               }' -f pid="$PROJECT_ID" \
             | jq -r --arg CID "$CID" '.data.node.items.nodes[] | select(.content.id==$CID) | .id' | head -n1
-          )
+          }
+
+          ITEM_ID="$(find_item)"
           if [ -z "$ITEM_ID" ]; then
-            echo "Project item not found yet. If this was just opened/labelled, it may appear on the next run."
+            echo "Item not found yet; waiting briefly and retrying…"
+            sleep 5
+            ITEM_ID="$(find_item)"
           fi
+
           echo "ITEM_ID=$ITEM_ID" >> $GITHUB_OUTPUT
           echo "ITEM_ID=$ITEM_ID"
 
-      # ─────────────────────────────────────────────────────────────────────
-      # Fetch Status field id and option ids (In review / To do)
-      - name: Cache Status field + option ids
+      - name: Cache Status field + option ids (union-safe)
         id: statusmeta
         run: |
           META=$(gh api graphql -f query='
@@ -134,31 +137,52 @@ jobs:
                   fields(first:50){
                     nodes{
                       __typename
-                      id
-                      name
-                      ... on ProjectV2SingleSelectField { options { id name } }
+                      # IMPORTANT: You cannot select fields on the union directly.
+                      # Narrow to the concrete single-select type first:
+                      ... on ProjectV2SingleSelectField {
+                        id
+                        name
+                        options { id name }
+                      }
                     }
                   }
                 }
               }
             }' -f pid="$PROJECT_ID")
+
           STATUS_FIELD_ID=$(echo "$META" | jq -r '.data.node.fields.nodes[] | select(.name=="Status") | .id')
-          INREVIEW_ID=$(echo "$META" | jq -r '.data.node.fields.nodes[] | select(.name=="Status") | .options[] | select(.name=="In review") | .id')
-          TODO_ID=$(echo "$META" | jq -r '.data.node.fields.nodes[] | select(.name=="Status") | .options[] | select(.name=="To do") | .id')
+          INREVIEW_ID=$(echo "$META"       | jq -r '.data.node.fields.nodes[] | select(.name=="Status") | .options[] | select(.name=="In review") | .id')
+          TODO_ID=$(echo "$META"           | jq -r '.data.node.fields.nodes[] | select(.name=="Status") | .options[] | select(.name=="To do") | .id')
+
+          if [ -z "$STATUS_FIELD_ID" ] || [ -z "$INREVIEW_ID" ] || [ -z "$TODO_ID" ]; then
+            echo "Failed to resolve Status field/options. Is this a Project (v2) with a Status field?"
+            exit 1
+          fi
+
           echo "STATUS_FIELD_ID=$STATUS_FIELD_ID" >> $GITHUB_OUTPUT
-          echo "INREVIEW_ID=$INREVIEW_ID" >> $GITHUB_OUTPUT
-          echo "TODO_ID=$TODO_ID" >> $GITHUB_OUTPUT
+          echo "INREVIEW_ID=$INREVIEW_ID"         >> $GITHUB_OUTPUT
+          echo "TODO_ID=$TODO_ID"                 >> $GITHUB_OUTPUT
 
       # ─────────────────────────────────────────────────────────────────────
       # PR opened/reopened → set Status = In review (only if labelled)
       - name: PR opened/reopened → In review
         if: steps.ids.outputs.TYPE == 'pr' && (github.event.action == 'opened' || github.event.action == 'reopened')
         run: |
-          # Only proceed if we actually have an item id
           if [ -z "${{ steps.item.outputs.ITEM_ID }}" ]; then
             echo "No Project item resolved yet; skipping."
             exit 0
           fi
+
+          # Confirm label policy before setting Status
+          CID="${{ steps.ids.outputs.CID }}"
+          LABS=$(gh api graphql -f query='
+            query($id:ID!){
+              node(id:$id){
+                ... on Labelable{ labels(first:100){ nodes{ name } } }
+              }
+            }' -f id="$CID" --jq '.data.node.labels.nodes[].name' | tr '\n' ' ' | tr -s ' ')
+          case " $LABS " in *" ELIS-Validation "*|*" ci "*);; *) echo "PR not labelled for auto-set; skipping."; exit 0;; esac
+
           gh api graphql -f query='mutation($pid:ID!,$iid:ID!,$fid:ID!,$oid:ID!){
             updateProjectV2ItemFieldValue(input:{
               projectId:$pid,itemId:$iid,fieldId:$fid,
@@ -197,6 +221,16 @@ jobs:
             echo "No Project item resolved yet; skipping."
             exit 0
           fi
+
+          CID="${{ steps.ids.outputs.CID }}"
+          LABS=$(gh api graphql -f query='
+            query($id:ID!){
+              node(id:$id){
+                ... on Labelable{ labels(first:100){ nodes{ name } } }
+              }
+            }' -f id="$CID" --jq '.data.node.labels.nodes[].name' | tr '\n' ' ' | tr -s ' ')
+          case " $LABS " in *" ELIS-Validation "*|*" ci "*);; *) echo "Issue not labelled for auto-set; skipping."; exit 0;; esac
+
           gh api graphql -f query='mutation($pid:ID!,$iid:ID!,$fid:ID!,$oid:ID!){
             updateProjectV2ItemFieldValue(input:{
               projectId:$pid,itemId:$iid,fieldId:$fid,
