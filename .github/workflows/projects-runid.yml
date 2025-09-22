@@ -1,0 +1,151 @@
+# .github/workflows/projects-runid.yml
+# ELIS — Projects Run ID
+#
+# MVP: When a CI workflow (on a PR) completes successfully,
+#      write the Actions run ID into the Project v2 "Run ID" text field.
+#
+# Triggers: adapt the workflow names below if yours differ.
+
+name: ELIS - Projects Run ID
+
+on:
+  workflow_run:
+    workflows:
+      - "ELIS - CI / validate (pull_request)"
+      - "ELIS - CI / quality (pull_request)"
+    types: [completed]
+
+permissions:
+  contents: read
+  repository-projects: write
+
+jobs:
+  write_run_id:
+    # Only for PR-triggered runs that finished successfully
+    if: >
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    env:
+      PROJECT_ID: ${{ vars.PROJECT_ID }}
+      GH_TOKEN: ${{ secrets.PROJECTS_TOKEN != '' && secrets.PROJECTS_TOKEN || secrets.GITHUB_TOKEN }}
+      RUN_ID: ${{ github.event.workflow_run.id }}
+      RUN_URL: ${{ github.event.workflow_run.html_url }}
+      RUN_NAME: ${{ github.event.workflow_run.name }}
+
+    steps:
+      - name: Tooling
+        run: |
+          gh --version
+          jq --version
+
+      - name: Resolve PR number from workflow_run payload
+        id: pr
+        run: |
+          PR_NUM=$(jq -r '.[0].number // empty' <<< '${{ toJson(github.event.workflow_run.pull_requests) }}')
+          if [ -z "$PR_NUM" ]; then
+            echo "No PR attached to this workflow_run; skipping."
+            echo "CONTINUE=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          echo "PR_NUM=$PR_NUM" >> $GITHUB_OUTPUT
+          echo "CONTINUE=true"  >> $GITHUB_OUTPUT
+
+      - name: Stop if no PR
+        if: steps.pr.outputs.CONTINUE != 'true'
+        run: echo "Nothing to do."
+
+      - name: Get PR node id (content id)
+        if: steps.pr.outputs.CONTINUE == 'true'
+        id: ids
+        run: |
+          CID=$(gh api repos/${{ github.repository }}/pulls/${{ steps.pr.outputs.PR_NUM }} --jq .node_id)
+          echo "CID=$CID" >> $GITHUB_OUTPUT
+          echo "CID=$CID"
+
+      - name: Ensure PR is on the Project (idempotent)
+        if: steps.pr.outputs.CONTINUE == 'true'
+        run: |
+          gh api graphql -f query='mutation($pid:ID!,$cid:ID!){
+            addProjectV2ItemById(input:{projectId:$pid,contentId:$cid}){ item { id } }
+          }' -f pid="$PROJECT_ID" -f cid="${{ steps.ids.outputs.CID }}" >/dev/null 2>&1 || true
+
+      - name: Resolve Project item id for this PR
+        if: steps.pr.outputs.CONTINUE == 'true'
+        id: item
+        run: |
+          find_item () {
+            gh api graphql -f query='
+              query($pid:ID!){
+                node(id:$pid){
+                  ... on ProjectV2{
+                    items(first:200){
+                      nodes{
+                        id
+                        content{
+                          __typename
+                          ... on Issue{ id }
+                          ... on PullRequest{ id }
+                        }
+                      }
+                    }
+                  }
+                }
+              }' -f pid="$PROJECT_ID" \
+            | jq -r --arg CID "${{ steps.ids.outputs.CID }}" '.data.node.items.nodes[] | select(.content.id==$CID) | .id' | head -n1
+          }
+          ITEM_ID="$(find_item)"
+          if [ -z "$ITEM_ID" ]; then
+            echo "Item not found yet; retrying…"
+            sleep 5
+            ITEM_ID="$(find_item)"
+          fi
+          if [ -z "$ITEM_ID" ]; then
+            echo "Could not resolve Project item id. Exiting."
+            exit 1
+          fi
+          echo "ITEM_ID=$ITEM_ID" >> $GITHUB_OUTPUT
+          echo "ITEM_ID=$ITEM_ID"
+
+      - name: Locate 'Run ID' field (text)
+        if: steps.pr.outputs.CONTINUE == 'true'
+        id: runfield
+        run: |
+          META=$(gh api graphql -f query='
+            query($pid:ID!){
+              node(id:$pid){
+                ... on ProjectV2{
+                  fields(first:50){
+                    nodes{
+                      # Union-safe fragments
+                      ... on ProjectV2Field { id name }
+                      ... on ProjectV2TextField { id name }      # text field type
+                    }
+                  }
+                }
+              }
+            }' -f pid="$PROJECT_ID")
+          # case-insensitive match for "Run ID"
+          RUN_FIELD_ID=$(echo "$META" | jq -r '.data.node.fields.nodes[] | select((.name|ascii_downcase)=="run id") | .id')
+          if [ -z "$RUN_FIELD_ID" ]; then
+            echo "Run ID field not found in Project. Please create a Text field named 'Run ID'."
+            exit 1
+          fi
+          echo "RUN_FIELD_ID=$RUN_FIELD_ID" >> $GITHUB_OUTPUT
+          echo "RUN_FIELD_ID=$RUN_FIELD_ID"
+
+      - name: Update Project item → Run ID field
+        if: steps.pr.outputs.CONTINUE == 'true'
+        run: |
+          # Keep it simple: store the URL (it could be the numeric run id)
+          TXT="${RUN_URL}"
+          gh api graphql -f query='mutation($pid:ID!,$iid:ID!,$fid:ID!,$txt:String!){
+            updateProjectV2ItemFieldValue(input:{
+              projectId:$pid, itemId:$iid, fieldId:$fid,
+              value:{ text:$txt }
+            }){ projectV2Item{ id } }
+          }' \
+          -f pid="$PROJECT_ID" \
+          -f iid="${{ steps.item.outputs.ITEM_ID }}" \
+          -f fid="${{ steps.runfield.outputs.RUN_FIELD_ID }}" \
+          -f txt="$TXT"
