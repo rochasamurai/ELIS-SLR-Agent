@@ -1,4 +1,4 @@
-name: ELIS Project Auto-Add
+name: ELIS - Projects Auto-Add
 
 on:
   issues:
@@ -10,7 +10,7 @@ permissions:
   contents: read
   issues: write
   pull-requests: write
-  project: write
+  repository-projects: write
 
 jobs:
   add_and_set_status:
