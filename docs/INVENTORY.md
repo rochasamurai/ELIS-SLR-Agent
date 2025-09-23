@@ -1,9 +1,6 @@
 # 📘 ELIS SLR Agent Repository INVENTORY
 #
-# The INVENTORY.md file now contains a complete listing of the repository’s folder and file structure,
-# providing an up-to-date inventory of all public files and directories. 
-# This tree was generated from the current GitHub repository structure GitHub. 
-# System files and temporary artifacts like desktop.ini and the auto-generated repo_structure.txt have been omitted for clarity.
+# The INVENTORY.md file now contains a complete listing of the repository’s folder and file structure, providing an up-to-date inventory of all public files and directories. This tree was generated from the current GitHub repository structure GitHub. System files and temporary artifacts like desktop.ini and the auto-generated repo_structure.txt have been omitted for clarity.
 
 The following is the complete structure of the ELIS-SLR-Agent repository (folders `*/` and files):
 
