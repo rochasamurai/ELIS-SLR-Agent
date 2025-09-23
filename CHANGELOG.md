@@ -4,14 +4,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
----
-
 ## [Unreleased]
 ### Planned
-- Validate JSON files in `json_jsonl/` against schemas (Appendices A–C).
-- Correct any misalignments directly in canonical JSON files.
-- Generate validation report into `validation_reports/`.
-- Confirm ELIS Agent readiness by running a minimal end-to-end test with one mock article.
+- **Pilot run:** Execute a full trial with real SLR data covering Appendices A–F (end-to-end):contentReference[oaicite:5]{index=5}.  
+- **Hardening:** Address pilot findings – expand test coverage, add pre-commit hooks (Black, Ruff), enforce branch protections:contentReference[oaicite:6]{index=6}.  
+- **Scaling & enhancements:** Enable scheduled agent runs (cron), explore multi-language support and protocol upgrades:contentReference[oaicite:7]{index=7}.
+
+---
+
+## [2.0.6] - 2025-09-22
+### Added
+- **Data files:** Introduced dedicated `*_rows.json` and `*_config.json` files for Appendices A, B, C (execution artefacts vs. config):contentReference[oaicite:8]{index=8}.  
+- **Script:** Added `scripts/agent.py` – a minimal “toy” agent that writes sample entries to A/B/C, confirming pipeline wiring:contentReference[oaicite:9]{index=9}.  
+- **Documentation:** Added multiple project docs in `docs/` for transparency and governance:  
+  - `INVENTORY.md` (complete repository tree listing):contentReference[oaicite:10]{index=10}  
+  - `Pilot_Plan.md` (pilot execution plan)  
+  - `PM_Glossary_Acronyms.md` (glossary of project terms)  
+  - `Technical_Development_Plan_ELIS_SLR_Agent_Summary.md` (technical roadmap summary):contentReference[oaicite:11]{index=11}  
+  - `SYNC_CHECK.md` (document checklist to keep specs in sync)  
+  - `Schema_Reference_v1.0.md` (detailed schema field reference)  
+- **CI/DevOps:** Implemented additional GitHub Actions workflows under `.github/workflows/` for automation:contentReference[oaicite:12]{index=12}: auto-formatting, bot commits, full CI (lint/tests), agent execution, and slash-command triggers.
+
+### Changed
+- **Data structure:** Replaced the single Appendix JSON files (A–C) containing `records` objects with the new split format – each Appendix now has a `_rows.json` (top-level array of records) and a corresponding `_config.json` for meta/authoring info:contentReference[oaicite:13]{index=13}:contentReference[oaicite:14]{index=14}. The JSON Schema definitions and the validator script were updated to accommodate this schema change.  
+- **Validation logs:** Continuous integration now outputs JSON validation logs on each run, saved as timestamped `.log` files in `validation_reports/` (replacing the single-day report approach):contentReference[oaicite:15]{index=15}.  
+- **README.md:** Minor improvements for clarity (language stating dependency installation, removed empty section):contentReference[oaicite:16]{index=16}; all documentation remains in UK English.
+
+### Validation
+- All new and modified JSON files (Appendices A–F) validate successfully against their respective schemas using `scripts/validate_json.py` (exit code 0).  
+- The `scripts/agent.py` toy run produces one valid sample record in each of A, B, C, which passes schema checks and is captured in the CI logs.  
+- Continuous integration (CI) runs (linting, tests, validation) are all passing, confirming repository integrity.
+
+### Notes
+- The repository structure and file inventory is now documented in `docs/INVENTORY.md` for easier navigation.  
+- The **Data Contract v1.0** remains the authoritative specification; structural changes were made in line with the locked schema fields (no schema fields were altered).  
+- All content and documentation are maintained in **UK English**. Next steps will focus on the pilot run and subsequent improvements as outlined in the Technical Development Plan.
 
 ---
 
@@ -169,4 +196,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **ELIS_Senior_Researcher_v2.0.md** initial draft.
 - **ELIS_SLR_Agent_Prompt_v1.0.md** first version of agent prompt.
 - Supporting protocol docs in `/docs`.
+
 
