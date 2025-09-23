@@ -1,0 +1,19 @@
+# INVENTORY
+
+Repository: ELIS-SLR-Agent
+
+## File/Folder Tree
+
+## Key Directories (overview)
+- `docs/` – Protocols, prompts, reports and documentation (includes `validation_reports/`).
+- `schemas/` – JSON Schemas for validation.
+- `scripts/` – Python utilities (e.g., `validate_json.py`).
+- `json_jsonl/` – Dataset/config JSON/JSONL inputs.
+- `.github/workflows/` – CI pipelines (e.g., `elis-validate.yml`).
+
+## CI Outputs
+- `validation_reports/` – Markdown reports produced by CI (kept with `.gitkeep`).
+
+## Notes
+- This inventory mirrors the current repo tree and is meant for quick navigation.
+- Update this file when adding/removing top-level assets.
