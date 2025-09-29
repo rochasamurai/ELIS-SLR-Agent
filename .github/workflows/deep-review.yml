@@ -1,0 +1,110 @@
+# ============================================================
+# ELIS - Deep Review
+# Purpose:
+#   In-depth checks on demand (or when a PR is labelled 'deep-review'):
+#   - Ruff (lint), Black (format check), Mypy (typing),
+#     Bandit (security SAST), pip-audit (dependency vulns), Pytest (+coverage).
+# Triggers:
+#   - Manual (workflow_dispatch)
+#   - Pull requests to main when label 'deep-review' is present
+# Notes:
+#   - Read-only: no commits or pushes. UK English comments.
+#   - Keep tools pinned for reproducibility.
+# ============================================================
+
+name: ELIS - Deep Review
+
+on:
+  workflow_dispatch: {}
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  deep-review:
+    name: deep-review
+    runs-on: ubuntu-latest
+
+    # Only run when:
+    # - Manually dispatched, OR
+    # - It's a PR and the label 'deep-review' is present
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' &&
+       contains(github.event.pull_request.labels.*.name, 'deep-review'))
+
+    concurrency:
+      group: deep-review-${{ github.ref || github.run_id }}
+      cancel-in-progress: true
+
+    steps:
+      # 1) Checkout full history (useful for coverage or reports)
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # 2) Python setup
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # 3) Install deps (project + tooling)
+      - name: Install dependencies and tools
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install \
+            ruff==0.6.8 \
+            black==24.8.0 \
+            mypy==1.11.2 \
+            bandit==1.7.9 \
+            pip-audit==2.7.3 \
+            pytest==8.3.2 \
+            pytest-cov==5.0.0
+
+      # 4) Lint
+      - name: Ruff (lint)
+        run: ruff check .
+
+      # 5) Format check (no write)
+      - name: Black (check)
+        run: black --check .
+
+      # 6) Typing
+      - name: Mypy (type check)
+        run: mypy --ignore-missing-imports .
+
+      # 7) Security static analysis
+      - name: Bandit (security SAST)
+        run: bandit -q -r . -x tests
+
+      # 8) Dependency vulnerabilities
+      - name: pip-audit (vulnerability scan)
+        run: pip-audit
+
+      # 9) Tests + coverage
+      - name: Pytest (unit + coverage)
+        run: |
+          pytest -q --maxfail=1 --disable-warnings \
+                 --cov=. --cov-report=term-missing
+
+      # 10) Summary in the job summary pane
+      - name: Summary
+        run: |
+          {
+            echo "## Deep Review Summary";
+            echo "";
+            echo "- Ruff: completed";
+            echo "- Black (check): completed";
+            echo "- Mypy: completed";
+            echo "- Bandit: completed";
+            echo "- pip-audit: completed";
+            echo "- Pytest + coverage: completed";
+            echo "";
+            echo "> Trigger: ${{ github.event_name }}";
+          } >> "$GITHUB_STEP_SUMMARY"
