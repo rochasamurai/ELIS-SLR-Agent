@@ -1,1 +1,96 @@
-# .github/workflows/ci.yml # ELIS – CI # # Jobs: #   quality : Ruff (lint) + Black (check) #   tests   : pytest (runs toy-agent smoke test) #   validate: repository validator (tolerates non-zero exit), depends on quality+tests # # Triggers: #   - pull_request → main #   - manual (workflow_dispatch)  name: ELIS - CI  on:   pull_request:     branches: [main]   workflow_dispatch: {}  permissions:   contents: read  jobs:   quality:     name: quality     runs-on: ubuntu-latest     steps:       - name: Checkout         uses: actions/checkout@v4         with:           fetch-depth: 0        - name: Set up Python         uses: actions/setup-python@v5         with:           python-version: "3.11"        - name: Install tools         run: |           python -m pip install --upgrade pip           pip install ruff==0.6.4 black==24.8.0        - name: Ruff (lint)         run: ruff check .        - name: Black (check)         run: black --check .    tests:     name: tests     runs-on: ubuntu-latest     needs: quality     steps:       - name: Checkout         uses: actions/checkout@v4         with:           fetch-depth: 0        - name: Set up Python         uses: actions/setup-python@v5         with:           python-version: "3.11"        - name: Install test deps         run: |           python -m pip install --upgrade pip           pip install pytest==8.3.3        - name: Run tests         run: pytest -q    validate:     name: validate     runs-on: ubuntu-latest     needs: [quality, tests]     steps:       - name: Checkout         uses: actions/checkout@v4         with:           fetch-depth: 0        - name: Set up Python         uses: actions/setup-python@v5         with:           python-version: "3.11"        - name: Run validator (non-blocking)         run: python scripts/validate_json.py || echo "::warning ::validator returned non-zero"
+# .github/workflows/ci.yml
+# ELIS - CI
+# Purpose:
+#   Lightweight CI that runs on PRs (and when this workflow file changes).
+#   - quality: Ruff (lint) + Black (check)
+#   - tests (optional): runs only if tests are present
+#   - validate: runs validator; does NOT block on warnings
+#
+# Why this shape?
+#   - Pytest exits with code 5 when no tests are collected. To avoid red builds
+#     in repos that don’t have tests yet, we gate the tests job on file presence.
+#   - validate depends only on quality so it still runs even if tests are absent.
+
+name: ELIS - CI
+
+on:
+  pull_request:
+    branches: [ main ]
+  # Re-run CI when the CI file changes on main, so we see if it’s syntactically valid.
+  push:
+    branches: [ main ]
+    paths:
+      - ".github/workflows/ci.yml"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: quality
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install tools (Ruff, Black)
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff==0.6.9 black==24.8.0
+
+      - name: Ruff (lint)
+        run: ruff check .
+
+      - name: Black (check)
+        run: black --check .
+
+  tests:
+    # Run tests ONLY if there are Python test files.
+    if: ${{ hashFiles('tests/**/*.py') != '' }}
+    name: tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install runtime + pytest
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install pytest
+
+      - name: Run pytest
+        run: pytest -q
+
+  validate:
+    name: validate
+    needs: [ quality ]   # Do not depend on tests (might be skipped)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install runtime deps
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Run validator (non-blocking)
+        run: |
+          python scripts/validate_json.py || echo "::warning ::validator returned non-zero (tolerated by CI)"
