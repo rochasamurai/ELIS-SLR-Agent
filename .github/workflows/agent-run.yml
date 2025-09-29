@@ -1,0 +1,77 @@
+# .github/workflows/agent-run.yml
+# ELIS – Agent Run
+# Purpose:
+#   Manually run the toy agent (scripts/agent.py) on a chosen branch,
+#   then upload the produced A/B/C JSON artefacts as build artifacts.
+# Notes:
+#   - Safe, read-only to the repo (no commits/pushes).
+#   - Defaults to running against the 'elis-bot' branch so you can iterate
+#     there; you can switch to 'main' from the Run workflow UI if needed.
+
+name: ELIS - Agent Run
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Branch or tag to run on (e.g. elis-bot or main)"
+        type: string
+        required: false
+        default: "elis-bot"
+
+permissions:
+  contents: read
+
+jobs:
+  run-agent:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      # 1) Check out the selected ref (branch/tag)
+      - name: Checkout ${{ inputs.ref }}
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+          fetch-depth: 0
+
+      # 2) Set up Python 3.11
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # 3) Run the toy agent
+      - name: Run ELIS toy agent
+        run: |
+          python --version
+          python scripts/agent.py
+
+      # 4) List outputs for visibility
+      - name: Show outputs
+        run: |
+          echo "==> json_jsonl contents"
+          ls -la json_jsonl || true
+          echo "==> Preview A/B/C files (first 50 lines if present)"
+          for f in \
+            json_jsonl/ELIS_Appendix_A_Search_rows.json \
+            json_jsonl/ELIS_Appendix_B_Screening_rows.json \
+            json_jsonl/ELIS_Appendix_C_DataExtraction_rows.json
+          do
+            if [ -f "$f" ]; then
+              echo "--- $f"
+              head -n 50 "$f" || true
+            fi
+          done
+
+      # 5) Upload artefacts for download
+      - name: Upload ELIS artefacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: elis-agent-output
+          path: |
+            json_jsonl/ELIS_Appendix_A_Search_rows.json
+            json_jsonl/ELIS_Appendix_B_Screening_rows.json
+            json_jsonl/ELIS_Appendix_C_DataExtraction_rows.json
+          if-no-files-found: error
