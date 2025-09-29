@@ -3,20 +3,19 @@
 # Purpose:
 #   Lightweight CI that runs on PRs (and when this workflow file changes).
 #   - quality: Ruff (lint) + Black (check)
-#   - tests (optional): runs only if tests are present
+#   - tests: runs pytest ONLY if test files exist (safe skip otherwise)
 #   - validate: runs validator; does NOT block on warnings
 #
-# Why this shape?
-#   - Pytest exits with code 5 when no tests are collected. To avoid red builds
-#     in repos that don’t have tests yet, we gate the tests job on file presence.
-#   - validate depends only on quality so it still runs even if tests are absent.
+# Notes:
+#   - We do NOT use hashFiles() at job-level (unsupported here).
+#   - Instead, we check for test file presence with shell globbing.
+#   - validate depends only on quality (so it still runs when tests are absent).
 
 name: ELIS - CI
 
 on:
   pull_request:
     branches: [ main ]
-  # Re-run CI when the CI file changes on main, so we see if it’s syntactically valid.
   push:
     branches: [ main ]
     paths:
@@ -51,8 +50,6 @@ jobs:
         run: black --check .
 
   tests:
-    # Run tests ONLY if there are Python test files.
-    if: ${{ hashFiles('tests/**/*.py') != '' }}
     name: tests
     runs-on: ubuntu-latest
     steps:
@@ -70,12 +67,22 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
           pip install pytest
 
-      - name: Run pytest
-        run: pytest -q
+      # Gate on the presence of *any* test file to avoid pytest exit code 5 (no tests collected).
+      - name: Run pytest if tests exist
+        shell: bash
+        run: |
+          shopt -s nullglob globstar
+          files=(tests/**/*.py)
+          if (( ${#files[@]} == 0 )); then
+            echo "No test files under tests/**.py – skipping pytest."
+            exit 0
+          fi
+          echo "Found ${#files[@]} test file(s). Running pytest..."
+          pytest -q
 
   validate:
     name: validate
-    needs: [ quality ]   # Do not depend on tests (might be skipped)
+    needs: [ quality ]   # Do not depend on tests (which may be skipped)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
