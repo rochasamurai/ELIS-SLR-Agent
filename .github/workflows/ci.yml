@@ -1,15 +1,12 @@
 # .github/workflows/ci.yml
 # ELIS - CI
 # Purpose:
-#   Lightweight CI that runs on PRs (and when this workflow file changes).
 #   - quality: Ruff (lint) + Black (check)
-#   - tests: runs pytest ONLY if test files exist (safe skip otherwise)
-#   - validate: runs validator; does NOT block on warnings
+#   - tests: run pytest when tests exist; tolerate exit code 5 (no tests collected)
+#   - validate: runs validator; tolerant to warnings
 #
-# Notes:
-#   - We do NOT use hashFiles() at job-level (unsupported here).
-#   - Instead, we check for test file presence with shell globbing.
-#   - validate depends only on quality (so it still runs when tests are absent).
+# Triggers:
+#   - PRs to main, pushes to main that touch this file, and manual dispatch.
 
 name: ELIS - CI
 
@@ -67,22 +64,37 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
           pip install pytest
 
-      # Gate on the presence of *any* test file to avoid pytest exit code 5 (no tests collected).
-      - name: Run pytest if tests exist
+      # Run pytest if we have any test files;
+      # if pytest exits 5 ("no tests collected"), treat it as success.
+      - name: Run pytest if tests exist (tolerate exit code 5)
         shell: bash
         run: |
+          set -e
           shopt -s nullglob globstar
-          files=(tests/**/*.py)
+          files=(tests/*.py tests/**/*.py)
           if (( ${#files[@]} == 0 )); then
-            echo "No test files under tests/**.py – skipping pytest."
+            echo "No test files under tests/ — skipping pytest."
             exit 0
           fi
-          echo "Found ${#files[@]} test file(s). Running pytest..."
+          echo "Found ${#files[@]} test candidate file(s). Running pytest…"
+          set +e
           pytest -q
+          rc=$?
+          set -e
+          if [ "$rc" -eq 0 ]; then
+            echo "pytest passed."
+            exit 0
+          elif [ "$rc" -eq 5 ]; then
+            echo "pytest exit code 5 (no tests collected) — treating as success."
+            exit 0
+          else
+            echo "pytest failed with exit code $rc."
+            exit "$rc"
+          fi
 
   validate:
     name: validate
-    needs: [ quality ]   # Do not depend on tests (which may be skipped)
+    needs: [ quality ]  # independent of tests (which may be skipped)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
