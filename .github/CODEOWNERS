@@ -1,0 +1,30 @@
+# CODEOWNERS — ELIS SLR Agent
+# Purpose: Require reviews from the right owner(s) on critical paths.
+# Syntax: https://docs.github.com/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+# Notes:
+# - Keep owners as GitHub handles or teams (@org/team). Apps/bots cannot be code owners.
+# - ELIS Bot will open PRs, but reviews remain human-only to ensure governance.
+
+# Global fallback (optional): direct all unmatched paths to the repository owner.
+*                                   @rochasamurai
+
+# Schemas are the Data Contract — mandatory review.
+schemas/**                           @rochasamurai
+
+# Validation script(s) — impact CI gates and audit reports.
+scripts/validate_json.py             @rochasamurai
+scripts/**                           @rochasamurai
+
+# Workflows — affect CI/CD and bot permissions.
+.github/workflows/**                 @rochasamurai
+
+# Structured data (Rows, Config, Logs) — changes must be intentional.
+json_jsonl/**                        @rochasamurai
+
+# Documentation that defines process and governance.
+docs/**                              @rochasamurai
+
+# Root docs and configuration.
+README.md                            @rochasamurai
+CHANGELOG.md                         @rochasamurai
+pyproject.toml                       @rochasamurai
