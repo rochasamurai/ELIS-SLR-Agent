@@ -1,0 +1,27 @@
+# Pull Request
+
+## Summary
+Short description of what changes and why.
+
+## Type
+- [ ] feat (new capability)
+- [ ] fix (bug fix)
+- [ ] docs (documentation only)
+- [ ] chore/ci (infra or automation)
+- [ ] refactor (no behaviour change)
+
+## Checklist (ELIS Quality Gate)
+- [ ] CI status **green** (required): **quality** and **validate** jobs passed.
+- [ ] Code formatted (Black) and linted (Ruff) locally or via Autoformat.
+- [ ] If schemas changed (`/schemas/**`), updated **docs** and **CHANGELOG.md** with migration notes.
+- [ ] If validator changed (`scripts/validate_json.py`), added/updated tests.
+- [ ] Structured data in `/json_jsonl/**` is schema-valid (checked locally if applicable).
+- [ ] Documentation updated in **UK English** (README/docs as needed).
+- [ ] No secrets or tokens added.
+- [ ] PR title uses Conventional Commits (e.g., `feat: ...`, `chore(ci): ...`).
+
+## Screenshots / Logs (optional)
+Paste relevant output (CI, validation report, etc).
+
+## Related issues
+Closes #<id> / Relates to #<id>
