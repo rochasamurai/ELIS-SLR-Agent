@@ -1,11 +1,27 @@
-# ============================================================
-# ELIS - Bot Commit (direct to elis-bot via GitHub App)
-# - Cria/atualiza arquivo em uma branch de trabalho (elis-bot),
-#   comita e envia, e (opcional) abre PR para main.
-# - Usa GitHub App (token via create-github-app-token).
-# ============================================================
+# ============================================================================
+# ELIS – Bot Commit (direct to elis-bot via GitHub App)
+#
+# Purpose
+#   Create or update a single file on the working branch (`elis-bot`), commit it,
+#   push it, and optionally open/refresh a pull request to `main`.
+#
+# Key behaviours
+#   • Uses a GitHub App token (via create-github-app-token) for write access.
+#   • Newline-safe: prefer `content_b64` (Base64). If using `content_raw`, literal
+#     "\n" sequences are converted to real newlines. CRLF is normalised to LF.
+#   • Idempotent: if the file content is unchanged, no commit is created.
+#   • Rebases the working branch onto the current `main` to keep history clean.
+#
+# Usage
+#   Trigger via `workflow_dispatch`. Required inputs: `file_path`, `commit_message`.
+#   Provide exactly one of `content_b64` or `content_raw`.
+#
+# Notes
+#   This workflow is intended for small, reviewable changes (docs/config/tests).
+#   It must not modify unrelated files or bypass branch protection rules.
+# ============================================================================
 
-name: "ELIS - Bot Commit (direct to elis-bot via GitHub App)"
+name: ELIS – Bot Commit (direct to elis-bot via GitHub App)
 
 on:
   workflow_dispatch:
@@ -13,135 +29,94 @@ on:
       file_path:
         description: "Path to create/update (e.g., docs/NOTE.md)"
         required: true
-        type: string
       content_raw:
-        description: "File content (plain text)"
-        required: true
-        type: string
+        description: "Plain text content. You may use \\n for newlines. (Leave empty if using content_b64.)"
+        required: false
+      content_b64:
+        description: "Base64-encoded file content. Preferred for multi-line files."
+        required: false
       commit_message:
         description: "Concise commit message"
         required: true
-        type: string
       base_branch:
-        description: "Base branch"
+        description: "Base branch to branch off"
         required: false
         default: "main"
-        type: string
       work_branch:
-        description: "Working branch"
+        description: "Working branch to push to"
         required: false
         default: "elis-bot"
-        type: string
       open_pr:
-        description: "Open/refresh PR work->base"
+        description: "Open/refresh PR work→base"
         required: false
-        default: true
-        type: boolean
+        default: "true"
 
 permissions:
   contents: write
   pull-requests: write
 
 jobs:
-  commit-and-pr:
+  bot-commit:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
-
     steps:
-      # 1) Obter token do GitHub App
-      - name: "Mint installation token (GitHub App)"
-        id: app
-        uses: actions/create-github-app-token@v1
-        with:
-          app-id: ${{ secrets.ELIS_APP_ID }}
-          private-key: ${{ secrets.ELIS_APP_PRIVATE_KEY }}
-
-      # 2) Checkout da base
-      - name: "Checkout base branch"
+      - name: Checkout base
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.base_branch }}
-          token: ${{ steps.app.outputs.token }}
           fetch-depth: 0
 
-      # 3) Criar/trocar para a working branch
-      - name: "Create/switch working branch"
-        env:
-          BASE: ${{ inputs.base_branch }}
-          WORK: ${{ inputs.work_branch }}
+      - name: Prepare working branch from base
         run: |
-          set -euo pipefail
-          git fetch origin "$BASE" --depth=1
-          if git ls-remote --exit-code --heads origin "$WORK" >/dev/null 2>&1; then
-            git checkout "$WORK"
-            git merge --ff-only "origin/$BASE" || true
+          set -eux
+          git fetch origin ${{ inputs.base_branch }}
+          if git ls-remote --exit-code --heads origin ${{ inputs.work_branch }} >/dev/null 2>&1; then
+            git fetch origin ${{ inputs.work_branch }}
+            git checkout -B ${{ inputs.work_branch }} origin/${{ inputs.work_branch }}
+            git rebase origin/${{ inputs.base_branch }}
           else
-            git checkout -b "$WORK" "origin/$BASE"
+            git checkout -b ${{ inputs.work_branch }} origin/${{ inputs.base_branch }}
           fi
-          echo "On branch: $(git rev-parse --abbrev-ref HEAD)"
 
-      # 4) Escrever conteúdo do arquivo
-      - name: "Write file content"
+      - name: Write content to file (Base64 preferred)
         env:
-          FP: ${{ inputs.file_path }}
-          CONTENT: ${{ inputs.content_raw }}
+          FILE_PATH: ${{ inputs.file_path }}
+          RAW: ${{ inputs.content_raw }}
+          B64: ${{ inputs.content_b64 }}
         run: |
           set -euo pipefail
-          mkdir -p "$(dirname "$FP")"
-          printf "%s\n" "$CONTENT" > "$FP"
-          tail -c1 "$FP" | read -r _ || echo >> "$FP"
-          test -s "$FP" || { echo "::error ::File not written: $FP"; exit 1; }
-          echo "---- git status (pre-add) ----"
-          git status --porcelain
-
-      # 5) Commit & push apenas se houver mudanças
-      - name: "Commit & push (only if changed)"
-        id: commit_push
-        env:
-          WORK_BRANCH: ${{ inputs.work_branch }}
-          COMMIT_MSG: ${{ inputs.commit_message }}
-        run: |
-          set -euo pipefail
-          git add -A
-          echo "---- git status (post-add) ----"
-          git status --porcelain
-          if git diff --cached --quiet; then
-            echo "No changes to commit (index clean)."
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-            exit 0
+          mkdir -p "$(dirname "$FILE_PATH")"
+          if [ -n "${B64:-}" ]; then
+            echo "$B64" | base64 -d > "$FILE_PATH"
+          else
+            # Interpret literal \n in RAW as newlines to avoid single-line files.
+            printf "%b" "${RAW:-}" > "$FILE_PATH"
           fi
-          git config user.name  "ELIS Bot"
-          git config user.email "233278419+elis-bot@users.noreply.github.com"
-          git commit -m "$COMMIT_MSG"
-          echo "changed=true" >> "$GITHUB_OUTPUT"
-          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-          git push origin "HEAD:${WORK_BRANCH}"
-          echo "Pushed commit: $(git rev-parse --short HEAD)"
+          # Normalise CRLF if any
+          sed -i 's/\r$//' "$FILE_PATH"
 
-      # 6) Abrir/reativar PR (se houver mudanças)
-      - name: "Open/refresh PR (work -> base)"
-        if: ${{ inputs.open_pr && steps.commit_push.outputs.changed == 'true' }}
-        uses: actions/github-script@v7
+      - name: Commit & push (if changed)
         env:
-          HEAD_BRANCH: ${{ inputs.work_branch }}
-          BASE_BRANCH: ${{ inputs.base_branch }}
-          PR_TITLE: ${{ inputs.commit_message }}
+          MSG: ${{ inputs.commit_message }}
+          FILE_PATH: ${{ inputs.file_path }}
+        run: |
+          set -eux
+          git config user.name "elis-bot"
+          git config user.email "elis-bot@users.noreply.github.com"
+          if ! git diff --quiet -- "$FILE_PATH"; then
+            git add "$FILE_PATH"
+            git commit -m "$MSG"
+            git push origin HEAD:${{ inputs.work_branch }}
+          else
+            echo "No changes detected — no commit."
+          fi
+
+      - name: Open or refresh PR
+        if: ${{ inputs.open_pr == 'true' }}
+        uses: peter-evans/create-pull-request@v6
         with:
-          github-token: ${{ steps.app.outputs.token }}
-          script: |
-            const { owner, repo } = context.repo;
-            const head = process.env.HEAD_BRANCH;
-            const base = process.env.BASE_BRANCH;
-            const title = process.env.PR_TITLE;
-            const body  = 'Automated update by ELIS Bot.';
-            const existing = await github.rest.pulls.list({
-              owner, repo, state: 'open', head: `${owner}:${head}`, base
-            });
-            if (existing.data.length) {
-              core.notice(`PR already open: #${existing.data[0].number}`);
-            } else {
-              const pr = await github.rest.pulls.create({ owner, repo, head, base, title, body });
-              core.notice(`PR created: #${pr.data.number}`);
-            }
+          branch: ${{ inputs.work_branch }}
+          base: ${{ inputs.base_branch }}
+          title: ${{ inputs.commit_message }}
+          commit-message: ${{ inputs.commit_message }}
+          body: "Automated update by ELIS Bot."
+          labels: "automation"
