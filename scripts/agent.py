@@ -1,113 +1,129 @@
-#!/usr/bin/env python3
 """
-ELIS Agent – Toy Run (A → B → C)
+Toy ELIS SLR Agent runner.
 
-Goal
-----
-Minimal, deterministic agent that proves the repository is wired correctly.
-It writes one JSON row to each of the three ELIS artefacts under `json_jsonl/`:
+Purpose
+-------
+Produce minimal, schema-aligned artefacts for A/B/C so CI can smoke-test the
+pipeline. Files are written under `json_jsonl/` as pretty-printed JSON arrays.
 
-* ELIS_Appendix_A_Search_rows.json
-* ELIS_Appendix_B_Screening_rows.json
-* ELIS_Appendix_C_DataExtraction_rows.json
-
-Each row is a small dict with stable keys so CI/test can assert structure.
-
-Design notes
-------------
-- UK English comments and docstrings.
-- No external dependencies; pure Python 3.11+.
-- Deterministic content (only the timestamp changes) to keep diffs readable.
-- Exits 0 on success and prints a concise summary to STDOUT.
+Compatibility
+-------------
+Matches minimal schemas:
+- schemas/ELIS_Appendix_A_Search.schema.json
+- schemas/ELIS_Appendix_B_Screening.schema.json
+- schemas/ELIS_Appendix_C_Extraction.schema.json
 """
-
-from __future__ import annotations
 
 import json
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, List
-
-ROOT: Path = Path(__file__).resolve().parents[1]
-DATA_DIR: Path = ROOT / "json_jsonl"
-
-A_PATH: Path = DATA_DIR / "ELIS_Appendix_A_Search_rows.json"
-B_PATH: Path = DATA_DIR / "ELIS_Appendix_B_Screening_rows.json"
-C_PATH: Path = DATA_DIR / "ELIS_Appendix_C_DataExtraction_rows.json"
 
 
-def now_iso_z() -> str:
-    """Return the current UTC time as an ISO-8601 string with 'Z' suffix."""
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+# --------------------------------------------------------------------------- #
+# Artefact locations (tests may override these module-level globals)
+# --------------------------------------------------------------------------- #
+
+ART_DIR = Path("json_jsonl")
+A_FILE = ART_DIR / "ELIS_Appendix_A_Search_rows.json"
+B_FILE = ART_DIR / "ELIS_Appendix_B_Screening_rows.json"
+C_FILE = ART_DIR / "ELIS_Appendix_C_Extraction_rows.json"
 
 
-def ensure_dirs() -> None:
-    """Create required directories if they do not exist."""
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
+# --------------------------------------------------------------------------- #
+# Helpers
+# --------------------------------------------------------------------------- #
+
+def _now() -> str:
+    """Return current UTC timestamp in ISO-8601 with trailing 'Z'."""
+    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
-def write_json_array(path: Path, rows: List[Dict]) -> None:
-    """Serialise a list of dict rows to JSON with a trailing newline."""
-    path.write_text(
-        json.dumps(rows, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
-    )
+def _write_json(path: Path, data) -> None:
+    """Write `data` to `path` as deterministic UTF-8 JSON."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
 
 
-def build_row(stage: str, note: str) -> Dict:
+# --------------------------------------------------------------------------- #
+# Core run
+# --------------------------------------------------------------------------- #
+
+def run():
     """
-    Build a minimal, self-describing row used across A/B/C artefacts.
+    Emit minimal A/B/C rows and persist them to disk.
 
-    Fields:
-      - id:         stable identifier string
-      - source:     which stage produced the row
-      - created_at: ISO-8601 UTC timestamp (Z)
-      - note:       human-readable explanation
+    Returns
+    -------
+    dict: keys 'a', 'b', 'c' with the lists that were written.
     """
-    return {
-        "id": f"toy-{stage}-001",
-        "source": stage,
-        "created_at": now_iso_z(),
-        "note": note,
-    }
-
-
-def make_toy_artefacts() -> None:
-    """Write one minimal row to each ELIS artefact."""
-    ensure_dirs()
-
+    # Appendix A — Search
     a_rows = [
-        build_row(
-            stage="A:search",
-            note="Seed query issued by the Toy Agent to demonstrate pipeline wiring.",
-        )
+        {
+            "id": "A-0001",
+            "search_query": "electronic voting integrity",
+            "source": "DemoEngine",
+            "executed_at": _now(),
+            "notes": "toy run",
+        }
     ]
+
+    # Appendix B — Screening (both included and excluded examples)
     b_rows = [
-        build_row(
-            stage="B:screening",
-            note="Single record marked as 'included' by the Toy Agent for demo purposes.",
-        )
+        {
+            "id": "B-0001",
+            "source_id": "A-0001",
+            "title": "Pilot study on electronic voting",
+            "decision": "included",
+            "decided_at": _now(),
+        },
+        {
+            "id": "B-0002",
+            "source_id": "A-0001",
+            "title": "Blog post without methodology",
+            "decision": "excluded",
+            "reason": "Not peer-reviewed / out of scope",
+            "decided_at": _now(),
+        },
     ]
+
+    # Appendix C — Extraction (only for included items)
     c_rows = [
-        build_row(
-            stage="C:data_extraction",
-            note="Minimal extraction payload (placeholder fields only).",
-        )
+        {
+            "id": "C-0001",
+            "screening_id": "B-0001",
+            "key_findings": "Example extraction placeholder.",
+            "extracted_at": _now(),
+            "notes": "toy run",
+        }
     ]
 
-    write_json_array(A_PATH, a_rows)
-    write_json_array(B_PATH, b_rows)
-    write_json_array(C_PATH, c_rows)
+    # Persist
+    _write_json(A_FILE, a_rows)
+    _write_json(B_FILE, b_rows)
+    _write_json(C_FILE, c_rows)
+
+    return {"a": a_rows, "b": b_rows, "c": c_rows}
 
 
-def main() -> int:
-    """Entry point used by CI and manual runs."""
-    make_toy_artefacts()
-    print("Toy run completed:")
-    print(f"  - wrote: {A_PATH.relative_to(ROOT)}")
-    print(f"  - wrote: {B_PATH.relative_to(ROOT)}")
-    print(f"  - wrote: {C_PATH.relative_to(ROOT)}")
-    return 0
-
+# --------------------------------------------------------------------------- #
+# CLI entrypoint
+# --------------------------------------------------------------------------- #
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    # Allow `python scripts/agent.py` for ad-hoc runs.
+    out = run()
+    print(
+        json.dumps(
+            {
+                "written": {
+                    "A_FILE": str(A_FILE),
+                    "B_FILE": str(B_FILE),
+                    "C_FILE": str(C_FILE),
+                },
+                "counts": {k: len(v) for k, v in out.items()},
+            },
+            ensure_ascii=False,
+            indent=2,
+        )
+    )
