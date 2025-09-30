@@ -1,0 +1,14 @@
+[tool.black]
+line-length = 88
+target-version = ["py311"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+# Keep rules pragmatic; we can tighten later.
+select = ["E", "F", "I"]           # pycodestyle/pyflakes + import sorting
+exclude = ["json_jsonl", "validation_reports", ".github"]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+pythonpath = ["."]
