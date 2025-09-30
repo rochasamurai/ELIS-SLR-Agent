@@ -1,0 +1,54 @@
+"""
+Tests for the toy agent Step B.
+
+Goals
+-----
+- Screening (Appendix B) rows are produced.
+- Every row has 'decision' in {'included', 'excluded'}.
+- 'excluded' rows include a non-empty 'reason'.
+- Files are written (redirected to a temp dir during the test).
+"""
+
+from pathlib import Path
+import importlib.util
+import json
+
+
+def _load_agent():
+    """
+    Load scripts/agent.py as a module without altering sys.path.
+
+    Using importlib.spec keeps test-time imports isolated and predictable.
+    """
+    path = Path("scripts/agent.py")
+    spec = importlib.util.spec_from_file_location("agent_mod", path)
+    assert spec and spec.loader
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)  # type: ignore[attr-defined]
+    return mod
+
+
+def test_screening_rows_have_decision_and_reason(tmp_path: Path) -> None:
+    """Run the agent into a temp artefact directory and inspect B rows."""
+    agent = _load_agent()
+
+    # Redirect artefacts to an isolated temp directory
+    agent.ART_DIR = tmp_path
+    agent.A_FILE = tmp_path / "ELIS_Appendix_A_Search_rows.json"
+    agent.B_FILE = tmp_path / "ELIS_Appendix_B_Screening_rows.json"
+    agent.C_FILE = tmp_path / "ELIS_Appendix_C_Extraction_rows.json"
+
+    out = agent.run()
+    assert "b" in out and isinstance(out["b"], list)
+    assert len(out["b"]) >= 2  # included + excluded example
+
+    # Verify file exists and is a JSON array
+    assert agent.B_FILE.exists(), "B file not written"
+    rows = json.loads(agent.B_FILE.read_text(encoding="utf-8"))
+    assert isinstance(rows, list) and rows
+
+    for row in rows:
+        assert row["decision"] in {"included", "excluded"}
+        if row["decision"] == "excluded":
+            reason = row.get("reason")
+            assert isinstance(reason, str) and reason.strip()
