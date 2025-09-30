@@ -1,27 +1,20 @@
+name: ELIS – Bot Commit (direct to elis-bot via GitHub App)
 # ============================================================================
-# ELIS – Bot Commit (direct to elis-bot via GitHub App)
-#
 # Purpose
 #   Create or update a single file on the working branch (`elis-bot`), commit it,
 #   push it, and optionally open/refresh a pull request to `main`.
 #
 # Key behaviours
-#   • Uses a GitHub App token (via create-github-app-token) for write access.
+#   • Uses the default GITHUB_TOKEN for write access.
 #   • Newline-safe: prefer `content_b64` (Base64). If using `content_raw`, literal
 #     "\n" sequences are converted to real newlines. CRLF is normalised to LF.
 #   • Idempotent: if the file content is unchanged, no commit is created.
-#   • Rebases the working branch onto the current `main` to keep history clean.
+#   • Keeps the `elis-bot` branch rebased on `main` for a clean history.
 #
 # Usage
 #   Trigger via `workflow_dispatch`. Required inputs: `file_path`, `commit_message`.
 #   Provide exactly one of `content_b64` or `content_raw`.
-#
-# Notes
-#   This workflow is intended for small, reviewable changes (docs/config/tests).
-#   It must not modify unrelated files or bypass branch protection rules.
 # ============================================================================
-
-name: ELIS – Bot Commit (direct to elis-bot via GitHub App)
 
 on:
   workflow_dispatch:
@@ -30,7 +23,7 @@ on:
         description: "Path to create/update (e.g., docs/NOTE.md)"
         required: true
       content_raw:
-        description: "Plain text content. You may use \\n for newlines. (Leave empty if using content_b64.)"
+        description: "Plain text content. You may use \\n for newlines. Leave empty if using content_b64."
         required: false
       content_b64:
         description: "Base64-encoded file content. Preferred for multi-line files."
@@ -65,6 +58,12 @@ jobs:
           ref: ${{ inputs.base_branch }}
           fetch-depth: 0
 
+      # Configure committer identity BEFORE any rebase/commit
+      - name: Configure Git identity
+        run: |
+          git config --global user.name "elis-bot"
+          git config --global user.email "elis-bot@users.noreply.github.com"
+
       - name: Prepare working branch from base
         run: |
           set -eux
@@ -72,6 +71,7 @@ jobs:
           if git ls-remote --exit-code --heads origin ${{ inputs.work_branch }} >/dev/null 2>&1; then
             git fetch origin ${{ inputs.work_branch }}
             git checkout -B ${{ inputs.work_branch }} origin/${{ inputs.work_branch }}
+            # Rebase requires identity, which we configured above.
             git rebase origin/${{ inputs.base_branch }}
           else
             git checkout -b ${{ inputs.work_branch }} origin/${{ inputs.base_branch }}
@@ -91,7 +91,7 @@ jobs:
             # Interpret literal \n in RAW as newlines to avoid single-line files.
             printf "%b" "${RAW:-}" > "$FILE_PATH"
           fi
-          # Normalise CRLF if any
+          # Normalise CRLF to LF (safety on Windows-originated text)
           sed -i 's/\r$//' "$FILE_PATH"
 
       - name: Commit & push (if changed)
@@ -100,8 +100,6 @@ jobs:
           FILE_PATH: ${{ inputs.file_path }}
         run: |
           set -eux
-          git config user.name "elis-bot"
-          git config user.email "elis-bot@users.noreply.github.com"
           if ! git diff --quiet -- "$FILE_PATH"; then
             git add "$FILE_PATH"
             git commit -m "$MSG"
