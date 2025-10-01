@@ -4,20 +4,32 @@
 [tool.black]
 target-version = ["py311"]
 line-length = 88
-# Black expects a single regex string (can be multi-line). These paths are ignored.
+# Black ignores (regex string)
 extend-exclude = '''
 (
-  ^json_jsonl/      # generated artefacts
-| ^docs/            # documentation outputs
-| ^schemas/         # schema files, not Python
+  ^json_jsonl/            # generated artefacts
+| ^docs/                  # documentation outputs
+| ^schemas/               # schema files
 )
 '''
 
 [tool.ruff]
 target-version = "py311"
 line-length = 88
+# Paths Ruff should skip walking entirely.
+exclude = [
+  "json_jsonl",
+  "validation_reports",
+  ".github",
+  "docs",
+  "schemas",
+]
+
+# New-style linter settings live under [tool.ruff.lint]
+[tool.ruff.lint]
 # Keep rules pragmatic; tighten later if needed.
-select = ["E", "F", "I"]  # pycodestyle/pyflakes + import sorting
+select = ["E", "F", "I"]     # pycodestyle, pyflakes, import sorting
+ignore = ["E501"]            # allow long lines (legacy docs/tests)
 
 [tool.pytest.ini_options]
 addopts = "-q"
