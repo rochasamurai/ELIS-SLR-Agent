@@ -15,7 +15,6 @@ import datetime
 import json
 import pathlib
 
-
 # --------------------------------------------------------------------------- #
 # Artefact locations (tests may override these module-level globals)
 # --------------------------------------------------------------------------- #
@@ -24,7 +23,6 @@ ART_DIR = pathlib.Path("json_jsonl")
 A_FILE = ART_DIR / "ELIS_Appendix_A_Search_rows.json"
 B_FILE = ART_DIR / "ELIS_Appendix_B_Screening_rows.json"
 C_FILE = ART_DIR / "ELIS_Appendix_C_Extraction_rows.json"
-
 
 # --------------------------------------------------------------------------- #
 # Helpers
