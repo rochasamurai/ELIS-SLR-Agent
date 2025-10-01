@@ -3,7 +3,9 @@ Smoke tests for Step B agent output (screening decisions).
 Ensures the agent outputs contain the expected fields and structure.
 """
 import json
+
 from scripts import agent
+
 
 def test_step_b_outputs(tmp_path):
     # Use a temporary directory for agent output files.
@@ -22,7 +24,7 @@ def test_step_b_outputs(tmp_path):
             "id": "A-TEST1",
             "search_query": "test query",
             "source": "UnitTest",
-            "executed_at": "2025-01-01T00:00:00Z"
+            "executed_at": "2025-01-01T00:00:00Z",
         }
     ]
     agent.A_FILE.write_text(json.dumps(sample_search_data))
@@ -52,7 +54,9 @@ def test_step_b_outputs(tmp_path):
             assert entry["reason"]
 
     # Each included screening entry should have a corresponding extraction entry.
-    included_ids = [entry["id"] for entry in result["b"] if entry["decision"] == "included"]
+    included_ids = [
+        entry["id"] for entry in result["b"] if entry["decision"] == "included"
+    ]
     assert included_ids, "Expected at least one included screening entry"
     for ext in result["c"]:
         assert ext["screening_id"] in included_ids
