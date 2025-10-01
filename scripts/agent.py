@@ -12,7 +12,6 @@ import datetime
 import json
 import pathlib
 
-
 # --------------------------------------------------------------------------- #
 # Artefact locations (tests may override these module-level globals)
 # --------------------------------------------------------------------------- #
@@ -21,7 +20,6 @@ ART_DIR = pathlib.Path("json_jsonl")
 A_FILE = ART_DIR / "ELIS_Appendix_A_Search_rows.json"
 B_FILE = ART_DIR / "ELIS_Appendix_B_Screening_rows.json"
 C_FILE = ART_DIR / "ELIS_Appendix_C_Extraction_rows.json"
-
 
 # --------------------------------------------------------------------------- #
 # Helpers
@@ -88,3 +86,62 @@ def run():
             "title": "Pilot study on electronic voting",
             "decision": "included",
             "reason": "No reason required (included)",
+            "decided_at": _now(),
+        },
+        {
+            "id": "B-0002",
+            "source_id": first_search_id,
+            "title": "Blog post without methodology",
+            "decision": "excluded",
+            "reason": "Not peer-reviewed / out of scope",
+            "decided_at": _now(),
+        },
+    ]
+
+    # Appendix C — Extraction (only for included items)
+    c_rows = []
+    included_entry = next(
+        (entry for entry in b_rows if entry["decision"] == "included"),
+        None,
+    )
+    if included_entry:
+        c_rows = [
+            {
+                "id": "C-0001",
+                "screening_id": included_entry["id"],
+                "key_findings": "Example extraction placeholder.",
+                "extracted_at": _now(),
+                "notes": "toy run",
+            }
+        ]
+
+    # Persist all artefacts to JSON files
+    _write_json(A_FILE, a_rows)
+    _write_json(B_FILE, b_rows)
+    _write_json(C_FILE, c_rows)
+
+    return {"a": a_rows, "b": b_rows, "c": c_rows}
+
+
+# --------------------------------------------------------------------------- #
+# CLI entrypoint
+# --------------------------------------------------------------------------- #
+
+
+if __name__ == "__main__":
+    # Allow `python scripts/agent.py` for ad-hoc runs.
+    output = run()
+    print(
+        json.dumps(
+            {
+                "written": {
+                    "A_FILE": str(A_FILE),
+                    "B_FILE": str(B_FILE),
+                    "C_FILE": str(C_FILE),
+                },
+                "counts": {key: len(val) for key, val in output.items()},
+            },
+            ensure_ascii=False,
+            indent=2,
+        )
+    )
