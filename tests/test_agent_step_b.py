@@ -2,6 +2,7 @@
 Smoke tests for Step B agent output (screening decisions).
 Ensures the agent outputs contain the expected fields and structure.
 """
+
 import json
 
 from scripts import agent
