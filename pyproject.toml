@@ -1,16 +1,24 @@
+# ELIS SLR Agent — Tooling configuration
+# Black (format), Ruff (lint), and Pytest defaults.
+
 [tool.black]
 target-version = ["py311"]
 line-length = 88
-extend-exclude = [
-    "json_jsonl",
-    "docs",
-    "schemas"
-]
+# Black expects a single regex string (can be multi-line). These paths are ignored.
+extend-exclude = '''
+(
+  ^json_jsonl/      # generated artefacts
+| ^docs/            # documentation outputs
+| ^schemas/         # schema files, not Python
+)
+'''
 
 [tool.ruff]
 target-version = "py311"
 line-length = 88
-extend-ignore = ["E501"]
+# Keep rules pragmatic; tighten later if needed.
+select = ["E", "F", "I"]  # pycodestyle/pyflakes + import sorting
 
 [tool.pytest.ini_options]
+addopts = "-q"
 pythonpath = ["."]
