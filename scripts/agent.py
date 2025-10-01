@@ -11,16 +11,16 @@ decision, and a minimal extraction record for included items. Files are written
 under `json_jsonl/` as pretty-printed JSON arrays.
 """
 
+import datetime
 import json
-from datetime import datetime, timezone
-from pathlib import Path
+import pathlib
 
 
 # --------------------------------------------------------------------------- #
 # Artefact locations (tests may override these module-level globals)
 # --------------------------------------------------------------------------- #
 
-ART_DIR = Path("json_jsonl")
+ART_DIR = pathlib.Path("json_jsonl")
 A_FILE = ART_DIR / "ELIS_Appendix_A_Search_rows.json"
 B_FILE = ART_DIR / "ELIS_Appendix_B_Screening_rows.json"
 C_FILE = ART_DIR / "ELIS_Appendix_C_Extraction_rows.json"
@@ -33,10 +33,14 @@ C_FILE = ART_DIR / "ELIS_Appendix_C_Extraction_rows.json"
 
 def _now() -> str:
     """Return current UTC timestamp in ISO-8601 with trailing 'Z'."""
-    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    return (
+        datetime.datetime.now(datetime.timezone.utc)
+        .isoformat()
+        .replace("+00:00", "Z")
+    )
 
 
-def _write_json(path: Path, data) -> None:
+def _write_json(path: pathlib.Path, data) -> None:
     """Write `data` to `path` as deterministic UTF-8 JSON."""
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8") as f:
