@@ -4,11 +4,11 @@ name: ELIS - Autoformat
 #   Run Black on a target branch (default: `elis-bot`). If changes occur,
 #   commit and push them, then (optionally) open/refresh a PR into `main`.
 #
-# Improvements in this version
-#   • Robust sync for unrelated histories and dirty trees.
-#   • Normalises line endings per `.gitattributes` to prevent Black churn.
-#   • Skips PR creation when there is no diff between base and head (avoids 422).
-#   • Uses github.rest.* with actions/github-script@v6.
+# Why this fixes the current red
+#   • A PR cannot be opened when head == base; we now detect "no diff" and
+#     skip PR creation gracefully (no 422).
+#   • Robust sync handles unrelated histories and dirty trees on the bot branch.
+#   • Line-ending normalisation per `.gitattributes` prevents Black churn on CI.
 # ============================================================================
 
 on:
@@ -64,7 +64,7 @@ jobs:
           git config user.name  "elis-bot"
           git config user.email "elis-bot@users.noreply.github.com"
 
-      # 4) Prepare target branch
+      # 4) Prepare target branch:
       #    - If origin/target exists, check it out.
       #    - Otherwise create from origin/base and push it.
       - name: Prepare target branch
@@ -84,7 +84,7 @@ jobs:
             git push -u origin "$HEAD"
           fi
 
-      # 5) Sync target from base (rebase; reset-to-base if rebase fails)
+      # 5) Sync target from base robustly (rebase; reset-to-base if rebase fails)
       - name: Sync target from base (rebase or reset)
         env:
           BASE:  ${{ inputs.base_branch }}
@@ -141,9 +141,27 @@ jobs:
             echo "No changes to push."
           fi
 
-      # 10) Open or refresh PR — SKIP when there is no diff (avoids 422)
+      # 10) Decide if there is any diff between base and head; only then open a PR
+      - name: Detect diff between base and head
+        id: diff
+        env:
+          BASE:  ${{ inputs.base_branch }}
+          HEAD:  ${{ inputs.target_branch }}
+        run: |
+          set -eux
+          git fetch origin "$BASE" --depth=1
+          # Compare remote base tip with current HEAD
+          if git diff --quiet "origin/$BASE" HEAD; then
+            echo "has_diff=false" >> "$GITHUB_OUTPUT"
+            echo "No diff between ${BASE} and ${HEAD}."
+          else
+            echo "has_diff=true" >> "$GITHUB_OUTPUT"
+            echo "Diff detected between ${BASE} and ${HEAD}."
+          fi
+
+      # 11) Open/refresh PR to base ONLY when there is a diff
       - name: Open/refresh PR to base
-        if: ${{ inputs.open_pr == 'true' }}
+        if: ${{ inputs.open_pr == 'true' && steps.diff.outputs.has_diff == 'true' }}
         uses: actions/github-script@v6
         env:
           BASE_BRANCH: ${{ inputs.base_branch }}
@@ -155,16 +173,6 @@ jobs:
             const repo  = context.repo.repo;
             const base  = process.env.BASE_BRANCH || 'main';
             const head  = process.env.HEAD_BRANCH || 'elis-bot';
-
-            // Compare base..head; if there is no diff, skip PR creation gracefully
-            const cmp = await github.rest.repos.compareCommitsWithBasehead({
-              owner, repo, basehead: `${base}...${head}`,
-            });
-
-            if ((cmp.data.ahead_by === 0) && (cmp.data.behind_by === 0) && (!cmp.data.files || cmp.data.files.length === 0)) {
-              core.info(`No commits between ${base} and ${head} — skipping PR creation.`);
-              return;
-            }
 
             // If a PR already exists, do nothing
             const { data: openPRs } = await github.rest.pulls.list({
@@ -181,3 +189,8 @@ jobs:
               });
               core.info(`Opened PR #${pr.number}`);
             }
+
+      # 12) No-diff note (keeps the job green without a PR)
+      - name: No changes to PR
+        if: ${{ steps.diff.outputs.has_diff != 'true' }}
+        run: echo "No commits between ${BASE_BRANCH:-main} and ${HEAD_BRANCH:-elis-bot} — PR not required."
