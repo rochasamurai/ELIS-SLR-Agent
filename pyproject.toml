@@ -1,22 +1,27 @@
+# =============================================================================
 # ELIS SLR Agent — Tooling configuration
 # Black (format), Ruff (lint), and Pytest defaults.
+# =============================================================================
 
 [tool.black]
 target-version = ["py311"]
 line-length = 88
+# Black expects a SINGLE regex string for extend-exclude (not a list).
+# Multi-line string for readability; anchors are repo-root relative.
 extend-exclude = '''
 (
-  ^json_jsonl/
-| ^docs/
-| ^schemas/
-| ^validation_reports/
-| ^.github/
+  ^json_jsonl/            # generated artefacts
+| ^validation_reports/    # CI reports
+| ^docs/                  # documentation outputs
+| ^schemas/               # JSON Schemas
+| ^.github/               # workflows (not Python)
 )
 '''
 
 [tool.ruff]
 target-version = "py311"
 line-length = 88
+# Paths Ruff should skip entirely
 exclude = [
   "json_jsonl",
   "validation_reports",
@@ -25,9 +30,11 @@ exclude = [
   "schemas",
 ]
 
+# New-style linter settings live under [tool.ruff.lint]
 [tool.ruff.lint]
-select = ["E", "F"]     # runtime/syntax errors only
-ignore = ["E501"]       # allow long lines in legacy text/tests
+# Keep it pragmatic for MVP: runtime/syntax errors only; Black owns formatting.
+select = ["E", "F"]      # pycodestyle errors + pyflakes
+ignore = ["E501"]        # allow long lines in legacy text/tests/docstrings
 
 [tool.pytest.ini_options]
 addopts = "-q"
