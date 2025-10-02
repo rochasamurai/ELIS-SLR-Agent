@@ -1,0 +1,7 @@
+# Keep Python sources consistent so Black --check is stable.
+*.py   text eol=lf
+
+# (optional but helpful)
+*.yml  text eol=lf
+*.yaml text eol=lf
+*.md   text eol=lf
