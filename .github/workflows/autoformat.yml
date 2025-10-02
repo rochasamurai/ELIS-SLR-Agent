@@ -4,26 +4,20 @@ name: ELIS - Autoformat
 #   Run Black on a target branch (default: `elis-bot`). If changes occur,
 #   commit and push them, then (optionally) open/refresh a PR into `main`.
 #
-# Key behaviours
-#   • Uses a GitHub App installation token (no PATs).
-#   • Syncs the target branch from `main` (fast-forward/rebase) so the PR only
-#     contains formatting and normalisation deltas.
-#   • Normalises line endings per `.gitattributes` to prevent recurring
-#     "would reformat" failures on Linux runners.
-#   • Commits only when there are changes, and pushes even if an earlier step
-#     already committed (e.g., normalisation).
-#   • Opens or refreshes a PR target→base when requested.
+# Why this fixes the recurring errors
+#   • Normalises line endings per `.gitattributes` to stop Black "would reformat"
+#     caused by CRLF on Linux runners.
+#   • Ensures the formatted, normalised bytes are PR'd back into `main`, where CI runs.
 #
 # Usage
-#   Actions → "ELIS - Autoformat" → Run workflow.
-#   Inputs:
-#     - base_branch   (default: main)       # PR target (protected)
+#   Actions → "ELIS - Autoformat" → Run workflow
+#     - base_branch   (default: main)       # PR target
 #     - target_branch (default: elis-bot)   # branch to format in place
 #     - open_pr       (default: true)       # open/refresh PR target→base
 #
-# Notes
-#   • Keep this manual (`workflow_dispatch`) to align with governance.
-#   • Ensure `.gitattributes` exists on `main` so normalisation is effective.
+# Governance
+#   Manual-only (`workflow_dispatch`), uses a GitHub App token, and never
+#   force-pushes to `main`. It keeps the PR small and reviewable.
 # ============================================================================
 
 on:
@@ -81,14 +75,15 @@ jobs:
           git config user.email "elis-bot@users.noreply.github.com"
 
       # 4) Sync target branch from base (fast-forward first, then rebase if needed)
+      #    Keeps the PR minimal and avoids diverging histories.
       - name: Sync target from base
         run: |
           set -eux
           git fetch origin ${{ inputs.base_branch }} --depth=1
           git merge --ff-only origin/${{ inputs.base_branch }} || git rebase origin/${{ inputs.base_branch }}
 
-      # 5) Normalise line endings per .gitattributes (prevents 'would reformat')
-      #    Inserted after "Configure Git identity" and before "Run Black".
+      # 5) Normalise line endings per .gitattributes (prevents "would reformat")
+      #    This is inserted explicitly before running Black.
       - name: Normalise line endings (.gitattributes)
         run: |
           set -eux
@@ -115,17 +110,15 @@ jobs:
         run: black .
 
       # 8) Commit & push:
-      #    - Create a Black commit if there are working-tree changes.
-      #    - Always push if local branch is ahead of origin (e.g., after normalisation).
+      #    - Create a Black commit if there are changes.
+      #    - Always push if local branch is ahead (e.g., after normalisation).
       - name: Commit and push if changed or ahead
         run: |
           set -eux
-          # Commit Black changes if any
           if ! git diff --quiet; then
             git add -A
             git commit -m "chore(format): apply Black autoformat"
           fi
-          # Push if we have local commits not on origin/target_branch
           AHEAD=$(git rev-list --left-only --count "origin/${{ inputs.target_branch }}..HEAD" || echo 0)
           if [ "$AHEAD" -gt 0 ]; then
             git push origin HEAD:${{ inputs.target_branch }}
@@ -143,12 +136,11 @@ jobs:
           script: |
             const owner = context.repo.owner;
             const repo  = context.repo.repo;
-            const base  = core.getInput('base_branch', { required: true });
+            const base  = core.getInput('base_branch',  { required: true });
             const head  = core.getInput('target_branch', { required: true });
 
-            // Check if a PR already exists
             const { data: prs } = await github.pulls.list({
-              owner, repo, state: 'open', base, head: `${owner}:${head}`,
+              owner, repo, base, state: 'open', head: `${owner}:${head}`,
             });
 
             if (prs.length === 0) {
