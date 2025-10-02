@@ -4,20 +4,23 @@ name: ELIS - Autoformat
 #   Run Black on a target branch (default: `elis-bot`). If changes occur,
 #   commit and push them, then (optionally) open/refresh a PR into `main`.
 #
-# Why this fixes the recurring errors
+# Why this fixes your recurring errors
 #   • Normalises line endings per `.gitattributes` to stop Black "would reformat"
 #     caused by CRLF on Linux runners.
-#   • Ensures the formatted, normalised bytes are PR'd back into `main`, where CI runs.
+#   • Formats in-place with Black and pushes the exact bytes into a PR to `main`,
+#     so `ELIS - CI` sees identical content and passes `black --check .`.
+#   • Corrects the PR step: `actions/github-script` now receives workflow inputs
+#     via env vars instead of `core.getInput`, which only reads *action* inputs.
 #
 # Usage
 #   Actions → "ELIS - Autoformat" → Run workflow
-#     - base_branch   (default: main)       # PR target
+#     - base_branch   (default: main)       # PR target (protected)
 #     - target_branch (default: elis-bot)   # branch to format in place
 #     - open_pr       (default: true)       # open/refresh PR target→base
 #
 # Governance
-#   Manual-only (`workflow_dispatch`), uses a GitHub App token, and never
-#   force-pushes to `main`. It keeps the PR small and reviewable.
+#   Manual-only (`workflow_dispatch`), uses a GitHub App token, and avoids
+#   changing `main` directly. Keep PRs small and reviewable.
 # ============================================================================
 
 on:
@@ -83,7 +86,7 @@ jobs:
           git merge --ff-only origin/${{ inputs.base_branch }} || git rebase origin/${{ inputs.base_branch }}
 
       # 5) Normalise line endings per .gitattributes (prevents "would reformat")
-      #    This is inserted explicitly before running Black.
+      #    This is explicitly before running Black.
       - name: Normalise line endings (.gitattributes)
         run: |
           set -eux
@@ -127,20 +130,24 @@ jobs:
             echo "No changes to push."
           fi
 
-      # 9) Open or refresh PR target→base (idempotent)
+      # 9) Open or refresh PR target→base (idempotent; FIXED INPUT HANDLING)
       - name: Open/refresh PR to base
         if: ${{ inputs.open_pr == 'true' }}
         uses: actions/github-script@v6
+        env:
+          BASE_BRANCH: ${{ inputs.base_branch }}
+          HEAD_BRANCH: ${{ inputs.target_branch }}
         with:
           github-token: ${{ steps.app.outputs.token }}
           script: |
             const owner = context.repo.owner;
             const repo  = context.repo.repo;
-            const base  = core.getInput('base_branch',  { required: true });
-            const head  = core.getInput('target_branch', { required: true });
+            const base  = process.env.BASE_BRANCH || 'main';
+            const head  = process.env.HEAD_BRANCH || 'elis-bot';
 
+            // Is there already an open PR head → base?
             const { data: prs } = await github.pulls.list({
-              owner, repo, base, state: 'open', head: `${owner}:${head}`,
+              owner, repo, state: 'open', base, head: `${owner}:${head}`,
             });
 
             if (prs.length === 0) {
