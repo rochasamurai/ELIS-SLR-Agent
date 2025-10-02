@@ -6,21 +6,24 @@ name: ELIS - Autoformat
 #
 # Key behaviours
 #   • Uses a GitHub App installation token (no PATs).
-#   • Replays base (`main`) onto the target branch first (fast-forward or rebase),
-#     so the PR only contains formatting deltas.
-#   • Creates a commit only when Black actually changes files.
+#   • Syncs the target branch from `main` (fast-forward/rebase) so the PR only
+#     contains formatting and normalisation deltas.
+#   • Normalises line endings per `.gitattributes` to prevent recurring
+#     "would reformat" failures on Linux runners.
+#   • Commits only when there are changes, and pushes even if an earlier step
+#     already committed (e.g., normalisation).
 #   • Opens or refreshes a PR target→base when requested.
 #
 # Usage
 #   Actions → "ELIS - Autoformat" → Run workflow.
 #   Inputs:
-#     - base_branch (default: main)      # PR target (protected)
-#     - target_branch (default: elis-bot) # branch to format in place
-#     - open_pr (default: true)           # open/refresh PR target→base
+#     - base_branch   (default: main)       # PR target (protected)
+#     - target_branch (default: elis-bot)   # branch to format in place
+#     - open_pr       (default: true)       # open/refresh PR target→base
 #
 # Notes
-#   • `.gitattributes` already enforces LF for Python/text; Black will be stable.
-#   • Keep this workflow manual (`workflow_dispatch`) per repo governance.
+#   • Keep this manual (`workflow_dispatch`) to align with governance.
+#   • Ensure `.gitattributes` exists on `main` so normalisation is effective.
 # ============================================================================
 
 on:
@@ -77,16 +80,26 @@ jobs:
           git config user.name  "elis-bot"
           git config user.email "elis-bot@users.noreply.github.com"
 
-      # 4) Sync target branch with base (fast-forward or rebase)
-      #    - Keeps the PR minimal and avoids formatting diverging commits.
+      # 4) Sync target branch from base (fast-forward first, then rebase if needed)
       - name: Sync target from base
         run: |
           set -eux
           git fetch origin ${{ inputs.base_branch }} --depth=1
-          # Try fast-forward first; if not possible, rebase onto base.
           git merge --ff-only origin/${{ inputs.base_branch }} || git rebase origin/${{ inputs.base_branch }}
 
-      # 5) Set up Python and install Black (pinned)
+      # 5) Normalise line endings per .gitattributes (prevents 'would reformat')
+      #    Inserted after "Configure Git identity" and before "Run Black".
+      - name: Normalise line endings (.gitattributes)
+        run: |
+          set -eux
+          git add --renormalize .
+          if ! git diff --cached --quiet; then
+            git commit -m "chore(format): normalise line endings per .gitattributes"
+          else
+            echo "No line-ending normalisation needed."
+          fi
+
+      # 6) Set up Python and install Black (pinned)
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
@@ -97,36 +110,54 @@ jobs:
           python -m pip install --upgrade pip
           pip install black==24.8.0
 
-      # 6) Run Black in-place
+      # 7) Run Black in-place
       - name: Run Black (format in-place)
         run: black .
 
-      # 7) Commit & push only if there are changes
-      - name: Commit and push if changed
+      # 8) Commit & push:
+      #    - Create a Black commit if there are working-tree changes.
+      #    - Always push if local branch is ahead of origin (e.g., after normalisation).
+      - name: Commit and push if changed or ahead
         run: |
           set -eux
-          if git diff --quiet; then
-            echo "No formatting changes detected."
-            exit 0
+          # Commit Black changes if any
+          if ! git diff --quiet; then
+            git add -A
+            git commit -m "chore(format): apply Black autoformat"
           fi
-          git add -A
-          git commit -m "chore(format): apply Black autoformat"
-          git push origin HEAD:${{ inputs.target_branch }}
-          echo "Pushed: $(git rev-parse --short HEAD)"
+          # Push if we have local commits not on origin/target_branch
+          AHEAD=$(git rev-list --left-only --count "origin/${{ inputs.target_branch }}..HEAD" || echo 0)
+          if [ "$AHEAD" -gt 0 ]; then
+            git push origin HEAD:${{ inputs.target_branch }}
+            echo "Pushed: $(git rev-parse --short HEAD)"
+          else
+            echo "No changes to push."
+          fi
 
-      # 8) Open or refresh PR target→base (optional)
+      # 9) Open or refresh PR target→base (idempotent)
       - name: Open/refresh PR to base
         if: ${{ inputs.open_pr == 'true' }}
-        uses: peter-evans/create-pull-request@v6
+        uses: actions/github-script@v6
         with:
-          token: ${{ steps.app.outputs.token }}
-          branch: ${{ inputs.target_branch }}
-          base: ${{ inputs.base_branch }}
-          title: "chore(format): apply Black autoformat"
-          commit-message: "chore(format): apply Black autoformat"
-          body: |
-            Automated formatting by **ELIS - Autoformat**.
-            - Base: `${{ inputs.base_branch }}`
-            - Target: `${{ inputs.target_branch }}`
-            - Formatter: `black==24.8.0`
-          labels: "automation, formatting"
+          github-token: ${{ steps.app.outputs.token }}
+          script: |
+            const owner = context.repo.owner;
+            const repo  = context.repo.repo;
+            const base  = core.getInput('base_branch', { required: true });
+            const head  = core.getInput('target_branch', { required: true });
+
+            // Check if a PR already exists
+            const { data: prs } = await github.pulls.list({
+              owner, repo, state: 'open', base, head: `${owner}:${head}`,
+            });
+
+            if (prs.length === 0) {
+              const { data: pr } = await github.pulls.create({
+                owner, repo, base, head,
+                title: "chore(format): apply Black autoformat",
+                body: "Automated formatting and line-ending normalisation by ELIS - Autoformat.",
+              });
+              core.info(`Opened PR #${pr.number}`);
+            } else {
+              core.info(`PR already open: #${prs[0].number}`);
+            }
