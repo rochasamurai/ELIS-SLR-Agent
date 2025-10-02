@@ -4,23 +4,17 @@ name: ELIS - Autoformat
 #   Run Black on a target branch (default: `elis-bot`). If changes occur,
 #   commit and push them, then (optionally) open/refresh a PR into `main`.
 #
-# Why this fixes your recurring errors
-#   • Normalises line endings per `.gitattributes` to stop Black "would reformat"
-#     caused by CRLF on Linux runners.
-#   • Formats in-place with Black and pushes the exact bytes into a PR to `main`,
-#     so `ELIS - CI` sees identical content and passes `black --check .`.
-#   • Corrects the PR step: `actions/github-script` now receives workflow inputs
-#     via env vars instead of `core.getInput`, which only reads *action* inputs.
+# Key fixes in this version
+#   • Robust sync: handle unrelated histories and dirty trees safely.
+#   • Normalise line endings per `.gitattributes` to avoid Black "would reformat".
+#   • Always push the bot branch correctly (uses --force-with-lease when reset).
+#   • Correct PR step: pass workflow inputs via env to actions/github-script.
 #
 # Usage
 #   Actions → "ELIS - Autoformat" → Run workflow
-#     - base_branch   (default: main)       # PR target (protected)
-#     - target_branch (default: elis-bot)   # branch to format in place
-#     - open_pr       (default: true)       # open/refresh PR target→base
-#
-# Governance
-#   Manual-only (`workflow_dispatch`), uses a GitHub App token, and avoids
-#   changing `main` directly. Keep PRs small and reviewable.
+#     - base_branch   (default: main)
+#     - target_branch (default: elis-bot)
+#     - open_pr       (default: true)
 # ============================================================================
 
 on:
@@ -63,11 +57,11 @@ jobs:
           app-id: ${{ secrets.ELIS_APP_ID }}
           private-key: ${{ secrets.ELIS_APP_PRIVATE_KEY }}
 
-      # 2) Check out the target branch to be formatted
-      - name: Checkout target branch
+      # 2) Checkout the repository (we will position to target branch next)
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.target_branch }}
+          # Use the token from the GitHub App so we can push
           token: ${{ steps.app.outputs.token }}
           fetch-depth: 0
 
@@ -77,16 +71,48 @@ jobs:
           git config user.name  "elis-bot"
           git config user.email "elis-bot@users.noreply.github.com"
 
-      # 4) Sync target branch from base (fast-forward first, then rebase if needed)
-      #    Keeps the PR minimal and avoids diverging histories.
-      - name: Sync target from base
+      # 4) Ensure we are on the target branch and that it tracks remote.
+      #    - If the remote branch does not exist, create it from base.
+      - name: Prepare target branch
+        env:
+          BASE:  ${{ inputs.base_branch }}
+          HEAD:  ${{ inputs.target_branch }}
         run: |
           set -eux
-          git fetch origin ${{ inputs.base_branch }} --depth=1
-          git merge --ff-only origin/${{ inputs.base_branch }} || git rebase origin/${{ inputs.base_branch }}
+          git fetch origin --prune
+          # Clean any local changes before branch operations
+          git reset --hard
+          git clean -fdx
 
-      # 5) Normalise line endings per .gitattributes (prevents "would reformat")
-      #    This is explicitly before running Black.
+          if git ls-remote --exit-code --heads origin "$HEAD" >/dev/null 2>&1; then
+            # Branch exists on remote: track it locally
+            git checkout -B "$HEAD" "origin/$HEAD"
+          else
+            # Branch does not exist: create it from base
+            git checkout -B "$HEAD" "origin/$BASE"
+            # Push initial branch so subsequent steps can push updates
+            git push -u origin "$HEAD"
+          fi
+
+      # 5) Sync target from base robustly:
+      #    - Try rebase onto base.
+      #    - If rebase fails (unrelated histories or conflicts), abort and
+      #      hard-reset target to base. This is safe for a bot branch.
+      - name: Sync target from base (rebase or reset)
+        env:
+          BASE:  ${{ inputs.base_branch }}
+          HEAD:  ${{ inputs.target_branch }}
+        run: |
+          set -eux
+          git fetch origin "$BASE" --depth=1
+          # Rebase; if it fails, reset to base (safe for automation branch)
+          if ! git rebase "origin/$BASE"; then
+            git rebase --abort || true
+            echo "Rebase failed or histories unrelated; resetting $HEAD to origin/$BASE"
+            git reset --hard "origin/$BASE"
+          fi
+
+      # 6) Normalise line endings per .gitattributes (prevents 'would reformat')
       - name: Normalise line endings (.gitattributes)
         run: |
           set -eux
@@ -97,7 +123,7 @@ jobs:
             echo "No line-ending normalisation needed."
           fi
 
-      # 6) Set up Python and install Black (pinned)
+      # 7) Set up Python and install Black (pinned)
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
@@ -108,29 +134,31 @@ jobs:
           python -m pip install --upgrade pip
           pip install black==24.8.0
 
-      # 7) Run Black in-place
+      # 8) Run Black in-place
       - name: Run Black (format in-place)
         run: black .
 
-      # 8) Commit & push:
-      #    - Create a Black commit if there are changes.
-      #    - Always push if local branch is ahead (e.g., after normalisation).
-      - name: Commit and push if changed or ahead
+      # 9) Commit & push any changes. Use --force-with-lease to cover the
+      #    reset case above while protecting against concurrent updates.
+      - name: Commit and push formatting changes
+        env:
+          HEAD:  ${{ inputs.target_branch }}
         run: |
           set -eux
           if ! git diff --quiet; then
             git add -A
             git commit -m "chore(format): apply Black autoformat"
           fi
-          AHEAD=$(git rev-list --left-only --count "origin/${{ inputs.target_branch }}..HEAD" || echo 0)
+          # Push if ahead; allow non-FF if we reset-to-base earlier
+          AHEAD=$(git rev-list --left-only --count "origin/$HEAD..HEAD" || echo 0)
           if [ "$AHEAD" -gt 0 ]; then
-            git push origin HEAD:${{ inputs.target_branch }}
+            git push --force-with-lease origin HEAD:"$HEAD"
             echo "Pushed: $(git rev-parse --short HEAD)"
           else
             echo "No changes to push."
           fi
 
-      # 9) Open or refresh PR target→base (idempotent; FIXED INPUT HANDLING)
+      # 10) Open or refresh PR target→base (idempotent; reads inputs via env)
       - name: Open/refresh PR to base
         if: ${{ inputs.open_pr == 'true' }}
         uses: actions/github-script@v6
@@ -145,7 +173,6 @@ jobs:
             const base  = process.env.BASE_BRANCH || 'main';
             const head  = process.env.HEAD_BRANCH || 'elis-bot';
 
-            // Is there already an open PR head → base?
             const { data: prs } = await github.pulls.list({
               owner, repo, state: 'open', base, head: `${owner}:${head}`,
             });
