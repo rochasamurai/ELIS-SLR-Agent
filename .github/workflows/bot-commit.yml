@@ -69,4 +69,109 @@ jobs:
       # 3) Prepare working branch (create if missing)
       - name: Prepare working branch
         env:
-          BASE: ${{ i
+          BASE: ${{ inputs.base_branch }}
+          HEAD: ${{ inputs.work_branch }}
+        run: |
+          set -eux
+          git fetch origin --prune
+          if git ls-remote --exit-code --heads origin "$HEAD" >/dev/null 2>&1; then
+            git checkout -B "$HEAD" "origin/$HEAD"
+            # Rebase onto base; if unrelated, reset.
+            if ! git rebase "origin/$BASE"; then
+              git rebase --abort || true
+              git reset --hard "origin/$BASE"
+            fi
+          else
+            git checkout -B "$HEAD" "origin/$BASE"
+            git push -u origin "$HEAD"
+          fi
+
+      # 4) Write file content (either Base64 or raw; normalise line endings to LF)
+      - name: Write file content
+        env:
+          DEST: ${{ inputs.file_path }}
+          B64: ${{ inputs.content_b64 }}
+          RAW: ${{ inputs.content_raw }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$(dirname "$DEST")"
+
+          # Validate inputs: exactly one of B64 or RAW must be provided.
+          if [ -n "$B64" ] && [ -n "$RAW" ]; then
+            echo "::error ::Provide exactly ONE of content_b64 OR content_raw."; exit 1
+          fi
+          if [ -z "$B64" ] && [ -z "$RAW" ]; then
+            echo "::error ::You must provide content_b64 OR content_raw."; exit 1
+          fi
+
+          if [ -n "$B64" ]; then
+            # Decode base64 safely
+            echo "$B64" | base64 -d > "$DEST"
+          else
+            # Interpret \n, \t etc. and write as bytes
+            printf '%b' "$RAW" > "$DEST"
+          fi
+
+          # Strip any CR (Windows) to ensure LF-only files (works with or without .gitattributes)
+          perl -i -pe 's/\r$//' "$DEST"
+
+      # 5) Commit changes only if content actually differs
+      - name: Commit changes (if any)
+        env:
+          DEST: ${{ inputs.file_path }}
+          MSG:  ${{ inputs.commit_message }}
+        run: |
+          set -euo pipefail
+          git add "$DEST"
+          if git diff --cached --quiet -- "$DEST"; then
+            echo "No changes detected in $DEST — skipping commit."
+            echo "HAS_COMMIT=false" >> "$GITHUB_ENV"
+          else
+            git commit -m "$MSG"
+            git push origin HEAD:${{ inputs.work_branch }}
+            echo "HAS_COMMIT=true" >> "$GITHUB_ENV"
+          fi
+
+      # 6) Open/refresh PR ONLY when requested and there is a diff vs base
+      - name: Open/refresh PR
+        if: ${{ inputs.open_pr == 'true' }}
+        uses: actions/github-script@v6
+        env:
+          BASE: ${{ inputs.base_branch }}
+          HEAD: ${{ inputs.work_branch }}
+          HAS_COMMIT: ${{ env.HAS_COMMIT }}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const owner = context.repo.owner;
+            const repo  = context.repo.repo;
+            const base  = process.env.BASE || 'main';
+            const head  = process.env.HEAD || 'elis-bot';
+            const hasCommit = (process.env.HAS_COMMIT || 'false') === 'true';
+
+            // If we didn't push anything this run, check if there's any diff at all.
+            if (!hasCommit) {
+              const cmp = await github.rest.repos.compareCommitsWithBasehead({
+                owner, repo, basehead: `${base}...${head}`,
+              });
+              const hasDiff = (cmp.data.ahead_by > 0) || (cmp.data.files && cmp.data.files.length > 0);
+              if (!hasDiff) {
+                core.info(`No commits/diff between ${base} and ${head} — skipping PR creation.`);
+                return;
+              }
+            }
+
+            // Open or reuse an existing PR
+            const { data: openPRs } = await github.rest.pulls.list({
+              owner, repo, state: 'open', base, head: `${owner}:${head}`,
+            });
+            if (openPRs.length > 0) {
+              core.info(`PR already open: #${openPRs[0].number}`);
+            } else {
+              const { data: pr } = await github.rest.pulls.create({
+                owner, repo, base, head,
+                title: process.env.GITHUB_EVENT_INPUTS_commit_message || "bot: update file",
+                body: "Automated update via ELIS – Bot Commit.",
+              });
+              core.info(`Opened PR #${pr.number}`);
+            }
