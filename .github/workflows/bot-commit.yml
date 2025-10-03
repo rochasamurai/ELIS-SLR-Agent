@@ -1,21 +1,15 @@
-# ============================================================================
-# Purpose
-#   Create or update a single file on the working branch (`elis-bot`), commit it,
-#   push it, and optionally open/refresh a pull request to `main`.
-#
-# Key behaviours
-#   • Uses the default GITHUB_TOKEN for write access.
-#   • Newline-safe: prefer `content_b64` (Base64). If using `content_raw`, literal
-#     "\n" sequences are converted to real newlines. CRLF is normalised to LF.
-#   • Idempotent: if the file content is unchanged, no commit is created.
-#   • Keeps the `elis-bot` branch rebased on `main` for a clean history.
-#
-# Usage
-#   Trigger via `workflow_dispatch`. Required inputs: `file_path`, `commit_message`.
-#   Provide exactly one of `content_b64` or `content_raw`.
-# ============================================================================
-
 name: ELIS - Bot Commit (direct to elis-bot via GitHub App)
+# =============================================================================
+# Purpose
+#   Create or update ONE file on a working branch (default: elis-bot),
+#   commit & push it, and (optionally) open/refresh a PR to main.
+#
+# Why this version
+#   • Accepts EITHER base64 OR raw content (choose one) to avoid "base64: invalid input".
+#   • Normalises line endings to LF to keep CI/Black stable.
+#   • Commits only when content actually changed (idempotent).
+#   • Opens PR only if there is a diff vs base (prevents 422 "No commits between ...").
+# =============================================================================
 
 on:
   workflow_dispatch:
@@ -23,88 +17,56 @@ on:
       file_path:
         description: "Path (relative to repo root) of the file to create/update"
         required: true
+      content_b64:
+        description: "File content in Base64 (leave empty if using raw)"
+        required: false
+        default: ""
       content_raw:
-        description: "File content in base64 encoding"
-        required: true
+        description: "File content as raw text (leave empty if using Base64). '\\n' becomes newline."
+        required: false
+        default: ""
       commit_message:
-        description: "Commit message (conventional style)"
+        description: "Commit message (conventional-commit style)"
         required: true
       base_branch:
-        description: "Base branch name"
+        description: "Base branch"
         required: false
         default: "main"
       work_branch:
-        description: "Working branch name"
+        description: "Working branch"
         required: false
         default: "elis-bot"
       open_pr:
-        description: "Whether to open a pull request to the base branch"
+        description: "Open/refresh PR work_branch → base_branch"
         required: false
         default: "true"
+
+permissions:
+  contents: write
+  pull-requests: write
 
 jobs:
   commit-file:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+
     steps:
-      - name: Check out base branch
-        uses: actions/checkout@v3
+      # 1) Checkout base branch
+      - name: Checkout base branch
+        uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.base_branch }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ inputs.base_branch }}
           fetch-depth: 0
 
-      - name: Switch to work branch
+      # 2) Configure Git identity
+      - name: Configure Git identity
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          # Fetch remote branches and switch to work branch (create if needed)
-          git fetch origin
-          if git show-ref --quiet refs/remotes/origin/${{ github.event.inputs.work_branch }}; then
-            git checkout -B ${{ github.event.inputs.work_branch }} origin/${{ github.event.inputs.work_branch }}
-          else
-            git checkout -b ${{ github.event.inputs.work_branch }} ${{ github.event.inputs.base_branch }}
-          fi
-        shell: bash
+          git config user.name  "elis-bot"
+          git config user.email "elis-bot@users.noreply.github.com"
 
-      - name: Write file content
-        run: |
-          # Decode base64 content and normalize line endings to LF
-          set -o pipefail
-          echo "${{ github.event.inputs.content_raw }}" | base64 -d | sed 's/\r//g' > "${{ github.event.inputs.file_path }}"
-        shell: bash
-
-      - name: Commit changes
-        run: |
-          git add "${{ github.event.inputs.file_path }}"
-          git commit -m "${{ github.event.inputs.commit_message }}"
-          git push origin HEAD:${{ github.event.inputs.work_branch }}
-        shell: bash
-
-      - name: Open pull request
-        if: ${{ github.event.inputs.open_pr == 'true' }}
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const owner = context.repo.owner;
-            const repo = context.repo.repo;
-            // Check if a PR from work_branch to base_branch already exists
-            const { data: existingPRs } = await github.pulls.list({
-              owner,
-              repo,
-              head: `${owner}:${github.event.inputs.work_branch}`,
-              base: github.event.inputs.base_branch,
-              state: 'open',
-            });
-            if (existingPRs.length === 0) {
-              // Create a new PR
-              await github.pulls.create({
-                owner,
-                repo,
-                head: github.event.inputs.work_branch,
-                base: github.event.inputs.base_branch,
-                title: github.event.inputs.commit_message,
-                body: 'Automated bot commit from workflow dispatch.',
-              });
-            } else {
-              core.info('Pull request already exists for this branch.');
-            }
+      # 3) Prepare working branch (create if missing)
+      - name: Prepare working branch
+        env:
+          BASE: ${{ i
