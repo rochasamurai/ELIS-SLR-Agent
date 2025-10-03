@@ -15,7 +15,7 @@
 #   Provide exactly one of `content_b64` or `content_raw`.
 # ============================================================================
 
-name: ELIS – Bot Commit (direct to elis-bot via GitHub App)
+name: ELIS - Bot Commit (direct to elis-bot via GitHub App)
 
 on:
   workflow_dispatch:
