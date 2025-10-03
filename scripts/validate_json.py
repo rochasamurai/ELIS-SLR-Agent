@@ -1,160 +1,270 @@
-#!/usr/bin/env python3
 """
-ELIS Validation Script (Extended, fail-only-on-BLOCKER)
+ELIS – Validate artefacts against JSON Schemas (non-blocking).
 
 Purpose
 -------
-1. Check the minimal repository structure (directories and key files).
-2. Verify the presence of the canonical XLSX file in /docs.
-3. Generate a Markdown report under validation_reports/ with a unique timestamped name.
-4. Exit with code 1 only if a [BLOCKER] issue is found; otherwise exit 0.
+Validate the three ELIS MVP artefacts produced under `json_jsonl/`:
 
-Usage
------
-python scripts/validate_json.py
+  - ELIS_Appendix_A_Search_rows.json
+  - ELIS_Appendix_B_Screening_rows.json
+  - ELIS_Appendix_C_Extraction_rows.json
+
+against minimal JSON Schemas in `schemas/`.
+
+Behaviour
+---------
+- Generates a Markdown report under `validation_reports/validation-report.md`.
+- Prints a short summary to STDOUT for CI logs.
+- **Never blocks CI**: exits with code 0 even if validation errors are found.
+
+Strict formats (post-MVP)
+-------------------------
+We default to *non-strict* JSON Schema format checking to keep MVP friction low.
+When you are ready to tighten validation (e.g., enforce RFC 3339 “date-time”):
+
+  1) Pin dependency:   jsonschema[format-nongpl]==4.23.0  (in requirements.txt)
+  2) Run this script with --strict-formats or set ELIS_STRICT_FORMATS=1
+
+Until then, --strict-formats is available but off by default (no behaviour change).
 """
 
 from __future__ import annotations
 
-import sys
-from datetime import datetime, timezone
+import argparse
+import json
+import os
+from dataclasses import dataclass
 from pathlib import Path
-from typing import List
+from typing import Any, Dict, List
 
-# ---------- Repository paths ----------
-ROOT = Path(__file__).resolve().parent.parent
-DOCS_DIR = ROOT / "docs"
-SCHEMAS_DIR = ROOT / "schemas"
+from jsonschema import Draft202012Validator, FormatChecker
+
+
+# -----------------------------------------------------------------------------
+# Locations
+# -----------------------------------------------------------------------------
+
+ROOT = Path(__file__).resolve().parents[1]
+
 DATA_DIR = ROOT / "json_jsonl"
-REPORTS_DIR = ROOT / "validation_reports"
-CANON_XLSX = DOCS_DIR / "ELIS_Data_Sheets_2025-08-19_v1.0.xlsx"
+A_PATH = DATA_DIR / "ELIS_Appendix_A_Search_rows.json"
+B_PATH = DATA_DIR / "ELIS_Appendix_B_Screening_rows.json"
+C_PATH = DATA_DIR / "ELIS_Appendix_C_Extraction_rows.json"
+
+SCHEMA_DIR = ROOT / "schemas"
+A_SCHEMA = SCHEMA_DIR / "appendix_a.schema.json"
+B_SCHEMA = SCHEMA_DIR / "appendix_b.schema.json"
+C_SCHEMA = SCHEMA_DIR / "appendix_c.schema.json"
+
+REPORT_DIR = ROOT / "validation_reports"
+REPORT_PATH = REPORT_DIR / "validation-report.md"
+
+# How many individual row errors to include per section in the report.
+ERROR_LIMIT_PER_SECTION = 50
 
 
-# ---------- Time helpers (def instead of lambda: Ruff E731 compliant) ----------
-def utc_now() -> datetime:
-    """Return current UTC datetime (timezone-aware)."""
-    return datetime.now(timezone.utc)
+# -----------------------------------------------------------------------------
+# Data structures
+# -----------------------------------------------------------------------------
+
+@dataclass
+class Result:
+    """Container for per-appendix validation results."""
+
+    name: str
+    path: Path
+    schema_path: Path
+    ok: bool
+    count: int
+    errors: List[str]
 
 
-def ts_isoz() -> str:
-    """Return current UTC time as ISO 8601 string with Z suffix."""
-    return utc_now().strftime("%Y-%m-%dT%H:%M:%SZ")  # e.g. 2025-09-16T15:42:10Z
+# -----------------------------------------------------------------------------
+# Helpers
+# -----------------------------------------------------------------------------
+
+def _load_json(path: Path) -> Any:
+    """Load JSON from `path` (UTF-8). Raises on parse errors."""
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
-def ts_date() -> str:
-    """Return current UTC date as YYYY-MM-DD."""
-    return utc_now().strftime("%Y-%m-%d")  # e.g. 2025-09-16
+def _load_schema(path: Path) -> Dict[str, Any]:
+    """Load a JSON Schema from `path` (UTF-8)."""
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
-def ts_full() -> str:
-    """Return compact UTC timestamp suitable for filenames."""
-    return utc_now().strftime("%Y-%m-%d_%H%M%S")  # e.g. 2025-09-16_154210
-
-
-# ---------- Validation checks ----------
-def scan() -> List[str]:
+def _make_validator(schema: Dict[str, Any], strict_formats: bool) -> Draft202012Validator:
     """
-    Perform structural checks and return a list of findings.
-    Prefixes:
-      - [BLOCKER] → must fail the CI (exit 1)
-      - [MINOR]   → advisory only
+    Build a Draft 2020-12 validator.
+
+    If `strict_formats` is true, attach a FormatChecker to enforce JSON-Schema
+    "format" keywords (e.g., RFC 3339 'date-time'). For full strictness,
+    ensure the environment installs `jsonschema[format-nongpl]`.
     """
-    findings: List[str] = []
+    if strict_formats:
+        return Draft202012Validator(schema, format_checker=FormatChecker())
+    return Draft202012Validator(schema)
 
-    # Required directories
-    for d in (DOCS_DIR, SCHEMAS_DIR, DATA_DIR, REPORTS_DIR):
-        if not d.exists():
-            findings.append(
-                f"[BLOCKER] Missing required directory: {d.relative_to(ROOT)}"
-            )
 
-    # Required root-level files
-    if not (ROOT / "README.md").exists():
-        findings.append("[MINOR] Missing README.md at repository root")
-    if not (ROOT / "CHANGELOG.md").exists():
-        findings.append("[MINOR] Missing CHANGELOG.md at repository root")
+def _validate_rows(
+    name: str, data_path: Path, schema_path: Path, strict_formats: bool
+) -> Result:
+    """
+    Validate a JSON array of rows against `schema_path`.
 
-    # Canonical XLSX
-    if not CANON_XLSX.exists():
-        findings.append(
-            f"[BLOCKER] Canonical XLSX not found: {CANON_XLSX.relative_to(ROOT)}"
+    Returns
+    -------
+    Result
+        ok=True when no validation errors were found.
+    """
+    if not data_path.exists():
+        return Result(
+            name=name,
+            path=data_path,
+            schema_path=schema_path,
+            ok=False,
+            count=0,
+            errors=[f"Missing file: {data_path.name}"],
         )
 
-    # Obsolete files to be removed
-    for junk in (DATA_DIR / "desktop.ini", SCHEMAS_DIR / "desktop.ini"):
-        if junk.exists():
-            findings.append(f"[MINOR] Obsolete file present: {junk.relative_to(ROOT)}")
+    # Load data
+    try:
+        data = _load_json(data_path)
+    except Exception as exc:  # pragma: no cover (robust logging)
+        return Result(
+            name=name,
+            path=data_path,
+            schema_path=schema_path,
+            ok=False,
+            count=0,
+            errors=[f"JSON load failed: {exc!r}"],
+        )
 
-    return findings
+    if not isinstance(data, list):
+        return Result(
+            name=name,
+            path=data_path,
+            schema_path=schema_path,
+            ok=False,
+            count=0,
+            errors=["File does not contain a JSON array"],
+        )
+
+    # Load schema
+    try:
+        schema = _load_schema(schema_path)
+    except Exception as exc:  # pragma: no cover
+        return Result(
+            name=name,
+            path=data_path,
+            schema_path=schema_path,
+            ok=False,
+            count=len(data),
+            errors=[f"Schema load failed: {exc!r}"],
+        )
+
+    validator = _make_validator(schema, strict_formats=strict_formats)
+
+    errors: List[str] = []
+    for idx, row in enumerate(data):
+        for error in validator.iter_errors(row):
+            loc = "/".join(str(p) for p in error.path) or "(root)"
+            errors.append(f"row {idx}: {loc}: {error.message}")
+
+    ok = not errors
+    return Result(
+        name=name,
+        path=data_path,
+        schema_path=schema_path,
+        ok=ok,
+        count=len(data),
+        errors=errors,
+    )
 
 
-# ---------- Report writer ----------
-def write_report(findings: List[str]) -> Path:
-    """
-    Write a Markdown validation report with a unique timestamp.
-    Returns the path to the generated file.
-    """
-    REPORTS_DIR.mkdir(parents=True, exist_ok=True)
-    out = REPORTS_DIR / f"{ts_date()}_{ts_full()}_validation_report.md"
+def _write_report(results: List[Result]) -> None:
+    """Write a readable Markdown report to REPORT_PATH."""
+    REPORT_DIR.mkdir(parents=True, exist_ok=True)
 
-    # Header and metadata
-    lines: List[str] = [
-        "# 📑 ELIS Validation Report\n",
-        f"**Generated:** {ts_isoz()}  \n",
-        "**Scope:** Automatic repository validation (structure, canonical docs)\n\n",
-        "---\n\n",
-        "## ✅ Summary\n",
-    ]
+    lines: List[str] = []
+    lines.append("# ELIS Validation Report (MVP)")
+    lines.append("")
+    for r in results:
+        status = "✅ OK" if r.ok else "❌ Errors"
+        lines.append(f"## {r.name} — {status}")
+        lines.append("")
+        lines.append(f"- File: `{r.path.relative_to(ROOT)}`")
+        lines.append(f"- Schema: `{r.schema_path.relative_to(ROOT)}`")
+        lines.append(f"- Row count: **{r.count}**")
+        if r.ok:
+            lines.append("- Findings: none")
+        else:
+            lines.append("- Findings:")
+            for msg in r.errors[:ERROR_LIMIT_PER_SECTION]:
+                lines.append(f"  - {msg}")
+            if len(r.errors) > ERROR_LIMIT_PER_SECTION:
+                lines.append(
+                    f"  - ... and {len(r.errors) - ERROR_LIMIT_PER_SECTION} more"
+                )
+        lines.append("")
 
-    # Overall status
-    if any("BLOCKER" in f for f in findings):
-        lines.append("- Status: **Issues detected (BLOCKER present)**\n")
-    elif findings:
-        lines.append("- Status: **Findings detected (no blocker)**\n")
-    else:
-        lines.append("- Status: **All critical checks passed**\n")
-    lines.append("\n---\n\n")
+    REPORT_PATH.write_text("\n".join(lines), encoding="utf-8")
 
-    # Checks executed
-    lines += [
-        "## 1) Checks Executed\n",
-        "- Directories: `docs/`, `schemas/`, `json_jsonl/`, `validation_reports/`\n",
-        "- Root files: `README.md`, `CHANGELOG.md`\n",
-        f"- Canonical XLSX: `{CANON_XLSX.name}` in `/docs`\n",
-        "\n---\n\n",
-    ]
 
-    # Findings
-    lines.append("## 2) Findings\n")
-    if findings:
-        for f in findings:
-            lines.append(f"- {f}\n")
-    else:
-        lines.append("- No issues found.\n")
-    lines += [
-        "\n---\n\n",
-        "## 3) Next Steps\n",
-        "1. Remove obsolete files (e.g., `desktop.ini`).\n",
-        "2. Keep the canonical XLSX in `/docs` and updated.\n",
-        "3. (Optional) Extend validation to check JSON/JSONL against schemas/XLSX.\n",
-        "\n---\n\n",
-        "*Aligned with ELIS Protocol v1.41 and Agent Prompt v2.0.*\n",
-    ]
+# -----------------------------------------------------------------------------
+# CLI / Main
+# -----------------------------------------------------------------------------
 
-    out.write_text("".join(lines), encoding="utf-8")
-    print(f"Validation report written to {out}")
-    return out
+def _parse_args() -> argparse.Namespace:
+    """Parse optional CLI flags; defaults keep MVP behaviour."""
+    parser = argparse.ArgumentParser(
+        description="Validate ELIS artefacts against JSON Schemas (non-blocking)."
+    )
+    parser.add_argument(
+        "--strict-formats",
+        action="store_true",
+        default=False,
+        help=(
+            "Enable strict JSON Schema 'format' checks (e.g., RFC 3339 date-time). "
+            "Requires installing jsonschema[format-nongpl]."
+        ),
+    )
+    return parser.parse_args()
 
 
 def main() -> int:
     """
-    Execute the checks and generate the report.
-    Returns 1 if a [BLOCKER] is found, otherwise 0 (pipeline passes with warnings).
+    Validate A/B/C artefacts and write a Markdown report.
+
+    Always returns 0 (non-blocking by CI design).
     """
-    findings = scan()
-    write_report(findings)
-    return 1 if any("BLOCKER" in f for f in findings) else 0
+    args = _parse_args()
+    strict_flag = (
+        args.strict_formats or os.getenv("ELIS_STRICT_FORMATS", "0") in {"1", "true", "TRUE"}
+    )
+
+    results = [
+        _validate_rows(
+            "Appendix A (Search)", A_PATH, A_SCHEMA, strict_formats=strict_flag
+        ),
+        _validate_rows(
+            "Appendix B (Screening)", B_PATH, B_SCHEMA, strict_formats=strict_flag
+        ),
+        _validate_rows(
+            "Appendix C (Extraction)", C_PATH, C_SCHEMA, strict_formats=strict_flag
+        ),
+    ]
+
+    # Emit a concise summary for CI logs.
+    for r in results:
+        status = "OK" if r.ok else "ERR"
+        print(f"[{status}] {r.name}: rows={r.count} file={r.path.name}")
+
+    _write_report(results)
+
+    # Non-blocking by design (validate job must not fail merges).
+    return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    raise SystemExit(main())
