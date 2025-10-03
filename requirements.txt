@@ -1,3 +1,18 @@
-# Minimal dependencies for ELIS Agent CI
+# =============================================================================
+# ELIS SLR Agent — Runtime dependencies (CI "validate" stage)
+# -----------------------------------------------------------------------------
+# Scope
+#   Only the packages required by scripts/validate_json.py at runtime.
+#   Developer tools (Ruff, Black, pytest) are installed by GitHub Actions
+#   workflows and must not be listed here to avoid environment drift.
+#
+# Reproducibility
+#   Pin exact versions so CI is deterministic across runners and time.
+# =============================================================================
 
-jsonschema>=4.20,<5  # CI validator; pin to 4.x to avoid breaking changes
+# JSON Schema validator used by scripts/validate_json.py
+# - Pinned for reproducible behaviour on Python 3.11.
+# - After update this pin, run ELIS – CI to ensure validation still behaves
+#   as expected and the report renders correctly.
+
+jsonschema==4.23.0
