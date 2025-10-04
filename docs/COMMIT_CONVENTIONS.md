@@ -1,5 +1,5 @@
 # Commit Conventions (Conventional Commits)
-#--
+<!--
   Purpose: quick, practical guide for ELIS SLR Agent.
   Audience: PMs and engineers. UK English. Keep concise and example-driven.
   Tip: This file helps authors write consistent commit messages and reviewers
@@ -12,14 +12,13 @@
 - Keeps governance predictable (small, reviewable changes).
 
 ## Format
-
-<code>
+```
 <type>(<scope>): <subject>
 <blank line>
 <body>
 <blank line>
 <footer>
-</code>
+```
 
 ### Types (used in this repo)
 - `feat` – new user-visible behaviour
@@ -27,7 +26,7 @@
 - `docs` – documentation only (README, CHANGELOG, docs/)
 - `style` – formatting only (no behaviour; e.g., whitespace)
 - `refactor` – internal change (no new features/fixes)
-- `perf` (— page) – performance improvements
+- `perf` – performance improvements
 - `test` – tests only
 - `ci` – pipelines/workflows/automation
 - `build` – packaging/requirements/tooling
@@ -36,47 +35,46 @@
 
 ### Scopes (common here)
 `agent`, `schemas`, `validator`, `readme`, `changelog`,  
-`workflows`, `ci`, autoformat`, `bot-commit`, `validate`, `housekeeping`,  
+`workflows`, `ci`, `autoformat`, `bot-commit`, `validate`, `housekeeping`,  
 `tests`, `docs`
 
 > Use a short noun; omit the scope if it doesn’t add clarity.
 
 ### Subject rules
-- Imperative, present tense: ‘add’,"’fix","’update".
+- Imperative, present tense: “add”, “fix”, “update”.
 - Lower case; no trailing full stop.
-- Aim for ’ 72 characters (max ~100).
+- Aim for ≤ 72 characters (max ~100).
 
 ### Body (optional, recommended)
-- Explain **what** and *why) (not how).
-- Wrap lines ~12 chars.
+- Explain **what** and **why** (not how).
+- Wrap lines ~72 chars.
 - Bullet points are fine.
 
 ### Footer (optional)
-- `BREAKING CSHANGE:` for any breaking behaviour.
+- `BREAKING CHANGE:` for any breaking behaviour.
 - Issue refs: `Closes #123`.
 
 ## Examples
-`  text
+```text
 feat(agent): add step B screening decisions to toy pipeline
 
-fix(validator): handle missing 'eXecuted_at' with clear message
+fix(validator): handle missing 'executed_at' with clear message
 
 docs(readme): add PM runbook and troubleshooting
 
 ci(workflows): only open validation report PR when report changed
 
-docs(changelog): add v0.1.1-mpv entry; document CI hardening
-``
-
+docs(changelog): add v0.1.1-mvp entry; document CI hardening
+```
 
 ## Versioning guidance (SemVer-ish)
-- `feat:` — 0MINOR bump (x..y..z)
-- `fix:` — PATCH bump (x.y.\*z*)
-- `BREAKING CSHANGE:` (any type) ‑ MAJOR (*x.y.z)
-- `docs:`, `ci:`, `chore:`, `style:`, `test:` — usually **\n version bump`*
+- `feat:` → MINOR bump (x.**y**.z)
+- `fix:` → PATCH bump (x.y.**z**)
+- `BREAKING CHANGE:` (any type) → MAJOR (**x**.y.z)
+- `docs:`, `ci:`, `chore:`, `style:`, `test:` → usually **no version bump**
 
 ## Quick checklist (pre-commit)
 - Type and scope chosen sensibly?
 - Subject imperative and concise?
-- Body explains *why* (if non-trivial)?
-[- Any breaking change noted in footer?
+- Body explains **why** (if non-trivial)?
+- Any breaking change noted in footer?
