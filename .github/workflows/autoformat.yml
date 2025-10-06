@@ -4,11 +4,10 @@ name: ELIS - Autoformat
 #   Run Black on a target branch (default: `elis-bot`). If changes occur,
 #   commit and push them, then (optionally) open/refresh a PR into `main`.
 #
-# Why this fixes red jobs
-#   • Skip PR creation when head == base via an API diff check (no 422).
-#   • Robust sync handles unrelated histories/dirty trees on the bot branch.
-#   • Force LF line endings + .gitattributes renormalisation to prevent Black churn.
-#   • Use github.event.inputs.* (reliable) instead of inputs.* in top-level/concurrency.
+# Why include a diagnostic step?
+#   The "Show Black dry-run/diff" step prints what Black would change without
+#   failing the job, so you can see exactly why CI "would reformat" before we
+#   actually format and commit. This helps when PRs are red due to EOL/spacing.
 # ============================================================================
 
 on:
@@ -31,9 +30,8 @@ permissions:
   contents: write
   pull-requests: write
 
-# Use workflow_dispatch inputs safely at top-level (concurrency supports expressions)
 concurrency:
-  group: autoformat-${{ github.event.inputs.target_branch != '' && github.event.inputs.target_branch || 'elis-bot' }}
+  group: autoformat-${{ inputs.target_branch }}
   cancel-in-progress: false
 
 jobs:
@@ -42,12 +40,6 @@ jobs:
     defaults:
       run:
         shell: bash
-
-    env:
-      # Normalise access to inputs (provide defaults in shell where needed)
-      BASE_BRANCH:   ${{ github.event.inputs.base_branch }}
-      TARGET_BRANCH: ${{ github.event.inputs.target_branch }}
-      OPEN_PR:       ${{ github.event.inputs.open_pr }}
 
     steps:
       # 1) GitHub App token for write operations
@@ -65,25 +57,21 @@ jobs:
           token: ${{ steps.app.outputs.token }}
           fetch-depth: 0
 
-      # 3) Git identity and EOL policy for consistent formatting
-      - name: Configure Git identity & LF endings
+      # 3) Git identity for commits/rebases
+      - name: Configure Git identity
         run: |
-          set -eux
           git config user.name  "elis-bot"
           git config user.email "elis-bot@users.noreply.github.com"
-          # Enforce LF endings to avoid Black churn across OSes
-          git config core.autocrlf false
-          git config core.eol lf
 
       # 4) Prepare target branch:
-      #    - If origin/TARGET exists, check it out.
-      #    - Otherwise create from origin/BASE and push it.
+      #    - If origin/target exists, check it out.
+      #    - Otherwise create from origin/base and push it.
       - name: Prepare target branch
+        env:
+          BASE:  ${{ inputs.base_branch }}
+          HEAD:  ${{ inputs.target_branch }}
         run: |
           set -eux
-          BASE="${BASE_BRANCH:-main}"
-          HEAD="${TARGET_BRANCH:-elis-bot}"
-
           git fetch origin --prune
           git reset --hard
           git clean -fdx
@@ -95,11 +83,12 @@ jobs:
             git push -u origin "$HEAD"
           fi
 
-      # 5) Sync target from base (rebase; if it fails/unrelated, reset to base)
+      # 5) Sync target from base (rebase; reset-to-base if rebase fails/unrelated)
       - name: Sync target from base (rebase or reset)
+        env:
+          BASE:  ${{ inputs.base_branch }}
         run: |
           set -eux
-          BASE="${BASE_BRANCH:-main}"
           git fetch origin "$BASE" --depth=1
           if ! git rebase "origin/$BASE"; then
             git rebase --abort || true
@@ -126,25 +115,40 @@ jobs:
 
       - name: Install Black
         run: |
-          set -eux
           python -m pip install --upgrade pip
           pip install black==24.8.0
 
-      # 8) Run Black in-place
+      # --- NEW: DIAGNOSTIC STEP ------------------------------------------------
+      # Show what Black would change and a patch diff, but do not fail the job.
+      - name: Show Black dry-run/diff
+        run: |
+          set -eux
+          black --version
+          echo ">>> black --check (non-fatal preview)"
+          if black --check . ; then
+            echo "Repository is already Black-clean."
+          else
+            echo "Black would reformat the files above."
+          fi
+          echo ">>> black --diff (non-fatal preview)"
+          # --diff exits 0 even if it prints a patch; --quiet only affects noise
+          black --diff --quiet . || true
+      # ------------------------------------------------------------------------
+
+      # 8) Run Black in-place (actually format)
       - name: Run Black (format in-place)
         run: black .
 
-      # 9) Commit and push (use --force-with-lease only if ahead)
+      # 9) Commit and push (use --force-with-lease only if we rewound history)
       - name: Commit and push formatting changes
+        env:
+          HEAD:  ${{ inputs.target_branch }}
         run: |
           set -eux
-          HEAD="${TARGET_BRANCH:-elis-bot}"
-
           if ! git diff --quiet; then
             git add -A
             git commit -m "chore(format): apply Black autoformat"
           fi
-
           AHEAD=$(git rev-list --left-only --count "origin/$HEAD..HEAD" || echo 0)
           if [ "$AHEAD" -gt 0 ]; then
             git push --force-with-lease origin HEAD:"$HEAD"
@@ -153,39 +157,44 @@ jobs:
             echo "No changes to push."
           fi
 
-      # 10) Compare base..head (skip PR when no diff)
+      # 10) Use GitHub API to decide if there is any diff between base and head
       - name: Compare base..head (API)
         id: compare
         uses: actions/github-script@v6
+        env:
+          BASE_BRANCH: ${{ inputs.base_branch }}
+          HEAD_BRANCH: ${{ inputs.target_branch }}
         with:
           github-token: ${{ steps.app.outputs.token }}
           script: |
             const owner = context.repo.owner;
             const repo  = context.repo.repo;
             const base  = process.env.BASE_BRANCH || 'main';
-            const head  = process.env.TARGET_BRANCH || 'elis-bot';
+            const head  = process.env.HEAD_BRANCH || 'elis-bot';
 
             const cmp = await github.rest.repos.compareCommitsWithBasehead({
               owner, repo, basehead: `${base}...${head}`,
             });
 
-            const hasDiff = (cmp.data.ahead_by > 0) || ((cmp.data.files || []).length > 0);
+            const hasDiff = (cmp.data.ahead_by > 0) || (cmp.data.files && cmp.data.files.length > 0);
             core.setOutput('has_diff', hasDiff ? 'true' : 'false');
             core.info(`Diff? ${hasDiff} (ahead_by=${cmp.data.ahead_by}, behind_by=${cmp.data.behind_by})`);
 
-      # 11) Open/refresh PR only when there is a diff (prevents 422)
+      # 11) Open/refresh PR only when there is a diff (prevents API 422)
       - name: Open/refresh PR to base
-        if: ${{ env.OPEN_PR == 'true' && steps.compare.outputs.has_diff == 'true' }}
+        if: ${{ inputs.open_pr == 'true' && steps.compare.outputs.has_diff == 'true' }}
         uses: actions/github-script@v6
+        env:
+          BASE_BRANCH: ${{ inputs.base_branch }}
+          HEAD_BRANCH: ${{ inputs.target_branch }}
         with:
           github-token: ${{ steps.app.outputs.token }}
           script: |
             const owner = context.repo.owner;
             const repo  = context.repo.repo;
             const base  = process.env.BASE_BRANCH || 'main';
-            const head  = process.env.TARGET_BRANCH || 'elis-bot';
+            const head  = process.env.HEAD_BRANCH || 'elis-bot';
 
-            // If a PR already exists, do nothing
             const { data: openPRs } = await github.rest.pulls.list({
               owner, repo, state: 'open', base, head: `${owner}:${head}`,
             });
@@ -201,8 +210,7 @@ jobs:
               core.info(`Opened PR #${pr.number}`);
             }
 
-      # 12) No-diff note (job remains green without a PR)
+      # 12) No-diff note (keeps the job green without a PR)
       - name: No changes to PR
         if: ${{ steps.compare.outputs.has_diff != 'true' }}
-        run: |
-          echo "No commits between ${BASE_BRANCH:-main} and ${TARGET_BRANCH:-elis-bot} — PR not required."
+        run: echo "No commits between ${BASE_BRANCH:-main} and ${HEAD_BRANCH:-elis-bot} — PR not required."
