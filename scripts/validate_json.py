@@ -62,11 +62,9 @@ SCHEMA_A = SCHEMAS_DIR / "appendix_a.schema.json"
 SCHEMA_B = SCHEMAS_DIR / "appendix_b.schema.json"
 SCHEMA_C = SCHEMAS_DIR / "appendix_c.schema.json"
 
-
 # --------------------------------------------------------------------------- #
 # Utilities
 # --------------------------------------------------------------------------- #
-
 
 def load_json(path: Path) -> Any:
     """Load a JSON file if it exists; return None if missing."""
@@ -77,7 +75,6 @@ def load_json(path: Path) -> Any:
     except Exception as exc:
         return {"__error__": f"failed to parse JSON: {exc}"}
 
-
 def load_schema(path: Path) -> Dict[str, Any]:
     """Load and return a JSON Schema."""
     try:
@@ -85,13 +82,11 @@ def load_schema(path: Path) -> Dict[str, Any]:
     except Exception as exc:
         raise RuntimeError(f"failed to load schema {path}: {exc}") from exc
 
-
 def mk_validator(schema: Dict[str, Any], strict_dt: bool) -> Draft7Validator:
     """Build a Draft7 validator; optionally enable strict date-time."""
     if strict_dt:
         return Draft7Validator(schema, format_checker=FormatChecker())
     return Draft7Validator(schema)
-
 
 def validate_rows(rows: Any, validator: Draft7Validator) -> Tuple[int, List[str]]:
     """
@@ -123,7 +118,6 @@ def validate_rows(rows: Any, validator: Draft7Validator) -> Tuple[int, List[str]
             messages.append(f"[{idx}] {loc}: {e.message}")
 
     return err_count, messages
-
 
 def write_report(
     a_summary: Tuple[int, List[str]],
@@ -162,11 +156,9 @@ def write_report(
     path.write_text("\n".join(body), encoding="utf-8")
     return path
 
-
 # --------------------------------------------------------------------------- #
 # Entry point
 # --------------------------------------------------------------------------- #
-
 
 def main(argv: List[str]) -> int:
     parser = argparse.ArgumentParser(description="Validate ELIS JSON artefacts.")
@@ -206,6 +198,7 @@ def main(argv: List[str]) -> int:
         return 1
     return 0
 
-
 if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))
+
+
