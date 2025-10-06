@@ -1,15 +1,23 @@
-name: ELIS - Bot Commit (direct to elis-bot via GitHub App)
-# =============================================================================
-# Purpose
-#   Create/update ONE file on a working branch, commit & push it, and (optionally)
-#   open/refresh a PR to main.
+# ELIS - Bot Commit (direct to elis-bot via GitHub App)
+# -----------------------------------------------------------------------------
+# Purpose:
+#   Create or update a single file on a working branch, commit it, push it,
+#   and optionally open/refresh a PR to main — using RAW TEXT ONLY.
 #
-# Key traits
-#   • Concurrency guard per work branch (prevents races).
-#   • Hard-resets work branch to base (main) each run → no non-FF errors.
-#   • Accepts EITHER Base64 OR raw text; normalises CRLF→LF.
-#   • Idempotent commit; guarded PR (only if diff vs base).
-# =============================================================================
+# Why this version:
+#   - GitHub workflow_dispatch inputs don’t preserve real newlines; authors paste
+#     text where "\n" appears literally. This workflow converts those sequences
+#     back into real newlines and writes the file with LF endings.
+#   - No Base64 needed; simpler for PM users.
+#
+# Key behaviours:
+#   • Newline-safe: turns literal "\n" into real newlines; normalises CRLF → LF.
+#   • Idempotent: if the file content is unchanged, no commit is created.
+#   • Branch hygiene: re-creates work branch from base on every run to avoid NFF.
+#   • Guarded PR: opened only when there’s a real diff vs base.
+# -----------------------------------------------------------------------------
+
+name: ELIS - Bot Commit (direct to elis-bot via GitHub App)
 
 on:
   workflow_dispatch:
@@ -17,27 +25,22 @@ on:
       file_path:
         description: "Path (relative to repo root) of the file to create/update"
         required: true
-      content_b64:
-        description: "File content in Base64 (leave empty if using raw)"
-        required: false
-        default: ""
       content_raw:
-        description: "File content as raw text (leave empty if using Base64). '\\n' becomes newline."
-        required: false
-        default: ""
+        description: "File content as RAW TEXT (literal \\n will become real newlines)"
+        required: true
       commit_message:
-        description: "Commit message (conventional-commit style)"
+        description: "Commit message (Conventional Commits style)"
         required: true
       base_branch:
-        description: "Base branch"
+        description: "Base branch name"
         required: false
         default: "main"
       work_branch:
-        description: "Working branch"
+        description: "Working branch name"
         required: false
         default: "elis-bot"
       open_pr:
-        description: "Open/refresh PR work_branch → base_branch"
+        description: "Whether to open a pull request to the base branch (true|false)"
         required: false
         default: "true"
 
@@ -45,122 +48,128 @@ permissions:
   contents: write
   pull-requests: write
 
-# Prevent two jobs from pushing to the same work branch at the same time
 concurrency:
-  group: bot-commit-${{ inputs.work_branch }}
+  # Prevent concurrent runs on the same work branch from racing.
+  group: bot-commit-${{ github.event.inputs.work_branch }}
   cancel-in-progress: false
 
 jobs:
   commit-file:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
+    env:
+      FILE_PATH: ${{ github.event.inputs.file_path }}
+      CONTENT_RAW: ${{ github.event.inputs.content_raw }}
+      COMMIT_MSG: ${{ github.event.inputs.commit_message }}
+      BASE_BRANCH: ${{ github.event.inputs.base_branch }}
+      WORK_BRANCH: ${{ github.event.inputs.work_branch }}
+      OPEN_PR: ${{ github.event.inputs.open_pr }}
 
     steps:
-      - name: Checkout base branch
+      # 1) Checkout base with full history (we will rebuild work branch cleanly)
+      - name: Checkout base
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.base_branch }}
+          ref: ${{ env.BASE_BRANCH }}
           fetch-depth: 0
 
-      - name: Configure Git identity
-        run: |
-          git config user.name  "elis-bot"
-          git config user.email "elis-bot@users.noreply.github.com"
-
-      # Always make the work branch a fresh copy of base to avoid non-FF
-      - name: Create/reset working branch from base
-        env:
-          BASE: ${{ inputs.base_branch }}
-          HEAD: ${{ inputs.work_branch }}
-        run: |
-          set -eux
-          git fetch origin --prune
-          git checkout -B "$HEAD" "origin/$BASE"
-
-      - name: Write file content (raw or base64) + normalise LF
-        env:
-          DEST: ${{ inputs.file_path }}
-          B64: ${{ inputs.content_b64 }}
-          RAW: ${{ inputs.content_raw }}
+      # 2) Prepare/clean working branch from base (avoid non-fast-forward)
+      - name: Reset work branch from base
+        shell: bash
         run: |
           set -euo pipefail
-          mkdir -p "$(dirname "$DEST")"
-          # Exactly one content source must be provided
-          if [ -n "$B64" ] && [ -n "$RAW" ]; then
-            echo "::error ::Provide exactly ONE of content_b64 OR content_raw."; exit 1
-          fi
-          if [ -z "$B64" ] && [ -z "$RAW" ]; then
-            echo "::error ::You must provide content_b64 OR content_raw."; exit 1
-          fi
-          if [ -n "$B64" ]; then
-            echo "$B64" | base64 -d > "$DEST"
+          git fetch origin "${BASE_BRANCH}" --depth=1
+          # Create or reset WORK_BRANCH to BASE_BRANCH
+          if git show-ref --quiet "refs/heads/${WORK_BRANCH}"; then
+            git checkout "${WORK_BRANCH}"
+            git reset --hard "origin/${BASE_BRANCH}"
           else
-            printf '%b' "$RAW" > "$DEST"
+            git checkout -b "${WORK_BRANCH}" "origin/${BASE_BRANCH}"
           fi
-          # Convert CRLF → LF to keep CI stable
-          perl -i -pe 's/\r$//' "$DEST"
 
-      - name: Commit and force-push with lease (only if changed)
-        env:
-          DEST: ${{ inputs.file_path }}
-          MSG:  ${{ inputs.commit_message }}
-          HEAD: ${{ inputs.work_branch }}
+      # 3) Write content: convert literal "\n" to newline, normalise CRLF to LF
+      - name: Write file content from RAW TEXT
+        shell: bash
         run: |
           set -euo pipefail
-          git add "$DEST"
-          if git diff --cached --quiet -- "$DEST"; then
-            echo "No changes detected in $DEST — skipping commit."
-            echo "HAS_COMMIT=false" >> "$GITHUB_ENV"
-            # Still push the branch pointer so the remote exists (harmless)
-            git push --force-with-lease origin HEAD:"$HEAD"
+          python - << 'PY'
+          import os, pathlib, sys
+          root = pathlib.Path(os.environ["GITHUB_WORKSPACE"])
+          target = root / os.environ["FILE_PATH"]
+          raw = os.environ["CONTENT_RAW"]
+
+          # Convert literal sequences to real characters:
+          # - turn '\\r\\n' and '\\n' into '\n'
+          # - normalise any stray '\r' to '\n'
+          text = raw.replace("\\r\\n", "\n").replace("\\n", "\n")
+          text = text.replace("\r\n", "\n").replace("\r", "\n")
+
+          target.parent.mkdir(parents=True, exist_ok=True)
+          with open(target, "w", encoding="utf-8", newline="\n") as f:
+            f.write(text)
+
+          # Ensure trailing newline (POSIX convention; helps diffs)
+          with open(target, "rb+") as f:
+            f.seek(0, 2)
+            if f.tell() == 0:
+              f.write(b"\n")
+            else:
+              f.seek(-1, 2)
+              if f.read(1) != b"\n":
+                f.write(b"\n")
+
+          print(f"Wrote {target} ({target.stat().st_size} bytes)")
+          PY
+
+      # 4) Commit only if content changed
+      - name: Commit changes (if any)
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -- "${FILE_PATH}"
+
+          if git diff --cached --quiet -- "${FILE_PATH}"; then
+            echo "No changes detected for ${FILE_PATH}; skipping commit."
+            echo "changed=false" >> $GITHUB_OUTPUT
             exit 0
           fi
-          git commit -m "$MSG"
-          # Force-with-lease keeps us safe and avoids non-FF errors on the bot branch
-          git push --force-with-lease origin HEAD:"$HEAD"
-          echo "HAS_COMMIT=true" >> "$GITHUB_ENV"
 
-      - name: Open/refresh PR (only when needed)
-        if: ${{ inputs.open_pr == 'true' }}
+          git commit -m "${COMMIT_MSG}"
+          git push origin "HEAD:${WORK_BRANCH}"
+          echo "changed=true" >> $GITHUB_OUTPUT
+
+      # 5) Open or refresh PR only when there are commits (skip on no-op)
+      - name: Open/refresh PR to base
+        if: ${{ env.OPEN_PR == 'true' }}
         uses: actions/github-script@v6
-        env:
-          BASE: ${{ inputs.base_branch }}
-          HEAD: ${{ inputs.work_branch }}
-          HAS_COMMIT: ${{ env.HAS_COMMIT }}
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            const core = require('@actions/core');
             const owner = context.repo.owner;
-            const repo  = context.repo.repo;
-            const base  = process.env.BASE || 'main';
-            const head  = process.env.HEAD || 'elis-bot';
-            const hasCommit = (process.env.HAS_COMMIT || 'false') === 'true';
+            const repo = context.repo.repo;
+            const base = process.env.BASE_BRANCH;
+            const head = process.env.WORK_BRANCH;
 
-            // If we didn't create a commit this run, check for any diff at all.
-            if (!hasCommit) {
-              const cmp = await github.rest.repos.compareCommitsWithBasehead({
-                owner, repo, basehead: `${base}...${head}`,
-              });
-              const hasDiff = (cmp.data.ahead_by > 0) || (cmp.data.files && cmp.data.files.length > 0);
-              if (!hasDiff) {
-                core.info(`No commits/diff between ${base} and ${head} — skipping PR creation.`);
-                return;
-              }
-            }
-
-            // Open or reuse an existing PR
-            const { data: openPRs } = await github.rest.pulls.list({
-              owner, repo, state: 'open', base, head: `${owner}:${head}`,
+            // Check for existing open PR from head->base
+            const { data: prs } = await github.rest.pulls.list({
+              owner, repo, state: 'open', base, head: `${owner}:${head}`
             });
-            if (openPRs.length > 0) {
-              core.info(`PR already open: #${openPRs[0].number}`);
-            } else {
-              const title = process.env.GITHUB_EVENT_INPUTS_commit_message || "bot: update file";
-              const { data: pr } = await github.rest.pulls.create({
-                owner, repo, base, head, title,
-                body: "Automated update via ELIS – Bot Commit.",
+
+            if (prs.length === 0) {
+              // Verify there are commits between branches; if none, skip PR creation
+              const cmp = await github.rest.repos.compareCommits({
+                owner, repo, base, head
               });
-              core.info(`Opened PR #${pr.number}`);
+              if (cmp.data.status === 'ahead' && cmp.data.ahead_by > 0) {
+                await github.rest.pulls.create({
+                  owner, repo, base, head,
+                  title: process.env.COMMIT_MSG,
+                  body: 'Automated bot commit (raw text, newline-safe).'
+                });
+              } else {
+                core.info('No commits between base and work branches; PR not created.');
+              }
+            } else {
+              core.info('PR already exists — no action needed.');
             }
