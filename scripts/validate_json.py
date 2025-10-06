@@ -1,270 +1,211 @@
+#!/usr/bin/env python3
 """
-ELIS – Validate artefacts against JSON Schemas (non-blocking).
+ELIS – JSON artefact validator (MVP)
+====================================
 
 Purpose
 -------
-Validate the three ELIS MVP artefacts produced under `json_jsonl/`:
-
-  - ELIS_Appendix_A_Search_rows.json
-  - ELIS_Appendix_B_Screening_rows.json
-  - ELIS_Appendix_C_Extraction_rows.json
-
-against minimal JSON Schemas in `schemas/`.
+Validate the three JSON artefacts (Appendix A/B/C) produced by the toy agent
+against the minimal JSON Schemas under `schemas/`. Emit a small Markdown report
+under `validation_reports/`. The CI workflow treats this step as non-blocking
+by design, but the script can still exit with a non-zero code when asked.
 
 Behaviour
 ---------
-- Generates a Markdown report under `validation_reports/validation-report.md`.
-- Prints a short summary to STDOUT for CI logs.
-- **Never blocks CI**: exits with code 0 even if validation errors are found.
+- Looks for:
+    json_jsonl/ELIS_Appendix_A_Search_rows.json
+    json_jsonl/ELIS_Appendix_B_Screening_rows.json
+    json_jsonl/ELIS_Appendix_C_DataExtraction_rows.json
+- Validates each list item against the corresponding schema.
+- Writes a Markdown report with a short summary and any failures.
 
-Strict formats (post-MVP)
--------------------------
-We default to *non-strict* JSON Schema format checking to keep MVP friction low.
-When you are ready to tighten validation (e.g., enforce RFC 3339 “date-time”):
+Flags
+-----
+--strict-exit   -> exit 1 when any validation error occurs (default: off)
+--strict-dt     -> enable strict RFC3339 date-time checking (requires
+                   jsonschema[format-nongpl] in requirements)
 
-  1) Pin dependency:   jsonschema[format-nongpl]==4.23.0  (in requirements.txt)
-  2) Run this script with --strict-formats or set ELIS_STRICT_FORMATS=1
-
-Until then, --strict-formats is available but off by default (no behaviour change).
+Notes
+-----
+Keep output deterministic and readable for CI diffs.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
-import os
-from dataclasses import dataclass
+import sys
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
-from jsonschema import Draft202012Validator, FormatChecker
+try:
+    from jsonschema import Draft7Validator, FormatChecker  # type: ignore
+except Exception as exc:  # pragma: no cover
+    print(f"[validate] jsonschema import failed: {exc}", file=sys.stderr)
+    sys.exit(2)
 
-
-# -----------------------------------------------------------------------------
-# Locations
-# -----------------------------------------------------------------------------
+# --------------------------------------------------------------------------- #
+# Repository layout
+# --------------------------------------------------------------------------- #
 
 ROOT = Path(__file__).resolve().parents[1]
-
+SCHEMAS_DIR = ROOT / "schemas"
 DATA_DIR = ROOT / "json_jsonl"
+REPORTS_DIR = ROOT / "validation_reports"
+
 A_PATH = DATA_DIR / "ELIS_Appendix_A_Search_rows.json"
 B_PATH = DATA_DIR / "ELIS_Appendix_B_Screening_rows.json"
-C_PATH = DATA_DIR / "ELIS_Appendix_C_Extraction_rows.json"
+C_PATH = DATA_DIR / "ELIS_Appendix_C_DataExtraction_rows.json"
 
-SCHEMA_DIR = ROOT / "schemas"
-A_SCHEMA = SCHEMA_DIR / "appendix_a.schema.json"
-B_SCHEMA = SCHEMA_DIR / "appendix_b.schema.json"
-C_SCHEMA = SCHEMA_DIR / "appendix_c.schema.json"
-
-REPORT_DIR = ROOT / "validation_reports"
-REPORT_PATH = REPORT_DIR / "validation-report.md"
-
-# How many individual row errors to include per section in the report.
-ERROR_LIMIT_PER_SECTION = 50
+SCHEMA_A = SCHEMAS_DIR / "appendix_a.schema.json"
+SCHEMA_B = SCHEMAS_DIR / "appendix_b.schema.json"
+SCHEMA_C = SCHEMAS_DIR / "appendix_c.schema.json"
 
 
-# -----------------------------------------------------------------------------
-# Data structures
-# -----------------------------------------------------------------------------
-
-@dataclass
-class Result:
-    """Container for per-appendix validation results."""
-
-    name: str
-    path: Path
-    schema_path: Path
-    ok: bool
-    count: int
-    errors: List[str]
+# --------------------------------------------------------------------------- #
+# Utilities
+# --------------------------------------------------------------------------- #
 
 
-# -----------------------------------------------------------------------------
-# Helpers
-# -----------------------------------------------------------------------------
-
-def _load_json(path: Path) -> Any:
-    """Load JSON from `path` (UTF-8). Raises on parse errors."""
-    return json.loads(path.read_text(encoding="utf-8"))
-
-
-def _load_schema(path: Path) -> Dict[str, Any]:
-    """Load a JSON Schema from `path` (UTF-8)."""
-    return json.loads(path.read_text(encoding="utf-8"))
+def load_json(path: Path) -> Any:
+    """Load a JSON file if it exists; return None if missing."""
+    if not path.exists():
+        return None
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except Exception as exc:
+        return {"__error__": f"failed to parse JSON: {exc}"}
 
 
-def _make_validator(schema: Dict[str, Any], strict_formats: bool) -> Draft202012Validator:
+def load_schema(path: Path) -> Dict[str, Any]:
+    """Load and return a JSON Schema."""
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except Exception as exc:
+        raise RuntimeError(f"failed to load schema {path}: {exc}") from exc
+
+
+def mk_validator(schema: Dict[str, Any], strict_dt: bool) -> Draft7Validator:
+    """Build a Draft7 validator; optionally enable strict date-time."""
+    if strict_dt:
+        return Draft7Validator(schema, format_checker=FormatChecker())
+    return Draft7Validator(schema)
+
+
+def validate_rows(rows: Any, validator: Draft7Validator) -> Tuple[int, List[str]]:
     """
-    Build a Draft 2020-12 validator.
-
-    If `strict_formats` is true, attach a FormatChecker to enforce JSON-Schema
-    "format" keywords (e.g., RFC 3339 'date-time'). For full strictness,
-    ensure the environment installs `jsonschema[format-nongpl]`.
-    """
-    if strict_formats:
-        return Draft202012Validator(schema, format_checker=FormatChecker())
-    return Draft202012Validator(schema)
-
-
-def _validate_rows(
-    name: str, data_path: Path, schema_path: Path, strict_formats: bool
-) -> Result:
-    """
-    Validate a JSON array of rows against `schema_path`.
+    Validate a JSON value expected to be a list of objects.
 
     Returns
     -------
-    Result
-        ok=True when no validation errors were found.
+    (error_count, messages)
     """
-    if not data_path.exists():
-        return Result(
-            name=name,
-            path=data_path,
-            schema_path=schema_path,
-            ok=False,
-            count=0,
-            errors=[f"Missing file: {data_path.name}"],
-        )
+    messages: List[str] = []
 
-    # Load data
-    try:
-        data = _load_json(data_path)
-    except Exception as exc:  # pragma: no cover (robust logging)
-        return Result(
-            name=name,
-            path=data_path,
-            schema_path=schema_path,
-            ok=False,
-            count=0,
-            errors=[f"JSON load failed: {exc!r}"],
-        )
+    if rows is None:
+        return 0, ["file missing (skipped)"]
 
-    if not isinstance(data, list):
-        return Result(
-            name=name,
-            path=data_path,
-            schema_path=schema_path,
-            ok=False,
-            count=0,
-            errors=["File does not contain a JSON array"],
-        )
+    if isinstance(rows, dict) and "__error__" in rows:
+        return 1, [rows["__error__"]]
 
-    # Load schema
-    try:
-        schema = _load_schema(schema_path)
-    except Exception as exc:  # pragma: no cover
-        return Result(
-            name=name,
-            path=data_path,
-            schema_path=schema_path,
-            ok=False,
-            count=len(data),
-            errors=[f"Schema load failed: {exc!r}"],
-        )
+    if not isinstance(rows, list):
+        return 1, ["top-level JSON value is not an array"]
 
-    validator = _make_validator(schema, strict_formats=strict_formats)
+    err_count = 0
+    for idx, item in enumerate(rows):
+        errors = sorted(validator.iter_errors(item), key=lambda e: e.path)
+        if not errors:
+            continue
+        err_count += len(errors)
+        for e in errors:
+            loc = "/".join(map(str, e.path)) or "<root>"
+            messages.append(f"[{idx}] {loc}: {e.message}")
 
-    errors: List[str] = []
-    for idx, row in enumerate(data):
-        for error in validator.iter_errors(row):
-            loc = "/".join(str(p) for p in error.path) or "(root)"
-            errors.append(f"row {idx}: {loc}: {error.message}")
-
-    ok = not errors
-    return Result(
-        name=name,
-        path=data_path,
-        schema_path=schema_path,
-        ok=ok,
-        count=len(data),
-        errors=errors,
-    )
+    return err_count, messages
 
 
-def _write_report(results: List[Result]) -> None:
-    """Write a readable Markdown report to REPORT_PATH."""
-    REPORT_DIR.mkdir(parents=True, exist_ok=True)
+def write_report(
+    a_summary: Tuple[int, List[str]],
+    b_summary: Tuple[int, List[str]],
+    c_summary: Tuple[int, List[str]],
+) -> Path:
+    """Write a Markdown report and return its path."""
+    REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+    ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%SZ")
+    name = f"validation-report_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.md"
+    path = REPORTS_DIR / name
 
-    lines: List[str] = []
-    lines.append("# ELIS Validation Report (MVP)")
-    lines.append("")
-    for r in results:
-        status = "✅ OK" if r.ok else "❌ Errors"
-        lines.append(f"## {r.name} — {status}")
+    def block(title: str, summary: Tuple[int, List[str]]) -> str:
+        count, messages = summary
+        lines = [f"### {title}", "", f"- errors: {count}"]
+        if messages:
+            lines.append("")
+            lines.append("#### Details")
+            lines.extend([f"- {m}" for m in messages])
         lines.append("")
-        lines.append(f"- File: `{r.path.relative_to(ROOT)}`")
-        lines.append(f"- Schema: `{r.schema_path.relative_to(ROOT)}`")
-        lines.append(f"- Row count: **{r.count}**")
-        if r.ok:
-            lines.append("- Findings: none")
-        else:
-            lines.append("- Findings:")
-            for msg in r.errors[:ERROR_LIMIT_PER_SECTION]:
-                lines.append(f"  - {msg}")
-            if len(r.errors) > ERROR_LIMIT_PER_SECTION:
-                lines.append(
-                    f"  - ... and {len(r.errors) - ERROR_LIMIT_PER_SECTION} more"
-                )
-        lines.append("")
+        return "\n".join(lines)
 
-    REPORT_PATH.write_text("\n".join(lines), encoding="utf-8")
-
-
-# -----------------------------------------------------------------------------
-# CLI / Main
-# -----------------------------------------------------------------------------
-
-def _parse_args() -> argparse.Namespace:
-    """Parse optional CLI flags; defaults keep MVP behaviour."""
-    parser = argparse.ArgumentParser(
-        description="Validate ELIS artefacts against JSON Schemas (non-blocking)."
-    )
-    parser.add_argument(
-        "--strict-formats",
-        action="store_true",
-        default=False,
-        help=(
-            "Enable strict JSON Schema 'format' checks (e.g., RFC 3339 date-time). "
-            "Requires installing jsonschema[format-nongpl]."
-        ),
-    )
-    return parser.parse_args()
-
-
-def main() -> int:
-    """
-    Validate A/B/C artefacts and write a Markdown report.
-
-    Always returns 0 (non-blocking by CI design).
-    """
-    args = _parse_args()
-    strict_flag = (
-        args.strict_formats or os.getenv("ELIS_STRICT_FORMATS", "0") in {"1", "true", "TRUE"}
-    )
-
-    results = [
-        _validate_rows(
-            "Appendix A (Search)", A_PATH, A_SCHEMA, strict_formats=strict_flag
-        ),
-        _validate_rows(
-            "Appendix B (Screening)", B_PATH, B_SCHEMA, strict_formats=strict_flag
-        ),
-        _validate_rows(
-            "Appendix C (Extraction)", C_PATH, C_SCHEMA, strict_formats=strict_flag
-        ),
+    body = [
+        "# ELIS – Validation Report",
+        "",
+        f"- generated: {ts}",
+        "",
+        block("Appendix A – Search", a_summary),
+        block("Appendix B – Screening", b_summary),
+        block("Appendix C – Data Extraction", c_summary),
+        "",
+        "_End of report._",
+        "",
     ]
 
-    # Emit a concise summary for CI logs.
-    for r in results:
-        status = "OK" if r.ok else "ERR"
-        print(f"[{status}] {r.name}: rows={r.count} file={r.path.name}")
+    path.write_text("\n".join(body), encoding="utf-8")
+    return path
 
-    _write_report(results)
 
-    # Non-blocking by design (validate job must not fail merges).
+# --------------------------------------------------------------------------- #
+# Entry point
+# --------------------------------------------------------------------------- #
+
+
+def main(argv: List[str]) -> int:
+    parser = argparse.ArgumentParser(description="Validate ELIS JSON artefacts.")
+    parser.add_argument(
+        "--strict-exit",
+        action="store_true",
+        help="exit with code 1 when any validation error occurs (default: off)",
+    )
+    parser.add_argument(
+        "--strict-dt",
+        action="store_true",
+        help="enable strict RFC3339 'date-time' checking",
+    )
+    args = parser.parse_args(argv)
+
+    schema_a = load_schema(SCHEMA_A)
+    schema_b = load_schema(SCHEMA_B)
+    schema_c = load_schema(SCHEMA_C)
+
+    v_a = mk_validator(schema_a, args.strict_dt)
+    v_b = mk_validator(schema_b, args.strict_dt)
+    v_c = mk_validator(schema_c, args.strict_dt)
+
+    rows_a = load_json(A_PATH)
+    rows_b = load_json(B_PATH)
+    rows_c = load_json(C_PATH)
+
+    sum_a = validate_rows(rows_a, v_a)
+    sum_b = validate_rows(rows_b, v_b)
+    sum_c = validate_rows(rows_c, v_c)
+
+    report = write_report(sum_a, sum_b, sum_c)
+    print(f"[validate] wrote report: {report.relative_to(ROOT)}")
+
+    total_errors = sum_a[0] + sum_b[0] + sum_c[0]
+    if args.strict_exit and total_errors > 0:
+        return 1
     return 0
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    sys.exit(main(sys.argv[1:]))
