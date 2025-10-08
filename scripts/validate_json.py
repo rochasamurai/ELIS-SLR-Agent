@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 ELIS – Validate artefacts against JSON Schemas (non-blocking).
 
@@ -7,13 +8,13 @@ Validate the three ELIS MVP artefacts produced under `json_jsonl/`:
 
   - ELIS_Appendix_A_Search_rows.json
   - ELIS_Appendix_B_Screening_rows.json
-  - ELIS_Appendix_C_Extraction_rows.json
+  - ELIS_Appendix_C_DataExtraction_rows.json
 
 against minimal JSON Schemas in `schemas/`.
 
 Behaviour
 ---------
-- Generates a Markdown report under `validation_reports/validation-report.md`.
+- Generates a Markdown report at `validation_reports/validation-report.md`.
 - Prints a short summary to STDOUT for CI logs.
 - **Never blocks CI**: exits with code 0 even if validation errors are found.
 
@@ -39,7 +40,6 @@ from typing import Any, Dict, List
 
 from jsonschema import Draft202012Validator, FormatChecker
 
-
 # -----------------------------------------------------------------------------
 # Locations
 # -----------------------------------------------------------------------------
@@ -49,7 +49,8 @@ ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = ROOT / "json_jsonl"
 A_PATH = DATA_DIR / "ELIS_Appendix_A_Search_rows.json"
 B_PATH = DATA_DIR / "ELIS_Appendix_B_Screening_rows.json"
-C_PATH = DATA_DIR / "ELIS_Appendix_C_Extraction_rows.json"
+# FIX: align with agent/output naming (DataExtraction, not Extraction)
+C_PATH = DATA_DIR / "ELIS_Appendix_C_DataExtraction_rows.json"
 
 SCHEMA_DIR = ROOT / "schemas"
 A_SCHEMA = SCHEMA_DIR / "appendix_a.schema.json"
@@ -268,3 +269,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
