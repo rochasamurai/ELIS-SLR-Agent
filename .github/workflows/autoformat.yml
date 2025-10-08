@@ -30,8 +30,9 @@ permissions:
   contents: write
   pull-requests: write
 
+# Tweak #1: robust concurrency group even when inputs are empty (e.g. re-runs)
 concurrency:
-  group: autoformat-${{ inputs.target_branch }}
+  group: autoformat-${{ github.event.inputs.target_branch != '' && github.event.inputs.target_branch || 'elis-bot' }}
   cancel-in-progress: false
 
 jobs:
@@ -57,13 +58,16 @@ jobs:
           token: ${{ steps.app.outputs.token }}
           fetch-depth: 0
 
-      # 3) Git identity for commits/rebases
-      - name: Configure Git identity
+      # Tweak #2: explicit LF policy to avoid Black churn on mixed-OS histories
+      - name: Configure Git identity & LF endings
         run: |
+          set -eux
           git config user.name  "elis-bot"
           git config user.email "elis-bot@users.noreply.github.com"
+          git config core.autocrlf false
+          git config core.eol lf
 
-      # 4) Prepare target branch:
+      # 3) Prepare target branch:
       #    - If origin/target exists, check it out.
       #    - Otherwise create from origin/base and push it.
       - name: Prepare target branch
@@ -83,7 +87,7 @@ jobs:
             git push -u origin "$HEAD"
           fi
 
-      # 5) Sync target from base (rebase; reset-to-base if rebase fails/unrelated)
+      # 4) Sync target from base (rebase; reset-to-base if rebase fails/unrelated)
       - name: Sync target from base (rebase or reset)
         env:
           BASE:  ${{ inputs.base_branch }}
@@ -96,7 +100,7 @@ jobs:
             git reset --hard "origin/$BASE"
           fi
 
-      # 6) Normalise line endings per .gitattributes (prevents Black 'would reformat')
+      # 5) Normalise line endings per .gitattributes (prevents Black 'would reformat')
       - name: Normalise line endings (.gitattributes)
         run: |
           set -eux
@@ -107,7 +111,7 @@ jobs:
             echo "No line-ending normalisation needed."
           fi
 
-      # 7) Set up Python and Black
+      # 6) Set up Python and Black
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
@@ -118,8 +122,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install black==24.8.0
 
-      # --- NEW: DIAGNOSTIC STEP ------------------------------------------------
-      # Show what Black would change and a patch diff, but do not fail the job.
+      # Diagnostic: preview what Black would change (non-fatal)
       - name: Show Black dry-run/diff
         run: |
           set -eux
@@ -131,15 +134,13 @@ jobs:
             echo "Black would reformat the files above."
           fi
           echo ">>> black --diff (non-fatal preview)"
-          # --diff exits 0 even if it prints a patch; --quiet only affects noise
           black --diff --quiet . || true
-      # ------------------------------------------------------------------------
 
-      # 8) Run Black in-place (actually format)
+      # 7) Run Black in-place (actually format)
       - name: Run Black (format in-place)
         run: black .
 
-      # 9) Commit and push (use --force-with-lease only if we rewound history)
+      # 8) Commit and push (use --force-with-lease only when ahead)
       - name: Commit and push formatting changes
         env:
           HEAD:  ${{ inputs.target_branch }}
@@ -157,7 +158,7 @@ jobs:
             echo "No changes to push."
           fi
 
-      # 10) Use GitHub API to decide if there is any diff between base and head
+      # 9) Use GitHub API to decide if there is any diff between base and head
       - name: Compare base..head (API)
         id: compare
         uses: actions/github-script@v6
@@ -180,7 +181,7 @@ jobs:
             core.setOutput('has_diff', hasDiff ? 'true' : 'false');
             core.info(`Diff? ${hasDiff} (ahead_by=${cmp.data.ahead_by}, behind_by=${cmp.data.behind_by})`);
 
-      # 11) Open/refresh PR only when there is a diff (prevents API 422)
+      # 10) Open/refresh PR only when there is a diff (prevents API 422)
       - name: Open/refresh PR to base
         if: ${{ inputs.open_pr == 'true' && steps.compare.outputs.has_diff == 'true' }}
         uses: actions/github-script@v6
@@ -195,6 +196,7 @@ jobs:
             const base  = process.env.BASE_BRANCH || 'main';
             const head  = process.env.HEAD_BRANCH || 'elis-bot';
 
+            // If a PR already exists, do nothing
             const { data: openPRs } = await github.rest.pulls.list({
               owner, repo, state: 'open', base, head: `${owner}:${head}`,
             });
@@ -210,7 +212,8 @@ jobs:
               core.info(`Opened PR #${pr.number}`);
             }
 
-      # 12) No-diff note (keeps the job green without a PR)
+      # 11) No-diff note (keeps the job green without a PR)
       - name: No changes to PR
         if: ${{ steps.compare.outputs.has_diff != 'true' }}
         run: echo "No commits between ${BASE_BRANCH:-main} and ${HEAD_BRANCH:-elis-bot} — PR not required."
+
