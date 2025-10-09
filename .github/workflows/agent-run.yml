@@ -1,84 +1,65 @@
-# .github/workflows/agent-run.yml
-# ELIS – Agent Run
-#
-# Purpose:
-#   Manually run the toy agent (scripts/agent.py) to generate the three ELIS
-#   artefacts (A/B/C JSON files under json_jsonl/), and upload them as workflow
-#   artifacts for inspection/download.
-#
-# Notes:
-#   - Read-only to the repository (no commits or pushes).
-#   - Input `ref` chooses the branch or tag to run against.
-#     * Defaults to 'elis-bot' for safe iteration.
-#     * If the requested ref does not exist (e.g. 'elis-bot' was auto-deleted
-#       after a merged PR), the workflow automatically falls back to 'main'.
-#   - Uses only the default GITHUB_TOKEN to check out code; no extra secrets.
-#   - Deterministic, fast “smoke test” of repo wiring: Python setup + agent run
-#     + artifact upload, without touching git history.
-
 name: ELIS - Agent Run
+# -----------------------------------------------------------------------------
+# Purpose
+#   Run the toy agent (scripts/agent.py) to generate MVP artefacts under
+#   json_jsonl/, then upload that folder as a downloadable workflow artifact.
+#
+# Notes
+#   - This workflow is read-only: it does not push branches or open PRs.
+#     (We can add an auto-PR mode in a later step.)
+# -----------------------------------------------------------------------------
 
 on:
   workflow_dispatch:
     inputs:
       ref:
-        description: "Git ref to run against (branch or tag). Defaults to elis-bot; falls back to main if absent."
-        type: string
+        description: "Git ref to run against (branch or tag). Defaults to main."
         required: false
-        default: "elis-bot"
+        default: "main"
+
+permissions:
+  contents: read
 
 jobs:
   run-agent:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    defaults:
-      run:
-        shell: bash
 
     steps:
-      # 1) Resolve a safe ref: prefer the requested ref if it exists; else use main
-      - name: Resolve ref (prefer input, else fallback to main)
-        id: ref
-        env:
-          INPUT_REF: ${{ github.event.inputs.ref }}
-        run: |
-          set -euo pipefail
-          REQ_REF="${INPUT_REF:-elis-bot}"
-          echo "Requested ref: ${REQ_REF}"
-
-          # Ask the remote which refs exist (branch or tag)
-          if git ls-remote --exit-code --heads  "https://github.com/${GITHUB_REPOSITORY}.git" "${REQ_REF}" >/dev/null 2>&1 \
-             || git ls-remote --exit-code --tags "https://github.com/${GITHUB_REPOSITORY}.git" "${REQ_REF}" >/dev/null 2>&1; then
-            REF_SAFE="${REQ_REF}"
-            echo "Using existing ref: ${REF_SAFE}"
-          else
-            REF_SAFE="main"
-            echo "Requested ref not found; falling back to ${REF_SAFE}"
-          fi
-
-          echo "ref_safe=${REF_SAFE}" >> "$GITHUB_OUTPUT"
-
-      # 2) Checkout the resolved ref
-      - name: Checkout ${{ steps.ref.outputs.ref_safe }}
+      - name: Checkout main (or provided ref)
         uses: actions/checkout@v4
         with:
-          ref: ${{ steps.ref.outputs.ref_safe }}
+          ref: ${{ github.event.inputs.ref || 'main' }}
+          fetch-depth: 0
 
-      # 3) Setup Python (match repo baseline)
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      # 4) Run the agent
+      - name: Install minimal runtime
+        run: |
+          python -m pip install --upgrade pip
+          # requirements.txt is minimal and present in repo
+          pip install -r requirements.txt || true
+
       - name: Run Toy Agent
         run: |
-          python --version
           python scripts/agent.py
 
-      # 5) Show artefacts written
       - name: List artefacts
         run: |
           echo "==> json_jsonl/"
           ls -la json_jsonl || true
+          echo "==> json_jsonl/config (if present)"
+          ls -la json_jsonl/config || true
+          echo "==> json_jsonl/logs (if present)"
+          ls -la json_jsonl/logs || true
+
+      - name: Upload artefacts (json_jsonl/)
+        uses: actions/upload-artifact@v4
+        with:
+          name: json_jsonl
+          path: |
+            json_jsonl/**
+          if-no-files-found: error
+          retention-days: 14
