@@ -1,14 +1,16 @@
-{
-  "appendix": "Appendix_A",
-  "generated_at": "2025-09-20T20:54:44Z",
-  "rows": [
-    {
-      "field_a": "value1",
-      "field_b": 123
-    },
-    {
-      "field_a": "value2",
-      "field_b": 456
-    }
-  ]
-}
+[
+  {
+    "id": "A-2025-0001",
+    "search_query": "electoral integrity strategy randomized evaluation",
+    "source": "Google Scholar",
+    "executed_at": "2025-10-09T13:00:00Z",
+    "notes": "pilot seed"
+  },
+  {
+    "id": "A-2025-0002",
+    "search_query": "election disinformation mitigation field experiment",
+    "source": "Dimensions",
+    "executed_at": "2025-10-09T13:10:00Z",
+    "notes": "pilot seed"
+  }
+]
