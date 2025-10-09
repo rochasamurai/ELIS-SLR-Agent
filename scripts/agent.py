@@ -37,6 +37,7 @@ C_FILE = ART_DIR / "ELIS_Appendix_C_DataExtraction_rows.json"
 # Helpers
 # --------------------------------------------------------------------------- #
 
+
 def _now_utc_iso() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
@@ -73,6 +74,7 @@ def _pick_title(a_row: Dict[str, Any], idx: int) -> str:
 # --------------------------------------------------------------------------- #
 # Core
 # --------------------------------------------------------------------------- #
+
 
 def run() -> Dict[str, Any]:
     """
