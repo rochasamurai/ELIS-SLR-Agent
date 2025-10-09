@@ -68,6 +68,7 @@ ERROR_LIMIT_PER_SECTION = 50
 # Data structures
 # -----------------------------------------------------------------------------
 
+
 @dataclass
 class Result:
     """Container for per-appendix validation results."""
@@ -84,6 +85,7 @@ class Result:
 # Helpers
 # -----------------------------------------------------------------------------
 
+
 def _load_json(path: Path) -> Any:
     """Load JSON from `path` (UTF-8). Raises on parse errors."""
     return json.loads(path.read_text(encoding="utf-8"))
@@ -94,7 +96,9 @@ def _load_schema(path: Path) -> Dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def _make_validator(schema: Dict[str, Any], strict_formats: bool) -> Draft202012Validator:
+def _make_validator(
+    schema: Dict[str, Any], strict_formats: bool
+) -> Draft202012Validator:
     """
     Build a Draft 2020-12 validator.
 
@@ -216,6 +220,7 @@ def _write_report(results: List[Result]) -> None:
 # CLI / Main
 # -----------------------------------------------------------------------------
 
+
 def _parse_args() -> argparse.Namespace:
     """Parse optional CLI flags; defaults keep MVP behaviour."""
     parser = argparse.ArgumentParser(
@@ -240,9 +245,11 @@ def main() -> int:
     Always returns 0 (non-blocking by CI design).
     """
     args = _parse_args()
-    strict_flag = (
-        args.strict_formats or os.getenv("ELIS_STRICT_FORMATS", "0") in {"1", "true", "TRUE"}
-    )
+    strict_flag = args.strict_formats or os.getenv("ELIS_STRICT_FORMATS", "0") in {
+        "1",
+        "true",
+        "TRUE",
+    }
 
     results = [
         _validate_rows(
@@ -269,4 +276,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
