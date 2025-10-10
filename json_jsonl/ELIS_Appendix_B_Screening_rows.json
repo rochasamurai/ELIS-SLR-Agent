@@ -5,7 +5,7 @@
     "title": "N/A",
     "decision": "included",
     "reason": "MVP toy included",
-    "decided_at": "2025-10-20T13:47:33Z"
+    "decided_at": "2025-10-10T16:07:36Z"
   },
   {
     "id": "B-A-0002",
@@ -13,7 +13,7 @@
     "title": "N/A",
     "decision": "excluded",
     "reason": "MVP toy excluded",
-    "decided_at": "2025-10-20T13:47:33Z"
+    "decided_at": "2025-10-10T16:07:36Z"
   },
   {
     "id": "B-A-0003",
@@ -21,7 +21,7 @@
     "title": "N/A",
     "decision": "included",
     "reason": "MVP toy included",
-    "decided_at": "2025-10-20T13:47:33Z"
+    "decided_at": "2025-10-10T16:07:36Z"
   },
   {
     "id": "B-A-0004",
@@ -29,7 +29,7 @@
     "title": "N/A",
     "decision": "excluded",
     "reason": "MVP toy excluded",
-    "decided_at": "2025-10-20T13:47:33Z"
+    "decided_at": "2025-10-10T16:07:36Z"
   },
   {
     "id": "B-A-0005",
@@ -37,7 +37,7 @@
     "title": "N/A",
     "decision": "included",
     "reason": "MVP toy included",
-    "decided_at": "2025-10-20T13:47:33Z"
+    "decided_at": "2025-10-10T16:07:36Z"
   },
   {
     "id": "B-A-0006",
@@ -45,7 +45,7 @@
     "title": "N/A",
     "decision": "excluded",
     "reason": "MVP toy excluded",
-    "decided_at": "2025-10-20T13:47:33Z"
+    "decided_at": "2025-10-10T16:07:36Z"
   },
   {
     "id": "B-A-0007",
@@ -53,7 +53,7 @@
     "title": "N/A",
     "decision": "included",
     "reason": "MVP toy included",
-    "decided_at": "2025-10-20T13:47:33Z"
+    "decided_at": "2025-10-10T16:07:36Z"
   },
   {
     "id": "B-A-0008",
@@ -61,6 +61,6 @@
     "title": "N/A",
     "decision": "excluded",
     "reason": "MVP toy excluded",
-    "decided_at": "2025-10-20T13:47:33Z"
+    "decided_at": "2025-10-10T16:07:36Z"
   }
 ]
