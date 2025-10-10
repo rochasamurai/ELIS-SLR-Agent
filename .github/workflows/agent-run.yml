@@ -1,29 +1,36 @@
 name: ELIS - Agent Run
-# -----------------------------------------------------------------------------
+# ============================================================================
 # Purpose
-#   Run the toy agent (scripts/agent.py) to generate MVP artefacts under
-#   json_jsonl/. Always upload them as an artifact.
-#   By default, also commit artefacts to branch "ci/agent-autopr" and open a PR
-#   into main. You can override or clear the branch at dispatch time.
-# -----------------------------------------------------------------------------
+#   Run the ELIS Agent from a chosen ref (branch or tag). The agent reads
+#   Appendix A and writes ONLY Appendix B & C. The workflow then:
+#     • commits B/C to a write branch (default: ci/agent-autopr)
+#     • pushes the branch
+#     • opens/reuses a PR into main
+#     • uploads B/C as an artifact (downloadable)
+#
+# Why this fixes the 404:
+#   The previous run tried to call the compare API with an empty head branch
+#   (URL looked like .../compare/main...). Here we ALWAYS compute and export a
+#   non-empty WRITE_BRANCH, push it first, and only then open the PR.
+# ============================================================================
 
 on:
   workflow_dispatch:
     inputs:
       ref:
-        description: "Git ref to run against (branch or tag). Defaults to main."
+        description: "Git ref to run from (branch or tag)"
+        required: false
+        default: "main"
+      base_branch:
+        description: "Base branch for PR"
         required: false
         default: "main"
       write_branch:
-        description: "Branch to commit json_jsonl/ into (blank = no commit/PR)."
+        description: "Branch to push generated artefacts to"
         required: false
         default: "ci/agent-autopr"
-      base_branch:
-        description: "Base branch to PR into (when write_branch is set)."
-        required: false
-        default: "main"
       open_pr:
-        description: "Open/refresh PR write_branch → base_branch (when write_branch is set)."
+        description: "Open/refresh PR write_branch → base_branch"
         required: false
         default: "true"
 
@@ -31,133 +38,122 @@ permissions:
   contents: write
   pull-requests: write
 
-# Avoid commit/PR races on the same branch
-concurrency:
-  group: agent-autopr-${{ github.event.inputs.write_branch != '' && github.event.inputs.write_branch || 'no-commit' }}
-  cancel-in-progress: false
-
 jobs:
-  run-agent:
+  agent-run:
     runs-on: ubuntu-latest
-    steps:
-      - name: Mint installation token (GitHub App)
-        id: app
-        uses: actions/create-github-app-token@v1
-        with:
-          app-id: ${{ secrets.ELIS_APP_ID }}
-          private-key: ${{ secrets.ELIS_APP_PRIVATE_KEY }}
+    defaults:
+      run:
+        shell: bash
 
-      - name: Checkout repository
+    steps:
+      # 1) Checkout the requested ref (branch or tag)
+      - name: Checkout ref
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.inputs.ref || 'main' }}
           fetch-depth: 0
-          token: ${{ steps.app.outputs.token }}
 
+      # 2) Set up Python and install runtime deps
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Install runtime (best-effort)
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt || true
-
-      - name: Run Toy Agent
-        run: python scripts/agent.py
-
-      - name: List artefacts
-        run: |
-          echo "==> json_jsonl/"
-          ls -la json_jsonl || true
-          echo "==> json_jsonl/config (if present)"
-          ls -la json_jsonl/config || true
-          echo "==> json_jsonl/logs (if present)"
-          ls -la json_jsonl/logs || true
-
-      - name: Upload artefacts (json_jsonl/)
-        uses: actions/upload-artifact@v4
-        with:
-          name: json_jsonl
-          path: json_jsonl/**
-          if-no-files-found: error
-          retention-days: 14
-
-      # ---------- Optional: commit and PR ------------------------------------
-      - name: Prepare work branch
-        if: ${{ github.event.inputs.write_branch != '' }}
-        env:
-          BASE: ${{ github.event.inputs.base_branch }}
-          HEAD: ${{ github.event.inputs.write_branch }}
+      - name: Install runtime deps
         run: |
           set -eux
-          git fetch origin --prune
-          if git ls-remote --exit-code --heads origin "$HEAD" >/dev/null 2>&1; then
-            git checkout -B "$HEAD" "origin/$HEAD"
-            git merge --ff-only "origin/${BASE:-main}" || true
-          else
-            git checkout -B "$HEAD" "origin/${BASE:-main}"
-          fi
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      # 3) Run the agent (reads A; writes ONLY B & C)
+      - name: Run ELIS Agent (B & C only)
+        run: |
+          set -eux
+          python scripts/agent.py
+          echo "Workspace JSON files:"
+          ls -la json_jsonl || true
+
+      # 4) Prepare/write branch; commit B/C; push
+      - name: Commit and push B/C to write branch
+        id: push
+        env:
+          BASE_BRANCH: ${{ github.event.inputs.base_branch || 'main' }}
+          REQ_WRITE_BRANCH: ${{ github.event.inputs.write_branch || 'ci/agent-autopr' }}
+        run: |
+          set -eux
+
+          # Configure author
           git config user.name  "elis-bot"
           git config user.email "elis-bot@users.noreply.github.com"
 
-      - name: Commit artefacts to work branch
-        if: ${{ github.event.inputs.write_branch != '' }}
-        run: |
-          set -eux
-          git add -A json_jsonl
-          if git diff --cached --quiet; then
-            echo "No artefact changes to commit."
-            echo "HAS_COMMIT=false" >> $GITHUB_ENV
-          else
-            git commit -m "data(agent): update json_jsonl artefacts (A/B/C) from ELIS - Agent Run"
-            echo "HAS_COMMIT=true" >> $GITHUB_ENV
+          # Stage ONLY B & C outputs
+          git add -N json_jsonl/ELIS_Appendix_B_Screening_rows.json json_jsonl/ELIS_Appendix_C_Extraction_rows.json || true
+          if git diff --name-only --exit-code -- json_jsonl/ELIS_Appendix_B_Screening_rows.json json_jsonl/ELIS_Appendix_C_Extraction_rows.json; then
+            echo "No B/C changes to commit; skipping push and PR."
+            echo "WRITE_BRANCH=" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
 
-      - name: Push work branch
-        if: ${{ github.event.inputs.write_branch != '' && env.HAS_COMMIT == 'true' }}
-        run: |
-          set -eux
-          git push --force-with-lease origin HEAD:${{ github.event.inputs.write_branch }}
+          # Decide write branch; if already exists remotely, suffix with timestamp
+          WRITE_BRANCH="$REQ_WRITE_BRANCH"
+          if git ls-remote --exit-code --heads origin "$WRITE_BRANCH" >/dev/null 2>&1; then
+            TS="$(date -u +%Y%m%d-%H%M%S)"
+            WRITE_BRANCH="${WRITE_BRANCH}-${TS}"
+          fi
 
-      - name: Open/refresh PR (write_branch → base_branch)
-        if: ${{ github.event.inputs.write_branch != '' && github.event.inputs.open_pr == 'true' }}
-        uses: actions/github-script@v6
+          # Create/checkout write branch from current ref (handles detached HEAD from tag)
+          git checkout -b "$WRITE_BRANCH"
+
+          # Add and commit B/C outputs
+          git add json_jsonl/ELIS_Appendix_B_Screening_rows.json json_jsonl/ELIS_Appendix_C_Extraction_rows.json
+          git commit -m "feat(agent): add B/C artefacts from ${GITHUB_REF_NAME:-ref}"
+
+          # Push write branch
+          git push origin HEAD:"$WRITE_BRANCH"
+
+          # Export for later steps
+          echo "WRITE_BRANCH=$WRITE_BRANCH" >> "$GITHUB_OUTPUT"
+
+      # 5) Upload artefacts for convenience (download from the run)
+      - name: Upload agent artefacts
+        if: ${{ steps.push.outputs.WRITE_BRANCH != '' }}
+        uses: actions/upload-artifact@v4
         with:
-          github-token: ${{ steps.app.outputs.token }}
+          name: agent-artefacts
+          path: |
+            json_jsonl/ELIS_Appendix_B_Screening_rows.json
+            json_jsonl/ELIS_Appendix_C_Extraction_rows.json
+
+      # 6) Open or reuse PR (only if we actually pushed a branch)
+      - name: Open/refresh PR
+        if: ${{ github.event.inputs.open_pr == 'true' && steps.push.outputs.WRITE_BRANCH != '' }}
+        uses: actions/github-script@v6
+        env:
+          BASE: ${{ github.event.inputs.base_branch || 'main' }}
+          HEAD: ${{ steps.push.outputs.WRITE_BRANCH }}
+        with:
           script: |
             const owner = context.repo.owner;
             const repo  = context.repo.repo;
-            const base  = core.getInput('base_branch') || 'main';
-            const head  = core.getInput('write_branch');
+            const base  = process.env.BASE || 'main';
+            const head  = process.env.HEAD;  // set by previous step
+            if (!head) {
+              core.setFailed("WRITE_BRANCH not set; no commit was pushed.");
+              return;
+            }
 
+            // If a PR already exists for this head → base, do nothing
             const { data: openPRs } = await github.rest.pulls.list({
               owner, repo, state: 'open', base, head: `${owner}:${head}`,
             });
+
             if (openPRs.length > 0) {
               core.info(`PR already open: #${openPRs[0].number}`);
-              return;
+            } else {
+              const { data: pr } = await github.rest.pulls.create({
+                owner, repo, base, head,
+                title: "feat(agent): add B/C artefacts from Appendix A",
+                body: "Automated agent run: B/C artefacts generated from current Appendix A input.",
+              });
+              core.info(`Opened PR #${pr.number}`);
             }
-
-            const cmp = await github.rest.repos.compareCommitsWithBasehead({
-              owner, repo, basehead: `${base}...${head}`,
-            });
-            const hasDiff = (cmp.data.ahead_by > 0) || ((cmp.data.files || []).length > 0);
-            if (!hasDiff) {
-              core.info(`No diff between ${base} and ${head}; PR not required.`);
-              return;
-            }
-
-            const title = "data(agent): add/update json_jsonl artefacts (ELIS - Agent Run)";
-            const body  = [
-              "Automated artefacts from **ELIS - Agent Run**.",
-              "",
-              "- Folder: `json_jsonl/`",
-              "- Behaviour: read-only (no schema/logic changes)",
-            ].join("\n");
-
-            const { data: pr } = await github.rest.pulls.create({
-              owner, repo, head, base, title, body,
-            });
-            core.info(`Opened PR #${pr.number}`);
