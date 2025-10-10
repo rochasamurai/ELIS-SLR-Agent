@@ -1,16 +1,50 @@
 [
   {
-    "id": "A-2025-0001",
-    "search_query": "electoral integrity strategy randomized evaluation",
-    "source": "Google Scholar",
-    "executed_at": "2025-10-09T13:00:00Z",
-    "notes": "pilot seed"
+    "id": "A-0001",
+    "search_query": "\"electoral integrity\" AND (intervention OR strategy) AND (technology OR digital)",
+    "source": "Crossref",
+    "executed_at": "2025-10-10T00:00:00Z"
   },
   {
-    "id": "A-2025-0002",
-    "search_query": "election disinformation mitigation field experiment",
+    "id": "A-0002",
+    "search_query": "(\"risk-limiting audit\" OR \"post-election audit\") AND elections",
+    "source": "Scopus",
+    "executed_at": "2025-10-10T00:00:00Z"
+  },
+  {
+    "id": "A-0003",
+    "search_query": "(disinformation OR misinformation) AND (mitigation OR countermeasures) AND elections",
     "source": "Dimensions",
-    "executed_at": "2025-10-09T13:10:00Z",
-    "notes": "pilot seed"
+    "executed_at": "2025-10-10T00:00:00Z"
+  },
+  {
+    "id": "A-0004",
+    "search_query": "(electronic voting OR e-voting) AND (security OR verifiability) AND integrity",
+    "source": "Crossref",
+    "executed_at": "2025-10-10T00:00:00Z"
+  },
+  {
+    "id": "A-0005",
+    "search_query": "(voter registration) AND (data quality OR deduplication OR cybersecurity)",
+    "source": "Scopus",
+    "executed_at": "2025-10-10T00:00:00Z"
+  },
+  {
+    "id": "A-0006",
+    "search_query": "(social media monitoring) AND elections AND (policy OR governance) AND integrity",
+    "source": "Dimensions",
+    "executed_at": "2025-10-10T00:00:00Z"
+  },
+  {
+    "id": "A-0007",
+    "search_query": "(ballot chain-of-custody) AND (procedures OR best practices)",
+    "source": "Crossref",
+    "executed_at": "2025-10-10T00:00:00Z"
+  },
+  {
+    "id": "A-0008",
+    "search_query": "(civic education OR voter education) AND (impact OR effectiveness) AND electoral integrity",
+    "source": "Scopus",
+    "executed_at": "2025-10-10T00:00:00Z"
   }
 ]
