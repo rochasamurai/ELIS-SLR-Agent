@@ -1,17 +1,18 @@
 [
   {
-    "timestamp": "2025-08-21T19:57:09Z",
-    "record_id": "REC-0001",
-    "reviewer_id": "rev_01",
-    "title": "Risk-limiting audits in contemporary elections",
-    "authors": "Smith J.; Patel R.",
-    "abstract": "Study of RLA implementations across jurisdictions; mixed methods.",
-    "source": "Journal of Election Technology",
-    "decision_stage1": "include",
-    "full_text_available": true,
-    "decision_stage2": "include",
-    "reason_exclusion": "",
-    "conflict_flag": false,
-    "notes": "Clear relevance to auditability."
+    "id": "B-A-2025-0001",
+    "source_id": "A-2025-0001",
+    "title": "N/A",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-10-10T14:55:10Z"
+  },
+  {
+    "id": "B-A-2025-0002",
+    "source_id": "A-2025-0002",
+    "title": "N/A",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-10-10T14:55:10Z"
   }
 ]
