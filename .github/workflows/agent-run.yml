@@ -16,16 +16,12 @@ name: ELIS - Agent Run
 on:
   workflow_dispatch:
     inputs:
-      ref:
-        description: "Git ref to run from (branch or tag)"
-        required: false
-        default: "main"
       base_branch:
-        description: "Base branch for PR"
+        description: "Base branch to PR into"
         required: false
         default: "main"
       write_branch:
-        description: "Branch to push generated artefacts to"
+        description: "Branch to push artefacts to (auto PR)"
         required: false
         default: "ci/agent-autopr"
       open_pr:
@@ -38,135 +34,140 @@ permissions:
   pull-requests: write
 
 jobs:
-  agent-run:
+  run-agent:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
 
     steps:
-      # 1) Checkout the requested ref (branch or tag)
-      - name: Checkout ref
+      # 0) Mint GitHub App installation token (this is what will trigger CI)
+      - name: Mint installation token (GitHub App)
+        id: app
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.ELIS_APP_ID }}
+          private-key: ${{ secrets.ELIS_APP_PRIVATE_KEY }}
+
+      # 1) Checkout the repo using the App token; do NOT persist the default creds
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.ref || 'main' }}
+          ref: ${{ github.event.inputs.base_branch || 'main' }}
+          token: ${{ steps.app.outputs.token }}
           fetch-depth: 0
+          persist-credentials: false
 
-      # 2) Set up Python and install runtime deps
+      # 2) Git identity + make sure pushes use the App token remote
+      - name: Configure Git identity & remote (App token)
+        run: |
+          set -eux
+          git config user.name  "elis-bot"
+          git config user.email "elis-bot@users.noreply.github.com"
+          git remote set-url origin \
+            https://x-access-token:${{ steps.app.outputs.token }}@github.com/${{ github.repository }}.git
+
+      # 3) Python
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Install runtime deps
+      - name: Install runtime (best-effort)
         run: |
-          set -eux
           python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install -r requirements.txt || true
 
-      # 3) Run the agent (reads A; writes ONLY B & C)
-      - name: Run ELIS Agent (B & C only)
+      # 4) Run agent – produces ONLY B & C from A
+      - name: Run Toy Agent
+        run: python scripts/agent.py
+
+      # 5) List artefacts for debugging
+      - name: List artefacts
         run: |
-          set -eux
-          python scripts/agent.py
-          echo "Workspace JSON files:"
-          ls -la json_jsonl || true
+          echo "==> json_jsonl/"
+          ls -l json_jsonl/ || true
 
-      # 4) Prepare/write branch; commit existing artefacts (B and/or C); push
-      - name: Commit and push artefacts to write branch
-        id: push
-        env:
-          BASE_BRANCH: ${{ github.event.inputs.base_branch || 'main' }}
-          REQ_WRITE_BRANCH: ${{ github.event.inputs.write_branch || 'ci/agent-autopr' }}
-        run: |
-          set -eux
-          B_PATH="json_jsonl/ELIS_Appendix_B_Screening_rows.json"
-          C_PATH="json_jsonl/ELIS_Appendix_C_Extraction_rows.json"
-
-          # Configure author
-          git config user.name  "elis-bot"
-          git config user.email "elis-bot@users.noreply.github.com"
-
-          # Build a list of files that actually exist
-          STAGE_FILES=()
-          [ -f "$B_PATH" ] && STAGE_FILES+=("$B_PATH")
-          [ -f "$C_PATH" ] && STAGE_FILES+=("$C_PATH")
-
-          if [ ${#STAGE_FILES[@]} -eq 0 ]; then
-            echo "No B/C artefacts found to commit; skipping push and PR."
-            echo "WRITE_BRANCH=" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          # Preview changes without failing (intent-to-add when needed)
-          git add -N "${STAGE_FILES[@]}" || true
-          if git diff --name-only --exit-code -- "${STAGE_FILES[@]}"; then
-            echo "No changes in artefacts; skipping push and PR."
-            echo "WRITE_BRANCH=" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          # Decide write branch; if already exists remotely, suffix with timestamp
-          WRITE_BRANCH="$REQ_WRITE_BRANCH"
-          if git ls-remote --exit-code --heads origin "$WRITE_BRANCH" >/dev/null 2>&1; then
-            TS="$(date -u +%Y%m%d-%H%M%S)"
-            WRITE_BRANCH="${WRITE_BRANCH}-${TS}"
-          fi
-
-          # Create/checkout write branch from current ref (handles detached HEAD from tag)
-          git checkout -b "$WRITE_BRANCH"
-
-          # Add and commit the artefacts that exist
-          git add "${STAGE_FILES[@]}"
-          git commit -m "feat(agent): add ${#STAGE_FILES[@]} artefact(s) from ${GITHUB_REF_NAME:-ref}"
-
-          # Push write branch
-          git push origin HEAD:"$WRITE_BRANCH"
-
-          # Export for later steps
-          echo "WRITE_BRANCH=$WRITE_BRANCH" >> "$GITHUB_OUTPUT"
-
-      # 5) Upload artefacts for convenience (download from the run)
-      - name: Upload agent artefacts
-        if: ${{ steps.push.outputs.WRITE_BRANCH != '' }}
+      # 6) Upload artefacts as a build artefact (optional convenience)
+      - name: Upload artefacts (json_jsonl/)
         uses: actions/upload-artifact@v4
         with:
-          name: agent-artefacts
-          path: |
-            json_jsonl/ELIS_Appendix_B_Screening_rows.json
-            json_jsonl/ELIS_Appendix_C_Extraction_rows.json
-          if-no-files-found: ignore
+          name: json_jsonl
+          path: json_jsonl/
+          if-no-files-found: warn
+          retention-days: 7
 
-      # 6) Open or reuse PR (only if we actually pushed a branch)
-      - name: Open/refresh PR
-        if: ${{ github.event.inputs.open_pr == 'true' && steps.push.outputs.WRITE_BRANCH != '' }}
-        uses: actions/github-script@v6
+      # 7) Prepare work branch (create or reuse)
+      - name: Prepare work branch
         env:
-          BASE: ${{ github.event.inputs.base_branch || 'main' }}
-          HEAD: ${{ steps.push.outputs.WRITE_BRANCH }}
+          BASE:  ${{ github.event.inputs.base_branch }}
+          HEAD:  ${{ github.event.inputs.write_branch }}
+        run: |
+          set -eux
+          BASE="${BASE:-main}"
+          HEAD="${HEAD:-ci/agent-autopr}"
+
+          git fetch origin --prune
+          if git ls-remote --exit-code --heads origin "$HEAD" >/dev/null 2>&1; then
+            git checkout -B "$HEAD" "origin/$HEAD"
+          else
+            git checkout -B "$HEAD" "origin/$BASE"
+          fi
+
+      # 8) Commit ONLY existing B/C files
+      - name: Commit artefacts to work branch
+        run: |
+          set -eux
+          B="json_jsonl/ELIS_Appendix_B_Screening_rows.json"
+          C="json_jsonl/ELIS_Appendix_C_Extraction_rows.json"
+
+          ADD=()
+          [ -f "$B" ] && ADD+=("$B")
+          [ -f "$C" ] && ADD+=("$C")
+
+          if [ "${#ADD[@]}" -eq 0 ]; then
+            echo "No artefacts to commit; exiting early."
+            exit 0
+          fi
+
+          git add "${ADD[@]}"
+          if git diff --cached --quiet; then
+            echo "No staged changes."
+          else
+            git commit -m "feat(agent): add B/C artefacts from Appendix A"
+          fi
+
+      # 9) Push using the App token remote
+      - name: Push work branch
+        run: |
+          set -eux
+          if [ -n "$(git log origin/HEAD..HEAD --oneline || true)" ]; then
+            git push -u origin HEAD
+          else
+            echo "Branch already up to date."
+          fi
+
+      # 10) Open/refresh PR using the App token (this makes CI fire)
+      - name: Open/refresh PR (write_branch → base_branch)
+        if: ${{ github.event.inputs.open_pr == 'true' }}
+        uses: actions/github-script@v6
         with:
+          github-token: ${{ steps.app.outputs.token }}
           script: |
             const owner = context.repo.owner;
             const repo  = context.repo.repo;
-            const base  = process.env.BASE || 'main';
-            const head  = process.env.HEAD;  // set by previous step
-            if (!head) {
-              core.setFailed("WRITE_BRANCH not set; no commit was pushed.");
-              return;
-            }
+            const base  = core.getInput('base_branch')  || 'main';
+            const head  = core.getInput('write_branch') || 'ci/agent-autopr';
 
-            // If a PR already exists for this head → base, do nothing
-            const { data: openPRs } = await github.rest.pulls.list({
+            const { data: prs } = await github.rest.pulls.list({
               owner, repo, state: 'open', base, head: `${owner}:${head}`,
             });
 
-            if (openPRs.length > 0) {
-              core.info(`PR already open: #${openPRs[0].number}`);
-            } else {
-              const { data: pr } = await github.rest.pulls.create({
-                owner, repo, base, head,
-                title: "feat(agent): add B/C artefacts from Appendix A",
-                body: "Automated agent run: B/C artefacts generated from current Appendix A input.",
-              });
-              core.info(`Opened PR #${pr.number}`);
+            if (prs.length > 0) {
+              core.info(`PR already open: #${prs[0].number}`);
+              return;
             }
+
+            const { data: pr } = await github.rest.pulls.create({
+              owner, repo, base, head,
+              title: "feat(agent): add B/C artefacts from Appendix A",
+              body: "Automated agent run: B/C artefacts generated from current Appendix A input.",
+            });
+            core.info(`Opened PR #${pr.number}`);
