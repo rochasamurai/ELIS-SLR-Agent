@@ -8,10 +8,9 @@ name: ELIS - Agent Run
 #     • opens/reuses a PR into main
 #     • uploads B/C as an artifact (downloadable)
 #
-# Why this fixes the 404:
-#   The previous run tried to call the compare API with an empty head branch
-#   (URL looked like .../compare/main...). Here we ALWAYS compute and export a
-#   non-empty WRITE_BRANCH, push it first, and only then open the PR.
+# Change log (ops-facing)
+#   - 2025-10-10: Commit only files that actually exist (B and/or C). This avoids
+#                 fatal errors when one of them is not produced in a run.
 # ============================================================================
 
 on:
@@ -73,23 +72,36 @@ jobs:
           echo "Workspace JSON files:"
           ls -la json_jsonl || true
 
-      # 4) Prepare/write branch; commit B/C; push
-      - name: Commit and push B/C to write branch
+      # 4) Prepare/write branch; commit existing artefacts (B and/or C); push
+      - name: Commit and push artefacts to write branch
         id: push
         env:
           BASE_BRANCH: ${{ github.event.inputs.base_branch || 'main' }}
           REQ_WRITE_BRANCH: ${{ github.event.inputs.write_branch || 'ci/agent-autopr' }}
         run: |
           set -eux
+          B_PATH="json_jsonl/ELIS_Appendix_B_Screening_rows.json"
+          C_PATH="json_jsonl/ELIS_Appendix_C_Extraction_rows.json"
 
           # Configure author
           git config user.name  "elis-bot"
           git config user.email "elis-bot@users.noreply.github.com"
 
-          # Stage ONLY B & C outputs
-          git add -N json_jsonl/ELIS_Appendix_B_Screening_rows.json json_jsonl/ELIS_Appendix_C_Extraction_rows.json || true
-          if git diff --name-only --exit-code -- json_jsonl/ELIS_Appendix_B_Screening_rows.json json_jsonl/ELIS_Appendix_C_Extraction_rows.json; then
-            echo "No B/C changes to commit; skipping push and PR."
+          # Build a list of files that actually exist
+          STAGE_FILES=()
+          [ -f "$B_PATH" ] && STAGE_FILES+=("$B_PATH")
+          [ -f "$C_PATH" ] && STAGE_FILES+=("$C_PATH")
+
+          if [ ${#STAGE_FILES[@]} -eq 0 ]; then
+            echo "No B/C artefacts found to commit; skipping push and PR."
+            echo "WRITE_BRANCH=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Preview changes without failing (intent-to-add when needed)
+          git add -N "${STAGE_FILES[@]}" || true
+          if git diff --name-only --exit-code -- "${STAGE_FILES[@]}"; then
+            echo "No changes in artefacts; skipping push and PR."
             echo "WRITE_BRANCH=" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -104,9 +116,9 @@ jobs:
           # Create/checkout write branch from current ref (handles detached HEAD from tag)
           git checkout -b "$WRITE_BRANCH"
 
-          # Add and commit B/C outputs
-          git add json_jsonl/ELIS_Appendix_B_Screening_rows.json json_jsonl/ELIS_Appendix_C_Extraction_rows.json
-          git commit -m "feat(agent): add B/C artefacts from ${GITHUB_REF_NAME:-ref}"
+          # Add and commit the artefacts that exist
+          git add "${STAGE_FILES[@]}"
+          git commit -m "feat(agent): add ${#STAGE_FILES[@]} artefact(s) from ${GITHUB_REF_NAME:-ref}"
 
           # Push write branch
           git push origin HEAD:"$WRITE_BRANCH"
@@ -123,6 +135,7 @@ jobs:
           path: |
             json_jsonl/ELIS_Appendix_B_Screening_rows.json
             json_jsonl/ELIS_Appendix_C_Extraction_rows.json
+          if-no-files-found: ignore
 
       # 6) Open or reuse PR (only if we actually pushed a branch)
       - name: Open/refresh PR
