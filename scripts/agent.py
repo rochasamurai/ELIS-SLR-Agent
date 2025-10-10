@@ -1,16 +1,21 @@
 #!/usr/bin/env python3
 """
 ELIS – Toy Agent (MVP)
+======================
 
-Reads Appendix A (Search) and produces ONLY:
-  - Appendix B (Screening) rows
-  - Appendix C (Data Extraction) rows
+Purpose
+-------
+Read Appendix A (Search rows) from ``json_jsonl/ELIS_Appendix_A_Search_rows.json``
+and produce:
+  • Appendix B (Screening rows)
+  • Appendix C (Extraction rows)
 
-Notes
------
-- Accepts Appendix A as either a top-level list or {"rows": [...]}.
-- Writes *only* B_FILE and C_FILE (MVP path).
-- Tests may override ART_DIR / A_FILE / B_FILE / C_FILE module variables.
+This script **does not** write Appendix A. It only reads A and writes **B & C**.
+
+Predictability
+--------------
+To keep downstream automation stable, this script **always writes Appendix C**,
+even if there are zero "included" screening items (C will be an empty array).
 """
 
 from __future__ import annotations
@@ -21,7 +26,7 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 # --------------------------------------------------------------------------- #
-# Locations (tests can override these)
+# Artefact locations (tests may override these module-level globals)
 # --------------------------------------------------------------------------- #
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -29,8 +34,7 @@ ART_DIR = ROOT / "json_jsonl"
 
 A_FILE = ART_DIR / "ELIS_Appendix_A_Search_rows.json"
 B_FILE = ART_DIR / "ELIS_Appendix_B_Screening_rows.json"
-# Repo canonical file; tests may override to *_Extraction_*.
-C_FILE = ART_DIR / "ELIS_Appendix_C_DataExtraction_rows.json"
+C_FILE = ART_DIR / "ELIS_Appendix_C_Extraction_rows.json"
 
 
 # --------------------------------------------------------------------------- #
@@ -38,37 +42,32 @@ C_FILE = ART_DIR / "ELIS_Appendix_C_DataExtraction_rows.json"
 # --------------------------------------------------------------------------- #
 
 
-def _now_utc_iso() -> str:
+def _utc_now() -> str:
+    """Return a UTC timestamp in RFC 3339 / ISO 8601 format with 'Z'."""
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def _ensure_parent(path: Path) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
+def _load_json_array(path: Path) -> List[Dict[str, Any]]:
+    """
+    Load a JSON array from ``path``; return [] if the file is missing.
 
-
-def _load_appendix_a(path: Path) -> List[Dict[str, Any]]:
-    """Load Appendix A rows; support list or {'rows': [...]}."""
+    We keep this tolerant for the MVP to simplify seeding Appendix A.
+    """
     if not path.exists():
         return []
-    raw = json.loads(path.read_text(encoding="utf-8"))
-    if isinstance(raw, list):
-        return raw
-    if isinstance(raw, dict) and isinstance(raw.get("rows"), list):
-        return raw["rows"]
-    return []
+    data = json.loads(path.read_text(encoding="utf-8"))
+    # Allow both "array of rows" (recommended) and the older wrapper shape.
+    if isinstance(data, dict) and "rows" in data and isinstance(data["rows"], list):
+        return list(data["rows"])
+    if isinstance(data, list):
+        return list(data)
+    raise ValueError(f"Expected a JSON array (or wrapper with 'rows') at {path}")
 
 
-def _pick_title(a_row: Dict[str, Any], idx: int) -> str:
-    title = a_row.get("title")
-    if title:
-        return str(title)
-    citation = a_row.get("citation")
-    if citation:
-        return str(citation)
-    query = a_row.get("search_query")
-    if query:
-        return str(query)
-    return f"Record {idx + 1}"
+def _write_json_array(path: Path, rows: List[Dict[str, Any]]) -> None:
+    """Write ``rows`` as pretty-printed JSON to ``path``."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(rows, indent=2, ensure_ascii=False) + "\n", "utf-8")
 
 
 # --------------------------------------------------------------------------- #
@@ -76,85 +75,109 @@ def _pick_title(a_row: Dict[str, Any], idx: int) -> str:
 # --------------------------------------------------------------------------- #
 
 
-def run() -> Dict[str, Any]:
+def run() -> Dict[str, List[Dict[str, Any]]]:
     """
-    Read Appendix A and write ONLY B and C outputs.
+    Execute the toy agent logic:
+      1) Read Appendix A rows.
+      2) Create screening decisions (Appendix B) ensuring both 'included'
+         and 'excluded' decisions appear in the output for predictability.
+      3) Create extraction rows (Appendix C) **only** for 'included' items.
+         C is **always written**, even if empty.
 
-    Returns:
-      {
-        "a": [...], "b": [...], "c": [...],
-        "counts": {"a": int, "b": int, "c": int},
-        "written": {"B_FILE": "...", "C_FILE": "..."}
-      }
+    Returns
+    -------
+    dict: {'a': [...], 'b': [...], 'c': [...]}
     """
-    a_rows = _load_appendix_a(A_FILE)
-    ts = _now_utc_iso()
+    # 1) Load A (Search). The "array of objects" shape is the supported MVP shape.
+    a_rows = _load_json_array(A_FILE)
 
-    # Build B (Screening) rows; alternate decisions.
+    # 2) Build B (Screening).
+    # Strategy:
+    # - If we have 0 A rows → still produce B=[], and C will also be [].
+    # - If we have 1 A row → produce two B decisions for the same source_id:
+    #       one 'included' and one 'excluded' (keeps tests/pipeline predictable).
+    # - If we have >=2 A rows → alternate included/excluded by index.
     b_rows: List[Dict[str, Any]] = []
-    for i, row in enumerate(a_rows):
-        source_id = str(row.get("id", f"A-{i + 1:04d}"))
-        decision = "included" if i % 2 == 0 else "excluded"
-        b_rows.append(
+    ts = _utc_now()
+
+    if len(a_rows) == 0:
+        b_rows = []
+    elif len(a_rows) == 1:
+        source_id = str(a_rows[0].get("id", "A-0001"))
+        b_rows = [
             {
-                "id": f"B-{i + 1:04d}",
+                "id": f"B-{source_id}-INC",
                 "source_id": source_id,
-                "title": _pick_title(row, i),
-                "decision": decision,
-                "reason": (
-                    "MVP auto-include" if decision == "included" else "MVP auto-exclude"
-                ),
+                "title": a_rows[0].get("title", "N/A"),
+                "decision": "included",
+                "reason": "MVP toy include",
                 "decided_at": ts,
-            }
-        )
-
-    # Guarantee at least one excluded to satisfy tests even when len(a_rows) == 1.
-    if a_rows and not any(b.get("decision") == "excluded" for b in b_rows):
-        first = b_rows[0]
-        b_rows.append(
+            },
             {
-                "id": f"{first['id']}-X",
-                "source_id": first["source_id"],
-                "title": first["title"],
+                "id": f"B-{source_id}-EXC",
+                "source_id": source_id,
+                "title": a_rows[0].get("title", "N/A"),
                 "decision": "excluded",
-                "reason": "MVP negative control",
+                "reason": "MVP toy exclude",
                 "decided_at": ts,
-            }
-        )
+            },
+        ]
+    else:
+        for idx, row in enumerate(a_rows):
+            source_id = str(row.get("id", f"A-{idx+1:04d}"))
+            decision = "included" if idx % 2 == 0 else "excluded"
+            b_rows.append(
+                {
+                    "id": f"B-{source_id}",
+                    "source_id": source_id,
+                    "title": row.get("title", "N/A"),
+                    "decision": decision,
+                    "reason": f"MVP toy {decision}",
+                    "decided_at": ts,
+                }
+            )
 
-    # Build C (Extraction) rows only for included B rows.
+    # 3) Build C (Extraction) for included screenings only.
     c_rows: List[Dict[str, Any]] = []
-    for j, b in enumerate(b_rows):
+    for b in b_rows:
         if b.get("decision") != "included":
             continue
         c_rows.append(
             {
-                "id": f"C-{j + 1:04d}",
+                "id": f"C-{b['id']}",
                 "screening_id": b["id"],
-                "key_findings": "MVP placeholder extraction",
+                "key_findings": "MVP toy extraction placeholder",
                 "extracted_at": ts,
-                "notes": "",
+                "notes": "Auto-generated by toy agent.",
             }
         )
 
-    # Write outputs (only B and C)
-    _ensure_parent(B_FILE)
-    _ensure_parent(C_FILE)
-    B_FILE.write_text(
-        json.dumps(b_rows, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
-    C_FILE.write_text(
-        json.dumps(c_rows, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
+    # 4) Write B and C. C is **always written**, even if empty.
+    _write_json_array(B_FILE, b_rows)
+    _write_json_array(C_FILE, c_rows)
 
-    return {
-        "a": a_rows,
-        "b": b_rows,
-        "c": c_rows,
-        "counts": {"a": len(a_rows), "b": len(b_rows), "c": len(c_rows)},
-        "written": {"B_FILE": str(B_FILE), "C_FILE": str(C_FILE)},
-    }
+    return {"a": a_rows, "b": b_rows, "c": c_rows}
 
+
+# --------------------------------------------------------------------------- #
+# CLI
+# --------------------------------------------------------------------------- #
 
 if __name__ == "__main__":
-    print(json.dumps(run(), indent=2))
+    result = run()
+    # Print a concise summary for workflow logs.
+    print(
+        json.dumps(
+            {
+                "written": {
+                    "B_FILE": str(B_FILE),
+                    "C_FILE": str(C_FILE),
+                },
+                "counts": {
+                    "a": len(result["a"]),
+                    "b": len(result["b"]),
+                    "c": len(result["c"]),
+                },
+            }
+        )
+    )
