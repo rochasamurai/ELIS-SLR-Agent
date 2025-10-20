@@ -5,19 +5,18 @@ name: ELIS - Agent Run
 #   branch and open/refresh a PR into `main`. Also upload B/C as a run artifact.
 #
 # Why this change
-#   • Prevents "local changes would be overwritten by checkout" by creating/
-#     switching to the write branch BEFORE running the agent.
-#   • Ensures PRs ALWAYS auto-trigger CI by using the ELIS GitHub App token
-#     (never the default GITHUB_TOKEN) for both push and PR creation.
-#   • Opens a PR only when there is an actual diff (no 422 “no commits” errors).
+#   Some runs failed at "git push" with:
+#     fatal: could not read Username for 'https://github.com'
+#   even though we minted an App token. The fix is to:
+#     1) Checkout USING the App token.
+#     2) Overwrite the 'origin' remote to an App-token URL BEFORE pushing.
 #
 # Usage
-#   Trigger manually (workflow_dispatch).
-#   Inputs:
-#     base_branch   -> PR base branch (default: main)
-#     write_branch  -> desired work branch (default: ci/agent-autopr)
-#                      (auto-suffixed with UTC timestamp if it already exists)
-#     open_pr       -> open/refresh PR when there is a diff (default: true)
+#   - Trigger manually (workflow_dispatch).
+#   - Inputs:
+#       base_branch:   target base to PR into (default: main)
+#       write_branch:  desired work branch name (default: ci/agent-autopr)
+#       open_pr:       open/refresh a PR when there is a diff (default: true)
 # =============================================================================
 
 on:
@@ -28,7 +27,7 @@ on:
         required: false
         default: "main"
       write_branch:
-        description: "Desired work branch (auto-suffixed if exists)"
+        description: "Work branch to write artefacts (auto-suffixed if exists)"
         required: false
         default: "ci/agent-autopr"
       open_pr:
@@ -36,24 +35,24 @@ on:
         required: false
         default: "true"
 
+# We need write perms to push and open PRs.
 permissions:
-  contents: write       # push commits
-  pull-requests: write  # open/update PRs
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: agent-run-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   run-agent:
     runs-on: ubuntu-latest
-    name: run-agent
     defaults:
       run:
         shell: bash
 
     steps:
-      # -----------------------------------------------------------------------
-      # 1) Mint installation token for the ELIS GitHub App.
-      #    We use THIS token to checkout, push, and create the PR so that
-      #    pull_request workflows (CI) auto-trigger.
-      # -----------------------------------------------------------------------
+      # 1) Mint a GitHub App token. This identity owns the push & PR.
       - name: Mint installation token (GitHub App)
         id: app
         uses: actions/create-github-app-token@v1
@@ -61,180 +60,128 @@ jobs:
           app-id: ${{ secrets.ELIS_APP_ID }}
           private-key: ${{ secrets.ELIS_APP_PRIVATE_KEY }}
 
-      # -----------------------------------------------------------------------
-      # 2) Checkout the repo using the App token and disable credential
-      #    persistence so all subsequent git operations keep using the App token.
-      # -----------------------------------------------------------------------
-      - name: Checkout repository
+      # 2) Checkout USING the App token so the remote is credentialed.
+      - name: Checkout repository (App token)
         uses: actions/checkout@v4
         with:
           token: ${{ steps.app.outputs.token }}
           fetch-depth: 0
-          persist-credentials: false
 
-      # -----------------------------------------------------------------------
-      # 3) Configure Git identity, decide write branch, and create/reset it
-      #    from the chosen base BEFORE running the agent (prevents overwrite).
-      # -----------------------------------------------------------------------
-      - name: Prepare write branch
-        env:
-          BASE_IN:  ${{ inputs.base_branch }}
-          WANT_IN:  ${{ inputs.write_branch }}
+      # 3) Git identity for commits.
+      - name: Configure Git identity
         run: |
-          set -eux
           git config user.name  "elis-bot"
           git config user.email "elis-bot@users.noreply.github.com"
 
-          BASE="${BASE_IN:-main}"
-          WANT="${WANT_IN:-ci/agent-autopr}"
+      # 4) Resolve base/head branch names (with sensible defaults).
+      - name: Resolve branches
+        id: br
+        run: |
+          BASE="${{ github.event.inputs.base_branch || 'main' }}"
+          HEAD="${{ github.event.inputs.write_branch || 'ci/agent-autopr' }}"
+          echo "base=$BASE" >> "$GITHUB_OUTPUT"
+          echo "head=$HEAD" >> "$GITHUB_OUTPUT"
 
+      # 5) Prepare the write branch BEFORE running the agent.
+      - name: Prepare write branch (create or fast-forward)
+        run: |
+          set -eux
+          BASE="${{ steps.br.outputs.base }}"
+          HEAD="${{ steps.br.outputs.head }}"
           git fetch origin --prune
-
-          # If the desired branch already exists on remote, suffix with UTC time.
-          if git ls-remote --exit-code --heads origin "$WANT" >/dev/null 2>&1; then
-            TS=$(date -u +%Y%m%d-%H%M%S)
-            WRITE_BRANCH="${WANT}-${TS}"
+          if git ls-remote --exit-code --heads origin "$HEAD" >/dev/null 2>&1; then
+            git checkout -B "$HEAD" "origin/$HEAD"
+            # Bring it up to date with base if fast-forwardable.
+            (git merge --ff-only "origin/$BASE" && echo "FF merged base") || true
           else
-            WRITE_BRANCH="$WANT"
+            git checkout -B "$HEAD" "origin/$BASE"
+            git push -u origin "$HEAD"
           fi
 
-          # Create the work branch from the base (fresh tree, no local changes).
-          git checkout -B "$WRITE_BRANCH" "origin/$BASE"
-
-          # Expose to later steps.
-          echo "WRITE_BRANCH=$WRITE_BRANCH" >> "$GITHUB_ENV"
-          echo "BASE_BRANCH=$BASE" >> "$GITHUB_ENV"
-
-      # -----------------------------------------------------------------------
-      # 4) Python runtime (best effort) and run the toy agent that:
-      #    - reads Appendix A
-      #    - writes B: json_jsonl/ELIS_Appendix_B_Screening_rows.json
-      #    - writes C: json_jsonl/ELIS_Appendix_C_Extraction_rows.json (empty OK)
-      # -----------------------------------------------------------------------
+      # 6) Python + deps
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Install runtime (best-effort)
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt || true
+          pip install -r requirements.txt
 
-      - name: Run Toy Agent (write B/C from Appendix A)
+      # 7) Run the agent (writes ONLY B/C from Appendix A).
+      - name: Run Toy Agent (B/C only)
         run: |
           set -eux
-          python - <<'PY'
-          import json
-          from scripts import agent
-          result = agent.run()
-          print(json.dumps(result, indent=2, sort_keys=True))
-          PY
+          python scripts/agent.py --write-bc-only
 
-      # -----------------------------------------------------------------------
-      # 5) List artefacts and upload them so you can download the zip from the
-      #    Actions UI if needed.
-      # -----------------------------------------------------------------------
-      - name: List artefacts
-        run: |
-          echo "==> json_jsonl/"
-          ls -lah json_jsonl/ || true
-
-      - name: Upload artefacts (json_jsonl/)
+      # 8) Upload artefacts for download/debug.
+      - name: Upload artefacts (B/C)
         uses: actions/upload-artifact@v4
         with:
           name: elis-agent-artefacts
-          path: json_jsonl/
-          if-no-files-found: warn
-          retention-days: 7
+          path: |
+            json_jsonl/ELIS_Appendix_B_Screening_rows.json
+            json_jsonl/ELIS_Appendix_C_Extraction_rows.json
 
-      # -----------------------------------------------------------------------
-      # 6) Commit ONLY the two artefacts (B/C). If neither changed, skip commit,
-      #    push and PR creation.
-      # -----------------------------------------------------------------------
-      - name: Commit artefacts to work branch
+      # 9) Stage & commit ONLY when B/C changed.
+      - name: Commit artefacts (B/C only when changed)
         run: |
           set -eux
-
-          # Pre-add in "intent-to-add" mode so diff works even if files are new.
-          git add -N json_jsonl/ELIS_Appendix_B_Screening_rows.json \
-                     json_jsonl/ELIS_Appendix_C_Extraction_rows.json || true
-
-          # If both paths show no diff, stop here.
-          if git diff --name-only --exit-code -- \
-              json_jsonl/ELIS_Appendix_B_Screening_rows.json \
-              json_jsonl/ELIS_Appendix_C_Extraction_rows.json; then
-            echo "HAS_DIFF=false" >> "$GITHUB_ENV"
-            echo "No artefact changes detected. Skipping commit/push/PR."
+          git add -N json_jsonl/ELIS_Appendix_B_Screening_rows.json json_jsonl/ELIS_Appendix_C_Extraction_rows.json || true
+          if git diff --name-only --exit-code -- json_jsonl/ELIS_Appendix_B_Screening_rows.json json_jsonl/ELIS_Appendix_C_Extraction_rows.json; then
+            echo "No artefact diffs; skipping commit/push/PR."
+            echo "skip_pr=true" >> "$GITHUB_ENV"
             exit 0
           fi
-
-          # Stage (if present) and commit.
-          git add json_jsonl/ELIS_Appendix_B_Screening_rows.json || true
-          git add json_jsonl/ELIS_Appendix_C_Extraction_rows.json || true
+          git add json_jsonl/ELIS_Appendix_B_Screening_rows.json json_jsonl/ELIS_Appendix_C_Extraction_rows.json
           git commit -m "feat(agent): add B/C artefacts from Appendix A"
-          echo "HAS_DIFF=true" >> "$GITHUB_ENV"
 
-      # -----------------------------------------------------------------------
-      # 7) Push the branch using the App token (CI will auto-trigger on PR).
-      # -----------------------------------------------------------------------
-      - name: Push work branch
-        if: env.HAS_DIFF == 'true'
-        env:
-          GH_TOKEN: ${{ steps.app.outputs.token }}
+      # 10) Overwrite 'origin' to the App-token URL (permanent push fix).
+      - name: Force remote to App-token URL (fix push auth)
+        if: env.skip_pr != 'true'
         run: |
           set -eux
-          # Use HTTPS with the App token implicitly via the checkout remote.
-          git push --force-with-lease origin "HEAD:${WRITE_BRANCH}"
+          git remote set-url origin "https://x-access-token:${{ steps.app.outputs.token }}@github.com/${{ github.repository }}"
 
-      # -----------------------------------------------------------------------
-      # 8) Open/refresh the PR using the App token, so pull_request CI runs.
-      #    We only do this when there was a diff/commit above.
-      # -----------------------------------------------------------------------
-      - name: Open/refresh PR (write_branch → base_branch)
-        if: env.HAS_DIFF == 'true' && inputs.open_pr == 'true'
+      # 11) Push work branch.
+      - name: Push work branch
+        if: env.skip_pr != 'true'
+        run: |
+          set -eux
+          HEAD="${{ steps.br.outputs.head }}"
+          git push --force-with-lease origin HEAD:"$HEAD"
+
+      # 12) Compare base..head and open PR using the App token.
+      - name: Compare base..head & open/refresh PR
+        if: ${{ env.skip_pr != 'true' && fromJSON(github.event.inputs.open_pr || 'true') }}
         uses: actions/github-script@v6
         with:
-          github-token: ${{ steps.app.outputs.token }}   # critical for CI trigger
+          github-token: ${{ steps.app.outputs.token }}
           script: |
             const owner = context.repo.owner;
             const repo  = context.repo.repo;
-            const base  = process.env.BASE_BRANCH || 'main';
-            const head  = process.env.WRITE_BRANCH;
+            const base  = "${{ steps.br.outputs.base }}";
+            const head  = "${{ steps.br.outputs.head }}";
 
-            // If a PR already exists from head→base, do nothing.
+            const cmp = await github.rest.repos.compareCommitsWithBasehead({
+              owner, repo, basehead: `${base}...${head}`,
+            });
+
+            const hasDiff = (cmp.data.ahead_by > 0) || ((cmp.data.files || []).length > 0);
+            if (!hasDiff) { core.info("No diff; no PR opened."); return; }
+
             const { data: openPRs } = await github.rest.pulls.list({
               owner, repo, state: 'open', base, head: `${owner}:${head}`,
             });
+
             if (openPRs.length > 0) {
               core.info(`PR already open: #${openPRs[0].number}`);
-              return;
-            }
-
-            const body = [
-              "Automated agent run:",
-              "",
-              "• Reads Appendix A input",
-              "• Writes Appendix B/C artefacts",
-              "• Validated via CI on PR",
-              "",
-              "_This PR was opened by **ELIS - Agent Run**._"
-            ].join("\n");
-
-            const { data: pr } = await github.rest.pulls.create({
-              owner, repo, base, head,
-              title: "feat(agent): add B/C artefacts from Appendix A",
-              body,
-            });
-
-            // Optionally request review from the actor who triggered the run.
-            try {
-              await github.rest.pulls.requestReviewers({
-                owner, repo, pull_number: pr.number,
-                reviewers: [context.actor],
+            } else {
+              const { data: pr } = await github.rest.pulls.create({
+                owner, repo, base, head,
+                title: "feat(agent): add B/C artefacts from Appendix A",
+                body: "Automated agent run using ELIS – Agent Run.",
               });
-            } catch (e) {
-              core.warning(`Could not request reviewer: ${e.message}`);
+              core.info(`Opened PR #${pr.number}`);
             }
-
-            core.info(`Opened PR #${pr.number}`);
