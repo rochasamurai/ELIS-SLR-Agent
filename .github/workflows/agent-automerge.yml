@@ -1,0 +1,161 @@
+name: ELIS - Agent AutoMerge
+# =============================================================================
+# Purpose
+#   Automatically squash-merge Agent PRs created by "ELIS - Agent Run" when:
+#     • The CI workflow "ELIS - CI" completed successfully for that branch, and
+#     • The PR head branch name starts with "ci/agent-autopr", and
+#     • Only the two artefact files changed:
+#         - json_jsonl/ELIS_Appendix_B_Screening_rows.json
+#         - json_jsonl/ELIS_Appendix_C_Extraction_rows.json
+#
+# Why this helps
+#   Removes manual clicks for routine, data-only updates while keeping safety
+#   rails: if ANY other file changed, this workflow does nothing.
+#
+# Trigger
+#   Runs after "ELIS - CI" completes (success or failure). We then gate on
+#   "conclusion == success".
+# =============================================================================
+
+on:
+  workflow_run:
+    workflows: ["ELIS - CI"]
+    types: [completed]
+
+permissions:
+  contents: write          # needed to merge and (optionally) delete refs
+  pull-requests: write
+  checks: read
+
+jobs:
+  auto-merge:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      # 1) Mint a GitHub App token for authenticated API calls.
+      - name: Mint installation token (GitHub App)
+        id: app
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.ELIS_APP_ID }}
+          private-key: ${{ secrets.ELIS_APP_PRIVATE_KEY }}
+
+      # 2) Identify the branch that completed CI and find an open PR for it.
+      - name: Locate matching Agent PR
+        id: findpr
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ steps.app.outputs.token }}
+          script: |
+            const owner = context.repo.owner;
+            const repo  = context.repo.repo;
+
+            // From the workflow_run event:
+            const headBranch = context.payload.workflow_run.head_branch || "";
+            const conclusion = context.payload.workflow_run.conclusion || "";
+            core.info(`CI completed for branch: ${headBranch} (conclusion=${conclusion})`);
+
+            // Only consider auto PR branches.
+            if (!headBranch.startsWith("ci/agent-autopr")) {
+              core.info("Branch is not an Agent auto-PR branch; exiting.");
+              core.setOutput("skip", "true");
+              return;
+            }
+
+            // Find an open PR with head = owner:headBranch and base = main (default).
+            const { data: prs } = await github.rest.pulls.list({
+              owner, repo, state: "open", head: `${owner}:${headBranch}`, base: "main",
+            });
+
+            if (!prs.length) {
+              core.info("No open PR found for this branch; exiting.");
+              core.setOutput("skip", "true");
+              return;
+            }
+
+            const pr = prs[0];
+            core.info(`Found PR #${pr.number}: ${pr.title}`);
+            core.setOutput("skip", "false");
+            core.setOutput("pr_number", String(pr.number));
+            core.setOutput("base", pr.base.ref);
+            core.setOutput("head", pr.head.ref);
+
+      # 3) Short-circuit if branch wasn't an agent branch or no PR exists.
+      - name: Skip if no candidate PR
+        if: ${{ steps.findpr.outputs.skip == 'true' }}
+        run: echo "Nothing to do."
+
+      # 4) Verify only the two artefact files changed (safety gate).
+      - name: Verify changed files are artefacts only
+        id: diffcheck
+        if: ${{ steps.findpr.outputs.skip != 'true' }}
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ steps.app.outputs.token }}
+          script: |
+            const owner = context.repo.owner;
+            const repo  = context.repo.repo;
+            const base  = "${{ steps.findpr.outputs.base }}";
+            const head  = "${{ steps.findpr.outputs.head }}";
+
+            const allowed = new Set([
+              "json_jsonl/ELIS_Appendix_B_Screening_rows.json",
+              "json_jsonl/ELIS_Appendix_C_Extraction_rows.json",
+            ]);
+
+            const cmp = await github.rest.repos.compareCommitsWithBasehead({
+              owner, repo, basehead: `${base}...${head}`,
+            });
+
+            const files = (cmp.data.files || []).map(f => f.filename);
+            core.info(`Files changed (${files.length}): ${files.join(", ") || "(none)"}`);
+
+            const allAllowed = files.length > 0 && files.every(f => allowed.has(f));
+            if (!allAllowed) {
+              core.info("Unsafe diff (non-artefact files present or no diff) — skipping auto-merge.");
+              core.setOutput("ok", "false");
+            } else {
+              core.setOutput("ok", "true");
+            }
+
+      # 5) Squash-merge the PR and try to delete the branch.
+      - name: Squash-merge PR
+        if: ${{ steps.findpr.outputs.skip != 'true' && steps.diffcheck.outputs.ok == 'true' }}
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ steps.app.outputs.token }}
+          script: |
+            const owner = context.repo.owner;
+            const repo  = context.repo.repo;
+            const number = Number("${{ steps.findpr.outputs.pr_number }}");
+
+            // Merge using squash to keep history tidy.
+            const { data: merged } = await github.rest.pulls.merge({
+              owner, repo, pull_number: number, merge_method: "squash",
+            });
+            core.info(`Merged PR #${number}: ${merged.sha}`);
+
+      - name: Delete head branch (best-effort)
+        if: ${{ steps.findpr.outputs.skip != 'true' && steps.diffcheck.outputs.ok == 'true' }}
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ steps.app.outputs.token }}
+          script: |
+            const owner = context.repo.owner;
+            const repo  = context.repo.repo;
+            const head  = "${{ steps.findpr.outputs.head }}";
+            try {
+              await github.rest.git.deleteRef({ owner, repo, ref: `heads/${head}` });
+              core.info(`Deleted branch ${head}`);
+            } catch (e) {
+              core.info(`Branch deletion not required or failed gracefully: ${String(e)}`);
+            }
+
+      # 6) Note when we deliberately skipped
+      - name: Note skipped
+        if: ${{ steps.findpr.outputs.skip == 'true' || steps.diffcheck.outputs.ok != 'true' }}
+        run: echo "Auto-merge skipped by safety gate (non-agent PR, no PR, or non-artefact changes)."
