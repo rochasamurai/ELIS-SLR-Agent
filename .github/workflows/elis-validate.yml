@@ -1,123 +1,105 @@
 name: ELIS - Validate
-# ============================================================================
+# =============================================================================
 # Purpose
-#   Generate a Markdown validation report from the JSON artefacts (A/B/C),
-#   and open/update a small PR only when the report CONTENT changes.
+#   Run the JSON artefact validator and publish a Markdown report under
+#   validation_reports/validation-report.md. When the report changes, open or
+#   update a small PR from 'ci/validation-report' into 'main'.
 #
 # Why this change
-#   In some runs a report was generated but no PR appeared. The root cause was
-#   checking for changes BEFORE staging the new report (so git saw “no diff”).
-#   We now:
-#     • Always stage the report, THEN check the index for changes.
-#     • Create/update branch `ci/validation-report` via create-pull-request only
-#       when the staged report differs.
-#     • Upload the report as a run artifact so it’s always easy to download.
+#   - Use a GitHub App installation token for write operations (push/PR).
+#   - Avoid failures when there are no changes (graceful no-op).
+#   - Do not open a report PR from inside another PR run (cleaner UX).
 #
-# Notes
-#   - Keeps the job green on “no changes” (no-op).
-#   - Uses only default dependencies (jsonschema installed via requirements.txt).
-# ============================================================================
+# Triggers
+#   - pull_request to main: run validation, upload the report artifact (no PR).
+#   - push: run validation; if report changed, (create/update) PR.
+#   - manual dispatch: same as push behaviour.
+# =============================================================================
 
 on:
-  # Manual runs
-  workflow_dispatch: {}
-
-  # Keep the report current on relevant pushes
-  push:
-    branches: [ main ]
-    paths:
-      - "schemas/**"
-      - "scripts/validate_json.py"
-      - ".github/workflows/elis-validate.yml"
-
-  # Show report status in PRs that might affect validation
   pull_request:
     branches: [ main ]
-    paths:
-      - "schemas/**"
-      - "scripts/validate_json.py"
+  push:
+    branches: [ "**" ]
+  workflow_dispatch: {}
 
 permissions:
-  contents: write        # needed for create-pull-request
-  pull-requests: write   # needed for create-pull-request
+  contents: write        # needed to push the report branch
+  pull-requests: write   # needed to create/update the report PR
 
 jobs:
   validate:
-    name: validate
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
 
     steps:
-      # 1) Checkout full history (PR branch or main)
+      # 1) Get a GitHub App token so we can push and open PRs reliably
+      - name: Mint installation token (GitHub App)
+        id: app
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.ELIS_APP_ID }}
+          private-key: ${{ secrets.ELIS_APP_PRIVATE_KEY }}
+
+      # 2) Checkout the current ref (PR head or push ref) using the App token
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          token: ${{ steps.app.outputs.token }}
           fetch-depth: 0
 
-      # 2) Python toolchain
+      # 3) Set up Python and runtime deps for validator
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      # 3) Install runtime deps (jsonschema, optional extras if present)
-      - name: Install runtime deps
+      - name: Install deps
         run: |
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      # 4) Run the validator (non-blocking by design)
-      #    scripts/validate_json.py should write:
-      #      validation_reports/validation-report.md  (stable filename)
-      - name: Run validator
+      # 4) Run validator (script writes a deterministic report path)
+      - name: Run validator (non-blocking)
         run: |
-          set -euo pipefail
+          set -eux
           python scripts/validate_json.py
           test -f validation_reports/validation-report.md
 
-      # 5) Upload the report as a run artifact for quick download, regardless of PR
-      - name: Upload validation report (artifact)
+      # 5) Always upload the report file as an artifact for easy viewing
+      - name: Upload validation report artifact
         uses: actions/upload-artifact@v4
         with:
           name: validation-report
           path: validation_reports/validation-report.md
+          if-no-files-found: error
 
-      # 6) Stage the report and detect changes in the INDEX (critical!)
-      #    If nothing is staged, there's no diff to commit → skip PR creation.
-      - name: Detect report changes
-        id: diff
-        run: |
-          set -euo pipefail
-          git config user.name  "elis-bot"
-          git config user.email "elis-bot@users.noreply.github.com"
-
-          # Stage ONLY the report (so we don’t accidentally commit unrelated files).
-          git add -A validation_reports/validation-report.md || true
-
-          if git diff --cached --quiet; then
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-            echo "No staged changes to the report."
-          else
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-            echo "Report content changed; will open/update PR."
-          fi
-
-      # 7) Create or update PR branch ONLY when there is a staged change
+      # 6) Create/update the report PR ONLY on push/manual (not on PR runs)
+      #    'peter-evans/create-pull-request' succeeds and no-ops when there are
+      #    no changes; using App token avoids permission issues on PR contexts.
       - name: Create/Update PR with report (changed only)
-        if: steps.diff.outputs.changed == 'true'
+        if: ${{ github.event_name != 'pull_request' }}
         uses: peter-evans/create-pull-request@v6
         with:
-          branch: ci/validation-report
+          token: ${{ steps.app.outputs.token }}
           commit-message: "ci(validate): update validation report"
-          title: "ci(validate): validation report"
+          title: "ci(validate): update validation report"
           body: |
-            Automated validation report.
-            This PR opens only when the report content changes vs the last report commit.
+            Automated validation report update.
+            This PR is opened/updated only when the report content changes.
+          branch: ci/validation-report
+          base: main
           add-paths: |
             validation_reports/validation-report.md
           signoff: false
           delete-branch: false
+          draft: false
 
-      # 8) No-op path keeps job green and noiseless
-      - name: No change in report (skip PR)
-        if: steps.diff.outputs.changed != 'true'
-        run: echo "Report unchanged; PR not required."
+      # 7) Log PR number if one was created/updated (purely informational)
+      - name: Report PR link (if any)
+        if: ${{ github.event_name != 'pull_request' }}
+        run: |
+          echo "pull_request_number=${{ steps.create_pull_request.outputs.pull-request-number || 'none' }}"
+          echo "pull_request_url=${{ steps.create_pull_request.outputs.pull-request-url || 'none' }}"
