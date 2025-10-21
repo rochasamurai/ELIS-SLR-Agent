@@ -1,35 +1,31 @@
 name: ELIS - Validate
 # =============================================================================
 # Purpose
-#   Validate ELIS artefacts (Appendix A/B/C) against the MVP schemas and
-#   generate a Markdown report. If the report content changed vs last commit,
-#   create/update a PR from 'ci/validation-report' into 'main'.
+#   Validate ELIS artefacts (Appendix A/B/C) against MVP schemas and generate
+#   a Markdown report. If the report content changed, create/update a PR from
+#   'ci/validation-report' into 'main'. Upload the report as a run artifact.
 #
-# Why this configuration (prevents loops)
+# Loop prevention
 #   - Triggers only on pushes to 'main' (and manual runs).
-#   - Uses a 'paths' filter so edits to 'validation_reports/**' DO NOT retrigger.
-#   - Concurrency collapses back-to-back runs to the newest one.
+#   - Excludes 'validation_reports/**' from triggers, so committing the report
+#     never re-triggers this workflow.
+#   - Concurrency collapses overlapping runs.
 #
-# CI triggering for the PR
-#   The PR branch is updated via a GitHub App token so your normal CI
-#   workflows run on that PR automatically.
-#
-# Requirements
-#   - Secret 'ELIS_GITHUB_APP_TOKEN' containing a fine-scoped App installation
-#     token with 'contents:write' and 'pull_requests:write'.
+# CI triggering on the report PR
+#   We mint a short-lived GitHub App installation token and use it to push/open
+#   the PR. This ensures your regular CI runs on that PR automatically.
 # =============================================================================
 
 on:
   workflow_dispatch:
   push:
     branches: [ main ]
-    # Only run when sources that affect validation change.
     paths:
       - 'json_jsonl/**'
       - 'schemas/**'
       - 'scripts/validate_json.py'
       - '.github/workflows/elis-validate.yml'
-      # DO NOT include 'validation_reports/**' to avoid loops.
+      # IMPORTANT: no 'validation_reports/**' here (prevents loops)
 
 permissions:
   contents: write
@@ -49,15 +45,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # -----------------------------------------------------------------------
-      # Checkout 'main' exactly; we validate current main and compare the report
-      # with the last committed report in the repository history.
-      # -----------------------------------------------------------------------
       - name: Checkout main
         uses: actions/checkout@v4
         with:
           ref: ${{ env.BASE_BRANCH }}
-          persist-credentials: false  # we’ll push with an App token later
+          persist-credentials: false  # we’ll push with an App token
 
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
@@ -69,12 +61,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run validator (generate report)
+      - name: Run validator (writes validation_reports/validation-report.md)
         run: |
           python scripts/validate_json.py
-        # The script writes validation_reports/validation-report.md
 
-      # Stage the report and detect whether content actually changed.
       - name: Stage report and detect diff
         id: diff
         shell: bash
@@ -87,7 +77,6 @@ jobs:
             echo "changed=true" >> $GITHUB_OUTPUT
           fi
 
-      # Upload the report as a run artifact for quick inspection.
       - name: Upload report artifact
         if: steps.diff.outputs.changed == 'true'
         uses: actions/upload-artifact@v4
@@ -95,21 +84,29 @@ jobs:
           name: validation-report
           path: validation_reports/validation-report.md
 
-      # Create or update a PR only when there’s a substantive change.
+      # --- NEW: mint a short-lived installation token for the PR/push ---
+      - name: Mint GitHub App token
+        id: app
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.ELIS_APP_ID }}
+          private-key: ${{ secrets.ELIS_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
+
       - name: Create / update PR with changed report
         if: steps.diff.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v6
         with:
-          token: ${{ secrets.ELIS_GITHUB_APP_TOKEN }}
+          token: ${{ steps.app.outputs.token }}
           branch: ${{ env.WRITE_BRANCH }}
-          base:  ${{ env.BASE_BRANCH }}
+          base:   ${{ env.BASE_BRANCH }}
           commit-message: |
             ci(validate): update validation report
           title: "ci(validate): validation report"
           body: |
             Automated validation report.
             This PR opens only when the report content changes vs the last report commit.
-          # Limit the PR to the report file to avoid unrelated noise.
           add-paths: |
             validation_reports/validation-report.md
           delete-branch: true
