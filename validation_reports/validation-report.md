@@ -6,14 +6,14 @@
 - Schema: `schemas/appendix_a.schema.json`
 - Row count: **8**
 - Findings:
-  - row 0: (root): {'id': 'A-0001', 'search_query': '"electoral integrity" AND (intervention OR strategy) AND (technology OR digital)', 'source': 'Crossref', 'executed_at': '2025-10-10T00:00:00Z'} is not of type 'array'
-  - row 1: (root): {'id': 'A-0002', 'search_query': '("risk-limiting audit" OR "post-election audit") AND elections', 'source': 'Scopus', 'executed_at': '2025-10-10T00:00:00Z'} is not of type 'array'
-  - row 2: (root): {'id': 'A-0003', 'search_query': '(disinformation OR misinformation) AND (mitigation OR countermeasures) AND elections', 'source': 'Dimensions', 'executed_at': '2025-10-10T00:00:00Z'} is not of type 'array'
-  - row 3: (root): {'id': 'A-0004', 'search_query': '(electronic voting OR e-voting) AND (security OR verifiability) AND integrity', 'source': 'Crossref', 'executed_at': '2025-10-10T00:00:00Z'} is not of type 'array'
-  - row 4: (root): {'id': 'A-0005', 'search_query': '(voter registration) AND (data quality OR deduplication OR cybersecurity)', 'source': 'Scopus', 'executed_at': '2025-10-10T00:00:00Z'} is not of type 'array'
-  - row 5: (root): {'id': 'A-0006', 'search_query': '(social media monitoring) AND elections AND (policy OR governance) AND integrity', 'source': 'Dimensions', 'executed_at': '2025-10-10T00:00:00Z'} is not of type 'array'
-  - row 6: (root): {'id': 'A-0007', 'search_query': '(ballot chain-of-custody) AND (procedures OR best practices)', 'source': 'Crossref', 'executed_at': '2025-10-10T00:00:00Z'} is not of type 'array'
-  - row 7: (root): {'id': 'A-0008', 'search_query': '(civic education OR voter education) AND (impact OR effectiveness) AND electoral integrity', 'source': 'Scopus', 'executed_at': '2025-10-10T00:00:00Z'} is not of type 'array'
+  - row 0: (root): {'id': 'A-0001', 'search_query': '"electoral integrity" AND (intervention OR strategy) AND (technology OR digital)', 'source': 'Crossref', 'executed_at': '2025-10-20T00:00:00Z'} is not of type 'array'
+  - row 1: (root): {'id': 'A-0002', 'search_query': '("risk-limiting audit" OR "post-election audit") AND elections', 'source': 'Scopus', 'executed_at': '2025-10-20T00:00:00Z'} is not of type 'array'
+  - row 2: (root): {'id': 'A-0003', 'search_query': '(disinformation OR misinformation) AND (mitigation OR countermeasures) AND elections', 'source': 'Dimensions', 'executed_at': '2025-10-20T00:00:00Z'} is not of type 'array'
+  - row 3: (root): {'id': 'A-0004', 'search_query': '(electronic voting OR e-voting) AND (security OR verifiability) AND integrity', 'source': 'Crossref', 'executed_at': '2025-10-20T00:00:00Z'} is not of type 'array'
+  - row 4: (root): {'id': 'A-0005', 'search_query': '(voter registration) AND (data quality OR deduplication OR cybersecurity)', 'source': 'Scopus', 'executed_at': '2025-10-20T00:00:00Z'} is not of type 'array'
+  - row 5: (root): {'id': 'A-0006', 'search_query': '(social media monitoring) AND elections AND (policy OR governance) AND integrity', 'source': 'Dimensions', 'executed_at': '2025-10-20T00:00:00Z'} is not of type 'array'
+  - row 6: (root): {'id': 'A-0007', 'search_query': '(ballot chain-of-custody) AND (procedures OR best practices)', 'source': 'Crossref', 'executed_at': '2025-10-20T00:00:00Z'} is not of type 'array'
+  - row 7: (root): {'id': 'A-0008', 'search_query': '(civic education OR voter education) AND (impact OR effectiveness) AND electoral integrity', 'source': 'Scopus', 'executed_at': '2025-10-20T00:00:00Z'} is not of type 'array'
 
 ## Appendix B (Screening) — ❌ Errors
 
@@ -21,14 +21,14 @@
 - Schema: `schemas/appendix_b.schema.json`
 - Row count: **8**
 - Findings:
-  - row 0: (root): {'id': 'B-A-0001', 'source_id': 'A-0001', 'title': 'N/A', 'decision': 'included', 'reason': 'MVP toy included', 'decided_at': '2025-10-10T16:34:03Z'} is not of type 'array'
-  - row 1: (root): {'id': 'B-A-0002', 'source_id': 'A-0002', 'title': 'N/A', 'decision': 'excluded', 'reason': 'MVP toy excluded', 'decided_at': '2025-10-10T16:34:03Z'} is not of type 'array'
-  - row 2: (root): {'id': 'B-A-0003', 'source_id': 'A-0003', 'title': 'N/A', 'decision': 'included', 'reason': 'MVP toy included', 'decided_at': '2025-10-10T16:34:03Z'} is not of type 'array'
-  - row 3: (root): {'id': 'B-A-0004', 'source_id': 'A-0004', 'title': 'N/A', 'decision': 'excluded', 'reason': 'MVP toy excluded', 'decided_at': '2025-10-10T16:34:03Z'} is not of type 'array'
-  - row 4: (root): {'id': 'B-A-0005', 'source_id': 'A-0005', 'title': 'N/A', 'decision': 'included', 'reason': 'MVP toy included', 'decided_at': '2025-10-10T16:34:03Z'} is not of type 'array'
-  - row 5: (root): {'id': 'B-A-0006', 'source_id': 'A-0006', 'title': 'N/A', 'decision': 'excluded', 'reason': 'MVP toy excluded', 'decided_at': '2025-10-10T16:34:03Z'} is not of type 'array'
-  - row 6: (root): {'id': 'B-A-0007', 'source_id': 'A-0007', 'title': 'N/A', 'decision': 'included', 'reason': 'MVP toy included', 'decided_at': '2025-10-10T16:34:03Z'} is not of type 'array'
-  - row 7: (root): {'id': 'B-A-0008', 'source_id': 'A-0008', 'title': 'N/A', 'decision': 'excluded', 'reason': 'MVP toy excluded', 'decided_at': '2025-10-10T16:34:03Z'} is not of type 'array'
+  - row 0: (root): {'id': 'B-A-0001', 'source_id': 'A-0001', 'title': 'N/A', 'decision': 'included', 'reason': 'MVP toy included', 'decided_at': '2025-10-20T13:47:33Z'} is not of type 'array'
+  - row 1: (root): {'id': 'B-A-0002', 'source_id': 'A-0002', 'title': 'N/A', 'decision': 'excluded', 'reason': 'MVP toy excluded', 'decided_at': '2025-10-20T13:47:33Z'} is not of type 'array'
+  - row 2: (root): {'id': 'B-A-0003', 'source_id': 'A-0003', 'title': 'N/A', 'decision': 'included', 'reason': 'MVP toy included', 'decided_at': '2025-10-20T13:47:33Z'} is not of type 'array'
+  - row 3: (root): {'id': 'B-A-0004', 'source_id': 'A-0004', 'title': 'N/A', 'decision': 'excluded', 'reason': 'MVP toy excluded', 'decided_at': '2025-10-20T13:47:33Z'} is not of type 'array'
+  - row 4: (root): {'id': 'B-A-0005', 'source_id': 'A-0005', 'title': 'N/A', 'decision': 'included', 'reason': 'MVP toy included', 'decided_at': '2025-10-20T13:47:33Z'} is not of type 'array'
+  - row 5: (root): {'id': 'B-A-0006', 'source_id': 'A-0006', 'title': 'N/A', 'decision': 'excluded', 'reason': 'MVP toy excluded', 'decided_at': '2025-10-20T13:47:33Z'} is not of type 'array'
+  - row 6: (root): {'id': 'B-A-0007', 'source_id': 'A-0007', 'title': 'N/A', 'decision': 'included', 'reason': 'MVP toy included', 'decided_at': '2025-10-20T13:47:33Z'} is not of type 'array'
+  - row 7: (root): {'id': 'B-A-0008', 'source_id': 'A-0008', 'title': 'N/A', 'decision': 'excluded', 'reason': 'MVP toy excluded', 'decided_at': '2025-10-20T13:47:33Z'} is not of type 'array'
 
 ## Appendix C (Extraction) — ❌ Errors
 
