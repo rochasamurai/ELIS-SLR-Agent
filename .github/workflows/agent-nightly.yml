@@ -1,0 +1,143 @@
+name: ELIS - Agent Nightly
+# =============================================================================
+# Purpose
+#   Nightly production run of the ELIS SLR Agent:
+#     - Read Appendix A seed
+#     - Generate Appendix B/C artefacts
+#     - Commit to ci/agent-autopr
+#     - Open/refresh a PR into main (App token, so CI auto-triggers)
+#
+# Triggers
+#   - schedule: every day at 02:30 UTC
+#   - workflow_dispatch: allow manual runs as needed
+#
+# Permissions
+#   Needs write for contents/PRs to push the branch and open the PR.
+# =============================================================================
+
+on:
+  schedule:
+    - cron: '30 2 * * *'   # 02:30 UTC daily
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  nightly:
+    runs-on: ubuntu-latest
+
+    steps:
+      # --- Checkout repository (full history for branch ops)
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # --- Mint short-lived App token (uses repo secrets)
+      - name: Mint GitHub App token
+        id: app
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.ELIS_APP_ID }}
+          private-key: ${{ secrets.ELIS_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
+
+      # --- Python runtime and deps (agent uses Python)
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -V
+          pip install -r requirements.txt
+
+      # --- Run Agent (writes only B and C artefacts)
+      - name: Run ELIS SLR Agent
+        run: |
+          python scripts/agent.py
+
+      # --- Upload artefacts for inspectors to download
+      - name: Upload B/C artefacts (for download)
+        uses: actions/upload-artifact@v4
+        with:
+          name: elis-agent-artefacts
+          path: |
+            json_jsonl/ELIS_Appendix_B_Screening_rows.json
+            json_jsonl/ELIS_Appendix_C_Extraction_rows.json
+          if-no-files-found: warn
+
+      # --- Prepare work branch BEFORE committing (avoids checkout conflicts)
+      - name: Prepare work branch (create or reset)
+        env:
+          WRITE_BRANCH: ci/agent-autopr
+        run: |
+          set -eux
+          git config user.name "elis-bot"
+          git config user.email "elis-bot@users.noreply.github.com"
+          git fetch origin --prune
+          if git ls-remote --exit-code --heads origin "$WRITE_BRANCH"; then
+            git checkout -B "$WRITE_BRANCH" "origin/$WRITE_BRANCH"
+          else
+            git checkout -B "$WRITE_BRANCH"
+          fi
+
+      # --- Commit artefacts only if they changed
+      - name: Commit artefacts if changed
+        id: commit
+        run: |
+          set -eux
+          git add json_jsonl/ELIS_Appendix_B_Screening_rows.json \
+                  json_jsonl/ELIS_Appendix_C_Extraction_rows.json || true
+
+          if git diff --cached --quiet; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "No changes to artefacts; exiting 0"
+            exit 0
+          fi
+
+          git commit -m "feat(agent): add B/C artefacts from Appendix A (nightly)"
+          echo "changed=true" >> $GITHUB_OUTPUT
+
+      # --- Push work branch via App token (ensures CI triggers)
+      - name: Push work branch
+        if: steps.commit.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+        run: |
+          set -eux
+          git push --force-with-lease \
+            "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}" \
+            HEAD:ci/agent-autopr
+
+      # --- Open/refresh PR main <- ci/agent-autopr (only if there was a change)
+      - name: Open/refresh PR
+        if: steps.commit.outputs.changed == 'true'
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ steps.app.outputs.token }}
+          script: |
+            const owner = context.repo.owner;
+            const repo  = context.repo.repo;
+            const base  = 'main';
+            const head  = 'ci/agent-autopr';
+            const title = 'feat(agent): add B/C artefacts from Appendix A';
+
+            // Check diff exists (guard)
+            await github.rest.repos.compareCommits({ owner, repo, base, head });
+
+            // Find existing open PR
+            const prs = await github.rest.pulls.list({
+              owner, repo, state: 'open', head: `${owner}:${head}`
+            });
+
+            if (prs.data.length) {
+              const pr = prs.data[0];
+              await github.rest.pulls.update({ owner, repo, pull_number: pr.number, title });
+            } else {
+              await github.rest.pulls.create({ owner, repo, base, head, title, maintainer_can_modify: true });
+            }
