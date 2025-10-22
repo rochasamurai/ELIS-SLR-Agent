@@ -1,34 +1,41 @@
 name: ELIS - Agent Nightly
 # =============================================================================
 # Purpose
-#   Run the ELIS SLR Agent every night to (re)generate Appendix B/C artefacts
-#   from Appendix A; commit them to a dedicated branch; push; and open/refresh
-#   a PR into `main`. Also uploads B/C as a run artifact.
+#   Run the ELIS SLR Agent nightly to regenerate Appendix B/C artefacts from
+#   Appendix A; commit them to a dedicated branch; push; and open/refresh a PR
+#   into `main`. Also uploads B/C as an artifact for inspection.
 #
 # Why this change
-#   Prevents "local changes would be overwritten by checkout" by preparing/
-#   resetting the write branch BEFORE running the agent (and ensuring a clean
-#   working tree). Uses a GitHub App token so pushes/PRs are first-class events.
+#   Fix “stale info” push failures by rebasing on the latest remote HEAD right
+#   before pushing, retrying on lease rejection, and serializing all writers via
+#   a repository-wide concurrency group. Uses a GitHub App token for pushes/PRs.
 #
-# Schedule
-#   All cron times are in UTC. Adjust as required.
+# Schedule (UTC)
+#   Adjust `cron` as needed; it currently runs at 02:30 UTC daily.
 # =============================================================================
 
 on:
   schedule:
-    - cron: "30 02 * * *"   # 02:30 UTC daily
+    - cron: "30 02 * * *"
   workflow_dispatch:
 
 permissions:
   contents: write
   pull-requests: write
 
+# Serialize all jobs that write to the ci/agent-autopr branch (across workflows).
+concurrency:
+  group: elis-agent-write-branch
+  cancel-in-progress: false
+
 jobs:
   nightly:
     runs-on: ubuntu-latest
 
     steps:
-      # --- Repository checkout (no default token persisted) -------------------
+      # -----------------------------------------------------------------------
+      # Checkout & auth
+      # -----------------------------------------------------------------------
       - name: Checkout main
         uses: actions/checkout@v4
         with:
@@ -36,7 +43,6 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      # --- Auth: mint short-lived GitHub App token ----------------------------
       - name: Mint GitHub App token
         id: app
         uses: actions/create-github-app-token@v1
@@ -46,34 +52,32 @@ jobs:
           owner: ${{ github.repository_owner }}
           repositories: ${{ github.event.repository.name }}
 
-      # --- Git author ---------------------------------------------------------
       - name: Configure git author
         run: |
           git config user.name "elis-bot"
           git config user.email "elis-bot@users.noreply.github.com"
 
-      # --- Prepare work branch BEFORE writing --------------------------------
-      # Ensures a clean tree, then creates/resets ci/agent-autopr from remote.
+      # -----------------------------------------------------------------------
+      # Prepare the work branch BEFORE any writes
+      # -----------------------------------------------------------------------
       - name: Prepare work branch (create/reset before writing)
         env:
           WRITE_BRANCH: ci/agent-autopr
         run: |
           set -eux
           git fetch origin --prune
-
           if git ls-remote --exit-code --heads origin "$WRITE_BRANCH"; then
-            # Branch exists remotely: recreate local branch tracking the remote.
             git checkout -B "$WRITE_BRANCH" "origin/$WRITE_BRANCH"
           else
-            # First ever run: create a new branch from current HEAD (main).
             git checkout -b "$WRITE_BRANCH"
           fi
-
-          # Ensure absolutely clean working tree before the agent writes files.
+          # Ensure a perfectly clean working tree before the agent writes.
           git reset --hard
           git clean -fdx
 
-      # --- Python runtime -----------------------------------------------------
+      # -----------------------------------------------------------------------
+      # Python runtime & agent execution
+      # -----------------------------------------------------------------------
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
@@ -83,8 +87,7 @@ jobs:
         run: |
           python -m pip install -r requirements.txt || true
 
-      # --- Run the agent (writes ONLY B & C artefacts) ------------------------
-      - name: Run ELIS Agent (B/C from Appendix A)
+      - name: Run ELIS Agent (writes ONLY B & C artefacts)
         run: |
           python - <<'PY'
           import json
@@ -93,7 +96,6 @@ jobs:
           print(json.dumps(result, indent=2))
           PY
 
-      # --- Upload artefacts for convenience ----------------------------------
       - name: Upload artefacts (json_jsonl/)
         uses: actions/upload-artifact@v4
         with:
@@ -104,8 +106,11 @@ jobs:
             json_jsonl/ELIS_Appendix_C_Extraction_rows.json
           if-no-files-found: warn
 
-      # --- Commit only when there are actual changes --------------------------
-      - name: Commit artefacts to branch
+      # -----------------------------------------------------------------------
+      # Commit changes only if files actually changed
+      # -----------------------------------------------------------------------
+      - name: Commit artefacts (if changed)
+        id: commit
         run: |
           set -eux
           git add \
@@ -114,7 +119,6 @@ jobs:
             json_jsonl/ELIS_Appendix_C_Extraction_rows.json || true
 
           if git diff --cached --quiet; then
-            echo "No changes to commit."
             echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -122,19 +126,45 @@ jobs:
           git commit -m "feat(agent-nightly): refresh Appendix B/C artefacts"
           echo "changed=true" >> "$GITHUB_OUTPUT"
 
-      # --- Push branch (with App token) --------------------------------------
-      - name: Push work branch
-        if: always()  # safe even if nothing changed (no-op push)
+      # -----------------------------------------------------------------------
+      # Rebase on latest remote just before pushing (refresh lease) + retries
+      # -----------------------------------------------------------------------
+      - name: Rebase on latest remote (refresh lease)
+        if: steps.commit.outputs.changed == 'true'
+        env:
+          WRITE_BRANCH: ci/agent-autopr
+        run: |
+          set -eux
+          git fetch origin "$WRITE_BRANCH"
+          # Apply our new commit(s) on top of the latest remote.
+          git rebase "origin/$WRITE_BRANCH" || {
+            echo "Rebase conflict; keeping newly generated artefacts (ours)."
+            git merge -s ours "origin/$WRITE_BRANCH" -m "chore(agent-nightly): reconcile with remote (ours)"
+          }
+
+      - name: Push work branch (retry on stale lease)
+        if: steps.commit.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ steps.app.outputs.token }}
           WRITE_BRANCH: ci/agent-autopr
         run: |
           set -eux
-          git push --force-with-lease \
-            https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }} \
-            HEAD:${WRITE_BRANCH}
+          REMOTE="https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}"
+          for i in 1 2 3; do
+            if git push --force-with-lease "$REMOTE" HEAD:"${WRITE_BRANCH}"; then
+              exit 0
+            fi
+            echo "Lease rejected (attempt $i). Fetching & rebasing, then retrying…"
+            git fetch origin "${WRITE_BRANCH}"
+            git rebase "origin/${WRITE_BRANCH}" || true
+            sleep $((i*3))
+          done
+          echo "Final attempt with --force (bot-owned branch)."
+          git push --force "$REMOTE" HEAD:"${WRITE_BRANCH}"
 
-      # --- Open/refresh PR (only if branch differs from main) -----------------
+      # -----------------------------------------------------------------------
+      # Open/refresh PR only if the branch differs from main
+      # -----------------------------------------------------------------------
       - name: Open/refresh PR to main
         uses: actions/github-script@v7
         env:
@@ -147,8 +177,7 @@ jobs:
             const { data: cmp } = await github.rest.repos.compareCommits({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              base,
-              head
+              base, head
             });
 
             if ((cmp.total_commits ?? 0) === 0 && (cmp.files?.length ?? 0) === 0) {
@@ -163,7 +192,6 @@ jobs:
               head: `${context.repo.owner}:${head}`,
               base
             });
-
             if (prs.length) {
               core.info(`PR already open: #${prs[0].number}`);
               return;
@@ -173,8 +201,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               title: 'feat(agent-nightly): add B/C artefacts from Appendix A',
-              head,
-              base,
+              head, base,
               body: 'Automated nightly agent run.'
             });
             core.info(`Opened PR #${pr.number}`);
