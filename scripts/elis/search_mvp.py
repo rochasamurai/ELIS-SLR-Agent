@@ -14,9 +14,9 @@
 #   - Documentation: All searches and filters logged to metadata at file head.
 #
 # Design Notes:
-#   - No external dependencies beyond PyYAML and requests (use requirements.txt).
-#   - “Best effort” mapping of fields across sources. We record source + raw ids.
-#   - Dedup strategy: prefer DOI; else normalized (title, year). First-win keep.
+#   - Minimal deps: PyYAML + requests (declared in workflows).
+#   - Field mapping is "best effort" across sources; we record source + raw ids.
+#   - Dedup strategy: prefer DOI; else normalized (title, year). First-hit wins.
 #   - Rate limiting: simple sleep between calls to be polite.
 #   - Safe on first run (creates canonical file); idempotent thereafter.
 #
@@ -49,15 +49,16 @@
 # =============================================================================
 
 from __future__ import annotations
+
+import json
 import os
 import re
-import sys
-import json
 import time
 import hashlib
 import logging
 import datetime as dt
 from typing import Any, Dict, List, Optional
+
 import requests
 import yaml
 
@@ -73,55 +74,74 @@ logging.basicConfig(
 
 # ------------------------- Helpers ------------------------------------------
 def now_utc_iso() -> str:
+    """Return UTC timestamp in ISO 8601 (no microseconds, with trailing Z)."""
     return dt.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
 
+
 def ensure_dirs():
+    """Create output directories if missing."""
     os.makedirs(os.path.dirname(CANONICAL_A), exist_ok=True)
 
+
 def load_yaml(path: str) -> dict:
+    """Load a UTF-8 YAML file into a dict."""
     with open(path, "r", encoding="utf-8") as f:
         return yaml.safe_load(f)
 
+
 def normalize_title(title: Optional[str]) -> str:
+    """Normalize title for dedupe: lowercase, strip punctuation/extra spaces."""
     if not title:
         return ""
-    # Lowercase, remove punctuation & extra spaces
     t = re.sub(r"[^\w\s]", " ", title.lower())
     return re.sub(r"\s+", " ", t).strip()
 
+
 def stable_id(doi: Optional[str], title: Optional[str], year: Optional[int]) -> str:
     """
-    Produce a stable deterministic id for deduping. Prefer DOI; else title+year.
+    Produce a stable deterministic id for deduping.
+    Prefer DOI; otherwise hash of normalized title + year.
     """
     if doi:
         return "doi:" + doi.lower().strip()
     t = normalize_title(title)
     y = str(year or "")
-    return "t:"+hashlib.sha256((t+"|"+y).encode("utf-8")).hexdigest()[:20]
+    return "t:" + hashlib.sha256((t + "|" + y).encode("utf-8")).hexdigest()[:20]
+
 
 def within_years(year: Optional[int], y0: int, y1: int) -> bool:
+    """Return True if year is an int within [y0, y1]."""
     if not isinstance(year, int):
         return False
     return y0 <= year <= y1
 
+
 def lang_ok(language: Optional[str], allowed: List[str]) -> bool:
+    """
+    Accept record if language is allowed or unknown.
+    We keep unknown languages for later screening.
+    """
     if not allowed:
         return True
     if not language:
-        # We keep items with unknown language; screening can exclude later.
         return True
     return language.lower() in {x.lower() for x in allowed}
 
+
 def polite_sleep(seconds: float):
+    """Tiny sleep to avoid hammering public APIs."""
     time.sleep(seconds)
 
+
 # ------------------------- Source: Crossref ----------------------------------
-def search_crossref(query: str, year_from: int, year_to: int, languages: List[str], cap: int) -> List[Dict[str, Any]]:
+def search_crossref(
+    query: str, year_from: int, year_to: int, languages: List[str], cap: int
+) -> List[Dict[str, Any]]:
     """
     Crossref REST: https://api.crossref.org/works
-    We use 'query' and filter by 'from-pub-date'/'until-pub-date' where possible.
+    We use 'query' and filter by 'from-pub-date'/'until-pub-date'.
     """
-    out = []
+    out: List[Dict[str, Any]] = []
     url = "https://api.crossref.org/works"
     params = {
         "query": query,
@@ -143,11 +163,10 @@ def search_crossref(query: str, year_from: int, year_to: int, languages: List[st
         data = r.json()
         items = (data.get("message") or {}).get("items") or []
         for it in items:
-            # Map fields with best-effort parsing
             title = " ".join(it.get("title") or []) or None
             authors = []
             for a in it.get("author") or []:
-                nm = " ".join([a.get("given",""), a.get("family","")]).strip()
+                nm = " ".join([a.get("given", ""), a.get("family", "")]).strip()
                 if nm:
                     authors.append(nm)
             # Extract year
@@ -173,7 +192,9 @@ def search_crossref(query: str, year_from: int, year_to: int, languages: List[st
                 "source": "crossref",
                 "source_id": (it.get("DOI") or it.get("URL") or None),
             }
-            if within_years(rec["year"], year_from, year_to) and lang_ok(rec["language"], languages):
+            if within_years(rec["year"], year_from, year_to) and lang_ok(
+                rec["language"], languages
+            ):
                 out.append(rec)
                 got += 1
                 if got >= cap:
@@ -184,13 +205,16 @@ def search_crossref(query: str, year_from: int, year_to: int, languages: List[st
         polite_sleep(0.5)
     return out
 
+
 # ------------------------- Source: Semantic Scholar --------------------------
-def search_semantic_scholar(query: str, year_from: int, year_to: int, languages: List[str], cap: int) -> List[Dict[str, Any]]:
+def search_semantic_scholar(
+    query: str, year_from: int, year_to: int, languages: List[str], cap: int
+) -> List[Dict[str, Any]]:
     """
-    Semantic Scholar API v1 (Graph-like REST):
-    https://api.semanticscholar.org/ (free tier; API key optional)
+    Semantic Scholar API v1:
+    https://api.semanticscholar.org/
     """
-    out = []
+    out: List[Dict[str, Any]] = []
     fields = "title,authors,year,venue,externalIds,publicationTypes,abstract,url,journal,publicationVenue"
     url = "https://api.semanticscholar.org/graph/v1/paper/search"
     headers = {}
@@ -216,17 +240,18 @@ def search_semantic_scholar(query: str, year_from: int, year_to: int, languages:
             break
         data = r.json()
         for it in data.get("data", []):
-            doi = None
             ext = it.get("externalIds") or {}
-            if "DOI" in ext and ext["DOI"]:
-                doi = ext["DOI"]
-            # crude language guess (S2 doesn’t provide lang reliably) -> keep
+            doi = ext.get("DOI") or None
             rec = {
                 "title": it.get("title"),
-                "authors": [a.get("name") for a in (it.get("authors") or []) if a.get("name")],
+                "authors": [
+                    a.get("name") for a in (it.get("authors") or []) if a.get("name")
+                ],
                 "year": it.get("year"),
                 "doi": doi,
-                "venue": it.get("venue") or (it.get("journal") or {}).get("name") or (it.get("publicationVenue") or {}).get("name"),
+                "venue": it.get("venue")
+                or (it.get("journal") or {}).get("name")
+                or (it.get("publicationVenue") or {}).get("name"),
                 "publisher": None,
                 "url": it.get("url"),
                 "language": None,  # unknown: we keep and screen later
@@ -235,7 +260,9 @@ def search_semantic_scholar(query: str, year_from: int, year_to: int, languages:
                 "source": "semanticscholar",
                 "source_id": it.get("paperId"),
             }
-            if within_years(rec["year"], year_from, year_to) and lang_ok(rec["language"], languages):
+            if within_years(rec["year"], year_from, year_to) and lang_ok(
+                rec["language"], languages
+            ):
                 out.append(rec)
                 if len(out) >= cap:
                     break
@@ -245,21 +272,22 @@ def search_semantic_scholar(query: str, year_from: int, year_to: int, languages:
         polite_sleep(0.5)
     return out
 
+
 # ------------------------- Source: arXiv -------------------------------------
-def search_arxiv(query: str, year_from: int, year_to: int, languages: List[str], cap: int) -> List[Dict[str, Any]]:
+def search_arxiv(
+    query: str, year_from: int, year_to: int, languages: List[str], cap: int
+) -> List[Dict[str, Any]]:
     """
-    arXiv Atom API via export.arxiv.org
+    arXiv Atom API via export.arxiv.org.
     Language not provided; treat as unknown and keep for screening.
     """
-    out = []
-    # arXiv query syntax is different; we do a simple all: query with URL encoding.
-    # Note: arXiv is preprint; allow via include_preprints flag at topic level.
+    out: List[Dict[str, Any]] = []
     base = "http://export.arxiv.org/api/query"
     start = 0
     pagesize = 100
     while len(out) < cap:
         params = {
-            "search_query": f'all:{query}',
+            "search_query": f"all:{query}",
             "start": start,
             "max_results": min(pagesize, cap - len(out)),
             "sortBy": "relevance",
@@ -273,7 +301,7 @@ def search_arxiv(query: str, year_from: int, year_to: int, languages: List[str],
             logging.warning(f"arXiv error: {e}")
             break
 
-        # Very light parsing to get entries (avoid external deps)
+        # Lightweight parsing (avoid external XML deps)
         entries = re.findall(r"<entry>(.*?)</entry>", text, flags=re.DOTALL)
         if not entries:
             break
@@ -282,7 +310,7 @@ def search_arxiv(query: str, year_from: int, year_to: int, languages: List[str],
             # Title
             m_title = re.search(r"<title>(.*?)</title>", ent, flags=re.DOTALL)
             title = (m_title.group(1).strip() if m_title else None)
-            # Year from published
+            # Year from <published>
             m_pub = re.search(r"<published>(.*?)</published>", ent)
             year = None
             if m_pub:
@@ -295,8 +323,11 @@ def search_arxiv(query: str, year_from: int, year_to: int, languages: List[str],
             url = (m_id.group(1) if m_id else None)
             # Authors
             authors = re.findall(r"<name>(.*?)</name>", ent)
-            # DOI if present in links
-            m_doi = re.search(r"<arxiv:doi xmlns:arxiv=\"http://arxiv.org/schemas/atom\">(.*?)</arxiv:doi>", ent)
+            # DOI (if provided)
+            m_doi = re.search(
+                r'<arxiv:doi xmlns:arxiv="http://arxiv.org/schemas/atom">(.*?)</arxiv:doi>',
+                ent,
+            )
             doi = m_doi.group(1) if m_doi else None
             # Abstract
             m_abs = re.search(r"<summary>(.*?)</summary>", ent, flags=re.DOTALL)
@@ -316,7 +347,9 @@ def search_arxiv(query: str, year_from: int, year_to: int, languages: List[str],
                 "source": "arxiv",
                 "source_id": url,
             }
-            if within_years(rec["year"], year_from, year_to) and lang_ok(rec["language"], languages):
+            if within_years(rec["year"], year_from, year_to) and lang_ok(
+                rec["language"], languages
+            ):
                 out.append(rec)
                 if len(out) >= cap:
                     break
@@ -324,8 +357,10 @@ def search_arxiv(query: str, year_from: int, year_to: int, languages: List[str],
         polite_sleep(0.5)
     return out
 
+
 # ------------------------- Orchestrator --------------------------------------
 def orchestrate_search(config: dict) -> List[Dict[str, Any]]:
+    """Run configured topics/queries across sources and return de-duplicated results."""
     y0 = int(config.get("global", {}).get("year_from", 1990))
     y1 = int(config.get("global", {}).get("year_to", dt.datetime.utcnow().year))
     langs = config.get("global", {}).get("languages", ["en"])
@@ -343,7 +378,7 @@ def orchestrate_search(config: dict) -> List[Dict[str, Any]]:
         rec["query_string"] = query_str
         rec["retrieved_at"] = now_utc_iso()
         key = stable_id(rec.get("doi"), rec.get("title"), rec.get("year"))
-        rec["_stable_id"] = key  # internal
+        rec["_stable_id"] = key  # internal marker for debugging
         if key in seen:
             return
         seen.add(key)
@@ -354,35 +389,36 @@ def orchestrate_search(config: dict) -> List[Dict[str, Any]]:
         include_preprints = bool(topic.get("include_preprints", True))
         sources = topic.get("sources", ["crossref", "semanticscholar"])
         for q in (topic.get("queries") or []):
-            # Crossref
             if "crossref" in sources:
                 for rec in search_crossref(q, y0, y1, langs, cap=topic_cap):
                     add_with_dedupe(rec, topic_id, q)
-            # Semantic Scholar
             if "semanticscholar" in sources:
                 for rec in search_semantic_scholar(q, y0, y1, langs, cap=topic_cap):
                     add_with_dedupe(rec, topic_id, q)
-            # arXiv (preprints)
             if include_preprints and "arxiv" in sources:
-                for rec in search_arxiv(q, y0, y1, langs, cap=min(50, topic_cap)):  # keep arXiv modest
+                for rec in search_arxiv(q, y0, y1, langs, cap=min(50, topic_cap)):
                     add_with_dedupe(rec, topic_id, q)
-            # Job-level cap (if set)
             if job_cap and len(results) >= job_cap:
                 logging.info(f"Job result cap reached: {job_cap}")
                 return results
     return results
 
+
 # ------------------------- Write JSON ----------------------------------------
 def write_json_array(path: str, records: List[Dict[str, Any]], meta: Dict[str, Any]):
+    """Write records to a JSON array with a leading _meta element."""
     ensure_dirs()
     payload = [{"_meta": True, **meta}] + records
     with open(path, "w", encoding="utf-8") as f:
         json.dump(payload, f, ensure_ascii=False, indent=2)
         f.write("\n")
 
+
 # ------------------------- CLI entrypoint ------------------------------------
 def main(argv: List[str]) -> int:
+    """CLI for Appendix A search MVP."""
     import argparse
+
     ap = argparse.ArgumentParser(description="ELIS – Appendix A Search (MVP)")
     ap.add_argument("--config", default=CONFIG_PATH, help="YAML config with queries/topics")
     ap.add_argument("--dry-run", action="store_true", help="Run search but do not write file")
@@ -403,7 +439,7 @@ def main(argv: List[str]) -> int:
         "retrieved_at": now_utc_iso(),
         "global": config.get("global", {}),
         "topics_enabled": [t["id"] for t in config.get("topics", []) if t.get("enabled", True)],
-        "sources": list({r["source"] for r in records}),
+        "sources": sorted(list({r["source"] for r in records})),
         "record_count": len(records),
     }
 
@@ -416,5 +452,7 @@ def main(argv: List[str]) -> int:
     logging.info(f"Wrote canonical Appendix A JSON: {CANONICAL_A}")
     return 0
 
+
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
+    import sys as _sys
+    _sys.exit(main(_sys.argv[1:]))
