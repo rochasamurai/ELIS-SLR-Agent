@@ -73,6 +73,7 @@ logging.basicConfig(
     stream=sys.stdout,
 )
 
+
 # ------------------------- Helpers ------------------------------------------
 def now_utc_iso() -> str:
     """Return UTC timestamp in ISO 8601 (no microseconds, with trailing Z)."""
@@ -310,7 +311,7 @@ def search_arxiv(
         for ent in entries:
             # Title
             m_title = re.search(r"<title>(.*?)</title>", ent, flags=re.DOTALL)
-            title = (m_title.group(1).strip() if m_title else None)
+            title = m_title.group(1).strip() if m_title else None
             # Year from <published>
             m_pub = re.search(r"<published>(.*?)</published>", ent)
             year = None
@@ -321,7 +322,7 @@ def search_arxiv(
                     pass
             # URL/ID
             m_id = re.search(r"<id>(.*?)</id>", ent)
-            url = (m_id.group(1) if m_id else None)
+            url = m_id.group(1) if m_id else None
             # Authors
             authors = re.findall(r"<name>(.*?)</name>", ent)
             # DOI (if provided)
@@ -332,7 +333,7 @@ def search_arxiv(
             doi = m_doi.group(1) if m_doi else None
             # Abstract
             m_abs = re.search(r"<summary>(.*?)</summary>", ent, flags=re.DOTALL)
-            abstract = (m_abs.group(1).strip() if m_abs else None)
+            abstract = m_abs.group(1).strip() if m_abs else None
 
             rec = {
                 "title": title,
@@ -389,7 +390,7 @@ def orchestrate_search(config: dict) -> List[Dict[str, Any]]:
         topic_id = topic["id"]
         include_preprints = bool(topic.get("include_preprints", True))
         sources = topic.get("sources", ["crossref", "semanticscholar"])
-        for q in (topic.get("queries") or []):
+        for q in topic.get("queries") or []:
             if "crossref" in sources:
                 for rec in search_crossref(q, y0, y1, langs, cap=topic_cap):
                     add_with_dedupe(rec, topic_id, q)
@@ -421,8 +422,12 @@ def main(argv: List[str]) -> int:
     import argparse
 
     ap = argparse.ArgumentParser(description="ELIS – Appendix A Search (MVP)")
-    ap.add_argument("--config", default=CONFIG_PATH, help="YAML config with queries/topics")
-    ap.add_argument("--dry-run", action="store_true", help="Run search but do not write file")
+    ap.add_argument(
+        "--config", default=CONFIG_PATH, help="YAML config with queries/topics"
+    )
+    ap.add_argument(
+        "--dry-run", action="store_true", help="Run search but do not write file"
+    )
     args = ap.parse_args(argv)
 
     if not os.path.isfile(args.config):
@@ -439,7 +444,9 @@ def main(argv: List[str]) -> int:
         "config_path": args.config,
         "retrieved_at": now_utc_iso(),
         "global": config.get("global", {}),
-        "topics_enabled": [t["id"] for t in config.get("topics", []) if t.get("enabled", True)],
+        "topics_enabled": [
+            t["id"] for t in config.get("topics", []) if t.get("enabled", True)
+        ],
         "sources": sorted(list({r["source"] for r in records})),
         "record_count": len(records),
     }
@@ -452,6 +459,7 @@ def main(argv: List[str]) -> int:
     write_json_array(CANONICAL_A, records, meta)
     logging.info(f"Wrote canonical Appendix A JSON: {CANONICAL_A}")
     return 0
+
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))
