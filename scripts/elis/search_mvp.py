@@ -50,6 +50,7 @@
 
 from __future__ import annotations
 
+import sys  # needed for logging.basicConfig(stream=sys.stdout)
 import json
 import os
 import re
@@ -452,7 +453,5 @@ def main(argv: List[str]) -> int:
     logging.info(f"Wrote canonical Appendix A JSON: {CANONICAL_A}")
     return 0
 
-
 if __name__ == "__main__":
-    import sys as _sys
-    _sys.exit(main(_sys.argv[1:]))
+    sys.exit(main(sys.argv[1:]))
