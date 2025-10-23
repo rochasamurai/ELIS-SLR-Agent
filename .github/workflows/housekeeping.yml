@@ -16,7 +16,8 @@ name: ELIS - Housekeeping
 # Notes:
 #   - Uses the GitHub-provided token (${{ github.token }}) only.
 #   - Dry-run supported to preview deletions.
-#   - Adds concurrency guard (no overlapping runs) and step summary output.
+#   - Concurrency guard prevents overlapping housekeeping runs.
+#   - Step Summary provides quick counts in the Actions UI.
 # ============================================================
 
 on:
@@ -80,16 +81,25 @@ jobs:
           # For scheduled runs, default dry_run to false; for manual, respect input.
           DRY_RUN="${DRY_RUN_IN:-false}"
 
+          # Basic sanity for retention bounds (defensive; adjust as desired)
+          if ! [[ "$RETENTION_DAYS" =~ ^[0-9]+$ ]]; then
+            echo "::error::retention_days must be an integer"; exit 1
+          fi
+          if (( RETENTION_DAYS < 1 )); then
+            echo "::warning::retention_days < 1 coerced to 1"
+            RETENTION_DAYS=1
+          fi
+
           echo "retention_days=${RETENTION_DAYS}"        >> "$GITHUB_OUTPUT"
           echo "delete_runs=${DELETE_RUNS}"              >> "$GITHUB_OUTPUT"
           echo "delete_artifacts=${DELETE_ARTIFACTS}"    >> "$GITHUB_OUTPUT"
           echo "dry_run=${DRY_RUN}"                      >> "$GITHUB_OUTPUT"
 
           echo "Configuration:"
-          echo "  retention_days = ${RETENTION_DAYS}"
-          echo "  delete_runs    = ${DELETE_RUNS}"
-          echo "  delete_artifacts = ${DELETE_ARTIFACTS}"
-          echo "  dry_run        = ${DRY_RUN}"
+          echo "  retention_days  = ${RETENTION_DAYS}"
+          echo "  delete_runs     = ${DELETE_RUNS}"
+          echo "  delete_artifacts= ${DELETE_ARTIFACTS}"
+          echo "  dry_run         = ${DRY_RUN}"
 
       # --------------------------------------------------------
       # Delete COMPLETED workflow runs older than retention_days
@@ -102,8 +112,9 @@ jobs:
         with:
           github-token: ${{ github.token }}
           script: |
-            const retentionDays = parseInt(core.getInput('RETENTION_DAYS', { required: false }) || process.env.RETENTION_DAYS || '14', 10);
-            const dryRun        = (core.getInput('DRY_RUN', { required: false }) || process.env.DRY_RUN || 'false') === 'true';
+            // Inputs are passed via environment from the previous step.
+            const retentionDays = parseInt(process.env.RETENTION_DAYS || '14', 10);
+            const dryRun        = (process.env.DRY_RUN === 'true');
             const cutoffMs      = Date.now() - retentionDays*24*60*60*1000;
             const cutoffIso     = new Date(cutoffMs).toISOString();
 
@@ -150,8 +161,9 @@ jobs:
         with:
           github-token: ${{ github.token }}
           script: |
-            const retentionDays = parseInt(core.getInput('RETENTION_DAYS', { required: false }) || process.env.RETENTION_DAYS || '14', 10);
-            const dryRun        = (core.getInput('DRY_RUN', { required: false }) || process.env.DRY_RUN || 'false') === 'true';
+            // Inputs are passed via environment from the previous step.
+            const retentionDays = parseInt(process.env.RETENTION_DAYS || '14', 10);
+            const dryRun        = (process.env.DRY_RUN === 'true');
             const cutoffMs      = Date.now() - retentionDays*24*60*60*1000;
             const cutoffIso     = new Date(cutoffMs).toISOString();
 
