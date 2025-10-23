@@ -4,13 +4,20 @@ name: ELIS - Agent Run
 #   Read Appendix A and generate B/C artefacts. Commit them on a dedicated
 #   branch and open/refresh a PR into `main`. Also upload B/C as a run artifact.
 #
+# Invariants enforced here
+#   - Canonical Appendix C artefact path MUST be:
+#       json_jsonl/ELIS_Appendix_C_DataExtraction_rows.json
+#     We *verify only* (no shims/renames). If variants exist or the file is
+#     missing, the job fails with a clear error.
+#
+# Housekeeping note
+#   - To keep Actions storage lean, uploaded artefacts have a retention of 14 days.
+#
 # Why this change
-#   1) Guarantee Appendix C canonical filename is used EXACTLY:
-#        json_jsonl/ELIS_Appendix_C_DataExtraction_rows.json
-#      We only *verify* (no renames, no shims). If any C-variant exists or the
-#      canonical file is missing, the job fails fast with a clear error.
-#   2) Fix previous path typos where C file was referred to as "..._Extraction_..."
-#      instead of "..._DataExtraction_...".
+#   - Earlier runs sometimes failed at "git push" despite using an App token.
+#     The fix is to:
+#       1) Checkout USING the App token.
+#       2) Overwrite 'origin' to the App-token URL BEFORE pushing.
 #
 # Usage
 #   - Trigger manually (workflow_dispatch).
@@ -155,7 +162,7 @@ jobs:
           [[ -f "$CANONICAL" ]] || { echo "::error::Agent did not produce $CANONICAL"; exit 6; }
           echo "✅ Canonical C path verified (post-run)."
 
-      # 8) Upload artefacts for download/debug.
+      # 8) Upload artefacts for download/debug (with 14-day retention).
       - name: Upload artefacts (B/C)
         uses: actions/upload-artifact@v4
         with:
@@ -163,6 +170,8 @@ jobs:
           path: |
             json_jsonl/ELIS_Appendix_B_Screening_rows.json
             json_jsonl/ELIS_Appendix_C_DataExtraction_rows.json
+          # Keep artefacts for 14 days for debugging, then expire automatically.
+          retention-days: 14
 
       # 9) Stage & commit ONLY when B/C changed.
       - name: Commit artefacts (B/C only when changed)
