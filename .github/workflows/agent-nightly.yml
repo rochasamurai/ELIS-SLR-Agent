@@ -1,207 +1,71 @@
 name: ELIS - Agent Nightly
 # =============================================================================
 # Purpose
-#   Run the ELIS SLR Agent nightly to regenerate Appendix B/C artefacts from
-#   Appendix A; commit them to a dedicated branch; push; and open/refresh a PR
-#   into `main`. Also uploads B/C as an artifact for inspection.
+#   Nightly verification + run. First, strictly verify the canonical C filename:
+#     json_jsonl/ELIS_Appendix_C_DataExtraction_rows.json
+#   If the check passes, run the nightly agent. No file mutations are performed.
 #
 # Why this change
-#   Fix “stale info” push failures by rebasing on the latest remote HEAD right
-#   before pushing, retrying on lease rejection, and serializing all writers via
-#   a repository-wide concurrency group. Uses a GitHub App token for pushes/PRs.
-#
-# Schedule (UTC)
-#   Adjust `cron` as needed; it currently runs at 02:30 UTC daily.
+#   Lock the invariant for Appendix C naming across time without introducing
+#   any "safe shim" or auto-rename step. Fail loudly if drift appears.
 # =============================================================================
 
 on:
   schedule:
-    - cron: "30 02 * * *"
-  workflow_dispatch:
+    - cron: "10 2 * * *"  # daily at 02:10 UTC
+  workflow_dispatch: {}
 
 permissions:
-  contents: write
-  pull-requests: write
-
-# Serialize all jobs that write to the ci/agent-autopr branch (across workflows).
-concurrency:
-  group: elis-agent-write-branch
-  cancel-in-progress: false
+  contents: read
+  actions: read
 
 jobs:
-  nightly:
+  nightly-verify-and-run:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
 
     steps:
-      # -----------------------------------------------------------------------
-      # Checkout & auth
-      # -----------------------------------------------------------------------
-      - name: Checkout main
+      - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: main
           fetch-depth: 0
-          persist-credentials: false
 
-      - name: Mint GitHub App token
-        id: app
-        uses: actions/create-github-app-token@v1
-        with:
-          app-id: ${{ secrets.ELIS_APP_ID }}
-          private-key: ${{ secrets.ELIS_APP_PRIVATE_KEY }}
-          owner: ${{ github.repository_owner }}
-          repositories: ${{ github.event.repository.name }}
-
-      - name: Configure git author
+      # Verify-only guard for the canonical C filename (no renames, no shims).
+      - name: Verify canonical Appendix C filename
         run: |
-          git config user.name "elis-bot"
-          git config user.email "elis-bot@users.noreply.github.com"
+          set -euo pipefail
+          CANONICAL="json_jsonl/ELIS_Appendix_C_DataExtraction_rows.json"
 
-      # -----------------------------------------------------------------------
-      # Prepare the work branch BEFORE any writes
-      # -----------------------------------------------------------------------
-      - name: Prepare work branch (create/reset before writing)
-        env:
-          WRITE_BRANCH: ci/agent-autopr
-        run: |
-          set -eux
-          git fetch origin --prune
-          if git ls-remote --exit-code --heads origin "$WRITE_BRANCH"; then
-            git checkout -B "$WRITE_BRANCH" "origin/$WRITE_BRANCH"
-          else
-            git checkout -b "$WRITE_BRANCH"
-          fi
-          # Ensure a perfectly clean working tree before the agent writes.
-          git reset --hard
-          git clean -fdx
-
-      # -----------------------------------------------------------------------
-      # Python runtime & agent execution
-      # -----------------------------------------------------------------------
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install runtime (best-effort)
-        run: |
-          python -m pip install -r requirements.txt || true
-
-      - name: Run ELIS Agent (writes ONLY B & C artefacts)
-        run: |
-          python - <<'PY'
-          import json
-          from scripts import agent
-          result = agent.run()
-          print(json.dumps(result, indent=2))
-          PY
-
-      - name: Upload artefacts (json_jsonl/)
-        uses: actions/upload-artifact@v4
-        with:
-          name: elis-agent-artefacts
-          path: |
-            json_jsonl/ELIS_Appendix_B_Screening_rows.json
-            json_jsonl/ELIS_Appendix_C_DataExtraction_rows.json
-            json_jsonl/ELIS_Appendix_C_Extraction_rows.json
-          if-no-files-found: warn
-
-      # -----------------------------------------------------------------------
-      # Commit changes only if files actually changed
-      # -----------------------------------------------------------------------
-      - name: Commit artefacts (if changed)
-        id: commit
-        run: |
-          set -eux
-          git add \
-            json_jsonl/ELIS_Appendix_B_Screening_rows.json \
-            json_jsonl/ELIS_Appendix_C_DataExtraction_rows.json \
-            json_jsonl/ELIS_Appendix_C_Extraction_rows.json || true
-
-          if git diff --cached --quiet; then
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-            exit 0
+          # Exact path must exist
+          if [[ ! -f "$CANONICAL" ]]; then
+            echo "::error::Missing canonical file at $CANONICAL."
+            exit 2
           fi
 
-          git commit -m "feat(agent-nightly): refresh Appendix B/C artefacts"
-          echo "changed=true" >> "$GITHUB_OUTPUT"
+          # No other Appendix C files lurking nearby (e.g., ..._Extraction_..., JSONL, etc.)
+          mapfile -t VARIANTS < <(find json_jsonl -maxdepth 1 -type f \
+            -iregex '.*/ELIS[ _-]*Appendix[ _-]*C[ _-]*.*rows\.\(json\|jsonl\)$' \
+            ! -path "$CANONICAL")
+          if (( ${#VARIANTS[@]} > 0 )); then
+            printf '%s\n' "${VARIANTS[@]}" | sed 's/^/::error::Found non-canonical C variant: /'
+            exit 3
+          fi
 
-      # -----------------------------------------------------------------------
-      # Rebase on latest remote just before pushing (refresh lease) + retries
-      # -----------------------------------------------------------------------
-      - name: Rebase on latest remote (refresh lease)
-        if: steps.commit.outputs.changed == 'true'
+          # Optional: if jq is present, ensure the file is a JSON array (best-effort).
+          if command -v jq >/dev/null 2>&1; then
+            jq -e 'type=="array"' "$CANONICAL" >/dev/null || (echo "::error::C file must be a JSON array"; exit 5)
+          fi
+
+          echo "✅ Canonical C path verified."
+
+      # Run your nightly agent only when verification passes.
+      - name: Run ELIS Agent (nightly)
+        if: ${{ success() }}
         env:
-          WRITE_BRANCH: ci/agent-autopr
+          ELIS_ENV: nightly
         run: |
-          set -eux
-          git fetch origin "$WRITE_BRANCH"
-          # Apply our new commit(s) on top of the latest remote.
-          git rebase "origin/$WRITE_BRANCH" || {
-            echo "Rebase conflict; keeping newly generated artefacts (ours)."
-            git merge -s ours "origin/$WRITE_BRANCH" -m "chore(agent-nightly): reconcile with remote (ours)"
-          }
-
-      - name: Push work branch (retry on stale lease)
-        if: steps.commit.outputs.changed == 'true'
-        env:
-          GH_TOKEN: ${{ steps.app.outputs.token }}
-          WRITE_BRANCH: ci/agent-autopr
-        run: |
-          set -eux
-          REMOTE="https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}"
-          for i in 1 2 3; do
-            if git push --force-with-lease "$REMOTE" HEAD:"${WRITE_BRANCH}"; then
-              exit 0
-            fi
-            echo "Lease rejected (attempt $i). Fetching & rebasing, then retrying…"
-            git fetch origin "${WRITE_BRANCH}"
-            git rebase "origin/${WRITE_BRANCH}" || true
-            sleep $((i*3))
-          done
-          echo "Final attempt with --force (bot-owned branch)."
-          git push --force "$REMOTE" HEAD:"${WRITE_BRANCH}"
-
-      # -----------------------------------------------------------------------
-      # Open/refresh PR only if the branch differs from main
-      # -----------------------------------------------------------------------
-      - name: Open/refresh PR to main
-        uses: actions/github-script@v7
-        env:
-          WRITE_BRANCH: ci/agent-autopr
-        with:
-          github-token: ${{ steps.app.outputs.token }}
-          script: |
-            const base = 'main';
-            const head = process.env.WRITE_BRANCH;
-            const { data: cmp } = await github.rest.repos.compareCommits({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              base, head
-            });
-
-            if ((cmp.total_commits ?? 0) === 0 && (cmp.files?.length ?? 0) === 0) {
-              core.info('No diff vs main; not opening a PR.');
-              return;
-            }
-
-            const { data: prs } = await github.rest.pulls.list({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              state: 'open',
-              head: `${context.repo.owner}:${head}`,
-              base
-            });
-            if (prs.length) {
-              core.info(`PR already open: #${prs[0].number}`);
-              return;
-            }
-
-            const { data: pr } = await github.rest.pulls.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: 'feat(agent-nightly): add B/C artefacts from Appendix A',
-              head, base,
-              body: 'Automated nightly agent run.'
-            });
-            core.info(`Opened PR #${pr.number}`);
+          # Replace with your nightly entrypoint
+          # Example: python -m elis.agent nightly
+          echo "Run your ELIS nightly agent here..."
