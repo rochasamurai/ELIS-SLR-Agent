@@ -5,11 +5,12 @@ name: ELIS - Agent Run
 #   branch and open/refresh a PR into `main`. Also upload B/C as a run artifact.
 #
 # Why this change
-#   Some runs failed at "git push" with:
-#     fatal: could not read Username for 'https://github.com'
-#   even though we minted an App token. The fix is to:
-#     1) Checkout USING the App token.
-#     2) Overwrite the 'origin' remote to an App-token URL BEFORE pushing.
+#   1) Guarantee Appendix C canonical filename is used EXACTLY:
+#        json_jsonl/ELIS_Appendix_C_DataExtraction_rows.json
+#      We only *verify* (no renames, no shims). If any C-variant exists or the
+#      canonical file is missing, the job fails fast with a clear error.
+#   2) Fix previous path typos where C file was referred to as "..._Extraction_..."
+#      instead of "..._DataExtraction_...".
 #
 # Usage
 #   - Trigger manually (workflow_dispatch).
@@ -109,11 +110,50 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      # 6.1) PRE-RUN GUARD — Verify canonical Appendix C filename exists and no variants.
+      #      This is a *verification only* step (no renames, no shims).
+      - name: Verify canonical Appendix C filename (pre-run)
+        shell: bash
+        run: |
+          set -euo pipefail
+          CANONICAL="json_jsonl/ELIS_Appendix_C_DataExtraction_rows.json"
+
+          # Must exist at the exact path
+          if [[ ! -f "$CANONICAL" ]]; then
+            echo "::error::Missing canonical file at $CANONICAL. Ensure the agent writes here."
+            exit 2
+          fi
+
+          # No confusing C-variants (case-insensitive) alongside the canonical file
+          mapfile -t VARIANTS < <(find json_jsonl -maxdepth 1 -type f \
+            -iregex '.*/ELIS[ _-]*Appendix[ _-]*C[ _-]*.*rows\.\(json\|jsonl\)$' \
+            ! -path "$CANONICAL")
+          if (( ${#VARIANTS[@]} > 0 )); then
+            printf '%s\n' "${VARIANTS[@]}" | sed 's/^/::error::Found non-canonical C variant: /'
+            exit 3
+          fi
+
+          # Optional content sanity check if jq is available (skip silently if not)
+          if command -v jq >/dev/null 2>&1; then
+            jq -e 'type=="array"' "$CANONICAL" >/dev/null || (echo "::error::C file must be a JSON array"; exit 5)
+          fi
+
+          echo "✅ Canonical C path verified (pre-run)."
+
       # 7) Run the agent (writes ONLY B/C from Appendix A).
       - name: Run Toy Agent (B/C only)
         run: |
           set -eux
           python scripts/agent.py --write-bc-only
+
+      # 7.1) POST-RUN GUARD — Ensure the agent did not deviate from the canonical C name.
+      - name: Verify canonical Appendix C filename (post-run)
+        shell: bash
+        run: |
+          set -euo pipefail
+          CANONICAL="json_jsonl/ELIS_Appendix_C_DataExtraction_rows.json"
+          [[ -f "$CANONICAL" ]] || { echo "::error::Agent did not produce $CANONICAL"; exit 6; }
+          echo "✅ Canonical C path verified (post-run)."
 
       # 8) Upload artefacts for download/debug.
       - name: Upload artefacts (B/C)
@@ -122,19 +162,28 @@ jobs:
           name: elis-agent-artefacts
           path: |
             json_jsonl/ELIS_Appendix_B_Screening_rows.json
-            json_jsonl/ELIS_Appendix_C_Extraction_rows.json
+            json_jsonl/ELIS_Appendix_C_DataExtraction_rows.json
 
       # 9) Stage & commit ONLY when B/C changed.
       - name: Commit artefacts (B/C only when changed)
         run: |
           set -eux
-          git add -N json_jsonl/ELIS_Appendix_B_Screening_rows.json json_jsonl/ELIS_Appendix_C_Extraction_rows.json || true
-          if git diff --name-only --exit-code -- json_jsonl/ELIS_Appendix_B_Screening_rows.json json_jsonl/ELIS_Appendix_C_Extraction_rows.json; then
+          git add -N \
+            json_jsonl/ELIS_Appendix_B_Screening_rows.json \
+            json_jsonl/ELIS_Appendix_C_DataExtraction_rows.json || true
+
+          if git diff --name-only --exit-code -- \
+              json_jsonl/ELIS_Appendix_B_Screening_rows.json \
+              json_jsonl/ELIS_Appendix_C_DataExtraction_rows.json; then
             echo "No artefact diffs; skipping commit/push/PR."
             echo "skip_pr=true" >> "$GITHUB_ENV"
             exit 0
           fi
-          git add json_jsonl/ELIS_Appendix_B_Screening_rows.json json_jsonl/ELIS_Appendix_C_Extraction_rows.json
+
+          git add \
+            json_jsonl/ELIS_Appendix_B_Screening_rows.json \
+            json_jsonl/ELIS_Appendix_C_DataExtraction_rows.json
+
           git commit -m "feat(agent): add B/C artefacts from Appendix A"
 
       # 10) Overwrite 'origin' to the App-token URL (permanent push fix).
