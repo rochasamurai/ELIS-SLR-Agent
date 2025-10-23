@@ -54,13 +54,10 @@ import re
 import sys
 import json
 import time
-import math
-import uuid
 import hashlib
 import logging
 import datetime as dt
-from typing import Any, Dict, List, Optional, Tuple
-
+from typing import Any, Dict, List, Optional
 import requests
 import yaml
 
