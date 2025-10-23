@@ -1,0 +1,187 @@
+name: ELIS - Agent Search (Appendix A)
+# =============================================================================
+# Purpose
+#   Execute Appendix A (Search) against configured sources and queries.
+#   Write canonical A file, commit to a work branch, and open/refresh a PR.
+#
+# Canonical A filename invariant (verify only; no shims):
+#   json_jsonl/ELIS_Appendix_A_Search_rows.json
+#
+# Triggers
+#   - Manual (workflow_dispatch)
+#   - Optional: weekly schedule (commented out below)
+# =============================================================================
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_branch:
+        description: "Base branch to PR into"
+        required: false
+        default: "main"
+      write_branch:
+        description: "Work branch to write A artefact (auto-suffixed if exists)"
+        required: false
+        default: "ci/agent-search-autopr"
+      open_pr:
+        description: "Open/refresh PR write_branch → base_branch"
+        required: false
+        default: "true"
+#  schedule:
+#    - cron: "20 6 * * 0"  # Sunday 06:20 UTC
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: agent-search-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  search-a:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      # 1) GitHub App token (push/PR identity)
+      - name: Mint installation token (GitHub App)
+        id: app
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.ELIS_APP_ID }}
+          private-key: ${{ secrets.ELIS_APP_PRIVATE_KEY }}
+
+      # 2) Checkout using App token
+      - name: Checkout repository (App token)
+        uses: actions/checkout@v4
+        with:
+          token: ${{ steps.app.outputs.token }}
+          fetch-depth: 0
+
+      # 3) Resolve branches
+      - name: Resolve branches
+        id: br
+        run: |
+          BASE="${{ github.event.inputs.base_branch || 'main' }}"
+          HEAD="${{ github.event.inputs.write_branch || 'ci/agent-search-autopr' }}"
+          echo "base=$BASE" >> "$GITHUB_OUTPUT"
+          echo "head=$HEAD" >> "$GITHUB_OUTPUT"
+
+      # 4) Prepare work branch
+      - name: Prepare write branch (create or fast-forward)
+        run: |
+          set -eux
+          BASE="${{ steps.br.outputs.base }}"
+          HEAD="${{ steps.br.outputs.head }}"
+          git fetch origin --prune
+          if git ls-remote --exit-code --heads origin "$HEAD" >/dev/null 2>&1; then
+            git checkout -B "$HEAD" "origin/$HEAD"
+            (git merge --ff-only "origin/$BASE" && echo "FF merged base") || true
+          else
+            git checkout -B "$HEAD" "origin/$BASE"
+            git push -u origin "$HEAD"
+          fi
+
+      # 5) Python runtime + deps
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests pyyaml
+
+      # 6) Run Appendix A search (creates canonical A file)
+      - name: Run Appendix A Search (MVP)
+        env:
+          SEMANTIC_SCHOLAR_API_KEY: ${{ secrets.SEMANTIC_SCHOLAR_API_KEY }}
+        run: |
+          set -eux
+          python scripts/elis/search_mvp.py --config config/elis_search_queries.yml
+
+      # 6.1) Verify canonical A filename (post-run only)
+      - name: Verify canonical Appendix A filename (post-run)
+        run: |
+          set -euo pipefail
+          CANONICAL="json_jsonl/ELIS_Appendix_A_Search_rows.json"
+          if [[ ! -f "$CANONICAL" ]]; then
+            echo "::error::Appendix A file not produced at $CANONICAL"; exit 6;
+          fi
+          if command -v jq >/dev/null 2>&1; then
+            jq -e 'type=="array" and (.[0]|has("_meta"))' "$CANONICAL" >/dev/null || \
+              (echo "::error::A file must be a JSON array and first element must be _meta"; exit 5)
+          fi
+          echo "✅ Canonical A path verified (post-run)."
+
+      # 7) Upload artefact (14-day retention)
+      - name: Upload artefact (Appendix A)
+        uses: actions/upload-artifact@v4
+        with:
+          name: elis-appendix-a-search
+          path: json_jsonl/ELIS_Appendix_A_Search_rows.json
+          retention-days: 14
+
+      # 8) Commit only if A changed
+      - name: Commit Appendix A (only when changed)
+        run: |
+          set -eux
+          git add -N json_jsonl/ELIS_Appendix_A_Search_rows.json || true
+          if git diff --name-only --exit-code -- json_jsonl/ELIS_Appendix_A_Search_rows.json; then
+            echo "No A diffs; skipping commit/push/PR."
+            echo "skip_pr=true" >> "$GITHUB_ENV"
+            exit 0
+          fi
+          git add json_jsonl/ELIS_Appendix_A_Search_rows.json
+          git commit -m "feat(search): update Appendix A results"
+
+      # 9) Ensure remote uses App token
+      - name: Force remote to App-token URL (fix push auth)
+        if: env.skip_pr != 'true'
+        run: |
+          set -eux
+          git remote set-url origin "https://x-access-token:${{ steps.app.outputs.token }}@github.com/${{ github.repository }}"
+
+      # 10) Push branch
+      - name: Push work branch
+        if: env.skip_pr != 'true'
+        run: |
+          set -eux
+          HEAD="${{ steps.br.outputs.head }}"
+          git push --force-with-lease origin HEAD:"$HEAD"
+
+      # 11) Open/refresh PR
+      - name: Compare base..head & open/refresh PR
+        if: ${{ env.skip_pr != 'true' && fromJSON(github.event.inputs.open_pr || 'true') }}
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ steps.app.outputs.token }}
+          script: |
+            const owner = context.repo.owner;
+            const repo  = context.repo.repo;
+            const base  = "${{ steps.br.outputs.base }}";
+            const head  = "${{ steps.br.outputs.head }}";
+
+            const cmp = await github.rest.repos.compareCommitsWithBasehead({
+              owner, repo, basehead: `${base}...${head}`,
+            });
+            const hasDiff = (cmp.data.ahead_by > 0) || ((cmp.data.files || []).length > 0);
+            if (!hasDiff) { core.info("No diff; no PR opened."); return; }
+
+            const { data: openPRs } = await github.rest.pulls.list({
+              owner, repo, state: 'open', base, head: `${owner}:${head}`,
+            });
+            if (openPRs.length > 0) {
+              core.info(`PR already open: #${openPRs[0].number}`);
+            } else {
+              const { data: pr } = await github.rest.pulls.create({
+                owner, repo, base, head,
+                title: "feat(search): update Appendix A results",
+                body: "Automated ELIS – Agent Search (Appendix A) run.",
+              });
+              core.info(`Opened PR #${pr.number}`);
+            }
