@@ -1,20 +1,23 @@
+name: ELIS - Housekeeping
 # ============================================================
 # Workflow: ELIS - Housekeeping
 # Purpose:
 #   - Clean up old workflow runs and artifacts to keep the repo lean.
 #   - Default behaviour: delete COMPLETED runs and artifacts older than N days.
+#
 # Triggers:
 #   - Manual (workflow_dispatch) with options.
 #   - Weekly schedule (Sunday 06:00 UTC).
+#
 # Permissions:
 #   - actions: write (required to delete runs/artifacts)
 #   - contents: read
+#
 # Notes:
-#   - Uses GITHUB_TOKEN only (no extra secrets).
+#   - Uses the GitHub-provided token (${{ github.token }}) only.
 #   - Dry-run supported to preview deletions.
+#   - Adds concurrency guard (no overlapping runs) and step summary output.
 # ============================================================
-
-name: ELIS - Housekeeping
 
 on:
   workflow_dispatch:
@@ -44,6 +47,11 @@ on:
   schedule:
     - cron: "0 6 * * 0"
 
+# Prevent overlapping housekeeping executions (e.g., manual + scheduled)
+concurrency:
+  group: housekeeping-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   actions: write
   contents: read
@@ -65,10 +73,11 @@ jobs:
           DRY_RUN_IN:  ${{ inputs.dry_run }}
         run: |
           set -euo pipefail
-          # When scheduled (no workflow_dispatch), inputs are empty.
+          # When scheduled (no workflow_dispatch), inputs are empty; set defaults.
           RETENTION_DAYS="${RET_DAYS_IN:-14}"
           DELETE_RUNS="${DEL_RUNS_IN:-true}"
           DELETE_ARTIFACTS="${DEL_ARTS_IN:-true}"
+          # For scheduled runs, default dry_run to false; for manual, respect input.
           DRY_RUN="${DRY_RUN_IN:-false}"
 
           echo "retention_days=${RETENTION_DAYS}"        >> "$GITHUB_OUTPUT"
@@ -84,26 +93,25 @@ jobs:
 
       # --------------------------------------------------------
       # Delete COMPLETED workflow runs older than retention_days
+      # - Exposes counts via step outputs -> used in the final summary.
       # --------------------------------------------------------
       - name: Housekeep workflow RUNS
+        id: runs
         if: ${{ steps.cfg.outputs.delete_runs == 'true' }}
         uses: actions/github-script@v7
-        env:
-          GH_TOKEN:        ${{ secrets.GITHUB_TOKEN }}
-          RETENTION_DAYS:  ${{ steps.cfg.outputs.retention_days }}
-          DRY_RUN:         ${{ steps.cfg.outputs.dry_run }}
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ github.token }}
           script: |
-            const retentionDays = parseInt(process.env.RETENTION_DAYS, 10);
-            const dryRun        = (process.env.DRY_RUN === 'true');
+            const retentionDays = parseInt(core.getInput('RETENTION_DAYS', { required: false }) || process.env.RETENTION_DAYS || '14', 10);
+            const dryRun        = (core.getInput('DRY_RUN', { required: false }) || process.env.DRY_RUN || 'false') === 'true';
             const cutoffMs      = Date.now() - retentionDays*24*60*60*1000;
+            const cutoffIso     = new Date(cutoffMs).toISOString();
 
             const { owner, repo } = context.repo;
-            core.info(`Deleting COMPLETED runs older than ${retentionDays} days (dry_run=${dryRun})`);
+            core.info(`Deleting COMPLETED runs older than ${retentionDays} days (cutoff=${cutoffIso}, dry_run=${dryRun})`);
 
             let deleted = 0, scanned = 0, page = 1;
-            while (true) {
+            for (;;) {
               const { data } = await github.rest.actions.listWorkflowRunsForRepo({
                 owner, repo, per_page: 100, page, status: 'completed'
               });
@@ -114,7 +122,7 @@ jobs:
                 scanned++;
                 const updatedAt = new Date(run.updated_at).getTime();
                 if (updatedAt < cutoffMs) {
-                  core.info(`- OLD run #${run.id} (${run.name}) updated_at=${run.updated_at}`);
+                  core.info(`- OLD run #${run.id} name="${run.name}" updated_at=${run.updated_at}`);
                   if (!dryRun) {
                     await github.rest.actions.deleteWorkflowRun({ owner, repo, run_id: run.id });
                   }
@@ -123,30 +131,35 @@ jobs:
               }
               page++;
             }
+
             core.notice(`Runs scanned: ${scanned} | Runs deleted: ${deleted} | dry_run=${dryRun}`);
+            core.setOutput('scanned', String(scanned));
+            core.setOutput('deleted', String(deleted));
+        env:
+          RETENTION_DAYS:  ${{ steps.cfg.outputs.retention_days }}
+          DRY_RUN:         ${{ steps.cfg.outputs.dry_run }}
 
       # --------------------------------------------------------
       # Delete artifacts older than retention_days
+      # - Exposes counts via step outputs -> used in the final summary.
       # --------------------------------------------------------
       - name: Housekeep ARTIFACTS
+        id: arts
         if: ${{ steps.cfg.outputs.delete_artifacts == 'true' }}
         uses: actions/github-script@v7
-        env:
-          GH_TOKEN:        ${{ secrets.GITHUB_TOKEN }}
-          RETENTION_DAYS:  ${{ steps.cfg.outputs.retention_days }}
-          DRY_RUN:         ${{ steps.cfg.outputs.dry_run }}
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ github.token }}
           script: |
-            const retentionDays = parseInt(process.env.RETENTION_DAYS, 10);
-            const dryRun        = (process.env.DRY_RUN === 'true');
+            const retentionDays = parseInt(core.getInput('RETENTION_DAYS', { required: false }) || process.env.RETENTION_DAYS || '14', 10);
+            const dryRun        = (core.getInput('DRY_RUN', { required: false }) || process.env.DRY_RUN || 'false') === 'true';
             const cutoffMs      = Date.now() - retentionDays*24*60*60*1000;
+            const cutoffIso     = new Date(cutoffMs).toISOString();
 
             const { owner, repo } = context.repo;
-            core.info(`Deleting artifacts older than ${retentionDays} days (dry_run=${dryRun})`);
+            core.info(`Deleting artifacts older than ${retentionDays} days (cutoff=${cutoffIso}, dry_run=${dryRun})`);
 
             let deleted = 0, scanned = 0, page = 1;
-            while (true) {
+            for (;;) {
               const { data } = await github.rest.actions.listArtifactsForRepo({
                 owner, repo, per_page: 100, page
               });
@@ -157,7 +170,7 @@ jobs:
                 scanned++;
                 const updatedAt = new Date(art.updated_at).getTime();
                 if (updatedAt < cutoffMs) {
-                  core.info(`- OLD artifact #${art.id} name=${art.name} updated_at=${art.updated_at}`);
+                  core.info(`- OLD artifact #${art.id} name="${art.name}" updated_at=${art.updated_at}`);
                   if (!dryRun) {
                     await github.rest.actions.deleteArtifact({ owner, repo, artifact_id: art.id });
                   }
@@ -166,15 +179,28 @@ jobs:
               }
               page++;
             }
+
             core.notice(`Artifacts scanned: ${scanned} | Artifacts deleted: ${deleted} | dry_run=${dryRun}`);
+            core.setOutput('scanned', String(scanned));
+            core.setOutput('deleted', String(deleted));
+        env:
+          RETENTION_DAYS:  ${{ steps.cfg.outputs.retention_days }}
+          DRY_RUN:         ${{ steps.cfg.outputs.dry_run }}
 
       # --------------------------------------------------------
-      # Summary line in logs
+      # Rich summary in the Actions UI (Step Summary)
       # --------------------------------------------------------
       - name: Summary
         run: |
-          echo "Housekeeping completed."
-          echo "Retention: ${{ steps.cfg.outputs.retention_days }} days"
-          echo "Deleted runs? ${{ steps.cfg.outputs.delete_runs }}"
-          echo "Deleted artifacts? ${{ steps.cfg.outputs.delete_artifacts }}"
-          echo "Dry run: ${{ steps.cfg.outputs.dry_run }}"
+          {
+            echo "## Housekeeping completed"
+            echo ""
+            echo "- Retention: **${{ steps.cfg.outputs.retention_days }}** days"
+            echo "- Delete runs? **${{ steps.cfg.outputs.delete_runs }}**"
+            echo "- Delete artifacts? **${{ steps.cfg.outputs.delete_artifacts }}**"
+            echo "- Dry run: **${{ steps.cfg.outputs.dry_run }}**"
+            echo ""
+            echo "### Counts"
+            echo "- Runs: scanned **${{ steps.runs.outputs.scanned || '0' }}**, deleted **${{ steps.runs.outputs.deleted || '0' }}**"
+            echo "- Artifacts: scanned **${{ steps.arts.outputs.scanned || '0' }}**, deleted **${{ steps.arts.outputs.deleted || '0' }}**"
+          } >> "$GITHUB_STEP_SUMMARY"
