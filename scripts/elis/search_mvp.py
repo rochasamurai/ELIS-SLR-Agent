@@ -116,6 +116,7 @@ logging.basicConfig(
     stream=sys.stdout,
 )
 
+
 # ------------------------- Helpers ------------------------------------------
 def now_utc_iso() -> str:
     """Return UTC timestamp in ISO 8601 (no microseconds, with trailing Z)."""
@@ -228,6 +229,7 @@ def write_step_summary(meta: Dict[str, Any], summary: Dict[str, Any]) -> None:
     with open(path, "a", encoding="utf-8") as fh:
         fh.write("\n".join(lines) + "\n")
 
+
 # ------------------------- Source: Crossref ----------------------------------
 def search_crossref(
     query: str, year_from: int, year_to: int, languages: List[str], cap: int
@@ -251,7 +253,10 @@ def search_crossref(
     while got < cap:
         try:
             r = requests.get(
-                url, params={**params, "cursor": cursor}, headers=DEFAULT_HEADERS, timeout=30
+                url,
+                params={**params, "cursor": cursor},
+                headers=DEFAULT_HEADERS,
+                timeout=30,
             )
             r.raise_for_status()
         except Exception as e:
@@ -409,7 +414,7 @@ def search_arxiv(
         for ent in entries:
             # Title
             m_title = re.search(r"<title>(.*?)</title>", ent, flags=re.DOTALL)
-            title = (m_title.group(1).strip() if m_title else None)
+            title = m_title.group(1).strip() if m_title else None
             # Year from <published>
             m_pub = re.search(r"<published>(.*?)</published>", ent)
             year = None
@@ -420,7 +425,7 @@ def search_arxiv(
                     pass
             # URL/ID
             m_id = re.search(r"<id>(.*?)</id>", ent)
-            url = (m_id.group(1) if m_id else None)
+            url = m_id.group(1) if m_id else None
             # Authors
             authors = re.findall(r"<name>(.*?)</name>", ent)
             # DOI (if provided)
@@ -431,7 +436,7 @@ def search_arxiv(
             doi = m_doi.group(1) if m_doi else None
             # Abstract
             m_abs = re.search(r"<summary>(.*?)</summary>", ent, flags=re.DOTALL)
-            abstract = (m_abs.group(1).strip() if m_abs else None)
+            abstract = m_abs.group(1).strip() if m_abs else None
 
             rec = {
                 "title": title,
@@ -489,7 +494,7 @@ def orchestrate_search(config: dict) -> List[Dict[str, Any]]:
         topic_id = topic["id"]
         include_preprints = bool(topic.get("include_preprints", True))
         sources = topic.get("sources", ["crossref", "semanticscholar"])
-        for q in (topic.get("queries") or []):
+        for q in topic.get("queries") or []:
             if "crossref" in sources:
                 for rec in search_crossref(q, y0, y1, langs, cap=topic_cap):
                     add_with_dedupe(rec, topic_id, q)
