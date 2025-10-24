@@ -61,6 +61,12 @@ jobs:
           token: ${{ steps.app.outputs.token }}
           fetch-depth: 0
 
+      # 2.1) Configure Git identity (needed for commits)
+      - name: Configure Git identity
+        run: |
+          git config user.name  "elis-bot"
+          git config user.email "elis-bot@users.noreply.github.com"
+
       # 3) Resolve branches
       - name: Resolve branches
         id: br
