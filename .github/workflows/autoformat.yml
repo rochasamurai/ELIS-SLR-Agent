@@ -1,8 +1,9 @@
 name: ELIS - Autoformat
 # ============================================================================
 # Purpose
-#   Run Black on a target branch (default: `elis-bot`). If changes occur,
-#   commit and push them, then (optionally) open/refresh a PR into `main`.
+#   Standardize code style: Ruff (lint/fix) and Black (format).
+#   - pull_request: check-only (non-destructive).
+#   - workflow_dispatch: optionally apply fixes and auto-commit.
 #
 # Notes
 #   - Includes a dry-run/diff step so you can see what Black would change.
@@ -11,216 +12,58 @@ name: ELIS - Autoformat
 # ============================================================================
 
 on:
+  pull_request:
   workflow_dispatch:
     inputs:
-      base_branch:
-        description: "Base branch to PR into"
-        required: false
-        default: "main"
-      target_branch:
-        description: "Branch to autoformat (in-place)"
-        required: false
-        default: "elis-bot"
-      open_pr:
-        description: "Open/refresh PR target_branch → base_branch"
-        required: false
-        default: "true"
+      apply_fixes:
+        description: "Apply fixes and auto-commit"
+        type: boolean
+        default: true
+        required: true
 
 permissions:
-  contents: write
-  pull-requests: write
-
-# Concurrency keyed by the target branch to avoid racing pushes
-concurrency:
-  group: autoformat-${{ github.event.inputs.target_branch != '' && github.event.inputs.target_branch || 'elis-bot' }}
-  cancel-in-progress: false
+  contents: write  # needed to auto-commit when apply_fixes=true
 
 jobs:
   autoformat:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
-
-    env:
-      BASE_BRANCH:   ${{ github.event.inputs.base_branch }}
-      TARGET_BRANCH: ${{ github.event.inputs.target_branch }}
-      OPEN_PR:       ${{ github.event.inputs.open_pr }}
-
     steps:
-      # 1) GitHub App token for write operations
-      - name: Mint installation token (GitHub App)
-        id: app
-        uses: actions/create-github-app-token@v1
-        with:
-          app-id: ${{ secrets.ELIS_APP_ID }}
-          private-key: ${{ secrets.ELIS_APP_PRIVATE_KEY }}
-
-      # 2) Checkout repo (full history; we will position onto the target branch)
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
         with:
-          token: ${{ steps.app.outputs.token }}
           fetch-depth: 0
 
-      # 3) Git identity & LF policy (avoid CRLF churn)
-      - name: Configure Git identity & LF endings
-        run: |
-          set -eux
-          git config user.name  "elis-bot"
-          git config user.email "elis-bot@users.noreply.github.com"
-          git config core.autocrlf false
-          git config core.eol lf
-
-      # 4) Prepare target branch
-      - name: Prepare target branch
-        run: |
-          set -eux
-          BASE="${BASE_BRANCH:-main}"
-          HEAD_BRANCH="${TARGET_BRANCH:-elis-bot}"
-
-          git fetch origin --prune
-          git reset --hard
-          git clean -fdx
-
-          if git ls-remote --exit-code --heads origin "$HEAD_BRANCH" >/dev/null 2>&1; then
-            git checkout -B "$HEAD_BRANCH" "origin/$HEAD_BRANCH"
-          else
-            git checkout -B "$HEAD_BRANCH" "origin/$BASE"
-            git push -u origin "$HEAD_BRANCH"
-          fi
-
-          # Ensure upstream is set (makes later diagnostics simpler)
-          git branch --set-upstream-to="origin/$HEAD_BRANCH" "$HEAD_BRANCH" || true
-
-      # 5) Sync target from base (rebase; reset if unrelated/fails)
-      - name: Sync target from base (rebase or reset)
-        run: |
-          set -eux
-          BASE="${BASE_BRANCH:-main}"
-          git fetch origin "$BASE" --depth=1
-          if ! git rebase "origin/$BASE"; then
-            git rebase --abort || true
-            echo "Rebase failed or unrelated histories; resetting to origin/$BASE"
-            git reset --hard "origin/$BASE"
-          fi
-
-      # 6) Normalise line endings per .gitattributes
-      - name: Normalise line endings (.gitattributes)
-        run: |
-          set -eux
-          git add --renormalize .
-          if ! git diff --cached --quiet; then
-            git commit -m "chore(format): normalise line endings per .gitattributes"
-          else
-            echo "No line-ending normalisation needed."
-          fi
-
-      # 7) Set up Python and Black
-      - name: Set up Python 3.11
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Install Black
+      - name: Install tools (pinned)
         run: |
-          set -eux
           python -m pip install --upgrade pip
-          pip install black==24.8.0
+          pip install "ruff==0.6.1" "black==24.8.0"
 
-      # 8) Diagnostics: show what Black would change (non-fatal)
-      - name: Show Black dry-run/diff
-        run: |
-          set -eux
-          black --version
-          echo ">>> black --check (non-fatal preview)"
-          if black --check . ; then
-            echo "Repository is already Black-clean."
-          else
-            echo "Black would reformat the files above."
-          fi
-          echo ">>> black --diff (non-fatal preview)"
-          black --diff --quiet . || true
+      # ---- Check-only on PRs (always non-destructive) ----
+      - name: Ruff (check)
+        if: github.event_name == 'pull_request'
+        run: ruff check .
 
-      # 9) Run Black in-place
-      - name: Run Black (format in-place)
+      - name: Black (check)
+        if: github.event_name == 'pull_request'
+        run: black --check .
+
+      # ---- Apply fixes on manual dispatch (optional) ----
+      - name: Ruff (fix)
+        if: github.event_name == 'workflow_dispatch' && inputs.apply_fixes == true
+        run: ruff check --fix .
+
+      - name: Black (format)
+        if: github.event_name == 'workflow_dispatch' && inputs.apply_fixes == true
         run: black .
 
-      # 10) Commit and ALWAYS push if a commit was created
-      - name: Commit and push formatting changes
-        run: |
-          set -eux
-          HEAD_BRANCH="${TARGET_BRANCH:-elis-bot}"
-
-          # Stage & commit if there is anything to commit
-          git add -A
-          if git diff --cached --quiet; then
-            echo "No working tree changes after Black."
-            exit 0
-          fi
-
-          git commit -m "chore(format): apply Black autoformat"
-
-          echo "Debug: current branch and last commit:"
-          git rev-parse --abbrev-ref HEAD
-          git --no-pager show --stat -1
-
-          # Make sure upstream is set and push the new commit unconditionally
-          git branch --set-upstream-to="origin/$HEAD_BRANCH" "$HEAD_BRANCH" || true
-          git push --force-with-lease origin "HEAD:$HEAD_BRANCH"
-          echo "Pushed: $(git rev-parse --short HEAD) -> $HEAD_BRANCH"
-
-      # 11) Compare base..head (skip PR when no diff)
-      - name: Compare base..head (API)
-        id: compare
-        uses: actions/github-script@v6
+      - name: Auto-commit formatting changes
+        if: github.event_name == 'workflow_dispatch' && inputs.apply_fixes == true
+        uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          github-token: ${{ steps.app.outputs.token }}
-          script: |
-            const owner = context.repo.owner;
-            const repo  = context.repo.repo;
-            const base  = process.env.BASE_BRANCH || 'main';
-            const head  = process.env.TARGET_BRANCH || 'elis-bot';
-
-            const cmp = await github.rest.repos.compareCommitsWithBasehead({
-              owner, repo, basehead: `${base}...${head}`,
-            });
-
-            const files = (cmp.data.files || []).length;
-            const hasDiff = (cmp.data.ahead_by > 0) || files > 0;
-            core.setOutput('has_diff', hasDiff ? 'true' : 'false');
-            core.info(`Diff? ${hasDiff} (ahead_by=${cmp.data.ahead_by}, behind_by=${cmp.data.behind_by}, files=${files})`);
-
-      # 12) Open/refresh PR only when there is a diff
-      - name: Open/refresh PR to base
-        if: ${{ env.OPEN_PR == 'true' && steps.compare.outputs.has_diff == 'true' }}
-        uses: actions/github-script@v6
-        with:
-          github-token: ${{ steps.app.outputs.token }}
-          script: |
-            const owner = context.repo.owner;
-            const repo  = context.repo.repo;
-            const base  = process.env.BASE_BRANCH || 'main';
-            const head  = process.env.TARGET_BRANCH || 'elis-bot';
-
-            const { data: openPRs } = await github.rest.pulls.list({
-              owner, repo, state: 'open', base, head: `${owner}:${head}`,
-            });
-
-            if (openPRs.length > 0) {
-              core.info(`PR already open: #${openPRs[0].number}`);
-            } else {
-              const { data: pr } = await github.rest.pulls.create({
-                owner, repo, base, head,
-                title: "chore(format): apply Black autoformat",
-                body: "Automated formatting and line-ending normalisation by ELIS - Autoformat.",
-              });
-              core.info(`Opened PR #${pr.number}`);
-            }
-
-      # 13) No-diff note (keeps the job green without a PR)
-      - name: No changes to PR
-        if: ${{ steps.compare.outputs.has_diff != 'true' }}
-        run: |
-          echo "No commits between ${BASE_BRANCH:-main} and ${TARGET_BRANCH:-elis-bot} — PR not required."
-
+          commit_message: "style(autoformat): apply Black/Ruff formatting"
+          file_pattern: .
