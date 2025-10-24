@@ -1,1 +1,144 @@
-{   "$schema": "https://json-schema.org/draft/2020-12/schema",   "$id": "urn:elis:schemas:appendix_a",   "title": "ELIS Appendix A – Search rows (MVP)",   "type": "array",   "items": {     "type": "object",     "additionalProperties": false,     "required": ["id", "search_query", "source", "executed_at", "notes"],     "properties": {       "id": { "type": "string", "minLength": 1 },       "search_query": { "type": "string", "minLength": 1 },       "source": { "type": "string", "minLength": 1 },       "executed_at": { "type": "string", "format": "date-time" },       "notes": { "type": "string", "minLength": 1 }     }   } }
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+
+  "$id": "urn:elis:appendix-a-schema:v1",
+  "$comment": "ELIS – Appendix A (Search) artefact schema. Validates the canonical file json_jsonl/ELIS_Appendix_A_Search_rows.json. The JSON MUST be an array whose first element is a metadata object containing \"_meta\": true. Subsequent items are search result records. The record model is intentionally permissive to accommodate heterogeneous sources.",
+
+  "title": "ELIS Appendix A (Search) Artefact",
+  "type": "array",
+  "minItems": 1,
+
+  "prefixItems": [
+    {
+      "type": "object",
+      "required": [
+        "_meta",
+        "protocol_version",
+        "config_path",
+        "retrieved_at",
+        "global",
+        "record_count",
+        "summary"
+      ],
+      "properties": {
+        "_meta": { "const": true },
+
+        "protocol_version": {
+          "type": "string",
+          "$comment": "e.g., \"ELIS 2025 (MVP)\""
+        },
+
+        "config_path": {
+          "type": "string",
+          "$comment": "Path of the effective configuration used (often /tmp/elis_config.yml when patched by the Actions UI)."
+        },
+
+        "retrieved_at": {
+          "type": "string",
+          "$comment": "UTC ISO 8601 timestamp with trailing Z."
+        },
+
+        "global": {
+          "type": "object",
+          "properties": {
+            "year_from": { "type": "integer" },
+            "year_to":   { "type": "integer" },
+            "languages": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "max_results_per_source": { "type": "integer" },
+            "job_result_cap": { "type": "integer" }
+          },
+          "additionalProperties": true,
+          "$comment": "Allow extra keys for forwards compatibility."
+        },
+
+        "topics_enabled": {
+          "type": "array",
+          "items": { "type": "string" },
+          "$comment": "List of enabled topic IDs after any UI filtering."
+        },
+
+        "sources": {
+          "type": "array",
+          "items": { "type": "string" },
+          "$comment": "Distinct set of sources observed in the records."
+        },
+
+        "record_count": {
+          "type": "integer",
+          "minimum": 0,
+          "$comment": "Unique record count after deduplication."
+        },
+
+        "summary": {
+          "type": "object",
+          "required": ["total"],
+          "properties": {
+            "total": { "type": "integer", "minimum": 0 },
+            "per_source": {
+              "type": "object",
+              "additionalProperties": { "type": "integer", "minimum": 0 }
+            },
+            "per_topic": {
+              "type": "object",
+              "additionalProperties": { "type": "integer", "minimum": 0 }
+            }
+          },
+          "additionalProperties": true,
+          "$comment": "Compact roll-up for PR review and the Actions Step Summary."
+        },
+
+        "run_inputs": {
+          "type": "object",
+          "properties": {
+            "year_from": { "type": "integer" },
+            "year_to": { "type": "integer" },
+            "job_result_cap": { "type": "integer" },
+            "max_results_per_source": { "type": "integer" },
+            "topics_selected": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "include_preprints_by_topic": {
+              "type": "object",
+              "additionalProperties": { "type": "boolean" }
+            }
+          },
+          "additionalProperties": true,
+          "$comment": "Provenance: effective knobs derived from the run configuration after any UI overrides."
+        }
+      },
+      "additionalProperties": true
+    }
+  ],
+
+  "items": {
+    "type": "object",
+    "required": ["id", "source", "retrieved_at", "query_topic", "query_string"],
+    "properties": {
+      "id":         { "type": "string" },
+      "_stable_id": { "type": "string" },
+
+      "title":     { "type": ["string", "null"] },
+      "authors":   { "type": "array", "items": { "type": "string" } },
+      "year":      { "type": ["integer", "null"] },
+      "doi":       { "type": ["string", "null"] },
+      "venue":     { "type": ["string", "null"] },
+      "publisher": { "type": ["string", "null"] },
+      "abstract":  { "type": ["string", "null"] },
+      "language":  { "type": ["string", "null"] },
+      "url":       { "type": ["string", "null"] },
+      "doc_type":  { "type": ["string", "null"] },
+
+      "source":    { "type": "string" },
+      "source_id": { "type": ["string", "null"] },
+
+      "query_topic":  { "type": "string" },
+      "query_string": { "type": "string" },
+      "retrieved_at": { "type": "string" }
+    },
+    "additionalProperties": true
+  }
+}
