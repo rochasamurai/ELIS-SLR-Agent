@@ -17,17 +17,43 @@
 #   - Minimal deps: PyYAML + requests (declared in workflows).
 #   - Field mapping is "best effort" across sources; we record source + raw ids.
 #   - Dedup strategy: prefer DOI; else normalized (title, year). First-hit wins.
-#   - Rate limiting: simple sleep between calls to be polite.
+#   - Rate limiting: small sleeps between calls; polite User-Agent for APIs.
+#   - Determinism: no randomness; results may still vary across runs due to
+#     upstream search backends updating/reshuffling.
 #   - Safe on first run (creates canonical file); idempotent thereafter.
+#
+# Enhancements in this version:
+#   - Adds a compact Search summary:
+#       * _meta.summary.total
+#       * _meta.summary.per_source: {"crossref": N, "semanticscholar": M, ...}
+#       * _meta.summary.per_topic:  {"topic_id": N, ...}
+#     and writes Markdown tables to $GITHUB_STEP_SUMMARY for PR reviewers.
 #
 # Environment (optional):
 #   - SEMANTIC_SCHOLAR_API_KEY: increases S2 rate limits if present.
+#   - ELIS_CONTACT: email shown in User-Agent for polite API usage (Crossref).
+#   - ELIS_HTTP_SLEEP_S: seconds to sleep between pagination calls (default 0.5).
 #
 # Outputs:
 #   - json_jsonl/ELIS_Appendix_A_Search_rows.json   (JSON array)
 #       [
 #         {
-#           "id": "<stable hash>",
+#           "_meta": true,
+#           "protocol_version": "ELIS 2025 (MVP)",
+#           "config_path": "...",
+#           "retrieved_at": "YYYY-MM-DDTHH:MM:SSZ",
+#           "global": {...},
+#           "topics_enabled": [...],
+#           "sources": [...],
+#           "record_count": <int>,
+#           "summary": {
+#             "total": <int>,
+#             "per_source": {...},
+#             "per_topic":  {...}
+#           }
+#         },
+#         {
+#           "id": "<stable id>",               # also present as _stable_id (BC)
 #           "title": "...",
 #           "authors": ["..."],
 #           "year": 2021,
@@ -37,34 +63,51 @@
 #           "venue": "Journal / Conference",
 #           "publisher": "...",
 #           "abstract": "...",
-#           "language": "en",
+#           "language": "en|fr|es|pt|null",
 #           "url": "https://...",
 #           "query_topic": "integrity_auditability_core",
 #           "query_string": "<the exact string executed>",
-#           "retrieved_at": "YYYY-MM-DDTHH:MM:SSZ"
+#           "retrieved_at": "YYYY-MM-DDTHH:MM:SSZ",
+#           "_stable_id": "<same as id>"       # kept temporarily for BC
 #         },
 #         ...
 #       ]
-#   - Also writes a small run metadata block as first element with "_meta": true.
+#
+# Exit codes:
+#   0 = success; 2 = missing/invalid config; other nonzero = runtime error.
+#
+# Known limitations (MVP):
+#   - Language is often unknown from S2/arXiv; screening (B) should enforce.
+#   - Titles/years may vary across sources; dedup may keep one variant.
+#   - arXiv parsed via lightweight regex (adequate for MVP).
 # =============================================================================
 
 from __future__ import annotations
 
-import sys  # needed for logging.basicConfig(stream=sys.stdout)
 import json
 import os
 import re
+import sys
 import time
 import hashlib
 import logging
 import datetime as dt
+from collections import Counter
 from typing import Any, Dict, List, Optional
 
 import requests
 import yaml
 
+# ------------------------- Constants & runtime knobs -------------------------
 CANONICAL_A = "json_jsonl/ELIS_Appendix_A_Search_rows.json"
 CONFIG_PATH = "config/elis_search_queries.yml"
+
+REQUEST_SLEEP_S = float(os.getenv("ELIS_HTTP_SLEEP_S", "0.5"))
+CONTACT = os.getenv("ELIS_CONTACT", "")
+UA = "ELIS-SLR-Agent/1.0"
+if CONTACT:
+    UA += f" (+mailto:{CONTACT})"
+DEFAULT_HEADERS = {"User-Agent": UA}
 
 # ------------------------- Logging configuration -----------------------------
 logging.basicConfig(
@@ -72,7 +115,6 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(message)s",
     stream=sys.stdout,
 )
-
 
 # ------------------------- Helpers ------------------------------------------
 def now_utc_iso() -> str:
@@ -130,10 +172,61 @@ def lang_ok(language: Optional[str], allowed: List[str]) -> bool:
     return language.lower() in {x.lower() for x in allowed}
 
 
-def polite_sleep(seconds: float):
-    """Tiny sleep to avoid hammering public APIs."""
-    time.sleep(seconds)
+def polite_sleep():
+    """Tiny sleep to avoid hammering public APIs (configurable via ELIS_HTTP_SLEEP_S)."""
+    if REQUEST_SLEEP_S > 0:
+        time.sleep(REQUEST_SLEEP_S)
 
+
+def build_summary(records: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """
+    Compute per-source and per-topic counts for the deduplicated record set.
+    Returns a plain dict suitable for embedding in _meta.summary.
+    """
+    per_source = Counter(r.get("source") for r in records if r.get("source"))
+    per_topic = Counter(r.get("query_topic") for r in records if r.get("query_topic"))
+
+    # Convert Counters to vanilla dicts with stable ordering (desc by count)
+    src_sorted = dict(sorted(per_source.items(), key=lambda x: (-x[1], x[0] or "")))
+    tpc_sorted = dict(sorted(per_topic.items(), key=lambda x: (-x[1], x[0] or "")))
+
+    return {
+        "total": len(records),
+        "per_source": src_sorted,
+        "per_topic": tpc_sorted,
+    }
+
+
+def write_step_summary(meta: Dict[str, Any], summary: Dict[str, Any]) -> None:
+    """
+    If running in GitHub Actions, append a compact Markdown summary to
+    $GITHUB_STEP_SUMMARY so reviewers get counts without opening the JSON.
+    """
+    path = os.environ.get("GITHUB_STEP_SUMMARY")
+    if not path:
+        return
+
+    def md_table(mapping: Dict[str, int], header_a: str, header_b: str) -> str:
+        lines = [f"| {header_a} | {header_b} |", "|---|---|"]
+        for k, v in mapping.items():
+            lines.append(f"| {k or '(unknown)'} | {v} |")
+        return "\n".join(lines)
+
+    lines: List[str] = []
+    lines.append("## Search summary")
+    lines.append("")
+    lines.append(f"- Timestamp: **{meta.get('retrieved_at', '')}**")
+    lines.append(f"- Total unique records: **{summary.get('total', 0)}**")
+    lines.append("")
+    lines.append("### Per source")
+    lines.append(md_table(summary.get("per_source", {}), "Source", "Records"))
+    lines.append("")
+    lines.append("### Per topic")
+    lines.append(md_table(summary.get("per_topic", {}), "Topic ID", "Records"))
+    lines.append("")
+
+    with open(path, "a", encoding="utf-8") as fh:
+        fh.write("\n".join(lines) + "\n")
 
 # ------------------------- Source: Crossref ----------------------------------
 def search_crossref(
@@ -157,7 +250,9 @@ def search_crossref(
     got = 0
     while got < cap:
         try:
-            r = requests.get(url, params={**params, "cursor": cursor}, timeout=30)
+            r = requests.get(
+                url, params={**params, "cursor": cursor}, headers=DEFAULT_HEADERS, timeout=30
+            )
             r.raise_for_status()
         except Exception as e:
             logging.warning(f"Crossref error: {e}")
@@ -204,7 +299,7 @@ def search_crossref(
         cursor = (data.get("message") or {}).get("next-cursor") or None
         if not cursor:
             break
-        polite_sleep(0.5)
+        polite_sleep()
     return out
 
 
@@ -217,9 +312,12 @@ def search_semantic_scholar(
     https://api.semanticscholar.org/
     """
     out: List[Dict[str, Any]] = []
-    fields = "title,authors,year,venue,externalIds,publicationTypes,abstract,url,journal,publicationVenue"
+    fields = (
+        "title,authors,year,venue,externalIds,publicationTypes,abstract,url,"
+        "journal,publicationVenue"
+    )
     url = "https://api.semanticscholar.org/graph/v1/paper/search"
-    headers = {}
+    headers = dict(DEFAULT_HEADERS)  # include UA alongside the API key
     api_key = os.getenv("SEMANTIC_SCHOLAR_API_KEY")
     if api_key:
         headers["x-api-key"] = api_key
@@ -271,7 +369,7 @@ def search_semantic_scholar(
         if not data.get("data"):
             break
         offset += params["limit"]
-        polite_sleep(0.5)
+        polite_sleep()
     return out
 
 
@@ -296,7 +394,7 @@ def search_arxiv(
             "sortOrder": "descending",
         }
         try:
-            r = requests.get(base, params=params, timeout=30)
+            r = requests.get(base, params=params, headers=DEFAULT_HEADERS, timeout=30)
             r.raise_for_status()
             text = r.text
         except Exception as e:
@@ -311,7 +409,7 @@ def search_arxiv(
         for ent in entries:
             # Title
             m_title = re.search(r"<title>(.*?)</title>", ent, flags=re.DOTALL)
-            title = m_title.group(1).strip() if m_title else None
+            title = (m_title.group(1).strip() if m_title else None)
             # Year from <published>
             m_pub = re.search(r"<published>(.*?)</published>", ent)
             year = None
@@ -322,7 +420,7 @@ def search_arxiv(
                     pass
             # URL/ID
             m_id = re.search(r"<id>(.*?)</id>", ent)
-            url = m_id.group(1) if m_id else None
+            url = (m_id.group(1) if m_id else None)
             # Authors
             authors = re.findall(r"<name>(.*?)</name>", ent)
             # DOI (if provided)
@@ -333,7 +431,7 @@ def search_arxiv(
             doi = m_doi.group(1) if m_doi else None
             # Abstract
             m_abs = re.search(r"<summary>(.*?)</summary>", ent, flags=re.DOTALL)
-            abstract = m_abs.group(1).strip() if m_abs else None
+            abstract = (m_abs.group(1).strip() if m_abs else None)
 
             rec = {
                 "title": title,
@@ -356,7 +454,7 @@ def search_arxiv(
                 if len(out) >= cap:
                     break
         start += params["max_results"]
-        polite_sleep(0.5)
+        polite_sleep()
     return out
 
 
@@ -380,7 +478,8 @@ def orchestrate_search(config: dict) -> List[Dict[str, Any]]:
         rec["query_string"] = query_str
         rec["retrieved_at"] = now_utc_iso()
         key = stable_id(rec.get("doi"), rec.get("title"), rec.get("year"))
-        rec["_stable_id"] = key  # internal marker for debugging
+        rec["id"] = key
+        rec["_stable_id"] = key  # kept for backward compatibility
         if key in seen:
             return
         seen.add(key)
@@ -390,7 +489,7 @@ def orchestrate_search(config: dict) -> List[Dict[str, Any]]:
         topic_id = topic["id"]
         include_preprints = bool(topic.get("include_preprints", True))
         sources = topic.get("sources", ["crossref", "semanticscholar"])
-        for q in topic.get("queries") or []:
+        for q in (topic.get("queries") or []):
             if "crossref" in sources:
                 for rec in search_crossref(q, y0, y1, langs, cap=topic_cap):
                     add_with_dedupe(rec, topic_id, q)
@@ -439,6 +538,8 @@ def main(argv: List[str]) -> int:
     records = orchestrate_search(config)
     logging.info(f"Total records (pre-write, unique): {len(records)}")
 
+    # Build meta (with summary) for provenance and quick review.
+    summary = build_summary(records)
     meta = {
         "protocol_version": "ELIS 2025 (MVP)",
         "config_path": args.config,
@@ -449,7 +550,11 @@ def main(argv: List[str]) -> int:
         ],
         "sources": sorted(list({r["source"] for r in records})),
         "record_count": len(records),
+        "summary": summary,
     }
+
+    # Emit a nice table into the GitHub Actions "Step Summary", if available.
+    write_step_summary(meta, summary)
 
     if args.dry_run:
         logging.info("Dry-run: not writing canonical Appendix A file.")
