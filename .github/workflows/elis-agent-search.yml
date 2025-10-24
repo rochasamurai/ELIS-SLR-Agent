@@ -2,19 +2,44 @@ name: ELIS - Agent Search (Appendix A)
 # =============================================================================
 # Purpose
 #   Execute Appendix A (Search) against configured sources and queries.
-#   Write canonical A file, commit to a work branch, and open/refresh a PR.
+#   Write the canonical A artefact, commit to a work branch, and
+#   open/refresh a PR into the chosen base branch.
 #
-# Canonical A filename invariant (verify only; no shims):
+# Canonical A filename (HARD INVARIANT):
 #   json_jsonl/ELIS_Appendix_A_Search_rows.json
 #
+# What this workflow does
+#   - Mints a GitHub App token (push/PR identity).
+#   - Checks out the repo using that token (fixes push auth).
+#   - Configures a bot identity for Git commits.
+#   - (Optional) Patches search config from UI inputs for ad-hoc runs.
+#   - Runs the search script (dry-run or real).
+#   - Always seeds the Actions Step Summary; the script appends per-source/topic tables.
+#   - Verifies the canonical filename (when not dry-run).
+#   - Uploads the artefact (14-day retention).
+#   - Commits only when the A file changed, pushes, and opens/refreshes a PR.
+#
 # Triggers
-#   - Manual (workflow_dispatch)
-#   - Optional: weekly schedule (commented out below)
+#   - Manual (workflow_dispatch) with UI inputs (see below).
+#   - You can add a schedule later if desired.
+#
+# Permissions
+#   - contents: write       (push commits)
+#   - pull-requests: write  (open/refresh PR)
+#
+# Notes
+#   - Uses the GitHub App credentials stored in secrets:
+#       ELIS_APP_ID, ELIS_APP_PRIVATE_KEY
+#   - The search script supports a “polite” User-Agent. Set ELIS_CONTACT as an
+#     Actions variable (email) to include contact details automatically.
+#   - Dry-run does not write or commit the A artefact, but still produces
+#     a human-readable Step Summary for reviewers.
 # =============================================================================
 
 on:
   workflow_dispatch:
     inputs:
+      # ---- PR wiring ---------------------------------------------------------
       base_branch:
         description: "Base branch to PR into"
         required: false
@@ -27,13 +52,49 @@ on:
         description: "Open/refresh PR write_branch → base_branch"
         required: false
         default: "true"
-#  schedule:
-#    - cron: "20 6 * * 0"  # Sunday 06:20 UTC
+
+      # ---- Search knobs (override YAML at run time) --------------------------
+      year_from:
+        description: "Start year (overrides YAML global.year_from)"
+        type: number
+        default: 1990
+        required: true
+      year_to:
+        description: "End year (overrides YAML global.year_to)"
+        type: number
+        default: 2025
+        required: true
+      job_result_cap:
+        description: "Hard cap on total results (0 = unlimited)"
+        type: number
+        default: 1000
+        required: true
+      max_results_per_source:
+        description: "Cap per source per topic"
+        type: number
+        default: 100
+        required: true
+      topics_filter:
+        description: "CSV of topic ids to run (empty = all from YAML)"
+        type: string
+        default: ""
+        required: false
+      include_preprints:
+        description: "Include preprints (arXiv) for all selected topics"
+        type: boolean
+        default: true
+        required: true
+      dry_run:
+        description: "Preview only (no write/commit/PR)"
+        type: boolean
+        default: false
+        required: true
 
 permissions:
   contents: write
   pull-requests: write
 
+# Prevent overlapping runs for the same ref
 concurrency:
   group: agent-search-${{ github.ref }}
   cancel-in-progress: false
@@ -46,7 +107,9 @@ jobs:
         shell: bash
 
     steps:
-      # 1) GitHub App token (push/PR identity)
+      # -----------------------------------------------------------------------
+      # 1) GitHub App identity (push/PR owner)
+      # -----------------------------------------------------------------------
       - name: Mint installation token (GitHub App)
         id: app
         uses: actions/create-github-app-token@v1
@@ -54,20 +117,26 @@ jobs:
           app-id: ${{ secrets.ELIS_APP_ID }}
           private-key: ${{ secrets.ELIS_APP_PRIVATE_KEY }}
 
-      # 2) Checkout using App token
+      # -----------------------------------------------------------------------
+      # 2) Checkout using the App token (remote now credentialed)
+      # -----------------------------------------------------------------------
       - name: Checkout repository (App token)
         uses: actions/checkout@v4
         with:
           token: ${{ steps.app.outputs.token }}
           fetch-depth: 0
 
-      # 2.1) Configure Git identity (needed for commits)
+      # -----------------------------------------------------------------------
+      # 3) Configure Git identity for commits
+      # -----------------------------------------------------------------------
       - name: Configure Git identity
         run: |
           git config user.name  "elis-bot"
           git config user.email "elis-bot@users.noreply.github.com"
 
-      # 3) Resolve branches
+      # -----------------------------------------------------------------------
+      # 4) Resolve branches (inputs → outputs)
+      # -----------------------------------------------------------------------
       - name: Resolve branches
         id: br
         run: |
@@ -76,7 +145,10 @@ jobs:
           echo "base=$BASE" >> "$GITHUB_OUTPUT"
           echo "head=$HEAD" >> "$GITHUB_OUTPUT"
 
-      # 4) Prepare work branch
+      # -----------------------------------------------------------------------
+      # 5) Prepare the write branch BEFORE running the agent
+      #    - create if missing, or fast-forward from base if it exists
+      # -----------------------------------------------------------------------
       - name: Prepare write branch (create or fast-forward)
         run: |
           set -eux
@@ -91,7 +163,10 @@ jobs:
             git push -u origin "$HEAD"
           fi
 
-      # 5) Python runtime + deps
+      # -----------------------------------------------------------------------
+      # 6) Python runtime + deps
+      #    - Use requirements.txt when present; otherwise install minimal deps.
+      # -----------------------------------------------------------------------
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
@@ -99,19 +174,88 @@ jobs:
 
       - name: Install dependencies
         run: |
+          set -eux
           python -m pip install --upgrade pip
-          pip install requests pyyaml
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          else
+            pip install "requests>=2.31" "pyyaml>=6.0"
+          fi
 
-      # 6) Run Appendix A search (creates canonical A file)
+      # -----------------------------------------------------------------------
+      # 7) Initialize Step Summary (guard)
+      #    - Ensures reviewers always see a section, even on dry runs or early exits.
+      #    - The search script will append the per-source/per-topic tables.
+      # -----------------------------------------------------------------------
+      - name: Initialize Step Summary
+        run: |
+          {
+            echo "## Search summary";
+            echo "";
+            echo "_The script will append per-source and per-topic tables below._";
+            echo "";
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # -----------------------------------------------------------------------
+      # 8) Patch search config from UI inputs (writes to /tmp/elis_config.yml)
+      #    - Leaves repo files untouched; changes affect only this run.
+      # -----------------------------------------------------------------------
+      - name: Patch search config from UI inputs
+        run: |
+          set -euo pipefail
+          SRC="config/elis_search_queries.yml"
+          DST="/tmp/elis_config.yml"
+          cp "$SRC" "$DST"
+          python - <<'PY'
+          import os, yaml
+          p="/tmp/elis_config.yml"
+          y=yaml.safe_load(open(p,"r",encoding="utf-8"))
+          g=y.setdefault("global",{})
+          g["year_from"]  = int(os.environ["YEAR_FROM"])
+          g["year_to"]    = int(os.environ["YEAR_TO"])
+          g["job_result_cap"] = int(os.environ["JOB_CAP"])
+          g["max_results_per_source"] = int(os.environ["TOPIC_CAP"])
+          # Topics filter (CSV of ids)
+          flt=[t.strip() for t in os.environ["TOPICS_FILTER"].split(",") if t.strip()]
+          if flt:
+            y["topics"] = [t for t in y.get("topics", []) if t.get("id") in flt]
+          # Include preprints flag applied uniformly across selected topics
+          incl = (os.environ["INCL_PREPRINTS"] == "true")
+          for t in y.get("topics", []):
+            t["include_preprints"] = incl
+          with open(p,"w",encoding="utf-8") as f:
+            yaml.safe_dump(y, f, sort_keys=False, allow_unicode=True)
+          print("Patched config saved to", p)
+          PY
+        env:
+          YEAR_FROM:      ${{ inputs.year_from }}
+          YEAR_TO:        ${{ inputs.year_to }}
+          JOB_CAP:        ${{ inputs.job_result_cap }}
+          TOPIC_CAP:      ${{ inputs.max_results_per_source }}
+          TOPICS_FILTER:  ${{ inputs.topics_filter }}
+          INCL_PREPRINTS: ${{ inputs.include_preprints }}
+
+      # -----------------------------------------------------------------------
+      # 9) Run Appendix A Search (MVP)
+      #    - Dry-run: script writes only metadata to logs and Step Summary.
+      #    - Real run: writes the canonical A file.
+      # -----------------------------------------------------------------------
       - name: Run Appendix A Search (MVP)
         env:
           SEMANTIC_SCHOLAR_API_KEY: ${{ secrets.SEMANTIC_SCHOLAR_API_KEY }}
         run: |
           set -eux
-          python scripts/elis/search_mvp.py --config config/elis_search_queries.yml
+          if [[ '${{ inputs.dry_run }}' == 'true' ]]; then
+            python scripts/elis/search_mvp.py --config /tmp/elis_config.yml --dry-run
+          else
+            python scripts/elis/search_mvp.py --config /tmp/elis_config.yml
+          fi
 
-      # 6.1) Verify canonical A filename (post-run only)
-      - name: Verify canonical Appendix A filename (post-run)
+      # -----------------------------------------------------------------------
+      # 10) Verify canonical Appendix A filename (post-run only, not dry-run)
+      # -----------------------------------------------------------------------
+      - name: Verify canonical Appendix A filename
+        if: ${{ inputs.dry_run != 'true' }}
         run: |
           set -euo pipefail
           CANONICAL="json_jsonl/ELIS_Appendix_A_Search_rows.json"
@@ -122,18 +266,24 @@ jobs:
             jq -e 'type=="array" and (.[0]|has("_meta"))' "$CANONICAL" >/dev/null || \
               (echo "::error::A file must be a JSON array and first element must be _meta"; exit 5)
           fi
-          echo "✅ Canonical A path verified (post-run)."
+          echo "✅ Canonical A path verified."
 
-      # 7) Upload artefact (14-day retention)
+      # -----------------------------------------------------------------------
+      # 11) Upload artefact (14-day retention) for download/debug (not dry-run)
+      # -----------------------------------------------------------------------
       - name: Upload artefact (Appendix A)
+        if: ${{ inputs.dry_run != 'true' }}
         uses: actions/upload-artifact@v4
         with:
           name: elis-appendix-a-search
           path: json_jsonl/ELIS_Appendix_A_Search_rows.json
           retention-days: 14
 
-      # 8) Commit only if A changed
+      # -----------------------------------------------------------------------
+      # 12) Commit ONLY when the A file changed (not dry-run)
+      # -----------------------------------------------------------------------
       - name: Commit Appendix A (only when changed)
+        if: ${{ inputs.dry_run != 'true' }}
         run: |
           set -eux
           git add -N json_jsonl/ELIS_Appendix_A_Search_rows.json || true
@@ -145,24 +295,27 @@ jobs:
           git add json_jsonl/ELIS_Appendix_A_Search_rows.json
           git commit -m "feat(search): update Appendix A results"
 
-      # 9) Ensure remote uses App token
-      - name: Force remote to App-token URL (fix push auth)
-        if: env.skip_pr != 'true'
+      # -----------------------------------------------------------------------
+      # 13) Force 'origin' to App-token URL (fix push auth) and push
+      # -----------------------------------------------------------------------
+      - name: Force remote to App-token URL
+        if: env.skip_pr != 'true' && inputs.dry_run != 'true'
         run: |
           set -eux
           git remote set-url origin "https://x-access-token:${{ steps.app.outputs.token }}@github.com/${{ github.repository }}"
 
-      # 10) Push branch
       - name: Push work branch
-        if: env.skip_pr != 'true'
+        if: env.skip_pr != 'true' && inputs.dry_run != 'true'
         run: |
           set -eux
           HEAD="${{ steps.br.outputs.head }}"
           git push --force-with-lease origin HEAD:"$HEAD"
 
-      # 11) Open/refresh PR
+      # -----------------------------------------------------------------------
+      # 14) Compare base..head and open/refresh PR using the App token
+      # -----------------------------------------------------------------------
       - name: Compare base..head & open/refresh PR
-        if: ${{ env.skip_pr != 'true' && fromJSON(github.event.inputs.open_pr || 'true') }}
+        if: ${{ env.skip_pr != 'true' && inputs.dry_run != 'true' && fromJSON(github.event.inputs.open_pr || 'true') }}
         uses: actions/github-script@v6
         with:
           github-token: ${{ steps.app.outputs.token }}
@@ -175,12 +328,14 @@ jobs:
             const cmp = await github.rest.repos.compareCommitsWithBasehead({
               owner, repo, basehead: `${base}...${head}`,
             });
+
             const hasDiff = (cmp.data.ahead_by > 0) || ((cmp.data.files || []).length > 0);
             if (!hasDiff) { core.info("No diff; no PR opened."); return; }
 
             const { data: openPRs } = await github.rest.pulls.list({
               owner, repo, state: 'open', base, head: `${owner}:${head}`,
             });
+
             if (openPRs.length > 0) {
               core.info(`PR already open: #${openPRs[0].number}`);
             } else {
