@@ -2,8 +2,8 @@
   {
     "_meta": true,
     "protocol_version": "ELIS 2025 (MVP)",
-    "config_path": "config/elis_search_queries.yml",
-    "retrieved_at": "2025-10-24T09:26:29Z",
+    "config_path": "/tmp/elis_config.yml",
+    "retrieved_at": "2025-10-24T11:50:27Z",
     "global": {
       "year_from": 1990,
       "year_to": 2025,
@@ -13,8 +13,8 @@
         "es",
         "pt"
       ],
-      "max_results_per_source": 100,
-      "job_result_cap": 1000
+      "max_results_per_source": 20,
+      "job_result_cap": 200
     },
     "topics_enabled": [
       "integrity_auditability_core",
@@ -23,7 +23,17 @@
     "sources": [
       "arxiv"
     ],
-    "record_count": 94
+    "record_count": 54,
+    "summary": {
+      "total": 54,
+      "per_source": {
+        "arxiv": 54
+      },
+      "per_topic": {
+        "integrity_auditability_core": 39,
+        "cryptographic_mechanisms": 15
+      }
+    }
   },
   {
     "title": "Auditing Indian Elections",
@@ -47,7 +57,8 @@
     "source_id": "http://arxiv.org/abs/1901.03108v2",
     "query_topic": "integrity_auditability_core",
     "query_string": "(\"electronic voting\" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR \"end-to-end verifiability\")",
-    "retrieved_at": "2025-10-24T09:26:25Z",
+    "retrieved_at": "2025-10-24T11:50:23Z",
+    "id": "t:5320d21c1b5cfb540648",
     "_stable_id": "t:5320d21c1b5cfb540648"
   },
   {
@@ -68,7 +79,8 @@
     "source_id": "http://arxiv.org/abs/1602.02509v1",
     "query_topic": "integrity_auditability_core",
     "query_string": "(\"electronic voting\" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR \"end-to-end verifiability\")",
-    "retrieved_at": "2025-10-24T09:26:25Z",
+    "retrieved_at": "2025-10-24T11:50:23Z",
+    "id": "t:3f46ff6c68376206d732",
     "_stable_id": "t:3f46ff6c68376206d732"
   },
   {
@@ -91,7 +103,8 @@
     "source_id": "http://arxiv.org/abs/2307.08412v1",
     "query_topic": "integrity_auditability_core",
     "query_string": "(\"electronic voting\" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR \"end-to-end verifiability\")",
-    "retrieved_at": "2025-10-24T09:26:25Z",
+    "retrieved_at": "2025-10-24T11:50:23Z",
+    "id": "t:18887706f9d4271799c2",
     "_stable_id": "t:18887706f9d4271799c2"
   },
   {
@@ -112,7 +125,8 @@
     "source_id": "http://arxiv.org/abs/2507.09453v1",
     "query_topic": "integrity_auditability_core",
     "query_string": "(\"electronic voting\" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR \"end-to-end verifiability\")",
-    "retrieved_at": "2025-10-24T09:26:25Z",
+    "retrieved_at": "2025-10-24T11:50:23Z",
+    "id": "t:05345af2dbf6ddd5747d",
     "_stable_id": "t:05345af2dbf6ddd5747d"
   },
   {
@@ -135,7 +149,8 @@
     "source_id": "http://arxiv.org/abs/1810.05083v3",
     "query_topic": "integrity_auditability_core",
     "query_string": "(\"electronic voting\" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR \"end-to-end verifiability\")",
-    "retrieved_at": "2025-10-24T09:26:25Z",
+    "retrieved_at": "2025-10-24T11:50:23Z",
+    "id": "doi:10.1145/3450144",
     "_stable_id": "doi:10.1145/3450144"
   },
   {
@@ -156,7 +171,8 @@
     "source_id": "http://arxiv.org/abs/2206.06019v1",
     "query_topic": "integrity_auditability_core",
     "query_string": "(\"electronic voting\" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR \"end-to-end verifiability\")",
-    "retrieved_at": "2025-10-24T09:26:25Z",
+    "retrieved_at": "2025-10-24T11:50:23Z",
+    "id": "t:5dd435b9ea4e664b8472",
     "_stable_id": "t:5dd435b9ea4e664b8472"
   },
   {
@@ -182,7 +198,8 @@
     "source_id": "http://arxiv.org/abs/2310.15789v2",
     "query_topic": "integrity_auditability_core",
     "query_string": "(\"electronic voting\" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR \"end-to-end verifiability\")",
-    "retrieved_at": "2025-10-24T09:26:25Z",
+    "retrieved_at": "2025-10-24T11:50:23Z",
+    "id": "t:1de8fa4c5df6332cbf8f",
     "_stable_id": "t:1de8fa4c5df6332cbf8f"
   },
   {
@@ -204,7 +221,8 @@
     "source_id": "http://arxiv.org/abs/2401.05947v4",
     "query_topic": "integrity_auditability_core",
     "query_string": "(\"electronic voting\" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR \"end-to-end verifiability\")",
-    "retrieved_at": "2025-10-24T09:26:25Z",
+    "retrieved_at": "2025-10-24T11:50:23Z",
+    "id": "t:40eca995af26ce5120d8",
     "_stable_id": "t:40eca995af26ce5120d8"
   },
   {
@@ -227,7 +245,8 @@
     "source_id": "http://arxiv.org/abs/2402.11582v3",
     "query_topic": "integrity_auditability_core",
     "query_string": "(\"electronic voting\" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR \"end-to-end verifiability\")",
-    "retrieved_at": "2025-10-24T09:26:25Z",
+    "retrieved_at": "2025-10-24T11:50:23Z",
+    "id": "doi:10.1109/csf61375.2024.00032",
     "_stable_id": "doi:10.1109/csf61375.2024.00032"
   },
   {
@@ -249,7 +268,8 @@
     "source_id": "http://arxiv.org/abs/2105.14783v1",
     "query_topic": "integrity_auditability_core",
     "query_string": "(\"electronic voting\" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR \"end-to-end verifiability\")",
-    "retrieved_at": "2025-10-24T09:26:25Z",
+    "retrieved_at": "2025-10-24T11:50:23Z",
+    "id": "t:75a117f089a67ec4acda",
     "_stable_id": "t:75a117f089a67ec4acda"
   },
   {
@@ -277,7 +297,8 @@
     "source_id": "http://arxiv.org/abs/1507.06812v2",
     "query_topic": "integrity_auditability_core",
     "query_string": "(\"electronic voting\" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR \"end-to-end verifiability\")",
-    "retrieved_at": "2025-10-24T09:26:25Z",
+    "retrieved_at": "2025-10-24T11:50:23Z",
+    "id": "t:bbf7f8e1dd7e919ac5ce",
     "_stable_id": "t:bbf7f8e1dd7e919ac5ce"
   },
   {
@@ -300,7 +321,8 @@
     "source_id": "http://arxiv.org/abs/2111.05096v1",
     "query_topic": "integrity_auditability_core",
     "query_string": "(\"electronic voting\" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR \"end-to-end verifiability\")",
-    "retrieved_at": "2025-10-24T09:26:25Z",
+    "retrieved_at": "2025-10-24T11:50:23Z",
+    "id": "t:fa5e584adba7403a4be5",
     "_stable_id": "t:fa5e584adba7403a4be5"
   },
   {
@@ -326,7 +348,8 @@
     "source_id": "http://arxiv.org/abs/1211.1904v1",
     "query_topic": "integrity_auditability_core",
     "query_string": "(\"electronic voting\" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR \"end-to-end verifiability\")",
-    "retrieved_at": "2025-10-24T09:26:25Z",
+    "retrieved_at": "2025-10-24T11:50:23Z",
+    "id": "t:dde740fcd383e5288794",
     "_stable_id": "t:dde740fcd383e5288794"
   },
   {
@@ -350,7 +373,8 @@
     "source_id": "http://arxiv.org/abs/2508.14230v1",
     "query_topic": "integrity_auditability_core",
     "query_string": "(\"electronic voting\" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR \"end-to-end verifiability\")",
-    "retrieved_at": "2025-10-24T09:26:25Z",
+    "retrieved_at": "2025-10-24T11:50:23Z",
+    "id": "t:dbac7fdd0879a6636cfb",
     "_stable_id": "t:dbac7fdd0879a6636cfb"
   },
   {
@@ -370,7 +394,8 @@
     "source_id": "http://arxiv.org/abs/0808.2431v1",
     "query_topic": "integrity_auditability_core",
     "query_string": "(\"electronic voting\" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR \"end-to-end verifiability\")",
-    "retrieved_at": "2025-10-24T09:26:25Z",
+    "retrieved_at": "2025-10-24T11:50:23Z",
+    "id": "t:7ebca39b218169fa4132",
     "_stable_id": "t:7ebca39b218169fa4132"
   },
   {
@@ -398,7 +423,8 @@
     "source_id": "http://arxiv.org/abs/1608.00849v1",
     "query_topic": "integrity_auditability_core",
     "query_string": "(\"electronic voting\" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR \"end-to-end verifiability\")",
-    "retrieved_at": "2025-10-24T09:26:25Z",
+    "retrieved_at": "2025-10-24T11:50:23Z",
+    "id": "t:06e07a164dfb24c67bd5",
     "_stable_id": "t:06e07a164dfb24c67bd5"
   },
   {
@@ -422,7 +448,8 @@
     "source_id": "http://arxiv.org/abs/1610.06343v1",
     "query_topic": "integrity_auditability_core",
     "query_string": "(\"electronic voting\" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR \"end-to-end verifiability\")",
-    "retrieved_at": "2025-10-24T09:26:25Z",
+    "retrieved_at": "2025-10-24T11:50:23Z",
+    "id": "t:39e6e8e5ff9104790db0",
     "_stable_id": "t:39e6e8e5ff9104790db0"
   },
   {
@@ -447,7 +474,8 @@
     "source_id": "http://arxiv.org/abs/2408.11195v1",
     "query_topic": "integrity_auditability_core",
     "query_string": "(\"electronic voting\" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR \"end-to-end verifiability\")",
-    "retrieved_at": "2025-10-24T09:26:25Z",
+    "retrieved_at": "2025-10-24T11:50:23Z",
+    "id": "t:c690fc41c5cc03cea878",
     "_stable_id": "t:c690fc41c5cc03cea878"
   },
   {
@@ -470,7 +498,8 @@
     "source_id": "http://arxiv.org/abs/1805.10258v2",
     "query_topic": "integrity_auditability_core",
     "query_string": "(\"electronic voting\" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR \"end-to-end verifiability\")",
-    "retrieved_at": "2025-10-24T09:26:25Z",
+    "retrieved_at": "2025-10-24T11:50:23Z",
+    "id": "t:d0e535b3f894812977fd",
     "_stable_id": "t:d0e535b3f894812977fd"
   },
   {
@@ -493,678 +522,9 @@
     "source_id": "http://arxiv.org/abs/1512.05596v1",
     "query_topic": "integrity_auditability_core",
     "query_string": "(\"electronic voting\" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR \"end-to-end verifiability\")",
-    "retrieved_at": "2025-10-24T09:26:25Z",
+    "retrieved_at": "2025-10-24T11:50:23Z",
+    "id": "doi:10.12691/iscf-3-2-2",
     "_stable_id": "doi:10.12691/iscf-3-2-2"
-  },
-  {
-    "title": "Intelligo ut Confido: Understanding, Trust and User Experience in\n  Verifiable Receipt-Free E-Voting (long version)",
-    "authors": [
-      "Marie-Laure Zollinger",
-      "Peter B. Rønne",
-      "Steve Schneider",
-      "Peter Y. A. Ryan",
-      "Wojtek Jamroga"
-    ],
-    "year": 2024,
-    "doi": null,
-    "venue": "arXiv",
-    "publisher": null,
-    "url": "http://arxiv.org/abs/2407.13240v1",
-    "language": null,
-    "abstract": "Voting protocols seek to provide integrity and vote privacy in elections. To\nachieve integrity, procedures have been proposed allowing voters to verify\ntheir vote - however this impacts both the user experience and privacy.\nEspecially, vote verification can lead to vote-buying or coercion, if an\nattacker can obtain documentation, i.e. a receipt, of the cast vote. Thus, some\nvoting protocols go further and provide mechanisms to prevent such receipts. To\nbe effective, this so-called receipt-freeness depends on voters being able to\nunderstand and use these mechanisms. In this paper, we present a study with 300\nparticipants which aims to evaluate the voters' experience of the\nreceipt-freeness procedures in the e-voting protocol Selene in the context of\nvote-buying. This actually constitutes the first user study dealing with\nvote-buying in e-voting. While the usability and trust factors were rated low\nin the experiments, we found a positive correlation between trust and\nunderstanding.",
-    "doc_type": "preprint",
-    "source": "arxiv",
-    "source_id": "http://arxiv.org/abs/2407.13240v1",
-    "query_topic": "integrity_auditability_core",
-    "query_string": "(\"electronic voting\" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR \"end-to-end verifiability\")",
-    "retrieved_at": "2025-10-24T09:26:25Z",
-    "_stable_id": "t:abc1d0c4a1ba3b19cbbd"
-  },
-  {
-    "title": "Secure and Verifiable Electronic Voting in Practice: the use of vVote in\n  the Victorian State Election",
-    "authors": [
-      "Craig Burton",
-      "Chris Culnane",
-      "Steve Schneider"
-    ],
-    "year": 2015,
-    "doi": null,
-    "venue": "arXiv",
-    "publisher": null,
-    "url": "http://arxiv.org/abs/1504.07098v1",
-    "language": null,
-    "abstract": "The November 2014 Australian State of Victoria election was the first\nstatutory political election worldwide at State level which deployed an\nend-to-end verifiable electronic voting system in polling places. This was the\nfirst time blind voters have been able to cast a fully secret ballot in a\nverifiable way, and the first time a verifiable voting system has been used to\ncollect remote votes in a political election. The code is open source, and the\noutput from the election is verifiable. The system took 1121 votes from these\nparticular groups, an increase on 2010 and with fewer polling places.",
-    "doc_type": "preprint",
-    "source": "arxiv",
-    "source_id": "http://arxiv.org/abs/1504.07098v1",
-    "query_topic": "integrity_auditability_core",
-    "query_string": "(\"electronic voting\" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR \"end-to-end verifiability\")",
-    "retrieved_at": "2025-10-24T09:26:25Z",
-    "_stable_id": "t:5f1eede7aeaccd812e2a"
-  },
-  {
-    "title": "Quantum protocol for electronic voting without election authorities",
-    "authors": [
-      "Federico Centrone",
-      "Eleni Diamanti",
-      "Iordanis Kerenidis"
-    ],
-    "year": 2021,
-    "doi": "10.1103/PhysRevApplied.18.014005",
-    "venue": "arXiv",
-    "publisher": null,
-    "url": "http://arxiv.org/abs/2107.14719v2",
-    "language": null,
-    "abstract": "Electronic voting is a very useful but challenging internet-based protocol\nthat despite many theoretical approaches and various implementations with\ndifferent degrees of success, remains a contentious topic due to issues in\nreliability and security. Here we present a quantum protocol that exploits an\nuntrusted source of multipartite entanglement to carry out an election without\nrelying on election authorities, simultaneous broadcasting or computational\nassumptions, and whose result is publicly verifiable. The level of security\ndepends directly on the fidelity of the shared multipartite entangled quantum\nstate, and the protocol can be readily implemented for a few voters with\nstate-of-the-art photonic technology.",
-    "doc_type": "preprint",
-    "source": "arxiv",
-    "source_id": "http://arxiv.org/abs/2107.14719v2",
-    "query_topic": "integrity_auditability_core",
-    "query_string": "(\"electronic voting\" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR \"end-to-end verifiability\")",
-    "retrieved_at": "2025-10-24T09:26:25Z",
-    "_stable_id": "doi:10.1103/physrevapplied.18.014005"
-  },
-  {
-    "title": "Contribution of Herv{é} Suaudeau for the mission of the French Senate\n  Law Commission on electronic voting on 25 January 2018",
-    "authors": [
-      "Hervé Suaudeau"
-    ],
-    "year": 2018,
-    "doi": null,
-    "venue": "arXiv",
-    "publisher": null,
-    "url": "http://arxiv.org/abs/1901.07308v2",
-    "language": null,
-    "abstract": "This contribution investigate the compatibility between the use of\ndematerialised voting and Article 3 of the french Constitution, which\nstipulates that 'voting must always be universal, equal and secret'. The IT\nrisk management of electronic voting is managed in a rational way like any\nother risk management areas. We are therefore prepared to accept the use of a\nnon dematerialised technique to cover a significant, well-identified and\nunavoidable risk. However, research has shown that a verifiable dematerialized\nvote intrinsically loses its anonymity. In addition, a study of the history of\nvulnerabilities shows that no terminal in recent years has been able to\nguarantee the anonymity of its connection and that personal voting data has\nalways been potentially exposed. Electronic voting systems are therefore, to\nthe best of our knowledge, unable to provide the required constitutional\nguarantee.",
-    "doc_type": "preprint",
-    "source": "arxiv",
-    "source_id": "http://arxiv.org/abs/1901.07308v2",
-    "query_topic": "integrity_auditability_core",
-    "query_string": "(\"electronic voting\" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR \"end-to-end verifiability\")",
-    "retrieved_at": "2025-10-24T09:26:25Z",
-    "_stable_id": "t:42ef2c40e794842d515b"
-  },
-  {
-    "title": "Tempora-Fusion: Time-Lock Puzzle with Efficient Verifiable Homomorphic\n  Linear Combination",
-    "authors": [
-      "Aydin Abadi"
-    ],
-    "year": 2024,
-    "doi": null,
-    "venue": "arXiv",
-    "publisher": null,
-    "url": "http://arxiv.org/abs/2406.15070v2",
-    "language": null,
-    "abstract": "To securely transmit sensitive information into the future, Time-Lock Puzzles\n(TLPs) have been developed. Their applications include scheduled payments,\ntimed commitments, e-voting, and sealed-bid auctions. Homomorphic TLP is a key\nvariant of TLP that enables computation on puzzles from different clients. This\nallows a solver/server to tackle only a single puzzle encoding the\ncomputation's result. However, existing homomorphic TLPs lack support for\nverifying the correctness of the computation results. We address this\nlimitation by introducing Tempora-Fusion, a TLP that allows a server to perform\nhomomorphic linear combinations of puzzles from different clients while\nensuring verification of computation correctness. This scheme avoids\nasymmetric-key cryptography for verification, thus paving the way for efficient\nimplementations. We discuss our scheme's application in various domains, such\nas federated learning, scheduled payments in online banking, and e-voting.",
-    "doc_type": "preprint",
-    "source": "arxiv",
-    "source_id": "http://arxiv.org/abs/2406.15070v2",
-    "query_topic": "integrity_auditability_core",
-    "query_string": "(\"electronic voting\" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR \"end-to-end verifiability\")",
-    "retrieved_at": "2025-10-24T09:26:25Z",
-    "_stable_id": "t:e3118208783ac1db9a4e"
-  },
-  {
-    "title": "An Internet Voting System Fatally Flawed in Creative New Ways",
-    "authors": [
-      "Andrew W. Appel",
-      "Philip B. Stark"
-    ],
-    "year": 2024,
-    "doi": null,
-    "venue": "arXiv",
-    "publisher": null,
-    "url": "http://arxiv.org/abs/2411.11796v1",
-    "language": null,
-    "abstract": "The recently published \"MERGE\" protocol is designed to be used in the\nprototype CAC-vote system. The voting kiosk and protocol transmit votes over\nthe internet and then transmit voter-verifiable paper ballots through the mail.\nIn the MERGE protocol, the votes transmitted over the internet are used to\ntabulate the results and determine the winners, but audits and recounts use the\npaper ballots that arrive in time. The enunciated motivation for the protocol\nis to allow (electronic) votes from overseas military voters to be included in\npreliminary results before a (paper) ballot is received from the voter. MERGE\ncontains interesting ideas that are not inherently unsound; but to make the\nsystem trustworthy--to apply the MERGE protocol--would require major changes to\nthe laws, practices, and technical and logistical abilities of U.S. election\njurisdictions. The gap between theory and practice is large and unbridgeable\nfor the foreseeable future. Promoters of this research project at DARPA, the\nagency that sponsored the research, should acknowledge that MERGE is internet\nvoting (election results rely on votes transmitted over the internet except in\nthe event of a full hand count) and refrain from claiming that it could be a\ncomponent of trustworthy elections without sweeping changes to election law and\nelection administration throughout the U.S.",
-    "doc_type": "preprint",
-    "source": "arxiv",
-    "source_id": "http://arxiv.org/abs/2411.11796v1",
-    "query_topic": "integrity_auditability_core",
-    "query_string": "(\"electronic voting\" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR \"end-to-end verifiability\")",
-    "retrieved_at": "2025-10-24T09:26:25Z",
-    "_stable_id": "t:4bf78e36b0f1410c5ea5"
-  },
-  {
-    "title": "COBRA: Comparison-Optimal Betting for Risk-limiting Audits",
-    "authors": [
-      "Jacob Spertus"
-    ],
-    "year": 2023,
-    "doi": null,
-    "venue": "arXiv",
-    "publisher": null,
-    "url": "http://arxiv.org/abs/2304.01010v2",
-    "language": null,
-    "abstract": "Risk-limiting audits (RLAs) can provide routine, affirmative evidence that\nreported election outcomes are correct by checking a random sample of cast\nballots. An efficient RLA requires checking relatively few ballots. Here we\nconstruct highly efficient RLAs by optimizing supermartingale tuning\nparameters--$\\textit{bets}$--for ballot-level comparison audits. The exactly\noptimal bets depend on the true rate of errors in cast-vote records\n(CVRs)--digital receipts detailing how machines tabulated each ballot. We\nevaluate theoretical and simulated workloads for audits of contests with a\nrange of diluted margins and CVR error rates. Compared to bets recommended in\npast work, using these optimal bets can dramatically reduce expected\nworkloads--by 93% on average over our simulated audits. Because the exactly\noptimal bets are unknown in practice, we offer some strategies for\napproximating them. As with the ballot-polling RLAs described in ALPHA and\nRiLACs, adapting bets to previously sampled data or diversifying them over a\nrange of suspected error rates can lead to substantially more efficient audits\nthan fixing bets to $\\textit{a priori}$ values, especially when those values\nare far from correct. We sketch extensions to other designs and social choice\nfunctions, and conclude with some recommendations for real-world comparison\naudits.",
-    "doc_type": "preprint",
-    "source": "arxiv",
-    "source_id": "http://arxiv.org/abs/2304.01010v2",
-    "query_topic": "integrity_auditability_core",
-    "query_string": "(\"electronic voting\" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR \"end-to-end verifiability\")",
-    "retrieved_at": "2025-10-24T09:26:25Z",
-    "_stable_id": "t:86d11b582c3c2e768b0d"
-  },
-  {
-    "title": "Improving Automated Symbolic Analysis for E-voting Protocols: A Method\n  Based on Sufficient Conditions for Ballot Secrecy",
-    "authors": [
-      "Cas Cremers",
-      "Lucca Hirschi"
-    ],
-    "year": 2017,
-    "doi": null,
-    "venue": "arXiv",
-    "publisher": null,
-    "url": "http://arxiv.org/abs/1709.00194v5",
-    "language": null,
-    "abstract": "We advance the state-of-the-art in automated symbolic analysis for e-voting\nprotocols by introducing three conditions that together are sufficient to\nguarantee ballot secrecy. There are two main advantages to using our\nconditions, compared to existing automated approaches. The first is a\nsubstantial expansion of the class of protocols and threat models that can be\nautomatically analysed: we can systematically deal with (a) honest authorities\npresent in different phases, (b) threat models in which no dishonest voters\noccur, and (c) protocols whose ballot secrecy depends on fresh data coming from\nother phases. The second advantage is that it can significantly improve\nverification efficiency, as the individual conditions are often simpler to\nverify. E.g., for the LEE protocol, we obtain a speedup of over two orders of\nmagnitude. We show the scope and effectiveness of our approach using ProVerif\nin several case studies, including FOO, LEE, JCJ, and Belenios. In these case\nstudies, our approach does not yield any false attacks, suggesting that our\nconditions are tight.",
-    "doc_type": "preprint",
-    "source": "arxiv",
-    "source_id": "http://arxiv.org/abs/1709.00194v5",
-    "query_topic": "integrity_auditability_core",
-    "query_string": "(\"electronic voting\" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR \"end-to-end verifiability\")",
-    "retrieved_at": "2025-10-24T09:26:25Z",
-    "_stable_id": "t:7099d1dc3eae803bfd39"
-  },
-  {
-    "title": "Adaptively Weighted Audits of Instant-Runoff Voting Elections: AWAIRE",
-    "authors": [
-      "Alexander Ek",
-      "Philip B. Stark",
-      "Peter J. Stuckey",
-      "Damjan Vukcevic"
-    ],
-    "year": 2023,
-    "doi": "10.1007/978-3-031-43756-4_3",
-    "venue": "arXiv",
-    "publisher": null,
-    "url": "http://arxiv.org/abs/2307.10972v2",
-    "language": null,
-    "abstract": "An election audit is risk-limiting if the audit limits (to a pre-specified\nthreshold) the chance that an erroneous electoral outcome will be certified.\nExtant methods for auditing instant-runoff voting (IRV) elections are either\nnot risk-limiting or require cast vote records (CVRs), the voting system's\nelectronic record of the votes on each ballot. CVRs are not always available,\nfor instance, in jurisdictions that tabulate IRV contests manually.\n  We develop an RLA method (AWAIRE) that uses adaptively weighted averages of\ntest supermartingales to efficiently audit IRV elections when CVRs are not\navailable. The adaptive weighting 'learns' an efficient set of hypotheses to\ntest to confirm the election outcome. When accurate CVRs are available, AWAIRE\ncan use them to increase the efficiency to match the performance of existing\nmethods that require CVRs.\n  We provide an open-source prototype implementation that can handle elections\nwith up to six candidates. Simulations using data from real elections show that\nAWAIRE is likely to be efficient in practice. We discuss how to extend the\ncomputational approach to handle elections with more candidates.\n  Adaptively weighted averages of test supermartingales are a general tool,\nuseful beyond election audits to test collections of hypotheses sequentially\nwhile rigorously controlling the familywise error rate.",
-    "doc_type": "preprint",
-    "source": "arxiv",
-    "source_id": "http://arxiv.org/abs/2307.10972v2",
-    "query_topic": "integrity_auditability_core",
-    "query_string": "(\"electronic voting\" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR \"end-to-end verifiability\")",
-    "retrieved_at": "2025-10-24T09:26:25Z",
-    "_stable_id": "doi:10.1007/978-3-031-43756-4_3"
-  },
-  {
-    "title": "A Quantum-Secure Voting Framework Using QKD, Dual-Key Symmetric\n  Encryption, and Verifiable Receipts",
-    "authors": [
-      "Taha M. Mahmoud",
-      "Naima Kaabouch"
-    ],
-    "year": 2025,
-    "doi": "10.1109/ACDSA65407.2025.11165862",
-    "venue": "arXiv",
-    "publisher": null,
-    "url": "http://arxiv.org/abs/2510.03489v1",
-    "language": null,
-    "abstract": "Electronic voting systems face growing risks from cyberattacks and data\nbreaches, which are expected to intensify with the advent of quantum computing.\nTo address these challenges, we introduce a quantum-secure voting framework\nthat integrates Quantum Key Distribution (QKD), Dual-Key Symmetric Encryption,\nand verifiable receipt mechanisms to strengthen the privacy, integrity, and\nreliability of the voting process. The framework enables voters to establish\nencryption keys securely, cast encrypted ballots, and verify their votes\nthrough receipt-based confirmation, all without exposing the vote contents. To\nevaluate performance, we simulate both quantum and classical communication\nchannels using the Message Queuing Telemetry Transport (MQTT) protocol. Results\ndemonstrate that the system can process large numbers of votes efficiently with\nlow latency and minimal error rates. This approach offers a scalable and\npractical path toward secure, transparent, and verifiable electronic voting in\nthe quantum era.",
-    "doc_type": "preprint",
-    "source": "arxiv",
-    "source_id": "http://arxiv.org/abs/2510.03489v1",
-    "query_topic": "integrity_auditability_core",
-    "query_string": "(\"electronic voting\" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR \"end-to-end verifiability\")",
-    "retrieved_at": "2025-10-24T09:26:25Z",
-    "_stable_id": "doi:10.1109/acdsa65407.2025.11165862"
-  },
-  {
-    "title": "Automated Cryptographic Analysis of the Pedersen Commitment Scheme",
-    "authors": [
-      "Roberto Metere",
-      "Changyu Dong"
-    ],
-    "year": 2017,
-    "doi": "10.1007/978-3-319-65127-9_22",
-    "venue": "arXiv",
-    "publisher": null,
-    "url": "http://arxiv.org/abs/1705.05897v1",
-    "language": null,
-    "abstract": "Aiming for strong security assurance, recently there has been an increasing\ninterest in formal verification of cryptographic constructions. This paper\npresents a mechanised formal verification of the popular Pedersen commitment\nprotocol, proving its security properties of correctness, perfect hiding, and\ncomputational binding. To formally verify the protocol, we extended the theory\nof EasyCrypt, a framework which allows for reasoning in the computational\nmodel, to support the discrete logarithm and an abstraction of commitment\nprotocols. Commitments are building blocks of many cryptographic constructions,\nfor example, verifiable secret sharing, zero-knowledge proofs, and e-voting.\nOur work paves the way for the verification of those more complex\nconstructions.",
-    "doc_type": "preprint",
-    "source": "arxiv",
-    "source_id": "http://arxiv.org/abs/1705.05897v1",
-    "query_topic": "integrity_auditability_core",
-    "query_string": "(\"electronic voting\" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR \"end-to-end verifiability\")",
-    "retrieved_at": "2025-10-24T09:26:25Z",
-    "_stable_id": "doi:10.1007/978-3-319-65127-9_22"
-  },
-  {
-    "title": "RiLACS: Risk-Limiting Audits via Confidence Sequences",
-    "authors": [
-      "Ian Waudby-Smith",
-      "Philip B. Stark",
-      "Aaditya Ramdas"
-    ],
-    "year": 2021,
-    "doi": null,
-    "venue": "arXiv",
-    "publisher": null,
-    "url": "http://arxiv.org/abs/2107.11323v2",
-    "language": null,
-    "abstract": "Accurately determining the outcome of an election is a complex task with many\npotential sources of error, ranging from software glitches in voting machines\nto procedural lapses to outright fraud. Risk-limiting audits (RLA) are\nstatistically principled \"incremental\" hand counts that provide statistical\nassurance that reported outcomes accurately reflect the validly cast votes. We\npresent a suite of tools for conducting RLAs using confidence sequences --\nsequences of confidence sets which uniformly capture an electoral parameter of\ninterest from the start of an audit to the point of an exhaustive recount with\nhigh probability. Adopting the SHANGRLA framework, we design nonnegative\nmartingales which yield computationally and statistically efficient confidence\nsequences and RLAs for a wide variety of election types.",
-    "doc_type": "preprint",
-    "source": "arxiv",
-    "source_id": "http://arxiv.org/abs/2107.11323v2",
-    "query_topic": "integrity_auditability_core",
-    "query_string": "(\"electronic voting\" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR \"end-to-end verifiability\")",
-    "retrieved_at": "2025-10-24T09:26:25Z",
-    "_stable_id": "t:acab0d86f5d681c28967"
-  },
-  {
-    "title": "Voter Perceptions of Trust in Risk-Limiting Audits",
-    "authors": [
-      "Asmita Dalela",
-      "Oksana Kulyk",
-      "Carsten Schürmann"
-    ],
-    "year": 2021,
-    "doi": null,
-    "venue": "arXiv",
-    "publisher": null,
-    "url": "http://arxiv.org/abs/2109.07918v1",
-    "language": null,
-    "abstract": "Risk-limiting audits (RLAs) are expected to strengthen the public confidence\nin the correctness of an election outcome. We hypothesize that this is not\nalways the case, in part because for large margins between the winner and the\nrunner-up, the number of ballots to be drawn can be so small that voters lose\nconfidence. We conduct a user study with 105 participants resident in the US.\nOur findings confirm the hypothesis, showing that our study participants felt\nless confident when they were told the number of ballots audited for RLAs. We\nelaborate on our findings and propose recommendations for future use of RLAs.",
-    "doc_type": "preprint",
-    "source": "arxiv",
-    "source_id": "http://arxiv.org/abs/2109.07918v1",
-    "query_topic": "integrity_auditability_core",
-    "query_string": "(\"electronic voting\" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR \"end-to-end verifiability\")",
-    "retrieved_at": "2025-10-24T09:26:25Z",
-    "_stable_id": "t:046c020642c7ce589f28"
-  },
-  {
-    "title": "Improving the Computational Efficiency of Adaptive Audits of IRV\n  Elections",
-    "authors": [
-      "Alexander Ek",
-      "Michelle Blom",
-      "Philip B. Stark",
-      "Peter J. Stuckey",
-      "Damjan Vukcevic"
-    ],
-    "year": 2024,
-    "doi": "10.1007/978-3-031-72244-8_3",
-    "venue": "arXiv",
-    "publisher": null,
-    "url": "http://arxiv.org/abs/2407.16465v1",
-    "language": null,
-    "abstract": "AWAIRE is one of two extant methods for conducting risk-limiting audits of\ninstant-runoff voting (IRV) elections. In principle AWAIRE can audit IRV\ncontests with any number of candidates, but the original implementation\nincurred memory and computation costs that grew superexponentially with the\nnumber of candidates. This paper improves the algorithmic implementation of\nAWAIRE in three ways that make it practical to audit IRV contests with 55\ncandidates, compared to the previous 6 candidates. First, rather than trying\nfrom the start to rule out all candidate elimination orders that produce a\ndifferent winner, the algorithm starts by considering only the final round,\ntesting statistically whether each candidate could have won that round. For\nthose candidates who cannot be ruled out at that stage, it expands to consider\nearlier and earlier rounds until either it provides strong evidence that the\nreported winner really won or a full hand count is conducted, revealing who\nreally won. Second, it tests a richer collection of conditions, some of which\ncan rule out many elimination orders at once. Third, it exploits relationships\namong those conditions, allowing it to abandon testing those that are unlikely\nto help. We provide real-world examples with up to 36 candidates and synthetic\nexamples with up to 55 candidates, showing how audit sample size depends on the\nmargins and on the tuning parameters. An open-source Python implementation is\npublicly available.",
-    "doc_type": "preprint",
-    "source": "arxiv",
-    "source_id": "http://arxiv.org/abs/2407.16465v1",
-    "query_topic": "integrity_auditability_core",
-    "query_string": "(\"electronic voting\" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR \"end-to-end verifiability\")",
-    "retrieved_at": "2025-10-24T09:26:25Z",
-    "_stable_id": "doi:10.1007/978-3-031-72244-8_3"
-  },
-  {
-    "title": "Implementing Risk-Limiting Post-Election Audits in California",
-    "authors": [
-      "Joseph Lorenzo Hall",
-      "Luke W. Miratrix",
-      "Philip B. Stark",
-      "Melvin Briones",
-      "Elaine Ginnold",
-      "Freddie Oakley",
-      "Martin Peaden",
-      "Gail Pellerin",
-      "Tom Stanionis",
-      "Tricia Webber"
-    ],
-    "year": 2009,
-    "doi": null,
-    "venue": "arXiv",
-    "publisher": null,
-    "url": "http://arxiv.org/abs/0905.4691v4",
-    "language": null,
-    "abstract": "Risk-limiting post-election audits limit the chance of certifying an\nelectoral outcome if the outcome is not what a full hand count would show.\nBuilding on previous work, we report on pilot risk-limiting audits in four\nelections during 2008 in three California counties: one during the February\n2008 Primary Election in Marin County and three during the November 2008\nGeneral Elections in Marin, Santa Cruz and Yolo Counties. We explain what makes\nan audit risk-limiting and how existing and proposed laws fall short. We\ndiscuss the differences among our four pilot audits. We identify challenges to\npractical, efficient risk-limiting audits and conclude that current approaches\nare too complex to be used routinely on a large scale. One important logistical\nbottleneck is the difficulty of exporting data from commercial election\nmanagement systems in a format amenable to audit calculations. Finally, we\npropose a bare-bones risk-limiting audit that is less efficient than these\npilot audits, but avoids many practical problems.",
-    "doc_type": "preprint",
-    "source": "arxiv",
-    "source_id": "http://arxiv.org/abs/0905.4691v4",
-    "query_topic": "integrity_auditability_core",
-    "query_string": "(\"electronic voting\" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR \"end-to-end verifiability\")",
-    "retrieved_at": "2025-10-24T09:26:25Z",
-    "_stable_id": "t:4a59c030bd0c48c41e81"
-  },
-  {
-    "title": "A Unified Evaluation of Two-Candidate Ballot-Polling Election Auditing\n  Methods",
-    "authors": [
-      "Zhuoqun Huang",
-      "Ronald L. Rivest",
-      "Philip B. Stark",
-      "Vanessa Teague",
-      "Damjan Vukcevic"
-    ],
-    "year": 2020,
-    "doi": "10.1007/978-3-030-60347-2_8",
-    "venue": "arXiv",
-    "publisher": null,
-    "url": "http://arxiv.org/abs/2008.08536v2",
-    "language": null,
-    "abstract": "Counting votes is complex and error-prone. Several statistical methods have\nbeen developed to assess election accuracy by manually inspecting randomly\nselected physical ballots. Two 'principled' methods are risk-limiting audits\n(RLAs) and Bayesian audits (BAs). RLAs use frequentist statistical inference\nwhile BAs are based on Bayesian inference. Until recently, the two have been\nthought of as fundamentally different.\n  We present results that unify and shed light upon 'ballot-polling' RLAs and\nBAs (which only require the ability to sample uniformly at random from all cast\nballot cards) for two-candidate plurality contests, which are building blocks\nfor auditing more complex social choice functions, including some preferential\nvoting systems. We highlight the connections between the methods and explore\ntheir performance.\n  First, building on a previous demonstration of the mathematical equivalence\nof classical and Bayesian approaches, we show that BAs, suitably calibrated,\nare risk-limiting. Second, we compare the efficiency of the methods across a\nwide range of contest sizes and margins, focusing on the distribution of sample\nsizes required to attain a given risk limit. Third, we outline several ways to\nimprove performance and show how the mathematical equivalence explains the\nimprovements.",
-    "doc_type": "preprint",
-    "source": "arxiv",
-    "source_id": "http://arxiv.org/abs/2008.08536v2",
-    "query_topic": "integrity_auditability_core",
-    "query_string": "(\"electronic voting\" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR \"end-to-end verifiability\")",
-    "retrieved_at": "2025-10-24T09:26:25Z",
-    "_stable_id": "doi:10.1007/978-3-030-60347-2_8"
-  },
-  {
-    "title": "Assertion-Based Approaches to Auditing Complex Elections, with\n  Application to Party-List Proportional Elections",
-    "authors": [
-      "Michelle Blom",
-      "Jurlind Budurushi",
-      "Ronald L. Rivest",
-      "Philip B. Stark",
-      "Peter J. Stuckey",
-      "Vanessa Teague",
-      "Damjan Vukcevic"
-    ],
-    "year": 2021,
-    "doi": "10.1007/978-3-030-86942-7_4",
-    "venue": "arXiv",
-    "publisher": null,
-    "url": "http://arxiv.org/abs/2107.11903v2",
-    "language": null,
-    "abstract": "Risk-limiting audits (RLAs), an ingredient in evidence-based elections, are\nincreasingly common. They are a rigorous statistical means of ensuring that\nelectoral results are correct, usually without having to perform an expensive\nfull recount -- at the cost of some controlled probability of error. A recently\ndeveloped approach for conducting RLAs, SHANGRLA, provides a flexible framework\nthat can encompass a wide variety of social choice functions and audit\nstrategies. Its flexibility comes from reducing sufficient conditions for\noutcomes to be correct to canonical `assertions' that have a simple\nmathematical form.\n  Assertions have been developed for auditing various social choice functions\nincluding plurality, multi-winner plurality, super-majority, Hamiltonian\nmethods, and instant runoff voting. However, there is no systematic approach to\nbuilding assertions. Here, we show that assertions with linear dependence on\ntransformations of the votes can easily be transformed to canonical form for\nSHANGRLA. We illustrate the approach by constructing assertions for party-list\nelections such as Hamiltonian free list elections and elections using the\nD'Hondt method, expanding the set of social choice functions to which SHANGRLA\napplies directly.",
-    "doc_type": "preprint",
-    "source": "arxiv",
-    "source_id": "http://arxiv.org/abs/2107.11903v2",
-    "query_topic": "integrity_auditability_core",
-    "query_string": "(\"electronic voting\" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR \"end-to-end verifiability\")",
-    "retrieved_at": "2025-10-24T09:26:25Z",
-    "_stable_id": "doi:10.1007/978-3-030-86942-7_4"
-  },
-  {
-    "title": "Receding Horizon Control Based Consensus Scheme in General Linear\n  Multi-agent Systems",
-    "authors": [
-      "Huiping Li",
-      "Weisheng Yan"
-    ],
-    "year": 2014,
-    "doi": null,
-    "venue": "arXiv",
-    "publisher": null,
-    "url": "http://arxiv.org/abs/1406.6167v1",
-    "language": null,
-    "abstract": "This paper investigates the consensus problem of general linear multi-agent\nsystems under the framework of optimization. A novel distributed receding\nhorizon control (RHC) strategy for consensus is proposed. We show that the\nconsensus protocol generated by the unconstrained distributed RHC can be\nexpressed in an explicit form. Based on the resulting consensus protocol the\nnecessary and sufficient conditions for ensuring consensus are developed.\nFurthermore, we specify more detailed consensus conditions for multi-agent\nsystem with general and one-dimensional linear dynamics depending on the\ndifference Riccati equations (DREs), respectively. Finally, two case studies\nverify the proposed scheme and the corresponding theoretical results.",
-    "doc_type": "preprint",
-    "source": "arxiv",
-    "source_id": "http://arxiv.org/abs/1406.6167v1",
-    "query_topic": "integrity_auditability_core",
-    "query_string": "(\"electronic voting\" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR \"end-to-end verifiability\")",
-    "retrieved_at": "2025-10-24T09:26:25Z",
-    "_stable_id": "t:8bf6ac955b037d328801"
-  },
-  {
-    "title": "TRIP: Coercion-resistant Registration for E-Voting with Verifiability\n  and Usability in Votegral",
-    "authors": [
-      "Louis-Henri Merino",
-      "Simone Colombo",
-      "Rene Reyes",
-      "Alaleh Azhir",
-      "Shailesh Mishra",
-      "Pasindu Tennage",
-      "Mohammad Amin Raeisi",
-      "Haoqian Zhang",
-      "Jeff R. Allen",
-      "Bernhard Tellenbach",
-      "Vero Estrada-Galiñanes",
-      "Bryan Ford"
-    ],
-    "year": 2022,
-    "doi": null,
-    "venue": "arXiv",
-    "publisher": null,
-    "url": "http://arxiv.org/abs/2202.06692v3",
-    "language": null,
-    "abstract": "Online voting is convenient and flexible, but amplifies the risks of voter\ncoercion and vote buying. One promising mitigation strategy enables voters to\ngive a coercer fake voting credentials, which silently cast votes that do not\ncount. Current systems along these lines make problematic assumptions about\ncredential issuance, however, such as strong trust in a registrar and/or in\nvoter-controlled hardware, or expecting voters to interact with multiple\nregistrars. Votegral is the first coercion-resistant voting architecture that\nleverages the physical security of in-person registration to address these\ncredential-issuance challenges, amortizing the convenience costs of in-person\nregistration by reusing credentials across successive elections. Votegral's\nregistration component, TRIP, gives voters a kiosk in a privacy booth with\nwhich to print real and fake credentials on paper, eliminating dependence on\ntrusted hardware in credential issuance. The voter learns and can verify in the\nprivacy booth which credential is real, but real and fake credentials\nthereafter appear indistinguishable to others. Only voters actually under\ncoercion, a hopefully-rare case, need to trust the kiosk. To achieve\nverifiability, each paper credential encodes an interactive zero-knowledge\nproof, which is sound in real credentials but unsound in fake credentials.\nVoters observe the difference in the order of printing steps, but need not\nunderstand the technical details. Experimental results with our prototype\nsuggest that Votegral is practical and sufficiently scalable for real-world\nelections. User-visible latency of credential issuance in TRIP is at most 19.7\nseconds even on resource-constrained kiosk hardware. A companion usability\nstudy indicates that TRIP's usability is competitive with other e-voting\nsystems, and formal proofs support TRIP's combination of coercion-resistance\nand verifiability.",
-    "doc_type": "preprint",
-    "source": "arxiv",
-    "source_id": "http://arxiv.org/abs/2202.06692v3",
-    "query_topic": "integrity_auditability_core",
-    "query_string": "(\"electronic voting\" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR \"end-to-end verifiability\")",
-    "retrieved_at": "2025-10-24T09:26:25Z",
-    "_stable_id": "t:b3bca5ed3c67d6f4c088"
-  },
-  {
-    "title": "New method of verifying cryptographic protocols based on the process\n  model",
-    "authors": [
-      "A. M. Mironov"
-    ],
-    "year": 2020,
-    "doi": null,
-    "venue": "arXiv",
-    "publisher": null,
-    "url": "http://arxiv.org/abs/2011.12040v1",
-    "language": null,
-    "abstract": "A cryptographic protocol (CP) is a distributed algorithm designed to provide\na secure communication in an insecure environment. CPs are used, for example,\nin electronic payments, electronic voting procedures, database access systems,\netc. Errors in the CPs can lead to great financial and social damage, therefore\nit is necessary to use mathematical methods to justify the correctness and\nsafety of the CPs. In this paper, a new mathematical model of a CP is\nintroduced, which allows one to describe both the CPs and their properties. It\nis shown how, on the base of this model, it is possible to solve the problems\nof verification of CPs.",
-    "doc_type": "preprint",
-    "source": "arxiv",
-    "source_id": "http://arxiv.org/abs/2011.12040v1",
-    "query_topic": "integrity_auditability_core",
-    "query_string": "(\"electronic voting\" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR \"end-to-end verifiability\")",
-    "retrieved_at": "2025-10-24T09:26:25Z",
-    "_stable_id": "t:66c6d750e86468e40089"
-  },
-  {
-    "title": "VoteMate: A Decentralized Application for Scalable Electronic Voting on\n  EVM-Based Blockchain",
-    "authors": [
-      "Ivan Homoliak",
-      "Tomáš Švondr"
-    ],
-    "year": 2025,
-    "doi": null,
-    "venue": "arXiv",
-    "publisher": null,
-    "url": "http://arxiv.org/abs/2505.15797v1",
-    "language": null,
-    "abstract": "Voting is a cornerstone of democracy, allowing citizens to express their will\nand make collective decisions. With advancing technology, online voting is\ngaining popularity as it enables voting from anywhere with Internet access,\neliminating the need for printed ballots or polling stations. However, despite\nits benefits, online voting carries significant risks. A single vulnerability\ncould be exploited to manipulate elections on a large scale. Centralized\nsystems can be secure but may lack transparency and confidentiality, especially\nif those in power manipulate them. Blockchain-based voting offers a\ntransparent, tamper-resistant alternative with end-to-end verifiability and\nstrong security. Adding cryptographic layers can also ensure voter\nconfidentiality.",
-    "doc_type": "preprint",
-    "source": "arxiv",
-    "source_id": "http://arxiv.org/abs/2505.15797v1",
-    "query_topic": "integrity_auditability_core",
-    "query_string": "(\"electronic voting\" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR \"end-to-end verifiability\")",
-    "retrieved_at": "2025-10-24T09:26:25Z",
-    "_stable_id": "t:a909fa78d67c41ce7832"
-  },
-  {
-    "title": "Publicly Verifiable Secret Sharing: Generic Constructions and\n  Lattice-Based Instantiations in the Standard Model",
-    "authors": [
-      "Pham Nhat Minh",
-      "Khoa Nguyen",
-      "Willy Susilo",
-      "Khuong Nguyen-An"
-    ],
-    "year": 2025,
-    "doi": null,
-    "venue": "arXiv",
-    "publisher": null,
-    "url": "http://arxiv.org/abs/2504.14381v2",
-    "language": null,
-    "abstract": "Publicly verifiable secret sharing (PVSS) allows a dealer to share a secret\namong a set of shareholders so that the secret can be reconstructed later from\nany set of qualified participants. In addition, any public verifier should be\nable to check the correctness of the sharing and reconstruction process. PVSS\nhas been demonstrated to yield various applications, such as e-voting,\ndistributed key generation, decentralized random number generation protocols,\nand multi-party computation. Although many concrete PVSS protocols have been\nproposed, their security is either proven in the random oracle model or relies\non quantum-vulnerable assumptions such as factoring or discrete logarithm. In\nthis work, we put forward a generic construction for PVSS that can be\ninstantiated in the standard model under the Learning With Errors (LWE)\nassumption. Our instantiation provides the first post-quantum PVSS in the\nstandard model, with a reasonable level of asymptotic efficiency.",
-    "doc_type": "preprint",
-    "source": "arxiv",
-    "source_id": "http://arxiv.org/abs/2504.14381v2",
-    "query_topic": "integrity_auditability_core",
-    "query_string": "(\"electronic voting\" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR \"end-to-end verifiability\")",
-    "retrieved_at": "2025-10-24T09:26:25Z",
-    "_stable_id": "t:6986c486d4e2ba7c95a5"
-  },
-  {
-    "title": "Novel Blockchain-based Protocols for Electronic Voting and Auctions",
-    "authors": [
-      "Zhaorun Lin"
-    ],
-    "year": 2025,
-    "doi": null,
-    "venue": "arXiv",
-    "publisher": null,
-    "url": "http://arxiv.org/abs/2507.03258v2",
-    "language": null,
-    "abstract": "Programmable blockchains have long been a hot research topic given their\ntremendous use in decentralized applications. Smart contracts, using\nblockchains as their underlying technology, inherit the desired properties such\nas verifiability, immutability, and transparency, which make it a great suit in\ntrustless environments.\n  In this thesis, we consider several decentralized protocols to be built on\nblockchains, specifically using smart contracts on Ethereum. We used\nalgorithmic and cryptographic tools in our implementations to further improve\nthe level of security and efficiency beyond the state-of-the-art works. We\nproposed a new approach called Blind Vote, which is an untraceable, secure,\nefficient, secrecy-preserving, and fully on-chain electronic voting protocol\nbased on the well-known concept of Chaum's blind signatures. We illustrate that\nour approach achieves the same security guarantees as previous methods such as\nTornado Vote [1], while consuming significantly less gas. Thus, we provide a\ncheaper and considerably more gas-efficient alternative for anonymous\nblockchain-based voting. On the other hand, we propose a new family of\nalgorithms for private, trustless auctions that protect bidder identities and\nbid values while remaining practical for smart contract execution. We ensure\ntrustlessness by running the auction logic in a smart contract, thereby\neliminating reliance on any single trusted party. This approach prevents bid\ntampering, front-running, and collusion by enforcing immutability and\ndecentralized verification of bids. The resulting protocol uniquely combines\nefficiency, trustlessness, and enduring bid privacy, offering a scalable and\nsecure solution for blockchain-based marketplaces and other decentralized\napplications.",
-    "doc_type": "preprint",
-    "source": "arxiv",
-    "source_id": "http://arxiv.org/abs/2507.03258v2",
-    "query_topic": "integrity_auditability_core",
-    "query_string": "(\"electronic voting\" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR \"end-to-end verifiability\")",
-    "retrieved_at": "2025-10-24T09:26:25Z",
-    "_stable_id": "t:40de92bf34973c270d0c"
-  },
-  {
-    "title": "Benaloh's Dense Probabilistic Encryption Revisited",
-    "authors": [
-      "Laurent Fousse",
-      "Pascal Lafourcade",
-      "Mohamed Alnuaimi"
-    ],
-    "year": 2010,
-    "doi": null,
-    "venue": "arXiv",
-    "publisher": null,
-    "url": "http://arxiv.org/abs/1008.2991v3",
-    "language": null,
-    "abstract": "In 1994, Josh Benaloh proposed a probabilistic homomorphic encryption scheme,\nenhancing the poor expansion factor provided by Goldwasser and Micali's scheme.\nSince then, numerous papers have taken advantage of Benaloh's homomorphic\nencryption function, including voting schemes, computing multi-party trust\nprivately, non-interactive verifiable secret sharing, online poker... In this\npaper we show that the original description of the scheme is incorrect,\npossibly resulting in ambiguous decryption of ciphertexts. We give a corrected\ndescription of the scheme and provide a complete proof of correctness. We also\ncompute the probability of failure of the original scheme. Finally we analyze\nseveral applications using Benaloh's encryption scheme. We show in each case\nthe impact of a bad choice in the key generation phase of Benaloh's scheme. For\ninstance in the application of e-voting protocol, it can inverse the result of\nan election, which is a non negligible consequence.",
-    "doc_type": "preprint",
-    "source": "arxiv",
-    "source_id": "http://arxiv.org/abs/1008.2991v3",
-    "query_topic": "integrity_auditability_core",
-    "query_string": "(\"electronic voting\" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR \"end-to-end verifiability\")",
-    "retrieved_at": "2025-10-24T09:26:25Z",
-    "_stable_id": "t:50db99353c31b1e279a4"
-  },
-  {
-    "title": "Conscript Your Friends into Larger Anonymity Sets with JavaScript",
-    "authors": [
-      "Henry Corrigan-Gibbs",
-      "Bryan Ford"
-    ],
-    "year": 2013,
-    "doi": null,
-    "venue": "arXiv",
-    "publisher": null,
-    "url": "http://arxiv.org/abs/1309.0958v1",
-    "language": null,
-    "abstract": "We present the design and prototype implementation of ConScript, a framework\nfor using JavaScript to allow casual Web users to participate in an anonymous\ncommunication system. When a Web user visits a cooperative Web site, the site\nserves a JavaScript application that instructs the browser to create and submit\n\"dummy\" messages into the anonymity system. Users who want to send non-dummy\nmessages through the anonymity system use a browser plug-in to replace these\ndummy messages with real messages. Creating such conscripted anonymity sets can\nincrease the anonymity set size available to users of remailer, e-voting, and\nverifiable shuffle-style anonymity systems. We outline ConScript's\narchitecture, we address a number of potential attacks against ConScript, and\nwe discuss the ethical issues related to deploying such a system. Our\nimplementation results demonstrate the practicality of ConScript: a workstation\nrunning our ConScript prototype JavaScript client generates a dummy message for\na mix-net in 81 milliseconds and it generates a dummy message for a\nDoS-resistant DC-net in 156 milliseconds.",
-    "doc_type": "preprint",
-    "source": "arxiv",
-    "source_id": "http://arxiv.org/abs/1309.0958v1",
-    "query_topic": "integrity_auditability_core",
-    "query_string": "(\"electronic voting\" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR \"end-to-end verifiability\")",
-    "retrieved_at": "2025-10-24T09:26:25Z",
-    "_stable_id": "t:97ee1ad8c27ec96981ca"
-  },
-  {
-    "title": "Model Checkers Are Cool: How to Model Check Voting Protocols in Uppaal",
-    "authors": [
-      "Wojciech Jamroga",
-      "Yan Kim",
-      "Damian Kurpiewski",
-      "Peter Y. A. Ryan"
-    ],
-    "year": 2020,
-    "doi": null,
-    "venue": "arXiv",
-    "publisher": null,
-    "url": "http://arxiv.org/abs/2007.12412v3",
-    "language": null,
-    "abstract": "The design and implementation of an e-voting system is a challenging task.\nFormal analysis can be of great help here. In particular, it can lead to a\nbetter understanding of how the voting system works, and what requirements on\nthe system are relevant. In this paper, we propose that the state-of-art model\nchecker Uppaal provides a good environment for modelling and preliminary\nverification of voting protocols. To illustrate this, we present an Uppaal\nmodel of Pr\\^et \\`a Voter, together with some natural extensions. We also show\nhow to verify a variant of receipt-freeness, despite the severe limitations of\nthe property specification language in the model checker.",
-    "doc_type": "preprint",
-    "source": "arxiv",
-    "source_id": "http://arxiv.org/abs/2007.12412v3",
-    "query_topic": "integrity_auditability_core",
-    "query_string": "(\"electronic voting\" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR \"end-to-end verifiability\")",
-    "retrieved_at": "2025-10-24T09:26:25Z",
-    "_stable_id": "t:bddbe5ae9d0526478f9d"
-  },
-  {
-    "title": "What's Wrong with the Absolute Trajectory Error?",
-    "authors": [
-      "Seong Hun Lee",
-      "Javier Civera"
-    ],
-    "year": 2022,
-    "doi": null,
-    "venue": "arXiv",
-    "publisher": null,
-    "url": "http://arxiv.org/abs/2212.05376v5",
-    "language": null,
-    "abstract": "One of the limitations of the commonly used Absolute Trajectory Error (ATE)\nis that it is highly sensitive to outliers. As a result, in the presence of\njust a few outliers, it often fails to reflect the varying accuracy as the\ninlier trajectory error or the number of outliers varies. In this work, we\npropose an alternative error metric for evaluating the accuracy of the\nreconstructed camera trajectory. Our metric, named Discernible Trajectory Error\n(DTE), is computed in five steps: (1) Shift the ground-truth and estimated\ntrajectories such that both of their geometric medians are located at the\norigin. (2) Rotate the estimated trajectory such that it minimizes the sum of\ngeodesic distances between the corresponding camera orientations. (3) Scale the\nestimated trajectory such that the median distance of the cameras to their\ngeometric median is the same as that of the ground truth. (4) Compute,\nwinsorize and normalize the distances between the corresponding cameras. (5)\nObtain the DTE by taking the average of the mean and the root-mean-square (RMS)\nof the resulting distances. This metric is an attractive alternative to the\nATE, in that it is capable of discerning the varying trajectory accuracy as the\ninlier trajectory error or the number of outliers varies. Using the similar\nidea, we also propose a novel rotation error metric, named Discernible Rotation\nError (DRE), which has similar advantages to the DTE. Furthermore, we propose a\nsimple yet effective method for calibrating the camera-to-marker rotation,\nwhich is needed for the computation of our metrics. Our methods are verified\nthrough extensive simulations.",
-    "doc_type": "preprint",
-    "source": "arxiv",
-    "source_id": "http://arxiv.org/abs/2212.05376v5",
-    "query_topic": "integrity_auditability_core",
-    "query_string": "(\"electronic voting\" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR \"end-to-end verifiability\")",
-    "retrieved_at": "2025-10-24T09:26:25Z",
-    "_stable_id": "t:7101b80edb310cc86023"
-  },
-  {
-    "title": "An Overview of End-to-End Verifiable Voting Systems",
-    "authors": [
-      "Syed Taha Ali",
-      "Judy Murray"
-    ],
-    "year": 2016,
-    "doi": null,
-    "venue": "arXiv",
-    "publisher": null,
-    "url": "http://arxiv.org/abs/1605.08554v1",
-    "language": null,
-    "abstract": "Advances in E2E verifiable voting have the potential to fundamentally restore\ntrust in elections and democratic processes in society. In this chapter, we\nprovide a comprehensive introduction to the field. We trace the evolution of\nprivacy and verifiability properties in the research literature and describe\nthe operations of current state-of-the-art E2E voting systems. We also discuss\noutstanding challenges to the deployment of E2E voting systems, including\ntechnical, legal, and usability constraints.\n  Our intention, in writing this chapter, has been to make the innovations in\nthis domain accessible to a wider audience. We have therefore eschewed\ndescription of complex cryptographic mechanisms and instead attempt to\ncommunicate the fundamental intuition behind the design of E2E voting systems.\nWe hope our work serves as a useful resource and assists in the future\ndevelopment of E2E voting.",
-    "doc_type": "preprint",
-    "source": "arxiv",
-    "source_id": "http://arxiv.org/abs/1605.08554v1",
-    "query_topic": "integrity_auditability_core",
-    "query_string": "(\"electronic voting\" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR \"end-to-end verifiability\")",
-    "retrieved_at": "2025-10-24T09:26:25Z",
-    "_stable_id": "t:953278e6f5c714a6de80"
-  },
-  {
-    "title": "LaSDVS : A Post-Quantum Secure Compact Strong-Designated Verifier\n  Signature",
-    "authors": [
-      "Shanu Poddar",
-      "Sweta Mishra",
-      "Tapaswini Mohanty",
-      "Vikas Srivastava",
-      "Sugata Gangopadhyay"
-    ],
-    "year": 2025,
-    "doi": null,
-    "venue": "arXiv",
-    "publisher": null,
-    "url": "http://arxiv.org/abs/2504.16571v2",
-    "language": null,
-    "abstract": "Digital signatures are fundamental cryptographic primitives that ensure the\nauthenticity and integrity of digital communication. However, in scenarios\ninvolving sensitive interactions -- such as e-voting or e-cash -- there is a\ngrowing need for more controlled signing mechanisms. Strong-Designated Verifier\nSignature (SDVS) offers such control by allowing the signer to specify and\nrestrict the verifier of a signature. The existing state-of-the-art SDVS are\nmostly based on number-theoretic hardness assumptions. Thus, they are not\nsecure against quantum attacks. Moreover, Post-Quantum Cryptography (PQC)-based\nSDVS are inefficient and have large key and signature sizes. In this work, we\naddress these challenges and propose an efficient post-quantum SDVS (namely,\nLaSDVS) based on ideal lattices under the hardness assumptions of the Ring-SIS\nand Ring-LWE problems. LaSDVS achieves advanced security properties including\nstrong unforgeability under chosen-message attacks, non-transferability,\nnon-delegatability, and signer anonymity. By employing the algebraic structure\nof rings and the gadget trapdoor mechanism of Micciancio et al., we design\nLaSDVS to minimize computational overhead and significantly reduce key and\nsignature sizes. Notably, our scheme achieves a compact signature size of\n$\\mathcal{O}(n\\log q)$, compared to $\\mathcal{O}(n^2)$ size, where $n$ is the\nsecurity parameter, in the existing state-of-the-art PQC designs. To the best\nof our knowledge, LaSDVS offers the \\textit{smallest private key and signature\nsize} among the existing PQC-based SDVS schemes.",
-    "doc_type": "preprint",
-    "source": "arxiv",
-    "source_id": "http://arxiv.org/abs/2504.16571v2",
-    "query_topic": "integrity_auditability_core",
-    "query_string": "(\"electronic voting\" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR \"end-to-end verifiability\")",
-    "retrieved_at": "2025-10-24T09:26:25Z",
-    "_stable_id": "t:e0b0ee0ff21ae5ed87fa"
-  },
-  {
-    "title": "A Compact Post-quantum Strong Designated Verifier Signature Scheme from\n  Isogenies",
-    "authors": [
-      "Farzin Renan"
-    ],
-    "year": 2025,
-    "doi": null,
-    "venue": "arXiv",
-    "publisher": null,
-    "url": "http://arxiv.org/abs/2507.14893v3",
-    "language": null,
-    "abstract": "Digital signatures are fundamental cryptographic tools that provide\nauthentication and integrity in digital communications. However,\nprivacy-sensitive applications, such as e-voting and digital cash, require more\nrestrictive verification models to ensure confidentiality and control. Strong\nDesignated Verifier Signature (SDVS) schemes address this need by enabling the\nsigner to designate a specific verifier, ensuring that only this party can\nvalidate the signature. Existing SDVS constructions are primarily based on\nnumber-theoretic assumptions and are therefore vulnerable to quantum attacks.\nAlthough post-quantum alternatives, particularly those based on lattices, have\nbeen proposed, they often entail large key and signature sizes. In this work,\nwe present $\\mathsf{CSI\\text{-}SDVS}$, a novel isogeny-based SDVS scheme that\noffers a compact, quantum-resistant alternative to existing SDVS constructions.\nThe scheme leverages the ideal class group action on $\\mathbb{F}_p$-isomorphism\nclasses of supersingular elliptic curves and is founded on the hardness of the\nMulti-Target Group Action Inverse Problem (MT-GAIP). $\\mathsf{CSI\\text{-}SDVS}$\nachieves strong security guarantees, Strong Unforgeability under Chosen-Message\nAttacks (SUF-CMA), Non-Transferability (NT), and Privacy of Signer's Identity\n(PSI), in the random oracle model, thereby making it among the most compact\nPQC-based SDVS schemes and the only post-quantum secure construction based on\nisogenies.",
-    "doc_type": "preprint",
-    "source": "arxiv",
-    "source_id": "http://arxiv.org/abs/2507.14893v3",
-    "query_topic": "integrity_auditability_core",
-    "query_string": "(\"electronic voting\" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR \"end-to-end verifiability\")",
-    "retrieved_at": "2025-10-24T09:26:25Z",
-    "_stable_id": "t:c14291e484b5cc7c2f82"
   },
   {
     "title": "MERGE: Matching Electronic Results with Genuine Evidence for verifiable\n  voting in person at remote locations",
@@ -1186,8 +546,31 @@
     "source_id": "http://arxiv.org/abs/2410.06705v4",
     "query_topic": "integrity_auditability_core",
     "query_string": "(\"paper ballot\" OR \"paper trail\") AND (\"risk-limiting audit\" OR audit* OR verifi*)",
-    "retrieved_at": "2025-10-24T09:26:26Z",
+    "retrieved_at": "2025-10-24T11:50:24Z",
+    "id": "t:b11bbb517b8b2844e18c",
     "_stable_id": "t:b11bbb517b8b2844e18c"
+  },
+  {
+    "title": "An Internet Voting System Fatally Flawed in Creative New Ways",
+    "authors": [
+      "Andrew W. Appel",
+      "Philip B. Stark"
+    ],
+    "year": 2024,
+    "doi": null,
+    "venue": "arXiv",
+    "publisher": null,
+    "url": "http://arxiv.org/abs/2411.11796v1",
+    "language": null,
+    "abstract": "The recently published \"MERGE\" protocol is designed to be used in the\nprototype CAC-vote system. The voting kiosk and protocol transmit votes over\nthe internet and then transmit voter-verifiable paper ballots through the mail.\nIn the MERGE protocol, the votes transmitted over the internet are used to\ntabulate the results and determine the winners, but audits and recounts use the\npaper ballots that arrive in time. The enunciated motivation for the protocol\nis to allow (electronic) votes from overseas military voters to be included in\npreliminary results before a (paper) ballot is received from the voter. MERGE\ncontains interesting ideas that are not inherently unsound; but to make the\nsystem trustworthy--to apply the MERGE protocol--would require major changes to\nthe laws, practices, and technical and logistical abilities of U.S. election\njurisdictions. The gap between theory and practice is large and unbridgeable\nfor the foreseeable future. Promoters of this research project at DARPA, the\nagency that sponsored the research, should acknowledge that MERGE is internet\nvoting (election results rely on votes transmitted over the internet except in\nthe event of a full hand count) and refrain from claiming that it could be a\ncomponent of trustworthy elections without sweeping changes to election law and\nelection administration throughout the U.S.",
+    "doc_type": "preprint",
+    "source": "arxiv",
+    "source_id": "http://arxiv.org/abs/2411.11796v1",
+    "query_topic": "integrity_auditability_core",
+    "query_string": "(\"paper ballot\" OR \"paper trail\") AND (\"risk-limiting audit\" OR audit* OR verifi*)",
+    "retrieved_at": "2025-10-24T11:50:24Z",
+    "id": "t:4bf78e36b0f1410c5ea5",
+    "_stable_id": "t:4bf78e36b0f1410c5ea5"
   },
   {
     "title": "Assessing the accuracy of the Australian Senate count: Key steps for a\n  rigorous and transparent audit",
@@ -1210,7 +593,8 @@
     "source_id": "http://arxiv.org/abs/2205.14634v2",
     "query_topic": "integrity_auditability_core",
     "query_string": "(\"paper ballot\" OR \"paper trail\") AND (\"risk-limiting audit\" OR audit* OR verifi*)",
-    "retrieved_at": "2025-10-24T09:26:26Z",
+    "retrieved_at": "2025-10-24T11:50:24Z",
+    "id": "t:056b68ad4b074ad5020e",
     "_stable_id": "t:056b68ad4b074ad5020e"
   },
   {
@@ -1232,7 +616,8 @@
     "source_id": "http://arxiv.org/abs/2202.02607v5",
     "query_topic": "integrity_auditability_core",
     "query_string": "(\"paper ballot\" OR \"paper trail\") AND (\"risk-limiting audit\" OR audit* OR verifi*)",
-    "retrieved_at": "2025-10-24T09:26:26Z",
+    "retrieved_at": "2025-10-24T11:50:24Z",
+    "id": "t:2e2fc46b2f7a597023dd",
     "_stable_id": "t:2e2fc46b2f7a597023dd"
   },
   {
@@ -1252,7 +637,8 @@
     "source_id": "http://arxiv.org/abs/1908.01897v2",
     "query_topic": "integrity_auditability_core",
     "query_string": "(\"paper ballot\" OR \"paper trail\") AND (\"risk-limiting audit\" OR audit* OR verifi*)",
-    "retrieved_at": "2025-10-24T09:26:26Z",
+    "retrieved_at": "2025-10-24T11:50:24Z",
+    "id": "t:13d8a8bd894deb531a6f",
     "_stable_id": "t:13d8a8bd894deb531a6f"
   },
   {
@@ -1272,7 +658,8 @@
     "source_id": "http://arxiv.org/abs/0804.2349v1",
     "query_topic": "integrity_auditability_core",
     "query_string": "(\"paper ballot\" OR \"paper trail\") AND (\"risk-limiting audit\" OR audit* OR verifi*)",
-    "retrieved_at": "2025-10-24T09:26:26Z",
+    "retrieved_at": "2025-10-24T11:50:24Z",
+    "id": "t:33c156455d2495debe3e",
     "_stable_id": "t:33c156455d2495debe3e"
   },
   {
@@ -1295,7 +682,8 @@
     "source_id": "http://arxiv.org/abs/1809.04235v1",
     "query_topic": "integrity_auditability_core",
     "query_string": "(\"paper ballot\" OR \"paper trail\") AND (\"risk-limiting audit\" OR audit* OR verifi*)",
-    "retrieved_at": "2025-10-24T09:26:26Z",
+    "retrieved_at": "2025-10-24T11:50:24Z",
+    "id": "t:8b127f74c083039667b4",
     "_stable_id": "t:8b127f74c083039667b4"
   },
   {
@@ -1316,7 +704,8 @@
     "source_id": "http://arxiv.org/abs/2509.19257v1",
     "query_topic": "integrity_auditability_core",
     "query_string": "(\"paper ballot\" OR \"paper trail\") AND (\"risk-limiting audit\" OR audit* OR verifi*)",
-    "retrieved_at": "2025-10-24T09:26:26Z",
+    "retrieved_at": "2025-10-24T11:50:24Z",
+    "id": "t:345594f5e43ef24aca92",
     "_stable_id": "t:345594f5e43ef24aca92"
   },
   {
@@ -1339,7 +728,8 @@
     "source_id": "http://arxiv.org/abs/2505.07032v1",
     "query_topic": "integrity_auditability_core",
     "query_string": "(\"paper ballot\" OR \"paper trail\") AND (\"risk-limiting audit\" OR audit* OR verifi*)",
-    "retrieved_at": "2025-10-24T09:26:26Z",
+    "retrieved_at": "2025-10-24T11:50:24Z",
+    "id": "t:c8523d6d14598da2bf5d",
     "_stable_id": "t:c8523d6d14598da2bf5d"
   },
   {
@@ -1361,7 +751,8 @@
     "source_id": "http://arxiv.org/abs/2002.06850v1",
     "query_topic": "integrity_auditability_core",
     "query_string": "(\"paper ballot\" OR \"paper trail\") AND (\"risk-limiting audit\" OR audit* OR verifi*)",
-    "retrieved_at": "2025-10-24T09:26:26Z",
+    "retrieved_at": "2025-10-24T11:50:24Z",
+    "id": "t:1ee7c7db58f5b27b5150",
     "_stable_id": "t:1ee7c7db58f5b27b5150"
   },
   {
@@ -1384,7 +775,8 @@
     "source_id": "http://arxiv.org/abs/2103.07180v1",
     "query_topic": "integrity_auditability_core",
     "query_string": "(\"paper ballot\" OR \"paper trail\") AND (\"risk-limiting audit\" OR audit* OR verifi*)",
-    "retrieved_at": "2025-10-24T09:26:26Z",
+    "retrieved_at": "2025-10-24T11:50:24Z",
+    "id": "t:f4d89b3b2af918c680ef",
     "_stable_id": "t:f4d89b3b2af918c680ef"
   },
   {
@@ -1404,7 +796,8 @@
     "source_id": "http://arxiv.org/abs/2207.01362v2",
     "query_topic": "integrity_auditability_core",
     "query_string": "(\"paper ballot\" OR \"paper trail\") AND (\"risk-limiting audit\" OR audit* OR verifi*)",
-    "retrieved_at": "2025-10-24T09:26:26Z",
+    "retrieved_at": "2025-10-24T11:50:24Z",
+    "id": "t:cca4adc684b41dfc55c7",
     "_stable_id": "t:cca4adc684b41dfc55c7"
   },
   {
@@ -1427,8 +820,32 @@
     "source_id": "http://arxiv.org/abs/2504.19640v1",
     "query_topic": "integrity_auditability_core",
     "query_string": "(\"paper ballot\" OR \"paper trail\") AND (\"risk-limiting audit\" OR audit* OR verifi*)",
-    "retrieved_at": "2025-10-24T09:26:26Z",
+    "retrieved_at": "2025-10-24T11:50:24Z",
+    "id": "t:ab932c8a62c3198eeffa",
     "_stable_id": "t:ab932c8a62c3198eeffa"
+  },
+  {
+    "title": "Voter Perceptions of Trust in Risk-Limiting Audits",
+    "authors": [
+      "Asmita Dalela",
+      "Oksana Kulyk",
+      "Carsten Schürmann"
+    ],
+    "year": 2021,
+    "doi": null,
+    "venue": "arXiv",
+    "publisher": null,
+    "url": "http://arxiv.org/abs/2109.07918v1",
+    "language": null,
+    "abstract": "Risk-limiting audits (RLAs) are expected to strengthen the public confidence\nin the correctness of an election outcome. We hypothesize that this is not\nalways the case, in part because for large margins between the winner and the\nrunner-up, the number of ballots to be drawn can be so small that voters lose\nconfidence. We conduct a user study with 105 participants resident in the US.\nOur findings confirm the hypothesis, showing that our study participants felt\nless confident when they were told the number of ballots audited for RLAs. We\nelaborate on our findings and propose recommendations for future use of RLAs.",
+    "doc_type": "preprint",
+    "source": "arxiv",
+    "source_id": "http://arxiv.org/abs/2109.07918v1",
+    "query_topic": "integrity_auditability_core",
+    "query_string": "(\"public trust\" OR confidence) AND (\"electronic voting\" OR \"ballot auditability\")",
+    "retrieved_at": "2025-10-24T11:50:25Z",
+    "id": "t:046c020642c7ce589f28",
+    "_stable_id": "t:046c020642c7ce589f28"
   },
   {
     "title": "The adoption and challenges of electronic voting technologies within the\n  South African context",
@@ -1448,8 +865,32 @@
     "source_id": "http://arxiv.org/abs/1312.2406v1",
     "query_topic": "integrity_auditability_core",
     "query_string": "(\"public trust\" OR confidence) AND (\"electronic voting\" OR \"ballot auditability\")",
-    "retrieved_at": "2025-10-24T09:26:27Z",
+    "retrieved_at": "2025-10-24T11:50:25Z",
+    "id": "t:9f7e6faac80d6ba49a7d",
     "_stable_id": "t:9f7e6faac80d6ba49a7d"
+  },
+  {
+    "title": "RiLACS: Risk-Limiting Audits via Confidence Sequences",
+    "authors": [
+      "Ian Waudby-Smith",
+      "Philip B. Stark",
+      "Aaditya Ramdas"
+    ],
+    "year": 2021,
+    "doi": null,
+    "venue": "arXiv",
+    "publisher": null,
+    "url": "http://arxiv.org/abs/2107.11323v2",
+    "language": null,
+    "abstract": "Accurately determining the outcome of an election is a complex task with many\npotential sources of error, ranging from software glitches in voting machines\nto procedural lapses to outright fraud. Risk-limiting audits (RLA) are\nstatistically principled \"incremental\" hand counts that provide statistical\nassurance that reported outcomes accurately reflect the validly cast votes. We\npresent a suite of tools for conducting RLAs using confidence sequences --\nsequences of confidence sets which uniformly capture an electoral parameter of\ninterest from the start of an audit to the point of an exhaustive recount with\nhigh probability. Adopting the SHANGRLA framework, we design nonnegative\nmartingales which yield computationally and statistically efficient confidence\nsequences and RLAs for a wide variety of election types.",
+    "doc_type": "preprint",
+    "source": "arxiv",
+    "source_id": "http://arxiv.org/abs/2107.11323v2",
+    "query_topic": "integrity_auditability_core",
+    "query_string": "(\"public trust\" OR confidence) AND (\"electronic voting\" OR \"ballot auditability\")",
+    "retrieved_at": "2025-10-24T11:50:25Z",
+    "id": "t:acab0d86f5d681c28967",
+    "_stable_id": "t:acab0d86f5d681c28967"
   },
   {
     "title": "Logic and Accuracy Testing: A Fifty-State Review",
@@ -1471,7 +912,8 @@
     "source_id": "http://arxiv.org/abs/2207.14394v2",
     "query_topic": "integrity_auditability_core",
     "query_string": "(\"public trust\" OR confidence) AND (\"electronic voting\" OR \"ballot auditability\")",
-    "retrieved_at": "2025-10-24T09:26:27Z",
+    "retrieved_at": "2025-10-24T11:50:25Z",
+    "id": "t:eec1b62f3846a555ecd9",
     "_stable_id": "t:eec1b62f3846a555ecd9"
   },
   {
@@ -1498,7 +940,8 @@
     "source_id": "http://arxiv.org/abs/2510.08700v1",
     "query_topic": "integrity_auditability_core",
     "query_string": "(\"public trust\" OR confidence) AND (\"electronic voting\" OR \"ballot auditability\")",
-    "retrieved_at": "2025-10-24T09:26:27Z",
+    "retrieved_at": "2025-10-24T11:50:25Z",
+    "id": "t:a6c71e3e0c6d4b4671de",
     "_stable_id": "t:a6c71e3e0c6d4b4671de"
   },
   {
@@ -1520,8 +963,31 @@
     "source_id": "http://arxiv.org/abs/2205.10580v7",
     "query_topic": "integrity_auditability_core",
     "query_string": "(\"public trust\" OR confidence) AND (\"electronic voting\" OR \"ballot auditability\")",
-    "retrieved_at": "2025-10-24T09:26:27Z",
+    "retrieved_at": "2025-10-24T11:50:25Z",
+    "id": "t:866a1224f1438a1e545f",
     "_stable_id": "t:866a1224f1438a1e545f"
+  },
+  {
+    "title": "An Overview of End-to-End Verifiable Voting Systems",
+    "authors": [
+      "Syed Taha Ali",
+      "Judy Murray"
+    ],
+    "year": 2016,
+    "doi": null,
+    "venue": "arXiv",
+    "publisher": null,
+    "url": "http://arxiv.org/abs/1605.08554v1",
+    "language": null,
+    "abstract": "Advances in E2E verifiable voting have the potential to fundamentally restore\ntrust in elections and democratic processes in society. In this chapter, we\nprovide a comprehensive introduction to the field. We trace the evolution of\nprivacy and verifiability properties in the research literature and describe\nthe operations of current state-of-the-art E2E voting systems. We also discuss\noutstanding challenges to the deployment of E2E voting systems, including\ntechnical, legal, and usability constraints.\n  Our intention, in writing this chapter, has been to make the innovations in\nthis domain accessible to a wider audience. We have therefore eschewed\ndescription of complex cryptographic mechanisms and instead attempt to\ncommunicate the fundamental intuition behind the design of E2E voting systems.\nWe hope our work serves as a useful resource and assists in the future\ndevelopment of E2E voting.",
+    "doc_type": "preprint",
+    "source": "arxiv",
+    "source_id": "http://arxiv.org/abs/1605.08554v1",
+    "query_topic": "cryptographic_mechanisms",
+    "query_string": "(\"end-to-end verifiability\" OR E2E) AND (\"electronic voting\" OR ballot)",
+    "retrieved_at": "2025-10-24T11:50:26Z",
+    "id": "t:953278e6f5c714a6de80",
+    "_stable_id": "t:953278e6f5c714a6de80"
   },
   {
     "title": "Verifiable Elections with Commitment Consistent Encryption -- A Primer",
@@ -1540,7 +1006,8 @@
     "source_id": "http://arxiv.org/abs/1412.7358v1",
     "query_topic": "cryptographic_mechanisms",
     "query_string": "(cryptograph* AND voting) AND (audit OR verifi* OR mixnet OR homomorphic)",
-    "retrieved_at": "2025-10-24T09:26:29Z",
+    "retrieved_at": "2025-10-24T11:50:27Z",
+    "id": "t:c852a1b77519b18bd62f",
     "_stable_id": "t:c852a1b77519b18bd62f"
   },
   {
@@ -1560,7 +1027,8 @@
     "source_id": "http://arxiv.org/abs/2311.12710v1",
     "query_topic": "cryptographic_mechanisms",
     "query_string": "(cryptograph* AND voting) AND (audit OR verifi* OR mixnet OR homomorphic)",
-    "retrieved_at": "2025-10-24T09:26:29Z",
+    "retrieved_at": "2025-10-24T11:50:27Z",
+    "id": "t:0edffb9a1aa59c66904a",
     "_stable_id": "t:0edffb9a1aa59c66904a"
   },
   {
@@ -1582,8 +1050,31 @@
     "source_id": "http://arxiv.org/abs/2005.03749v2",
     "query_topic": "cryptographic_mechanisms",
     "query_string": "(cryptograph* AND voting) AND (audit OR verifi* OR mixnet OR homomorphic)",
-    "retrieved_at": "2025-10-24T09:26:29Z",
+    "retrieved_at": "2025-10-24T11:50:27Z",
+    "id": "t:6288995b93e668e006e7",
     "_stable_id": "t:6288995b93e668e006e7"
+  },
+  {
+    "title": "VoteMate: A Decentralized Application for Scalable Electronic Voting on\n  EVM-Based Blockchain",
+    "authors": [
+      "Ivan Homoliak",
+      "Tomáš Švondr"
+    ],
+    "year": 2025,
+    "doi": null,
+    "venue": "arXiv",
+    "publisher": null,
+    "url": "http://arxiv.org/abs/2505.15797v1",
+    "language": null,
+    "abstract": "Voting is a cornerstone of democracy, allowing citizens to express their will\nand make collective decisions. With advancing technology, online voting is\ngaining popularity as it enables voting from anywhere with Internet access,\neliminating the need for printed ballots or polling stations. However, despite\nits benefits, online voting carries significant risks. A single vulnerability\ncould be exploited to manipulate elections on a large scale. Centralized\nsystems can be secure but may lack transparency and confidentiality, especially\nif those in power manipulate them. Blockchain-based voting offers a\ntransparent, tamper-resistant alternative with end-to-end verifiability and\nstrong security. Adding cryptographic layers can also ensure voter\nconfidentiality.",
+    "doc_type": "preprint",
+    "source": "arxiv",
+    "source_id": "http://arxiv.org/abs/2505.15797v1",
+    "query_topic": "cryptographic_mechanisms",
+    "query_string": "(cryptograph* AND voting) AND (audit OR verifi* OR mixnet OR homomorphic)",
+    "retrieved_at": "2025-10-24T11:50:27Z",
+    "id": "t:a909fa78d67c41ce7832",
+    "_stable_id": "t:a909fa78d67c41ce7832"
   },
   {
     "title": "Cryptographically verifiable anonymous voting using pan-european e-IDs",
@@ -1603,7 +1094,8 @@
     "source_id": "http://arxiv.org/abs/1611.09332v1",
     "query_topic": "cryptographic_mechanisms",
     "query_string": "(cryptograph* AND voting) AND (audit OR verifi* OR mixnet OR homomorphic)",
-    "retrieved_at": "2025-10-24T09:26:29Z",
+    "retrieved_at": "2025-10-24T11:50:27Z",
+    "id": "t:411d162d3671bba3ddfd",
     "_stable_id": "t:411d162d3671bba3ddfd"
   },
   {
@@ -1628,7 +1120,8 @@
     "source_id": "http://arxiv.org/abs/1908.09557v8",
     "query_topic": "cryptographic_mechanisms",
     "query_string": "(cryptograph* AND voting) AND (audit OR verifi* OR mixnet OR homomorphic)",
-    "retrieved_at": "2025-10-24T09:26:29Z",
+    "retrieved_at": "2025-10-24T11:50:27Z",
+    "id": "doi:10.1007/978-3-031-43756-4_2",
     "_stable_id": "doi:10.1007/978-3-031-43756-4_2"
   },
   {
@@ -1652,7 +1145,8 @@
     "source_id": "http://arxiv.org/abs/2210.14833v2",
     "query_topic": "cryptographic_mechanisms",
     "query_string": "(cryptograph* AND voting) AND (audit OR verifi* OR mixnet OR homomorphic)",
-    "retrieved_at": "2025-10-24T09:26:29Z",
+    "retrieved_at": "2025-10-24T11:50:27Z",
+    "id": "t:2ca5f331d0d8dee4bc31",
     "_stable_id": "t:2ca5f331d0d8dee4bc31"
   },
   {
@@ -1674,7 +1168,8 @@
     "source_id": "http://arxiv.org/abs/2007.14916v2",
     "query_topic": "cryptographic_mechanisms",
     "query_string": "(cryptograph* AND voting) AND (audit OR verifi* OR mixnet OR homomorphic)",
-    "retrieved_at": "2025-10-24T09:26:29Z",
+    "retrieved_at": "2025-10-24T11:50:27Z",
+    "id": "t:98cb52539699d465b744",
     "_stable_id": "t:98cb52539699d465b744"
   },
   {
@@ -1696,7 +1191,8 @@
     "source_id": "http://arxiv.org/abs/2005.11189v3",
     "query_topic": "cryptographic_mechanisms",
     "query_string": "(cryptograph* AND voting) AND (audit OR verifi* OR mixnet OR homomorphic)",
-    "retrieved_at": "2025-10-24T09:26:29Z",
+    "retrieved_at": "2025-10-24T11:50:27Z",
+    "id": "t:bae0d575746faf87f7de",
     "_stable_id": "t:bae0d575746faf87f7de"
   },
   {
@@ -1718,7 +1214,8 @@
     "source_id": "http://arxiv.org/abs/2102.10594v1",
     "query_topic": "cryptographic_mechanisms",
     "query_string": "(cryptograph* AND voting) AND (audit OR verifi* OR mixnet OR homomorphic)",
-    "retrieved_at": "2025-10-24T09:26:29Z",
+    "retrieved_at": "2025-10-24T11:50:27Z",
+    "id": "t:4f372a2ec9bb72bd25f9",
     "_stable_id": "t:4f372a2ec9bb72bd25f9"
   },
   {
@@ -1743,7 +1240,8 @@
     "source_id": "http://arxiv.org/abs/2111.04210v2",
     "query_topic": "cryptographic_mechanisms",
     "query_string": "(cryptograph* AND voting) AND (audit OR verifi* OR mixnet OR homomorphic)",
-    "retrieved_at": "2025-10-24T09:26:29Z",
+    "retrieved_at": "2025-10-24T11:50:27Z",
+    "id": "t:26241f3bdb100c92ff3d",
     "_stable_id": "t:26241f3bdb100c92ff3d"
   },
   {
@@ -1764,7 +1262,8 @@
     "source_id": "http://arxiv.org/abs/2010.02421v1",
     "query_topic": "cryptographic_mechanisms",
     "query_string": "(cryptograph* AND voting) AND (audit OR verifi* OR mixnet OR homomorphic)",
-    "retrieved_at": "2025-10-24T09:26:29Z",
+    "retrieved_at": "2025-10-24T11:50:27Z",
+    "id": "t:576e6d0a810839cdf4ce",
     "_stable_id": "t:576e6d0a810839cdf4ce"
   },
   {
@@ -1787,7 +1286,8 @@
     "source_id": "http://arxiv.org/abs/1404.6822v4",
     "query_topic": "cryptographic_mechanisms",
     "query_string": "(cryptograph* AND voting) AND (audit OR verifi* OR mixnet OR homomorphic)",
-    "retrieved_at": "2025-10-24T09:26:29Z",
+    "retrieved_at": "2025-10-24T11:50:27Z",
+    "id": "t:3b98e6bc7deb0364cf11",
     "_stable_id": "t:3b98e6bc7deb0364cf11"
   },
   {
@@ -1808,336 +1308,8 @@
     "source_id": "http://arxiv.org/abs/2406.19730v1",
     "query_topic": "cryptographic_mechanisms",
     "query_string": "(cryptograph* AND voting) AND (audit OR verifi* OR mixnet OR homomorphic)",
-    "retrieved_at": "2025-10-24T09:26:29Z",
+    "retrieved_at": "2025-10-24T11:50:27Z",
+    "id": "t:9fb24b13d2743749a301",
     "_stable_id": "t:9fb24b13d2743749a301"
-  },
-  {
-    "title": "Risk-Limiting Tallies",
-    "authors": [
-      "Wojciech Jamroga",
-      "Peter B. Roenne",
-      "Peter Y. A. Ryan",
-      "Philip B. Stark"
-    ],
-    "year": 2019,
-    "doi": null,
-    "venue": "arXiv",
-    "publisher": null,
-    "url": "http://arxiv.org/abs/1908.04947v1",
-    "language": null,
-    "abstract": "Many voter-verifiable, coercion-resistant schemes have been proposed, but\neven the most carefully designed systems necessarily leak information via the\nannounced result. In corner cases, this may be problematic. For example, if all\nthe votes go to one candidate then all vote privacy evaporates. The mere\npossibility of candidates getting no or few votes could have implications for\nsecurity in practice: if a coercer demands that a voter cast a vote for such an\nunpopular candidate, then the voter may feel obliged to obey, even if she is\nconfident that the voting system satisfies the standard coercion resistance\ndefinitions. With complex ballots, there may also be a danger of \"Italian\"\nstyle (aka \"signature\") attacks: the coercer demands the voter cast a ballot\nwith a specific, identifying pattern. Here we propose an approach to tallying\nend-to-end verifiable schemes that avoids revealing all the votes but still\nachieves whatever confidence level in the announced result is desired. Now a\ncoerced voter can claim that the required vote must be amongst those that\nremained shrouded. Our approach is based on the well-established notion of\nRisk-Limiting Audits, but here applied to the tally rather than to the audit.\nWe show that this approach counters coercion threats arising in extreme tallies\nand \"Italian\" attacks. We illustrate our approach by applying it to the Selene\nscheme, and we extend the approach to Risk-Limiting Verification, where not all\nvote trackers are revealed, thereby enhancing the coercion mitigation\nproperties of Selene.",
-    "doc_type": "preprint",
-    "source": "arxiv",
-    "source_id": "http://arxiv.org/abs/1908.04947v1",
-    "query_topic": "cryptographic_mechanisms",
-    "query_string": "(cryptograph* AND voting) AND (audit OR verifi* OR mixnet OR homomorphic)",
-    "retrieved_at": "2025-10-24T09:26:29Z",
-    "_stable_id": "t:a31fb380f3351f26ccfc"
-  },
-  {
-    "title": "Overcoming Bottlenecks in Homomorphic Encryption for the 2024 Mexican\n  Federal Election",
-    "authors": [
-      "Eric Landquist",
-      "Nimit Sawhney",
-      "Simer Sawhney"
-    ],
-    "year": 2025,
-    "doi": null,
-    "venue": "arXiv",
-    "publisher": null,
-    "url": "http://arxiv.org/abs/2504.13198v1",
-    "language": null,
-    "abstract": "On June 2, 2024, Mexico held its federal elections. The majority of Mexican\ncitizens voted in person at the polls in this historic election. For the first\ntime though, Mexican citizens living outside their country were able to vote\nonline via a web app, either on a personal device or using an electronic voting\nkiosk at one of 23 embassies and consulates in the U.S., Canada, and Europe. In\ntotal, 144,734 people voted outside of Mexico: 122,496 on a personal device and\n22,238 in-person at a kiosk. Voting was open for remote voting from 8PM, May\n18, 2024 to 6PM, June 2, 2024 and was open for in-person voting from 8AM-6PM on\nJune 2, 2024. This article describes the technical and cryptographic tools\napplied to secure the ex-patriate component of the election and to enable INE\n(Mexico's National Electoral Institute) to generate provable election results\nwithin minutes of the close of the election. This article will also describe\nhow the solutions we present scale to elections on a national level.",
-    "doc_type": "preprint",
-    "source": "arxiv",
-    "source_id": "http://arxiv.org/abs/2504.13198v1",
-    "query_topic": "cryptographic_mechanisms",
-    "query_string": "(cryptograph* AND voting) AND (audit OR verifi* OR mixnet OR homomorphic)",
-    "retrieved_at": "2025-10-24T09:26:29Z",
-    "_stable_id": "t:90a20a08c0ba56dc7d2c"
-  },
-  {
-    "title": "Verification of STAR-Vote and Evaluation of FDR and ProVerif",
-    "authors": [
-      "Murat Moran",
-      "Dan S. Wallach"
-    ],
-    "year": 2017,
-    "doi": null,
-    "venue": "arXiv",
-    "publisher": null,
-    "url": "http://arxiv.org/abs/1705.00782v1",
-    "language": null,
-    "abstract": "We present the first automated privacy analysis of STAR-Vote, a real world\nvoting system design with sophisticated \"end-to-end\" cryptography, using FDR\nand ProVerif. We also evaluate the effectiveness of these tools. Despite the\ncomplexity of the voting system, we were able to verify that our abstracted\nformal model of STAR-Vote provides ballot-secrecy using both formal approaches.\nNotably, ProVerif is radically faster than FDR, making it more suitable for\nrapid iteration and refinement of the formal model.",
-    "doc_type": "preprint",
-    "source": "arxiv",
-    "source_id": "http://arxiv.org/abs/1705.00782v1",
-    "query_topic": "cryptographic_mechanisms",
-    "query_string": "(cryptograph* AND voting) AND (audit OR verifi* OR mixnet OR homomorphic)",
-    "retrieved_at": "2025-10-24T09:26:29Z",
-    "_stable_id": "t:975edc2e70de1084a1cb"
-  },
-  {
-    "title": "Process Automation Architecture Using RFID for Transparent Voting\n  Systems",
-    "authors": [
-      "Stella N. Arinze",
-      "Patrick U. Okafor",
-      "Onyekachi M. Egwuagu",
-      "Augustine O. Nwajana"
-    ],
-    "year": 2025,
-    "doi": null,
-    "venue": "arXiv",
-    "publisher": null,
-    "url": "http://arxiv.org/abs/2510.17403v1",
-    "language": null,
-    "abstract": "This paper presents the development of a process automation architecture\nleveraging Radio Frequency Identification (RFID) technology for secure,\ntransparent and efficient voting systems. The proposed architecture automates\nthe voting workflow through RFID-enabled voter identification, encrypted vote\ncasting, and secure data transmission. Each eligible voter receives a smart\nRFID card containing a uniquely encrypted identifier, which is verified using\nan RC522 reader interfaced with a microcontroller. Upon successful\nverification, the voter interacts with a touchscreen interface to cast a vote,\nwhich is then encrypted using AES-128 and securely stored on a local SD card or\ntransmitted via GSM to a central server. A tamper-proof monitoring mechanism\nrecords each session with time-stamped digital signatures, ensuring\nauditability and data integrity. The architecture is designed to function in\nboth online and offline modes, with an automated batch synchronization\nmechanism that updates vote records once network connectivity is restored.\nSystem testing in simulated environments confirmed 100% voter authentication\naccuracy, minimized latency (average voting time of 11.5 seconds), and\nrobustness against cloning, double voting, and data interception. The\nintegration of real-time monitoring and secure process control modules enables\nelectoral authorities to automate data logging, detect anomalies, and validate\nsystem integrity dynamically. This work demonstrates a scalable,\nautomation-driven solution for voting infrastructure, offering enhanced\ntransparency, resilience, and deployment flexibility, especially in\nenvironments where digital transformation of electoral processes is critically\nneeded.",
-    "doc_type": "preprint",
-    "source": "arxiv",
-    "source_id": "http://arxiv.org/abs/2510.17403v1",
-    "query_topic": "cryptographic_mechanisms",
-    "query_string": "(cryptograph* AND voting) AND (audit OR verifi* OR mixnet OR homomorphic)",
-    "retrieved_at": "2025-10-24T09:26:29Z",
-    "_stable_id": "t:a6f5ec54bf2251774996"
-  },
-  {
-    "title": "Secret Sharing Homomorphism and Secure E-voting",
-    "authors": [
-      "V P Binu",
-      "Divya G Nair",
-      "A Sreekumar"
-    ],
-    "year": 2016,
-    "doi": null,
-    "venue": "arXiv",
-    "publisher": null,
-    "url": "http://arxiv.org/abs/1602.05372v1",
-    "language": null,
-    "abstract": "Secure E-voting is a challenging protocol. Several approaches based on\nhomomorphic crypto systems, mix-nets blind signatures are proposed in the\nliterature .But most of them need complicated homomorphic encryption which\ninvolves complicated encryption decryption process and key management which is\nnot efficient. In this paper we propose a secure and efficient E-voting scheme\nbased on secret sharing homomorphism. Here E-voting is viewed as special case\nof multi party computation where several voters jointly compute the result\nwithout revealing his vote. Secret sharing schemes are good alternative for\nsecure multi party computation and are computationally efficient and secure\ncompared with the cryptographic techniques. It is the first proposal, which\nmakes use of the additive homomorphic property of the Shamir secret sharing\nscheme and the encoding decoding of votes to obtain the individual votes\nobtained by each candidate apart from the election result. We have achieved\nintegrity and privacy while keeping the efficiency of the system.",
-    "doc_type": "preprint",
-    "source": "arxiv",
-    "source_id": "http://arxiv.org/abs/1602.05372v1",
-    "query_topic": "cryptographic_mechanisms",
-    "query_string": "(cryptograph* AND voting) AND (audit OR verifi* OR mixnet OR homomorphic)",
-    "retrieved_at": "2025-10-24T09:26:29Z",
-    "_stable_id": "t:0e3c8ef27a7d88ac4baf"
-  },
-  {
-    "title": "A Protocol for Cast-as-Intended Verifiability with a Second Device",
-    "authors": [
-      "Johannes Müller",
-      "Tomasz Truderung"
-    ],
-    "year": 2023,
-    "doi": null,
-    "venue": "arXiv",
-    "publisher": null,
-    "url": "http://arxiv.org/abs/2304.09456v1",
-    "language": null,
-    "abstract": "Numerous institutions, such as companies, universities, or non-governmental\norganizations, employ Internet voting for remote elections. Since the main\npurpose of an election is to determine the voters' will, it is fundamentally\nimportant to ensure that the final election result correctly reflects the\nvoters' votes. To this end, modern secure Internet voting schemes aim for what\nis called end-to-end verifiability. This fundamental security property ensures\nthat the correctness of the final result can be verified, even if some of the\ncomputers or parties involved are malfunctioning or corrupted.\n  A standard component in this approach is so called cast-as-intended\nverifiability which enables individual voters to verify that the ballots cast\non their behalf contain their intended choices. Numerous approaches for\ncast-as-intended verifiability have been proposed in the literature, some of\nwhich have also been employed in real-life Internet elections.\n  One of the well established approaches for cast-as-intended verifiability is\nto employ a second device which can be used by voters to audit their submitted\nballots. This approach offers several advantages - including support for\nflexible ballot/election types and intuitive user experience - and it has been\nused in real-life elections, for instance in Estonia.\n  In this work, we improve the existing solutions for cast-as-intended\nverifiability based on the use of a second device. We propose a solution which,\nwhile preserving the advantageous practical properties sketched above, provides\ntighter security guarantees. Our method does not increase the risk of\nvote-selling when compared to the underlying voting protocol being augmented\nand, to achieve this, it requires only comparatively weak trust assumptions. It\ncan be combined with various voting protocols, including commitment-based\nsystems offering everlasting privacy.",
-    "doc_type": "preprint",
-    "source": "arxiv",
-    "source_id": "http://arxiv.org/abs/2304.09456v1",
-    "query_topic": "cryptographic_mechanisms",
-    "query_string": "(cryptograph* AND voting) AND (audit OR verifi* OR mixnet OR homomorphic)",
-    "retrieved_at": "2025-10-24T09:26:29Z",
-    "_stable_id": "t:f301ff182a61861a3286"
-  },
-  {
-    "title": "Electt: running auditable and verifiable elections in untrusted\n  environments",
-    "authors": [
-      "Kirill A. Korinsky"
-    ],
-    "year": 2020,
-    "doi": null,
-    "venue": "arXiv",
-    "publisher": null,
-    "url": "http://arxiv.org/abs/2011.10902v2",
-    "language": null,
-    "abstract": "We present a system for running auditable and verifiable elections in\nuntrusted environments. Votes are anonymous since the order of candidates on a\nballot sheet is random. Tellers see only the position of the candidate. Voters\ncan check their vote. An election is auditable using blockchain log.\nThreshold-encryption, which is used to implement the quorum, prevents a\ndeadlock from occurring if a minority of candidates or observers tries to\nsabotage the election. Candidates and observers can indicate that the election\nwas free and fair by exposing their keys, which are used by the system to\ndecrypt each vote. Ballot sheets are encrypted by onion-routing, which has a\nlayer with the key of the election instance, so it's impossible for a quorum to\ndecode the results before they have announced their decision by exposing their\nkeys. A register of voters ensures that only verified voters can vote without\ncompromising their identity. If there any doubts about the identity of a voter,\ntheir vote can be excluded from the election, if a quorum agrees. This system\nis designed to scale from one instance to a distributed system that runs over\nan unlimited number of instances, which can be achieved using cloud instances\nor smartphones belonging to voters or tellers.",
-    "doc_type": "preprint",
-    "source": "arxiv",
-    "source_id": "http://arxiv.org/abs/2011.10902v2",
-    "query_topic": "cryptographic_mechanisms",
-    "query_string": "(cryptograph* AND voting) AND (audit OR verifi* OR mixnet OR homomorphic)",
-    "retrieved_at": "2025-10-24T09:26:29Z",
-    "_stable_id": "t:507b32a9980bab176e2f"
-  },
-  {
-    "title": "Anonymous Public-Key Quantum Money and Quantum Voting",
-    "authors": [
-      "Alper Cakan",
-      "Vipul Goyal",
-      "Takashi Yamakawa"
-    ],
-    "year": 2024,
-    "doi": null,
-    "venue": "arXiv",
-    "publisher": null,
-    "url": "http://arxiv.org/abs/2411.04482v1",
-    "language": null,
-    "abstract": "Quantum information allows us to build quantum money schemes, where a bank\ncan issue banknotes in the form of authenticatable quantum states that cannot\nbe cloned or counterfeited. Similar to paper banknotes, in existing quantum\nmoney schemes, a banknote consists of an unclonable quantum state and a\nclassical serial number, signed by bank. Thus, they lack one of the most\nfundamental properties cryptographers look for in a currency scheme: privacy.\nIn this work, we first further develop the formal definitions of privacy for\nquantum money schemes. Then, we construct the first public-key quantum money\nschemes that satisfy these security notions. Namely, - Assuming existence of\nindistinguishability obfuscation (iO) and hardness of Learning with Errors\n(LWE), we construct a public-key quantum money scheme with anonymity against\nusers and traceability by authorities.\n  Since it is a policy choice whether authorities should be able to track\nbanknotes or not, we also construct an untraceable money scheme from the same\ncryptographic assumptions, where no one (not even the authorities) can track\nbanknotes.\n  Further, we show that the no-cloning principle, a result of quantum\nmechanics, allows us to construct schemes, with security guarantees that are\nclassically impossible, for a seemingly unrelated application: voting! -\nAssuming iO and LWE, we construct a universally verifiable quantum voting\nscheme with classical votes.\n  Finally, as a technical tool, we introduce the notion of publicly\nrerandomizable encryption with strong correctness, where no adversary is able\nto produce a malicious ciphertext and a malicious randomness such that the\nciphertext before and after rerandomization decrypts to different values! We\nbelieve this might be of independent interest. - Assuming LWE, we construct a\n(post-quantum) classical publicly rerandomizable encryption scheme with strong\ncorrectness.",
-    "doc_type": "preprint",
-    "source": "arxiv",
-    "source_id": "http://arxiv.org/abs/2411.04482v1",
-    "query_topic": "cryptographic_mechanisms",
-    "query_string": "(cryptograph* AND voting) AND (audit OR verifi* OR mixnet OR homomorphic)",
-    "retrieved_at": "2025-10-24T09:26:29Z",
-    "_stable_id": "t:539a39a26c6d9f4089d1"
-  },
-  {
-    "title": "Key Expansion Based on Internet X.509 Public Key Infrastructure for\n  Anonymous Voting",
-    "authors": [
-      "Abel C. H. Chen"
-    ],
-    "year": 2024,
-    "doi": "10.1109/ICCE-Taiwan62264.2024.10674337",
-    "venue": "arXiv",
-    "publisher": null,
-    "url": "http://arxiv.org/abs/2410.17274v1",
-    "language": null,
-    "abstract": "This document focuses on developing a key expansion method based on the\ninternet X.509 public key infrastructure and elliptic curve cryptography, which\nis applied in the context of anonymous voting. The method enables end entities\nto maintain anonymity from other end entities, the registration authority, and\nthe certificate authority, while still allowing the validity of end entity\ncertificates to be verified, thereby facilitating anonymous voting services.",
-    "doc_type": "preprint",
-    "source": "arxiv",
-    "source_id": "http://arxiv.org/abs/2410.17274v1",
-    "query_topic": "cryptographic_mechanisms",
-    "query_string": "(cryptograph* AND voting) AND (audit OR verifi* OR mixnet OR homomorphic)",
-    "retrieved_at": "2025-10-24T09:26:29Z",
-    "_stable_id": "doi:10.1109/icce-taiwan62264.2024.10674337"
-  },
-  {
-    "title": "A Simple Voting Protocol on Quantum Blockchain",
-    "authors": [
-      "Xin Sun",
-      "Quanlong Wang",
-      "Piotr Kulicki"
-    ],
-    "year": 2018,
-    "doi": "10.1007/s10773-018-3929-6",
-    "venue": "arXiv",
-    "publisher": null,
-    "url": "http://arxiv.org/abs/1805.11979v2",
-    "language": null,
-    "abstract": "This paper proposes a simple voting protocol based on quantum blockchain.\nBesides being simple, our voting protocol is anonymous, binding, non-reusable,\nverifiable, eligible, fair and self-tallying. Our protocol is also realizable\nby the current technology.",
-    "doc_type": "preprint",
-    "source": "arxiv",
-    "source_id": "http://arxiv.org/abs/1805.11979v2",
-    "query_topic": "cryptographic_mechanisms",
-    "query_string": "(cryptograph* AND voting) AND (audit OR verifi* OR mixnet OR homomorphic)",
-    "retrieved_at": "2025-10-24T09:26:29Z",
-    "_stable_id": "doi:10.1007/s10773-018-3929-6"
-  },
-  {
-    "title": "Cast-as-Intended Mechanism with Return Codes Based on PETs",
-    "authors": [
-      "Achim Brelle",
-      "Tomasz Truderung"
-    ],
-    "year": 2017,
-    "doi": null,
-    "venue": "arXiv",
-    "publisher": null,
-    "url": "http://arxiv.org/abs/1707.03632v1",
-    "language": null,
-    "abstract": "We propose a method providing cast-as-intended verifiability for remote\nelectronic voting. The method is based on plaintext equivalence tests (PETs),\nused to match the cast ballots against the pre-generated encrypted code tables.\n  Our solution provides an attractive balance of security and functional\nproperties. It is based on well-known cryptographic building blocks and relies\non standard cryptographic assumptions, which allows for relatively simple\nsecurity analysis. Our scheme is designed with a built-in fine-grained\ndistributed trust mechanism based on threshold decryption. It, finally, imposes\nonly very little additional computational burden on the voting platform, which\nis especially important when voters use devices of restricted computational\npower such as mobile phones. At the same time, the computational cost on the\nserver side is very reasonable and scales well with the increasing ballot size.",
-    "doc_type": "preprint",
-    "source": "arxiv",
-    "source_id": "http://arxiv.org/abs/1707.03632v1",
-    "query_topic": "cryptographic_mechanisms",
-    "query_string": "(cryptograph* AND voting) AND (audit OR verifi* OR mixnet OR homomorphic)",
-    "retrieved_at": "2025-10-24T09:26:29Z",
-    "_stable_id": "t:b3f135642e348891c77a"
-  },
-  {
-    "title": "Anonymous voting scheme using quantum assisted blockchain",
-    "authors": [
-      "Sandeep Mishra",
-      "Kishore Thapliyal",
-      "S Krish Rewanth",
-      "Abhishek Parakh",
-      "Anirban Pathak"
-    ],
-    "year": 2022,
-    "doi": null,
-    "venue": "arXiv",
-    "publisher": null,
-    "url": "http://arxiv.org/abs/2206.03182v1",
-    "language": null,
-    "abstract": "Voting forms the most important tool for arriving at a decision in any\ninstitution. The changing needs of the civilization currently demands a\npractical yet secure electronic voting system, but any flaw related to the\napplied voting technology can lead to tampering of the results with the\nmalicious outcomes. Currently, blockchain technology due to its transparent\nstructure forms an emerging area of investigation for the development of voting\nsystems with a far greater security. However, various apprehensions are yet to\nbe conclusively resolved before using blockchain in high stakes elections.\nOther than this, the blockchain based voting systems are vulnerable to possible\nattacks by upcoming noisy intermediate scale quantum (NISQ) computer. To\ncircumvent, most of these limitations, in this work, we propose an anonymous\nvoting scheme based on quantum assisted blockchain by enhancing the advantages\noffered by blockchain with the quantum resources such as quantum random number\ngenerators and quantum key distribution. The purposed scheme is shown to\nsatisfy the requirements of a good voting scheme. Further, the voting scheme is\nauditable and can be implemented using the currently available technology.",
-    "doc_type": "preprint",
-    "source": "arxiv",
-    "source_id": "http://arxiv.org/abs/2206.03182v1",
-    "query_topic": "cryptographic_mechanisms",
-    "query_string": "(cryptograph* AND voting) AND (audit OR verifi* OR mixnet OR homomorphic)",
-    "retrieved_at": "2025-10-24T09:26:29Z",
-    "_stable_id": "t:4688646b8bd8b972eab0"
-  },
-  {
-    "title": "Power-Efficient Direct-Voting Assurance for Data Fusion in Wireless\n  Sensor Networks",
-    "authors": [
-      "H. -T. Pai",
-      "Y. S. Han"
-    ],
-    "year": 2007,
-    "doi": null,
-    "venue": "arXiv",
-    "publisher": null,
-    "url": "http://arxiv.org/abs/0705.3683v1",
-    "language": null,
-    "abstract": "Wireless sensor networks place sensors into an area to collect data and send\nthem back to a base station. Data fusion, which fuses the collected data before\nthey are sent to the base station, is usually implemented over the network.\nSince the sensor is typically placed in locations accessible to malicious\nattackers, information assurance of the data fusion process is very important.\nA witness-based approach has been proposed to validate the fusion data. In this\napproach, the base station receives the fusion data and \"votes\" on the data\nfrom a randomly chosen sensor node. The vote comes from other sensor nodes,\ncalled \"witnesses,\" to verify the correctness of the fusion data. Because the\nbase station obtains the vote through the chosen node, the chosen node could\nforge the vote if it is compromised. Thus, the witness node must encrypt the\nvote to prevent this forgery. Compared with the vote, the encryption requires\nmore bits, increasing transmission burden from the chosen node to the base\nstation. The chosen node consumes more power. This work improves the\nwitness-based approach using direct voting mechanism such that the proposed\nscheme has better performance in terms of assurance, overhead, and delay. The\nwitness node transmits the vote directly to the base station. Forgery is not a\nproblem in this scheme. Moreover, fewer bits are necessary to represent the\nvote, significantly reducing the power consumption. Performance analysis and\nsimulation results indicate that the proposed approach can achieve a 40 times\nbetter overhead than the witness-based approach.",
-    "doc_type": "preprint",
-    "source": "arxiv",
-    "source_id": "http://arxiv.org/abs/0705.3683v1",
-    "query_topic": "cryptographic_mechanisms",
-    "query_string": "(cryptograph* AND voting) AND (audit OR verifi* OR mixnet OR homomorphic)",
-    "retrieved_at": "2025-10-24T09:26:29Z",
-    "_stable_id": "t:5fbd6131d706d17a1e4a"
-  },
-  {
-    "title": "BBB-Voting: 1-out-of-k Blockchain-Based Boardroom Voting",
-    "authors": [
-      "Sarad Venugopalan",
-      "Ivan Homoliak",
-      "Zengpeng Li",
-      "Pawel Szalachowski"
-    ],
-    "year": 2020,
-    "doi": null,
-    "venue": "arXiv",
-    "publisher": null,
-    "url": "http://arxiv.org/abs/2010.09112v4",
-    "language": null,
-    "abstract": "Voting is a means to agree on a collective decision based on available\nchoices (e.g., candidates), where participants agree to abide by their outcome.\nTo improve some features of e-voting, decentralized blockchain-based solutions\ncan be employed, where the blockchain represents a public bulletin board that\nin contrast to a centralized bulletin board provides extremely high\navailability, censorship resistance, and correct code execution. A blockchain\nensures that all entities in the voting system have the same view of the\nactions made by others due to its immutability and append-only features. The\nexisting remote blockchain-based boardroom voting solution called Open Voting\nNetwork (OVN) provides the privacy of votes, universal &amp; End-to-End\nverifiability, and perfect ballot secrecy; however, it supports only two\nchoices and lacks robustness enabling recovery from stalling participants.\n  We present BBB-Voting, an equivalent blockchain-based approach for\ndecentralized voting such as OVN, but in contrast to it, BBB-Voting supports\n1-out-of-$k$ choices and provides robustness that enables recovery from\nstalling participants. We make a cost-optimized implementation using an\nEthereum-based environment respecting Ethereum Enterprise Alliance standards,\nwhich we compare with OVN and show that our work decreases the costs for voters\nby 13.5% in normalized gas consumption. Finally, we show how BBB-Voting can be\nextended to support the number of participants limited only by the expenses\npaid by the authority and the computing power to obtain the tally.",
-    "doc_type": "preprint",
-    "source": "arxiv",
-    "source_id": "http://arxiv.org/abs/2010.09112v4",
-    "query_topic": "cryptographic_mechanisms",
-    "query_string": "(cryptograph* AND voting) AND (audit OR verifi* OR mixnet OR homomorphic)",
-    "retrieved_at": "2025-10-24T09:26:29Z",
-    "_stable_id": "t:eb64352ac58843f779af"
-  },
-  {
-    "title": "SOBA: Secrecy-preserving Observable Ballot-level Audit",
-    "authors": [
-      "Josh Benaloh",
-      "Douglas Jones",
-      "Eric Lazarus",
-      "Mark Lindeman",
-      "Philip B. Stark"
-    ],
-    "year": 2011,
-    "doi": null,
-    "venue": "arXiv",
-    "publisher": null,
-    "url": "http://arxiv.org/abs/1105.5803v2",
-    "language": null,
-    "abstract": "SOBA is an approach to election verification that provides observers with\njustifiably high confidence that the reported results of an election are\nconsistent with an audit trail (\"ballots\"), which can be paper or electronic.\nSOBA combines three ideas: (1) publishing cast vote records (CVRs) separately\nfor each contest, so that anyone can verify that each reported contest outcome\nis correct, if the CVRs reflect voters' intentions with sufficient accuracy;\n(2) shrouding a mapping between ballots and the CVRs for those ballots to\nprevent the loss of privacy that could occur otherwise; (3) assessing the\naccuracy with which the CVRs reflect voters' intentions for a collection of\ncontests while simultaneously assessing the integrity of the shrouded mapping\nbetween ballots and CVRs by comparing randomly selected ballots to the CVRs\nthat purport to represent them. Step (1) is related to work by the Humboldt\nCounty Election Transparency Project, but publishing CVRs separately for\nindividual contests rather than images of entire ballots preserves privacy.\nStep (2) requires a cryptographic commitment from elections officials.\nObservers participate in step (3), which relies on the \"super-simple\nsimultaneous single-ballot risk-limiting audit.\" Step (3) is designed to reveal\nrelatively few ballots if the shrouded mapping is proper and the CVRs\naccurately reflect voter intent. But if the reported outcomes of the contests\ndiffer from the outcomes that a full hand count would show, step (3) is\nguaranteed to have a large chance of requiring all the ballots to be counted by\nhand, thereby limiting the risk that an incorrect outcome will become official\nand final.",
-    "doc_type": "preprint",
-    "source": "arxiv",
-    "source_id": "http://arxiv.org/abs/1105.5803v2",
-    "query_topic": "cryptographic_mechanisms",
-    "query_string": "(cryptograph* AND voting) AND (audit OR verifi* OR mixnet OR homomorphic)",
-    "retrieved_at": "2025-10-24T09:26:29Z",
-    "_stable_id": "t:c43b755652619801259e"
   }
 ]
