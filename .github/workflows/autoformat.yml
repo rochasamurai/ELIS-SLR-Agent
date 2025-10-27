@@ -1,13 +1,12 @@
 name: ELIS - Autoformat
 # =============================================================================
 # Purpose
-#   Auto-format the repository (Black + Ruff) on a target branch.
+#   Auto-format a target branch with Black + Ruff.
 #   When apply_fixes=true, write changes, commit with the GitHub App identity,
-#   and push back to the same branch so downstream PR checks turn green.
+#   and push back to that branch so PR checks re-run and go green.
 #
 # Why pin tool versions?
-#   To avoid version drift between Autoformat and “quality”/PR checks. If both
-#   jobs run the same Black/Ruff versions, formatting is consistent.
+#   To avoid version drift between Autoformat and the quality checks workflow.
 #
 # Permissions
 #   contents: write (to push commits)
@@ -39,8 +38,9 @@ jobs:
     defaults:
       run:
         shell: bash
+
     steps:
-      # 1) GitHub App token so we can push commits (same identity as other CI)
+      # 1) Use the GitHub App identity so we can push commits reliably.
       - name: Mint installation token (GitHub App)
         id: app
         uses: actions/create-github-app-token@v1
@@ -48,22 +48,22 @@ jobs:
           app-id: ${{ secrets.ELIS_APP_ID }}
           private-key: ${{ secrets.ELIS_APP_PRIVATE_KEY }}
 
-      # 2) Checkout target branch using the App token
-      - name: Checkout repository
+      # 2) Check out the *target branch* using the App token.
+      - name: Checkout repository (target branch)
         uses: actions/checkout@v4
         with:
           token: ${{ steps.app.outputs.token }}
-          ref: ${{ github.event.inputs.target_branch || 'main' }}
+          ref: ${{ inputs.target_branch }}
           fetch-depth: 0
 
-      # 3) Configure Git identity for the commit we may create
+      # 3) Configure Git identity for any commit we may create.
       - name: Configure Git identity
         run: |
           git config user.name  "elis-bot"
           git config user.email "elis-bot@users.noreply.github.com"
 
-      # 4) Python toolchain + pinned tool versions (keep in sync with quality CI)
-      - name: Set up Python
+      # 4) Python + pinned formatter versions (keep aligned with quality checks).
+      - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -73,9 +73,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install "black==24.4.2" "ruff==0.6.9"
 
-      # 5) Run formatters (fix or check)
+      # 5) Run formatters (fix or check).
       - name: Run Black / Ruff
-        id: fmt
         env:
           APPLY_FIXES: "${{ inputs.apply_fixes }}"
         run: |
@@ -88,27 +87,24 @@ jobs:
             black --check .
           fi
 
-      # 6) Commit only when there are changes (apply_fixes=true)
-      - name: Commit changes
+      # 6) Commit and push only if there were changes (apply_fixes=true).
+      - name: Commit changes (if any)
         if: ${{ inputs.apply_fixes == true }}
         run: |
           set -eux
           if ! git diff --quiet; then
             git add -A
             git commit -m "style(autoformat): apply Black/Ruff formatting"
-            # Make sure we still push with the App token URL
             git remote set-url origin "https://x-access-token:${{ steps.app.outputs.token }}@github.com/${{ github.repository }}"
             git push --force-with-lease
           else
             echo "No formatting changes."
           fi
 
-      # 7) Step Summary for easy auditing
+      # 7) Step Summary for quick auditing.
       - name: Summary
         run: |
           echo "## Autoformat" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Branch: \`${{ inputs.target_branch }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Target branch: \`${{ inputs.target_branch }}\`" >> "$GITHUB_STEP_SUMMARY"
           echo "- Apply fixes: \`${{ inputs.apply_fixes }}\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "_If the job ran with apply_fixes=true and produced changes, a commit was pushed by **elis-bot**._" >> "$GITHUB_STEP_SUMMARY"
