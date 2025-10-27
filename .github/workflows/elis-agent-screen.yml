@@ -1,0 +1,251 @@
+name: ELIS - Agent Screen (Appendix B)
+# =============================================================================
+# Purpose
+#   Generate canonical Appendix B (Screening) from Appendix A.
+#   - Runs the screening script with UI-configurable knobs.
+#   - Appends Step Summary tables so reviewers see counts at a glance.
+#   - Validates the JSON against the Appendix B schema.
+#   - On diffs, commits to a work branch and opens/refeshes a PR into `main`.
+#
+# Trigger
+#   Manual (workflow_dispatch). You can add a schedule later if desired.
+#
+# Identity & Permissions
+#   Uses a GitHub App (elis-bot) for push/PR. Requires:
+#     secrets.ELIS_APP_ID
+#     secrets.ELIS_APP_PRIVATE_KEY
+#   Grants write to contents and pull-requests.
+#
+# Notes
+#   - Script always writes Step Summary (even on dry runs).
+#   - Validation uses pinned jsonschema via requirements.txt.
+# =============================================================================
+
+on:
+  workflow_dispatch:
+    inputs:
+      # ---------------- Run knobs (override defaults from A._meta.global) -----
+      year_from:
+        description: "Lower year bound (inclusive); leave empty to use A._meta.global"
+        required: false
+        default: ""
+      year_to:
+        description: "Upper year bound (inclusive); leave empty to use A._meta.global"
+        required: false
+        default: ""
+      languages_csv:
+        description: "Languages CSV (e.g. 'en,fr,es,pt'); empty to use A._meta.global"
+        required: false
+        default: ""
+      enforce_preprint_policy:
+        description: "Respect per-topic preprint policy (exclude where disabled)"
+        type: boolean
+        required: true
+        default: true
+      allow_unknown_language:
+        description: "Keep records where language is missing/unknown"
+        type: boolean
+        required: true
+        default: false
+
+      # ---------------- Storage / PR behaviour --------------------------------
+      dry_run:
+        description: "Preview only (no write/commit/PR)"
+        type: boolean
+        required: true
+        default: true
+      base_branch:
+        description: "Base branch to PR into"
+        required: false
+        default: "main"
+      write_branch:
+        description: "Work branch to write artefacts (auto-created if needed)"
+        required: false
+        default: "ci/agent-screen-autopr"
+      open_pr:
+        description: "Open/refresh PR write_branch → base_branch"
+        required: false
+        default: "true"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: agent-screen-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  agent-screen:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      # 1) Mint a GitHub App token for push/PR identity.
+      - name: Mint installation token (GitHub App)
+        id: app
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.ELIS_APP_ID }}
+          private-key: ${{ secrets.ELIS_APP_PRIVATE_KEY }}
+
+      # 2) Checkout using the App token (so remotes are credentialed).
+      - name: Checkout repository (App token)
+        uses: actions/checkout@v4
+        with:
+          token: ${{ steps.app.outputs.token }}
+          fetch-depth: 0
+
+      # 3) Git identity for commits created by this job.
+      - name: Configure Git identity
+        run: |
+          git config user.name  "elis-bot"
+          git config user.email "elis-bot@users.noreply.github.com"
+
+      # 4) Resolve base/head branch names.
+      - name: Resolve branches
+        id: br
+        run: |
+          BASE="${{ github.event.inputs.base_branch || 'main' }}"
+          HEAD="${{ github.event.inputs.write_branch || 'ci/agent-screen-autopr' }}"
+          echo "base=$BASE" >> "$GITHUB_OUTPUT"
+          echo "head=$HEAD" >> "$GITHUB_OUTPUT"
+
+      # 5) Prepare write branch (create or fast-forward).
+      - name: Prepare write branch (create or fast-forward)
+        run: |
+          set -eux
+          BASE="${{ steps.br.outputs.base }}"
+          HEAD="${{ steps.br.outputs.head }}"
+          git fetch origin --prune
+          if git ls-remote --exit-code --heads origin "$HEAD" >/dev/null 2>&1; then
+            git checkout -B "$HEAD" "origin/$HEAD"
+            (git merge --ff-only "origin/$BASE" && echo "FF merged base") || true
+          else
+            git checkout -B "$HEAD" "origin/$BASE"
+            git push -u origin "$HEAD"
+          fi
+
+      # 6) Python toolchain and deps (jsonschema pinned via requirements.txt).
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install runtime dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # 7) Run screening (always writes Step Summary; writes file unless dry-run).
+      - name: Run Appendix B screening
+        run: |
+          set -eux
+          ARGS=()
+          # Optional overrides
+          [ -n "${{ inputs.year_from }}" ] && ARGS+=(--year-from "${{ inputs.year_from }}")
+          [ -n "${{ inputs.year_to }}" ] && ARGS+=(--year-to "${{ inputs.year_to }}")
+          [ -n "${{ inputs.languages_csv }}" ] && ARGS+=(--languages "${{ inputs.languages_csv }}")
+          # Toggles
+          if [ "${{ inputs.enforce_preprint_policy }}" = "true" ]; then ARGS+=(--enforce-preprint-policy); fi
+          if [ "${{ inputs.allow_unknown_language }}" = "true" ]; then ARGS+=(--allow-unknown-language); fi
+          if [ "${{ inputs.dry_run }}" = "true" ]; then ARGS+=(--dry-run); fi
+
+          python scripts/elis/screen_mvp.py "${ARGS[@]}"
+
+      # 8) Validate JSON against Appendix B schema (only when not dry-run).
+      - name: Validate Appendix B against schema
+        if: ${{ inputs.dry_run != 'true' }}
+        run: |
+          python - <<'PY'
+          import json, sys, pathlib
+          from jsonschema import Draft202012Validator
+          schema_path = pathlib.Path("schemas/appendix_b.schema.json")
+          data_path   = pathlib.Path("json_jsonl/ELIS_Appendix_B_Screening_rows.json")
+
+          schema = json.loads(schema_path.read_text(encoding="utf-8"))
+          data   = json.loads(data_path.read_text(encoding="utf-8"))
+
+          v = Draft202012Validator(schema)
+          errors = sorted(v.iter_errors(data), key=lambda e: e.path)
+          if errors:
+            for e in errors:
+              print(f"::error file={data_path},line=1::Schema validation error: {e.message}")
+            sys.exit(2)
+          print("Schema validation OK.")
+          PY
+
+      # 9) Upload artefact for download/debug (only when not dry-run).
+      - name: Upload artefact (B)
+        if: ${{ inputs.dry_run != 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: elis-screen-artefact
+          path: json_jsonl/ELIS_Appendix_B_Screening_rows.json
+          if-no-files-found: error
+          retention-days: 14
+
+      # 10) Commit artefact when there is a diff (skip on no change).
+      - name: Commit artefact (B only when changed)
+        if: ${{ inputs.dry_run != 'true' }}
+        run: |
+          set -eux
+          git add -N json_jsonl/ELIS_Appendix_B_Screening_rows.json || true
+          if git diff --name-only --exit-code -- json_jsonl/ELIS_Appendix_B_Screening_rows.json; then
+            echo "No artefact diffs; skipping commit/push/PR."
+            echo "skip_pr=true" >> "$GITHUB_ENV"
+            exit 0
+          fi
+          git add json_jsonl/ELIS_Appendix_B_Screening_rows.json
+          git commit -m "feat(screen): update Appendix B results"
+
+      # 11) Ensure push uses App token URL (fix push auth).
+      - name: Force remote to App-token URL (fix push auth)
+        if: env.skip_pr != 'true'
+        run: |
+          set -eux
+          git remote set-url origin "https://x-access-token:${{ steps.app.outputs.token }}@github.com/${{ github.repository }}"
+
+      # 12) Push work branch with changes.
+      - name: Push work branch
+        if: env.skip_pr != 'true'
+        run: |
+          set -eux
+          HEAD="${{ steps.br.outputs.head }}"
+          git push --force-with-lease origin HEAD:"$HEAD"
+
+      # 13) Open/refresh PR if configured.
+      - name: Compare base..head & open/refresh PR
+        if: ${{ env.skip_pr != 'true' && fromJSON(github.event.inputs.open_pr || 'true') }}
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ steps.app.outputs.token }}
+          script: |
+            const owner = context.repo.owner;
+            const repo  = context.repo.repo;
+            const base  = "${{ steps.br.outputs.base }}";
+            const head  = "${{ steps.br.outputs.head }}";
+
+            const cmp = await github.rest.repos.compareCommitsWithBasehead({
+              owner, repo, basehead: `${base}...${head}`,
+            });
+
+            const hasDiff = (cmp.data.ahead_by > 0) || ((cmp.data.files || []).length > 0);
+            if (!hasDiff) { core.info("No diff; no PR opened."); return; }
+
+            const { data: openPRs } = await github.rest.pulls.list({
+              owner, repo, state: 'open', base, head: `${owner}:${head}`,
+            });
+
+            if (openPRs.length > 0) {
+              core.info(`PR already open: #${openPRs[0].number}`);
+            } else {
+              const { data: pr } = await github.rest.pulls.create({
+                owner, repo, base, head,
+                title: "feat(screen): update Appendix B results",
+                body: "Automated screening run using ELIS – Agent Screen (Appendix B).",
+              });
+              core.info(`Opened PR #${pr.number}`);
+            }
