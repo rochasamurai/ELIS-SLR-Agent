@@ -63,7 +63,9 @@ CANONICAL_B = "json_jsonl/ELIS_Appendix_B_Screening_rows.json"
 
 # ------------------------- Logging -------------------------------------------
 logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s", stream=sys.stdout
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    stream=sys.stdout,
 )
 
 # ------------------------- Small helpers -------------------------------------
@@ -108,10 +110,10 @@ def is_preprint(rec: Dict[str, Any]) -> bool:
     src = (rec.get("source") or "").lower()
     if src == "arxiv":
         return True
-    venue = (rec.get("venue") or "")
+    venue = rec.get("venue") or ""
     if isinstance(venue, str) and "arxiv" in venue.lower():
         return True
-    doc_type = (rec.get("doc_type") or "")
+    doc_type = rec.get("doc_type") or ""
     if isinstance(doc_type, str) and "preprint" in doc_type.lower():
         return True
     return False
@@ -124,7 +126,9 @@ def within_years(year: Optional[int], y0: int, y1: int) -> bool:
     return y0 <= year <= y1
 
 
-def lang_allowed(lang: Optional[str], allowed: Iterable[str], allow_unknown: bool) -> bool:
+def lang_allowed(
+    lang: Optional[str], allowed: Iterable[str], allow_unknown: bool
+) -> bool:
     """
     Whether `lang` is allowed given a set of ISO codes. Unknown language passes
     only if allow_unknown=True.
@@ -199,8 +203,14 @@ def build_summary(records: List[Dict[str, Any]]) -> Dict[str, Any]:
     """Compute per-source and per-topic counts for INCLUDED records."""
     per_source = Counter(r.get("source") for r in records if r.get("source"))
     per_topic = Counter(r.get("query_topic") for r in records if r.get("query_topic"))
-    src_rows = sorted(((k or "(unknown)", v) for k, v in per_source.items()), key=lambda x: (-x[1], x[0]))
-    tpc_rows = sorted(((k or "(unknown)", v) for k, v in per_topic.items()), key=lambda x: (-x[1], x[0]))
+    src_rows = sorted(
+        ((k or "(unknown)", v) for k, v in per_source.items()),
+        key=lambda x: (-x[1], x[0]),
+    )
+    tpc_rows = sorted(
+        ((k or "(unknown)", v) for k, v in per_topic.items()),
+        key=lambda x: (-x[1], x[0]),
+    )
     return {
         "total": len(records),
         "per_source": dict(src_rows),
@@ -226,7 +236,9 @@ def write_step_summary(
         return
 
     def rows(d: Dict[str, int]) -> List[Tuple[str, int]]:
-        return sorted(((k or "(unknown)", v) for k, v in d.items()), key=lambda x: (-x[1], x[0]))
+        return sorted(
+            ((k or "(unknown)", v) for k, v in d.items()), key=lambda x: (-x[1], x[0])
+        )
 
     lines: List[str] = []
     lines.append("## Screening summary (Appendix B)")
@@ -255,8 +267,14 @@ def write_step_summary(
 def main(argv: List[str]) -> int:
     """CLI entrypoint for Appendix B screening (MVP)."""
     ap = argparse.ArgumentParser(description="ELIS – Appendix B (Screening) MVP")
-    ap.add_argument("--input", default=CANONICAL_A, help="Path to canonical Appendix A JSON array")
-    ap.add_argument("--output", default=CANONICAL_B, help="Path to write canonical Appendix B JSON array")
+    ap.add_argument(
+        "--input", default=CANONICAL_A, help="Path to canonical Appendix A JSON array"
+    )
+    ap.add_argument(
+        "--output",
+        default=CANONICAL_B,
+        help="Path to write canonical Appendix B JSON array",
+    )
     ap.add_argument(
         "--year-from",
         type=int,
@@ -284,7 +302,9 @@ def main(argv: List[str]) -> int:
         action="store_true",
         help="Respect per-topic include_preprints flags (default: off).",
     )
-    ap.add_argument("--dry-run", action="store_true", help="Compute but do not write B to disk.")
+    ap.add_argument(
+        "--dry-run", action="store_true", help="Compute but do not write B to disk."
+    )
     args = ap.parse_args(argv)
 
     # 1) Load Appendix A
@@ -298,8 +318,14 @@ def main(argv: List[str]) -> int:
 
     # 2) Resolve effective knobs (defaults from A, override via CLI)
     g = meta_a.get("global") or {}
-    year_from = int(args.year_from if args.year_from is not None else g.get("year_from", 1990))
-    year_to = int(args.year_to if args.year_to is not None else g.get("year_to", dt.datetime.utcnow().year))
+    year_from = int(
+        args.year_from if args.year_from is not None else g.get("year_from", 1990)
+    )
+    year_to = int(
+        args.year_to
+        if args.year_to is not None
+        else g.get("year_to", dt.datetime.utcnow().year)
+    )
 
     if args.languages:
         languages = [x.strip() for x in args.languages.split(",") if x.strip()]
@@ -308,14 +334,16 @@ def main(argv: List[str]) -> int:
 
     # Topic-level preprint policy: from A._meta.run_inputs if present, else default True.
     include_preprints_by_topic: Dict[str, bool] = {}
-    run_inputs_a = (meta_a.get("run_inputs") or {})
+    run_inputs_a = meta_a.get("run_inputs") or {}
     ipbt = run_inputs_a.get("include_preprints_by_topic") or {}
     if isinstance(ipbt, dict):
         include_preprints_by_topic = {str(k): bool(v) for k, v in ipbt.items()}
 
     # Fallback – if A didn't record per-topic flags, assume True for all topics seen.
     if not include_preprints_by_topic:
-        topic_ids = {rec.get("query_topic") for rec in records_a if rec.get("query_topic")}
+        topic_ids = {
+            rec.get("query_topic") for rec in records_a if rec.get("query_topic")
+        }
         include_preprints_by_topic = {tid: True for tid in topic_ids}
 
     # 3) Run screening
