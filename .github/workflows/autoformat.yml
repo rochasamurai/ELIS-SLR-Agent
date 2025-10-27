@@ -2,14 +2,11 @@ name: ELIS - Autoformat
 # =============================================================================
 # Purpose
 #   Auto-format a target branch with Black + Ruff.
-#   When apply_fixes=true, write changes, commit with the GitHub App identity,
-#   and push back to that branch so PR checks re-run and go green.
+#   If apply_fixes=true, write changes and push so PR checks re-run and go green.
 #
-# Why pin tool versions?
-#   To avoid version drift between Autoformat and the quality checks workflow.
-#
-# Permissions
-#   contents: write (to push commits)
+# Notes
+#   - Pin Black/Ruff versions to avoid version drift with quality checks.
+#   - Select the branch to format via the 'target_branch' input.
 # =============================================================================
 
 on:
@@ -40,7 +37,7 @@ jobs:
         shell: bash
 
     steps:
-      # 1) Use the GitHub App identity so we can push commits reliably.
+      # 1) App token so we can push commits reliably
       - name: Mint installation token (GitHub App)
         id: app
         uses: actions/create-github-app-token@v1
@@ -48,7 +45,7 @@ jobs:
           app-id: ${{ secrets.ELIS_APP_ID }}
           private-key: ${{ secrets.ELIS_APP_PRIVATE_KEY }}
 
-      # 2) Check out the *target branch* using the App token.
+      # 2) Check out the *target branch*
       - name: Checkout repository (target branch)
         uses: actions/checkout@v4
         with:
@@ -56,13 +53,13 @@ jobs:
           ref: ${{ inputs.target_branch }}
           fetch-depth: 0
 
-      # 3) Configure Git identity for any commit we may create.
+      # 3) Git identity for the commit we may create
       - name: Configure Git identity
         run: |
           git config user.name  "elis-bot"
           git config user.email "elis-bot@users.noreply.github.com"
 
-      # 4) Python + pinned formatter versions (keep aligned with quality checks).
+      # 4) Tooling (PINNED)
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
@@ -73,21 +70,21 @@ jobs:
           python -m pip install --upgrade pip
           pip install "black==24.4.2" "ruff==0.6.9"
 
-      # 5) Run formatters (fix or check).
+      # 5) Run Ruff + Black (fix or check)
       - name: Run Black / Ruff
         env:
           APPLY_FIXES: "${{ inputs.apply_fixes }}"
         run: |
           set -eux
           if [ "${APPLY_FIXES}" = "true" ]; then
-            ruff --fix .
+            ruff check --fix .
             black .
           else
             ruff check .
             black --check .
           fi
 
-      # 6) Commit and push only if there were changes (apply_fixes=true).
+      # 6) Commit & push only if changes exist (apply_fixes=true)
       - name: Commit changes (if any)
         if: ${{ inputs.apply_fixes == true }}
         run: |
@@ -101,7 +98,7 @@ jobs:
             echo "No formatting changes."
           fi
 
-      # 7) Step Summary for quick auditing.
+      # 7) Step summary
       - name: Summary
         run: |
           echo "## Autoformat" >> "$GITHUB_STEP_SUMMARY"
