@@ -16,7 +16,7 @@
 # Design Notes:
 #   - Minimal deps: PyYAML + requests (declared in workflows).
 #   - Field mapping is "best effort" across sources; we record source + raw ids.
-#   - Dedup strategy: prefer DOI; else normalized (title, year). First-hit wins.
+#   - Dedup strategy: prefer DOI; else normalised (title, year). First-hit wins.
 #   - Rate limiting: small sleeps between calls; polite User-Agent for APIs.
 #   - Determinism: no randomness; results may still vary across runs due to
 #     upstream search backends updating/reshuffling.
@@ -28,6 +28,17 @@
 #       * _meta.summary.per_source: {"crossref": N, "semanticscholar": M, ...}
 #       * _meta.summary.per_topic:  {"topic_id": N, ...}
 #     and writes Markdown tables to $GITHUB_STEP_SUMMARY for PR reviewers.
+#   - Records effective run-time inputs for provenance at _meta.run_inputs:
+#       {
+#         "year_from": <int>,
+#         "year_to": <int>,
+#         "job_result_cap": <int>,
+#         "max_results_per_source": <int>,
+#         "topics_selected": [<topic ids>],
+#         "include_preprints_by_topic": {"topic_id": true/false, ...}
+#       }
+#     The values are derived from the *effective* configuration passed to this
+#     script (which the workflow may patch from UI inputs).
 #
 # Environment (optional):
 #   - SEMANTIC_SCHOLAR_API_KEY: increases S2 rate limits if present.
@@ -50,6 +61,14 @@
 #             "total": <int>,
 #             "per_source": {...},
 #             "per_topic":  {...}
+#           },
+#           "run_inputs": {
+#             "year_from": <int>,
+#             "year_to": <int>,
+#             "job_result_cap": <int>,
+#             "max_results_per_source": <int>,
+#             "topics_selected": [...],
+#             "include_preprints_by_topic": {...}
 #           }
 #         },
 #         {
@@ -84,14 +103,14 @@
 
 from __future__ import annotations
 
+import datetime as dt
+import hashlib
 import json
+import logging
 import os
 import re
 import sys
 import time
-import hashlib
-import logging
-import datetime as dt
 from collections import Counter
 from typing import Any, Dict, List, Optional
 
@@ -123,7 +142,7 @@ def now_utc_iso() -> str:
     return dt.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
 
 
-def ensure_dirs():
+def ensure_dirs() -> None:
     """Create output directories if missing."""
     os.makedirs(os.path.dirname(CANONICAL_A), exist_ok=True)
 
@@ -135,7 +154,7 @@ def load_yaml(path: str) -> dict:
 
 
 def normalize_title(title: Optional[str]) -> str:
-    """Normalize title for dedupe: lowercase, strip punctuation/extra spaces."""
+    """Normalise title for dedupe: lowercase, strip punctuation/extra spaces."""
     if not title:
         return ""
     t = re.sub(r"[^\w\s]", " ", title.lower())
@@ -145,7 +164,7 @@ def normalize_title(title: Optional[str]) -> str:
 def stable_id(doi: Optional[str], title: Optional[str], year: Optional[int]) -> str:
     """
     Produce a stable deterministic id for deduping.
-    Prefer DOI; otherwise hash of normalized title + year.
+    Prefer DOI; otherwise hash of normalised title + year.
     """
     if doi:
         return "doi:" + doi.lower().strip()
@@ -173,7 +192,7 @@ def lang_ok(language: Optional[str], allowed: List[str]) -> bool:
     return language.lower() in {x.lower() for x in allowed}
 
 
-def polite_sleep():
+def polite_sleep() -> None:
     """Tiny sleep to avoid hammering public APIs (configurable via ELIS_HTTP_SLEEP_S)."""
     if REQUEST_SLEEP_S > 0:
         time.sleep(REQUEST_SLEEP_S)
@@ -191,11 +210,7 @@ def build_summary(records: List[Dict[str, Any]]) -> Dict[str, Any]:
     src_sorted = dict(sorted(per_source.items(), key=lambda x: (-x[1], x[0] or "")))
     tpc_sorted = dict(sorted(per_topic.items(), key=lambda x: (-x[1], x[0] or "")))
 
-    return {
-        "total": len(records),
-        "per_source": src_sorted,
-        "per_topic": tpc_sorted,
-    }
+    return {"total": len(records), "per_source": src_sorted, "per_topic": tpc_sorted}
 
 
 def write_step_summary(meta: Dict[str, Any], summary: Dict[str, Any]) -> None:
@@ -228,6 +243,38 @@ def write_step_summary(meta: Dict[str, Any], summary: Dict[str, Any]) -> None:
 
     with open(path, "a", encoding="utf-8") as fh:
         fh.write("\n".join(lines) + "\n")
+
+
+def build_run_inputs(config: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Derive a provenance snapshot of the *effective* knobs used for this run,
+    based solely on the configuration loaded by this script (which may have
+    been patched by CI UI inputs before execution).
+    """
+    g = (config.get("global") or {})
+    year_from = int(g.get("year_from", 1990))
+    year_to = int(g.get("year_to", dt.datetime.utcnow().year))
+    job_result_cap = int(g.get("job_result_cap", 0))
+    max_results_per_source = int(g.get("max_results_per_source", 100))
+
+    topics = (config.get("topics") or [])
+    enabled = [t for t in topics if t.get("enabled", True)]
+
+    topics_selected = [t.get("id") for t in enabled if t.get("id")]
+    include_preprints_by_topic = {
+        t.get("id"): bool(t.get("include_preprints", True))
+        for t in enabled
+        if t.get("id")
+    }
+
+    return {
+        "year_from": year_from,
+        "year_to": year_to,
+        "job_result_cap": job_result_cap,
+        "max_results_per_source": max_results_per_source,
+        "topics_selected": topics_selected,
+        "include_preprints_by_topic": include_preprints_by_topic,
+    }
 
 
 # ------------------------- Source: Crossref ----------------------------------
@@ -472,13 +519,13 @@ def orchestrate_search(config: dict) -> List[Dict[str, Any]]:
     topic_cap = int(config.get("global", {}).get("max_results_per_source", 100))
     job_cap = int(config.get("global", {}).get("job_result_cap", 0))
 
-    enabled_topics = [t for t in (config.get("topics") or []) if t.get("enabled", True)]
+    enabled_topics = [t for t in (config.get("topics") or []) if t.get("enabled", True))]
     results: List[Dict[str, Any]] = []
 
     # Dedup tracking
     seen: set[str] = set()
 
-    def add_with_dedupe(rec: Dict[str, Any], topic_id: str, query_str: str):
+    def add_with_dedupe(rec: Dict[str, Any], topic_id: str, query_str: str) -> None:
         rec["query_topic"] = topic_id
         rec["query_string"] = query_str
         rec["retrieved_at"] = now_utc_iso()
@@ -487,7 +534,8 @@ def orchestrate_search(config: dict) -> List[Dict[str, Any]]:
         rec["_stable_id"] = key  # kept for backward compatibility
         if key in seen:
             return
-        seen.add(key)
+        seen.add(key
+        )
         results.append(rec)
 
     for topic in enabled_topics:
@@ -511,7 +559,7 @@ def orchestrate_search(config: dict) -> List[Dict[str, Any]]:
 
 
 # ------------------------- Write JSON ----------------------------------------
-def write_json_array(path: str, records: List[Dict[str, Any]], meta: Dict[str, Any]):
+def write_json_array(path: str, records: List[Dict[str, Any]], meta: Dict[str, Any]) -> None:
     """Write records to a JSON array with a leading _meta element."""
     ensure_dirs()
     payload = [{"_meta": True, **meta}] + records
@@ -526,12 +574,8 @@ def main(argv: List[str]) -> int:
     import argparse
 
     ap = argparse.ArgumentParser(description="ELIS – Appendix A Search (MVP)")
-    ap.add_argument(
-        "--config", default=CONFIG_PATH, help="YAML config with queries/topics"
-    )
-    ap.add_argument(
-        "--dry-run", action="store_true", help="Run search but do not write file"
-    )
+    ap.add_argument("--config", default=CONFIG_PATH, help="YAML config with queries/topics")
+    ap.add_argument("--dry-run", action="store_true", help="Run search but do not write file")
     args = ap.parse_args(argv)
 
     if not os.path.isfile(args.config):
@@ -543,19 +587,18 @@ def main(argv: List[str]) -> int:
     records = orchestrate_search(config)
     logging.info(f"Total records (pre-write, unique): {len(records)}")
 
-    # Build meta (with summary) for provenance and quick review.
+    # Build meta (with summary + run_inputs) for provenance and quick review.
     summary = build_summary(records)
     meta = {
         "protocol_version": "ELIS 2025 (MVP)",
         "config_path": args.config,
         "retrieved_at": now_utc_iso(),
         "global": config.get("global", {}),
-        "topics_enabled": [
-            t["id"] for t in config.get("topics", []) if t.get("enabled", True)
-        ],
+        "topics_enabled": [t["id"] for t in config.get("topics", []) if t.get("enabled", True)],
         "sources": sorted(list({r["source"] for r in records})),
         "record_count": len(records),
         "summary": summary,
+        "run_inputs": build_run_inputs(config),
     }
 
     # Emit a nice table into the GitHub Actions "Step Summary", if available.
