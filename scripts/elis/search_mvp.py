@@ -251,13 +251,13 @@ def build_run_inputs(config: Dict[str, Any]) -> Dict[str, Any]:
     based solely on the configuration loaded by this script (which may have
     been patched by CI UI inputs before execution).
     """
-    g = (config.get("global") or {})
+    g = config.get("global") or {}
     year_from = int(g.get("year_from", 1990))
     year_to = int(g.get("year_to", dt.datetime.utcnow().year))
     job_result_cap = int(g.get("job_result_cap", 0))
     max_results_per_source = int(g.get("max_results_per_source", 100))
 
-    topics = (config.get("topics") or [])
+    topics = config.get("topics") or []
     enabled = [t for t in topics if t.get("enabled", True)]
 
     topics_selected = [t.get("id") for t in enabled if t.get("id")]
@@ -558,7 +558,9 @@ def orchestrate_search(config: dict) -> List[Dict[str, Any]]:
 
 
 # ------------------------- Write JSON ----------------------------------------
-def write_json_array(path: str, records: List[Dict[str, Any]], meta: Dict[str, Any]) -> None:
+def write_json_array(
+    path: str, records: List[Dict[str, Any]], meta: Dict[str, Any]
+) -> None:
     """Write records to a JSON array with a leading _meta element."""
     ensure_dirs()
     payload = [{"_meta": True, **meta}] + records
@@ -573,8 +575,12 @@ def main(argv: List[str]) -> int:
     import argparse
 
     ap = argparse.ArgumentParser(description="ELIS – Appendix A Search (MVP)")
-    ap.add_argument("--config", default=CONFIG_PATH, help="YAML config with queries/topics")
-    ap.add_argument("--dry-run", action="store_true", help="Run search but do not write file")
+    ap.add_argument(
+        "--config", default=CONFIG_PATH, help="YAML config with queries/topics"
+    )
+    ap.add_argument(
+        "--dry-run", action="store_true", help="Run search but do not write file"
+    )
     args = ap.parse_args(argv)
 
     if not os.path.isfile(args.config):
@@ -593,7 +599,9 @@ def main(argv: List[str]) -> int:
         "config_path": args.config,
         "retrieved_at": now_utc_iso(),
         "global": config.get("global", {}),
-        "topics_enabled": [t["id"] for t in config.get("topics", []) if t.get("enabled", True)],
+        "topics_enabled": [
+            t["id"] for t in config.get("topics", []) if t.get("enabled", True)
+        ],
         "sources": sorted(list({r["source"] for r in records})),
         "record_count": len(records),
         "summary": summary,
