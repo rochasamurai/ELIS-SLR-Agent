@@ -1,0 +1,364 @@
+name: ELIS - Agent Nightly (A→B)
+# =============================================================================
+# Purpose
+#   Nightly pipeline to refresh:
+#     • Appendix A (Search) with light caps, then
+#     • Appendix B (Screening) from the new A.
+#   - Shows per-source/topic tables via Step Summary for both stages.
+#   - Validates A/B against schemas.
+#   - Commits changes to a work branch and opens/refreses a PR into `main`.
+#
+# Triggers
+#   - Scheduled nightly run (03:30 UTC).
+#   - Manual (workflow_dispatch) with UI knobs to override defaults.
+#
+# Identity & Permissions
+#   - Uses a GitHub App (elis-bot) for push/PR. Requires:
+#       secrets.ELIS_APP_ID
+#       secrets.ELIS_APP_PRIVATE_KEY
+#   - Grants write to contents and pull-requests.
+#
+# Notes
+#   - Light caps by default to keep nightly runs cheap & fast. Adjust below.
+#   - Search uses a patched config written to /tmp/elis_config.yml.
+#   - Screening inherits defaults from A._meta but can be overridden via inputs.
+# =============================================================================
+
+on:
+  schedule:
+    # Nightly at 03:30 UTC
+    - cron: "30 3 * * *"
+  workflow_dispatch:
+    inputs:
+      # --------- Appendix A knobs (override parts of the YAML config) ----------
+      topics_csv:
+        description: "Limit to these topic IDs (CSV). Empty = all topics from YAML."
+        required: false
+        default: ""
+      max_results_per_source:
+        description: "Cap per source per topic (default 50)."
+        type: number
+        required: false
+        default: 50
+      job_result_cap:
+        description: "Hard cap on total results (default 500)."
+        type: number
+        required: false
+        default: 500
+
+      # --------- Appendix B knobs (override defaults from A._meta.global) ------
+      year_from:
+        description: "Lower year bound (inclusive); empty → use A._meta.global."
+        required: false
+        default: ""
+      year_to:
+        description: "Upper year bound (inclusive); empty → use A._meta.global."
+        required: false
+        default: ""
+      languages_csv:
+        description: "Languages CSV (e.g. 'en,fr,es,pt'); empty → use A._meta.global."
+        required: false
+        default: ""
+      enforce_preprint_policy:
+        description: "Respect per-topic preprint policy (exclude where disabled)."
+        type: boolean
+        required: true
+        default: true
+      allow_unknown_language:
+        description: "Keep records where language is missing/unknown."
+        type: boolean
+        required: true
+        default: false
+
+      # --------- Storage / PR behaviour ---------------------------------------
+      base_branch:
+        description: "Base branch to PR into."
+        required: false
+        default: "main"
+      write_branch:
+        description: "Work branch to write artefacts (auto-created)."
+        required: false
+        default: "ci/agent-nightly-autopr"
+      open_pr:
+        description: "Open/refresh PR write_branch → base_branch."
+        required: false
+        default: "true"
+      dry_run:
+        description: "Preview only (no write/commit/PR)."
+        type: boolean
+        required: true
+        default: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  # Prevent overlapping nightly runs or manual re-runs.
+  group: agent-nightly-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  nightly:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      # 1) Mint App token for push/PR identity.
+      - name: Mint installation token (GitHub App)
+        id: app
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.ELIS_APP_ID }}
+          private-key: ${{ secrets.ELIS_APP_PRIVATE_KEY }}
+
+      # 2) Checkout using the App token (so remote is credentialed).
+      - name: Checkout repository (App token)
+        uses: actions/checkout@v4
+        with:
+          token: ${{ steps.app.outputs.token }}
+          fetch-depth: 0
+
+      # 3) Git identity for commits created by this job.
+      - name: Configure Git identity
+        run: |
+          git config user.name  "elis-bot"
+          git config user.email "elis-bot@users.noreply.github.com"
+
+      # 4) Resolve base/head branch names.
+      - name: Resolve branches
+        id: br
+        run: |
+          BASE="${{ github.event.inputs.base_branch || 'main' }}"
+          HEAD="${{ github.event.inputs.write_branch || 'ci/agent-nightly-autopr' }}"
+          echo "base=$BASE" >> "$GITHUB_OUTPUT"
+          echo "head=$HEAD" >> "$GITHUB_OUTPUT"
+
+      # 5) Prepare write branch (create or fast-forward).
+      - name: Prepare write branch (create or fast-forward)
+        run: |
+          set -eux
+          BASE="${{ steps.br.outputs.base }}"
+          HEAD="${{ steps.br.outputs.head }}"
+          git fetch origin --prune
+          if git ls-remote --exit-code --heads origin "$HEAD" >/dev/null 2>&1; then
+            git checkout -B "$HEAD" "origin/$HEAD"
+            (git merge --ff-only "origin/$BASE" && echo "FF merged base") || true
+          else
+            git checkout -B "$HEAD" "origin/$BASE"
+            git push -u origin "$HEAD"
+          fi
+
+      # 6) Python + deps (jsonschema pinned via requirements.txt). Also pin runtime deps.
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies (pinned where required)
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install "PyYAML==6.0.2" "requests==2.32.3"
+
+      # ------------------------------ Appendix A --------------------------------
+
+      # 7) Patch search config from UI inputs → /tmp/elis_config.yml
+      - name: Patch search config (Appendix A)
+        env:
+          INPUT_TOPICS_CSV: ${{ inputs.topics_csv }}
+          INPUT_CAP_PER_SOURCE: ${{ inputs.max_results_per_source }}
+          INPUT_JOB_CAP: ${{ inputs.job_result_cap }}
+        run: |
+          python - <<'PY'
+          import os, sys, yaml, pathlib
+          src = pathlib.Path("config/elis_search_queries.yml")
+          out = pathlib.Path("/tmp/elis_config.yml")
+          cfg = yaml.safe_load(src.read_text(encoding="utf-8"))
+
+          # Coerce global caps (light nightly defaults if inputs are empty/0).
+          g = cfg.setdefault("global", {})
+          try:
+            cap_src = int(os.environ.get("INPUT_CAP_PER_SOURCE") or 50)
+          except Exception:
+            cap_src = 50
+          try:
+            job_cap = int(os.environ.get("INPUT_JOB_CAP") or 500)
+          except Exception:
+            job_cap = 500
+          g["max_results_per_source"] = cap_src
+          g["job_result_cap"] = job_cap
+
+          # Optional: limit topics by CSV
+          topics_csv = (os.environ.get("INPUT_TOPICS_CSV") or "").strip()
+          if topics_csv:
+            want = {t.strip() for t in topics_csv.split(",") if t.strip()}
+            cfg["topics"] = [t for t in (cfg.get("topics") or []) if str(t.get("id")) in want]
+
+          out.write_text(yaml.safe_dump(cfg, sort_keys=False, allow_unicode=True), encoding="utf-8")
+          print(f"Wrote patched config to {out}")
+          PY
+
+      # 8) Show effective run inputs (A) in Step Summary
+      - name: Show effective search inputs (A)
+        run: |
+          python - <<'PY'
+          import sys, yaml, json
+          p = "/tmp/elis_config.yml"
+          cfg = yaml.safe_load(open(p, "r", encoding="utf-8"))
+          g = cfg.get("global", {}) or {}
+          topics = [t.get("id") for t in (cfg.get("topics") or []) if t.get("enabled", True)]
+          lines = []
+          lines.append("## Nightly – Appendix A inputs (effective)")
+          lines.append("")
+          lines.append("```yaml")
+          lines.append(f"max_results_per_source: {g.get('max_results_per_source')}")
+          lines.append(f"job_result_cap: {g.get('job_result_cap')}")
+          lines.append("topics_selected:")
+          for t in topics: lines.append(f"  - {t}")
+          lines.append("```")
+          open(sys.argv[1], "a", encoding="utf-8").write("\n".join(lines) + "\n")
+          PY
+          "$GITHUB_STEP_SUMMARY"
+
+      # 9) Run A (Search). The script writes its own Step Summary.
+      - name: Run Appendix A (Search)
+        env:
+          # Optional polite contact; empty is fine if not set.
+          ELIS_CONTACT: ${{ secrets.ELIS_CONTACT }}
+        run: |
+          set -eux
+          ARGS=(--config /tmp/elis_config.yml)
+          # No dry-run in nightly unless explicitly requested
+          if [ "${{ inputs.dry_run }}" = "true" ]; then ARGS+=(--dry-run); fi
+          python scripts/elis/search_mvp.py "${ARGS[@]}"
+
+      # 10) Validate A against schema (non-dry runs only)
+      - name: Validate Appendix A against schema
+        if: ${{ inputs.dry_run != 'true' }}
+        run: |
+          python - <<'PY'
+          import json, sys, pathlib
+          from jsonschema import Draft202012Validator
+          schema_path = pathlib.Path("schemas/appendix_a.schema.json")
+          data_path   = pathlib.Path("json_jsonl/ELIS_Appendix_A_Search_rows.json")
+          schema = json.loads(schema_path.read_text(encoding="utf-8"))
+          data   = json.loads(data_path.read_text(encoding="utf-8"))
+          v = Draft202012Validator(schema)
+          errors = sorted(v.iter_errors(data), key=lambda e: e.path)
+          if errors:
+            for e in errors: print(f"::error file={data_path},line=1::Schema error: {e.message}")
+            sys.exit(2)
+          print("Schema validation (A) OK.")
+          PY
+
+      # ------------------------------ Appendix B --------------------------------
+
+      # 11) Run B (Screening). The script writes its own Step Summary.
+      - name: Run Appendix B (Screening)
+        run: |
+          set -eux
+          ARGS=()
+          [ -n "${{ inputs.year_from }}" ] && ARGS+=(--year-from "${{ inputs.year_from }}")
+          [ -n "${{ inputs.year_to }}" ] && ARGS+=(--year-to "${{ inputs.year_to }}")
+          [ -n "${{ inputs.languages_csv }}" ] && ARGS+=(--languages "${{ inputs.languages_csv }}")
+          if [ "${{ inputs.enforce_preprint_policy }}" = "true" ]; then ARGS+=(--enforce-preprint-policy); fi
+          if [ "${{ inputs.allow_unknown_language }}" = "true" ]; then ARGS+=(--allow-unknown-language); fi
+          if [ "${{ inputs.dry_run }}" = "true" ]; then ARGS+=(--dry-run); fi
+          python scripts/elis/screen_mvp.py "${ARGS[@]}"
+
+      # 12) Validate B against schema (non-dry runs only)
+      - name: Validate Appendix B against schema
+        if: ${{ inputs.dry_run != 'true' }}
+        run: |
+          python - <<'PY'
+          import json, sys, pathlib
+          from jsonschema import Draft202012Validator
+          schema_path = pathlib.Path("schemas/appendix_b.schema.json")
+          data_path   = pathlib.Path("json_jsonl/ELIS_Appendix_B_Screening_rows.json")
+          schema = json.loads(schema_path.read_text(encoding="utf-8"))
+          data   = json.loads(data_path.read_text(encoding="utf-8"))
+          v = Draft202012Validator(schema)
+          errors = sorted(v.iter_errors(data), key=lambda e: e.path)
+          if errors:
+            for e in errors: print(f"::error file={data_path},line=1::Schema error: {e.message}")
+            sys.exit(2)
+          print("Schema validation (B) OK.")
+          PY
+
+      # 13) Upload artefacts (A & B) for download/debug (non-dry runs only)
+      - name: Upload artefacts (A & B)
+        if: ${{ inputs.dry_run != 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: elis-nightly-artefacts
+          path: |
+            json_jsonl/ELIS_Appendix_A_Search_rows.json
+            json_jsonl/ELIS_Appendix_B_Screening_rows.json
+          if-no-files-found: error
+          retention-days: 7
+
+      # 14) Commit artefacts when there is a diff (skip on no change).
+      - name: Commit artefacts (A/B only when changed)
+        if: ${{ inputs.dry_run != 'true' }}
+        run: |
+          set -eux
+          git add -N json_jsonl/ELIS_Appendix_A_Search_rows.json json_jsonl/ELIS_Appendix_B_Screening_rows.json || true
+          if git diff --name-only --exit-code -- json_jsonl/ELIS_Appendix_A_Search_rows.json json_jsonl/ELIS_Appendix_B_Screening_rows.json; then
+            echo "No artefact diffs; skipping commit/push/PR."
+            echo "skip_pr=true" >> "$GITHUB_ENV"
+            exit 0
+          fi
+          git add json_jsonl/ELIS_Appendix_A_Search_rows.json json_jsonl/ELIS_Appendix_B_Screening_rows.json
+          git commit -m "chore(nightly): refresh Appendix A/B artefacts"
+
+      # 15) Ensure push uses App token URL (fix push auth).
+      - name: Force remote to App-token URL (fix push auth)
+        if: env.skip_pr != 'true'
+        run: |
+          set -eux
+          git remote set-url origin "https://x-access-token:${{ steps.app.outputs.token }}@github.com/${{ github.repository }}"
+
+      # 16) Push work branch with changes.
+      - name: Push work branch
+        if: env.skip_pr != 'true'
+        run: |
+          set -eux
+          HEAD="${{ steps.br.outputs.head }}"
+          git push --force-with-lease origin HEAD:"$HEAD"
+
+      # 17) Open/refresh PR if configured.
+      - name: Compare base..head & open/refresh PR
+        if: ${{ env.skip_pr != 'true' && fromJSON(github.event.inputs.open_pr || 'true') }}
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ steps.app.outputs.token }}
+          script: |
+            const owner = context.repo.owner;
+            const repo  = context.repo.repo;
+            const base  = "${{ steps.br.outputs.base }}";
+            const head  = "${{ steps.br.outputs.head }}";
+
+            const cmp = await github.rest.repos.compareCommitsWithBasehead({
+              owner, repo, basehead: `${base}...${head}`,
+            });
+
+            const hasDiff = (cmp.data.ahead_by > 0) || ((cmp.data.files || []).length > 0);
+            if (!hasDiff) { core.info("No diff; no PR opened."); return; }
+
+            const { data: openPRs } = await github.rest.pulls.list({
+              owner, repo, state: 'open', base, head: `${owner}:${head}`,
+            });
+
+            if (openPRs.length > 0) {
+              core.info(`PR already open: #${openPRs[0].number}`);
+            } else {
+              const { data: pr } = await github.rest.pulls.create({
+                owner, repo, base, head,
+                title: "chore(nightly): refresh Appendix A/B artefacts",
+                body: "Automated nightly run using ELIS – Agent Nightly (A→B).",
+              });
+              core.info(`Opened PR #${pr.number}`);
+            }
