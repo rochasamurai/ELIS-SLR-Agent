@@ -519,7 +519,7 @@ def orchestrate_search(config: dict) -> List[Dict[str, Any]]:
     topic_cap = int(config.get("global", {}).get("max_results_per_source", 100))
     job_cap = int(config.get("global", {}).get("job_result_cap", 0))
 
-    enabled_topics = [t for t in (config.get("topics") or []) if t.get("enabled", True))]
+    enabled_topics = [t for t in (config.get("topics") or []) if t.get("enabled", True)]
     results: List[Dict[str, Any]] = []
 
     # Dedup tracking
@@ -534,8 +534,7 @@ def orchestrate_search(config: dict) -> List[Dict[str, Any]]:
         rec["_stable_id"] = key  # kept for backward compatibility
         if key in seen:
             return
-        seen.add(key
-        )
+        seen.add(key)
         results.append(rec)
 
     for topic in enabled_topics:
