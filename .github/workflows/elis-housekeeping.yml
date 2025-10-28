@@ -1,61 +1,62 @@
 name: ELIS - Housekeeping
 # =============================================================================
 # Purpose
-#   Keep Actions storage lean by deleting old workflow runs and artifacts.
-#   Uses two retention windows:
-#     - General runs & artifacts
-#     - Nightly bundles (exact name: "elis-nightly-artefacts", plus optional aliases)
+#   Keep Actions storage lean:
+#     - delete COMPLETED workflow runs older than N days (general retention)
+#     - delete artifacts older than N days, with a *shorter* window for
+#       nightly bundles uploaded as "elis-nightly-artefacts" (aliases allowed)
 #
 # Triggers
-#   - Manual (workflow_dispatch) with UI inputs
-#   - Weekly schedule (Sunday 06:00 UTC)
+#   - Manual: workflow_dispatch (with UI inputs)
+#   - Weekly: Sunday 06:00 UTC
 #
 # Notes
-#   - No 'push' trigger to avoid accidental executions on commits.
-#   - We never reference 'inputs.*' outside the resolver step; schedule has no inputs.
+#   - We ONLY reference `inputs.*` inside the resolver step.
+#     All other steps consume `steps.cfg.outputs.*` to work for both
+#     dispatch and schedule triggers.
 # =============================================================================
 
 on:
   workflow_dispatch:
     inputs:
       retention_days:
-        description: "General retention in days (runs + non-nightly artifacts)"
+        description: General retention for runs & non-nightly artifacts (days)
         type: number
         required: true
         default: 14
       nightly_artifact_retention_days:
-        description: "Nightly artifact retention in days"
+        description: Retention for nightly artifacts (days)
         type: number
         required: true
         default: 7
       nightly_name:
-        description: "Canonical nightly artifact name (exact)"
+        description: Canonical nightly artifact name (exact match)
         type: string
         required: true
         default: "elis-nightly-artefacts"
       nightly_aliases_csv:
-        description: "Optional CSV of additional nightly names (exact matches)"
+        description: Optional comma-separated extra nightly names (exact)
         type: string
         required: false
         default: ""
       delete_runs:
-        description: "Delete COMPLETED runs older than general retention"
+        description: Delete COMPLETED runs past general retention
         type: boolean
         required: true
         default: true
       delete_artifacts:
-        description: "Delete artifacts past their retention windows"
+        description: Delete artifacts past retention windows
         type: boolean
         required: true
         default: true
       dry_run:
-        description: "Preview only (do not delete)"
+        description: Preview only (do not delete)
         type: boolean
         required: true
         default: true
 
   schedule:
-    - cron: "0 6 * * 0" # Sundays 06:00 UTC
+    - cron: "0 6 * * 0"  # Sunday 06:00 UTC
 
 permissions:
   actions: write
@@ -68,78 +69,89 @@ concurrency:
 jobs:
   housekeeping:
     runs-on: ubuntu-latest
+
     steps:
       # -----------------------------------------------------------------------
-      # 1) Resolve inputs & derived values (works for dispatch AND schedule)
-      #    Never use inputs.* outside this step.
+      # Resolve inputs & derived values (works for both dispatch and schedule)
       # -----------------------------------------------------------------------
       - name: Resolve inputs / defaults
         id: cfg
         env:
-          RET_ALL_IN:          ${{ inputs.retention_days }}
-          RET_N_IN:            ${{ inputs.nightly_artifact_retention_days }}
-          NL_NAME_IN:          ${{ inputs.nightly_name }}
-          NL_ALIASES_IN:       ${{ inputs.nightly_aliases_csv }}
-          DEL_RUNS_IN:         ${{ inputs.delete_runs }}
-          DEL_ARTS_IN:         ${{ inputs.delete_artifacts }}
-          DRY_IN:              ${{ inputs.dry_run }}
+          RET_ALL_IN:  ${{ inputs.retention_days }}
+          RET_N_IN:    ${{ inputs.nightly_artifact_retention_days }}
+          NL_NAME_IN:  ${{ inputs.nightly_name }}
+          NL_ALIASES_IN: ${{ inputs.nightly_aliases_csv }}
+          DEL_RUNS_IN: ${{ inputs.delete_runs }}
+          DEL_ARTS_IN: ${{ inputs.delete_artifacts }}
+          DRY_RUN_IN:  ${{ inputs.dry_run }}
         run: |
           set -euo pipefail
-          # Defaults for schedule (no inputs)
+
+          # Defaults for scheduled runs (no workflow_dispatch)
           RET_ALL="${RET_ALL_IN:-14}"
           RET_N="${RET_N_IN:-7}"
           NL_NAME="${NL_NAME_IN:-elis-nightly-artefacts}"
           NL_ALIASES="${NL_ALIASES_IN:-}"
           DEL_RUNS="${DEL_RUNS_IN:-true}"
           DEL_ARTS="${DEL_ARTS_IN:-true}"
-          DRY="${DRY_IN:-true}"
+          DRY_RUN="${DRY_RUN_IN:-true}"
 
-          # Basic sanitisation
-          case "$DEL_RUNS" in true|false) ;; *) DEL_RUNS=true ;; esac
-          case "$DEL_ARTS" in true|false) ;; *) DEL_ARTS=true ;; esac
-          case "$DRY"      in true|false) ;; *) DRY=true      ;; esac
-          if ! [[ "$RET_ALL" =~ ^[0-9]+$ ]]; then RET_ALL=14; fi
-          if ! [[ "$RET_N"   =~ ^[0-9]+$ ]]; then RET_N=7;   fi
+          # Basic sanity
+          case "$RET_ALL" in (''|*[!0-9]*) echo "::error::retention_days must be integer"; exit 1;; esac
+          case "$RET_N"   in (''|*[!0-9]*) echo "::error::nightly_artifact_retention_days must be integer"; exit 1;; esac
+          [ "$RET_ALL" -lt 1 ] && RET_ALL=1
+          [ "$RET_N"   -lt 1 ] && RET_N=1
 
-          echo "retention_days=$RET_ALL"                       >> "$GITHUB_OUTPUT"
-          echo "nightly_retention_days=$RET_N"                 >> "$GITHUB_OUTPUT"
-          echo "nightly_name=$NL_NAME"                         >> "$GITHUB_OUTPUT"
-          echo "nightly_aliases_csv=$NL_ALIASES"               >> "$GITHUB_OUTPUT"
-          echo "delete_runs=$DEL_RUNS"                         >> "$GITHUB_OUTPUT"
-          echo "delete_artifacts=$DEL_ARTS"                    >> "$GITHUB_OUTPUT"
-          echo "dry_run=$DRY"                                  >> "$GITHUB_OUTPUT"
+          # Normalise aliases: strip spaces, collapse duplicates
+          IFS=',' read -r -a _ali <<< "${NL_ALIASES}"
+          uniq_ali=""
+          for a in "${_ali[@]}"; do
+            a="$(echo "$a" | xargs)"
+            [ -n "$a" ] || continue
+            case ",$uniq_ali," in
+              *,"$a",*) ;; # already present
+              *) uniq_ali="${uniq_ali:+$uniq_ali,}$a" ;;
+            esac
+          done
+          NL_ALIASES="$uniq_ali"
+
+          echo "retention_days=${RET_ALL}"                     >> "$GITHUB_OUTPUT"
+          echo "nightly_retention_days=${RET_N}"               >> "$GITHUB_OUTPUT"
+          echo "nightly_name=${NL_NAME}"                       >> "$GITHUB_OUTPUT"
+          echo "nightly_aliases_csv=${NL_ALIASES}"             >> "$GITHUB_OUTPUT"
+          echo "delete_runs=${DEL_RUNS}"                       >> "$GITHUB_OUTPUT"
+          echo "delete_artifacts=${DEL_ARTS}"                  >> "$GITHUB_OUTPUT"
+          echo "dry_run=${DRY_RUN}"                            >> "$GITHUB_OUTPUT"
 
           echo "Configuration:"
-          echo "  general retention      = $RET_ALL days"
-          echo "  nightly retention      = $RET_N days"
-          echo "  nightly name (exact)   = $NL_NAME"
-          echo "  nightly aliases (CSV)  = ${NL_ALIASES:-<none>}"
-          echo "  delete runs?           = $DEL_RUNS"
-          echo "  delete artifacts?      = $DEL_ARTS"
-          echo "  dry run?               = $DRY"
+          echo "  retention_days            = $RET_ALL"
+          echo "  nightly_retention_days    = $RET_N"
+          echo "  nightly_name              = $NL_NAME"
+          echo "  nightly_aliases_csv       = ${NL_ALIASES:-<none>}"
+          echo "  delete_runs               = $DEL_RUNS"
+          echo "  delete_artifacts          = $DEL_ARTS"
+          echo "  dry_run                   = $DRY_RUN"
 
       # -----------------------------------------------------------------------
-      # 2) Delete COMPLETED workflow runs older than general retention
+      # Delete COMPLETED workflow runs older than general retention
       # -----------------------------------------------------------------------
-      - name: Housekeep workflow RUNS
+      - name: Housekeep RUNS
         if: ${{ steps.cfg.outputs.delete_runs == 'true' }}
-        id: runs
         uses: actions/github-script@v7
+        env:
+          RETENTION_DAYS: ${{ steps.cfg.outputs.retention_days }}
+          DRY_RUN:        ${{ steps.cfg.outputs.dry_run }}
         with:
+          github-token: ${{ github.token }}
           script: |
-            const core = require('@actions/core');
-            const { context, github } = require('@actions/github');
-
-            const retentionDays = parseInt(core.getInput('retention_days') || '14', 10);
-            const dryRun = (core.getInput('dry_run') || 'true') === 'true';
-            const cutoffMs = Date.now() - retentionDays*24*60*60*1000;
-            const cutoffIso = new Date(cutoffMs).toISOString();
-
-            core.info(`Deleting COMPLETED runs older than ${retentionDays} days (cutoff=${cutoffIso}, dry_run=${dryRun})`);
-
+            const retentionDays = parseInt(process.env.RETENTION_DAYS, 10);
+            const dryRun        = (process.env.DRY_RUN === 'true');
+            const cutoffMs      = Date.now() - retentionDays*24*60*60*1000;
             const { owner, repo } = context.repo;
-            let scanned = 0, deleted = 0, page = 1;
 
+            core.info(`Deleting COMPLETED runs older than ${retentionDays} days (dry_run=${dryRun})`);
+
+            let deleted = 0, scanned = 0, page = 1;
             for (;;) {
               const { data } = await github.rest.actions.listWorkflowRunsForRepo({
                 owner, repo, per_page: 100, page, status: 'completed'
@@ -164,49 +176,47 @@ jobs:
             core.notice(`Runs scanned: ${scanned} | Runs deleted: ${deleted} | dry_run=${dryRun}`);
             core.setOutput('scanned', String(scanned));
             core.setOutput('deleted', String(deleted));
-        with:
-          retention_days: ${{ steps.cfg.outputs.retention_days }}
-          dry_run:        ${{ steps.cfg.outputs.dry_run }}
 
       # -----------------------------------------------------------------------
-      # 3) Delete artifacts with split logic (Nightly vs General)
+      # Delete artifacts — nightly vs general retention windows
       # -----------------------------------------------------------------------
       - name: Housekeep ARTIFACTS
         if: ${{ steps.cfg.outputs.delete_artifacts == 'true' }}
-        id: arts
         uses: actions/github-script@v7
+        env:
+          RET_ALL:   ${{ steps.cfg.outputs.retention_days }}
+          RET_N:     ${{ steps.cfg.outputs.nightly_retention_days }}
+          NL_NAME:   ${{ steps.cfg.outputs.nightly_name }}
+          NL_ALIASES:${{ steps.cfg.outputs.nightly_aliases_csv }}
+          DRY_RUN:   ${{ steps.cfg.outputs.dry_run }}
         with:
+          github-token: ${{ github.token }}
           script: |
-            const core = require('@actions/core');
-            const { context, github } = require('@actions/github');
+            const retGeneralDays = parseInt(process.env.RET_ALL, 10);
+            const retNightlyDays = parseInt(process.env.RET_N, 10);
+            const dryRun         = (process.env.DRY_RUN === 'true');
 
-            // Inputs
-            const generalDays = parseInt(core.getInput('retention_days') || '14', 10);
-            const nightlyDays = parseInt(core.getInput('nightly_retention_days') || '7', 10);
-            const nightlyName = core.getInput('nightly_name') || 'elis-nightly-artefacts';
-            const aliasesCsv  = (core.getInput('nightly_aliases_csv') || '').trim();
-            const dryRun = (core.getInput('dry_run') || 'true') === 'true';
+            const nightlyPrimary = (process.env.NL_NAME || '').trim();
+            const aliasCsv = (process.env.NL_ALIASES || '').trim();
+            const aliasList = aliasCsv ? aliasCsv.split(',').map(s => s.trim()).filter(Boolean) : [];
+            const nightlyNames = new Set([nightlyPrimary, ...aliasList].filter(Boolean));
 
-            const aliases = aliasesCsv ? aliasesCsv.split(',').map(s => s.trim()).filter(Boolean) : [];
-            const isNightly = (nm) => {
-              if (!nm) return false;
-              if (nm === nightlyName) return true;
-              if (aliases.includes(nm)) return true;
-              return /^elis[-_]?nightly/i.test(nm); // tolerant fallback
-            };
-
-            const now = Date.now();
-            const generalCutoffMs = now - generalDays*24*60*60*1000;
-            const nightlyCutoffMs = now - nightlyDays*24*60*60*1000;
+            const cutoffGeneral = Date.now() - retGeneralDays*24*60*60*1000;
+            const cutoffNightly = Date.now() - retNightlyDays*24*60*60*1000;
 
             const { owner, repo } = context.repo;
-            core.info(`Artifacts cleaner (dry_run=${dryRun})`);
-            core.info(`- general retention: ${generalDays} days`);
-            core.info(`- nightly retention: ${nightlyDays} days`);
-            core.info(`- nightly name: ${nightlyName}`);
-            if (aliases.length) core.info(`- nightly aliases: ${aliases.join(', ')}`);
+            core.info(`Deleting artifacts (dry_run=${dryRun})`);
+            core.info(`  - General retention: ${retGeneralDays} days`);
+            core.info(`  - Nightly retention: ${retNightlyDays} days`);
+            core.info(`  - Nightly names: ${[...nightlyNames].join(', ') || '<none>'}`);
 
-            let scanned = 0, deletedTotal = 0, deletedNightly = 0, deletedGeneral = 0, page = 1;
+            let scanned = 0, delNightly = 0, delGeneral = 0, page = 1;
+
+            function isNightlyName(name) {
+              if (nightlyNames.has(name)) return true;
+              // tolerant fallback to catch early bundles
+              return name.startsWith('elis-nightly') || name.startsWith('elis_nightly');
+            }
 
             for (;;) {
               const { data } = await github.rest.actions.listArtifactsForRepo({
@@ -217,45 +227,37 @@ jobs:
 
               for (const art of arts) {
                 scanned++;
-                const name = art.name || '';
-                const updatedMs = new Date(art.updated_at).getTime();
-                const nightly = isNightly(name);
+                const updatedAt = new Date(art.updated_at).getTime();
+                const nightly = isNightlyName(art.name);
 
                 if (nightly) {
-                  if (updatedMs < nightlyCutoffMs) {
-                    core.info(`- NIGHTLY old artifact #${art.id} "${name}" updated_at=${art.updated_at}`);
+                  if (updatedAt < cutoffNightly) {
+                    core.info(`- OLD nightly artifact #${art.id} "${art.name}" updated_at=${art.updated_at}`);
                     if (!dryRun) {
                       await github.rest.actions.deleteArtifact({ owner, repo, artifact_id: art.id });
                     }
-                    deletedNightly++; deletedTotal++;
+                    delNightly++;
                   }
                 } else {
-                  if (updatedMs < generalCutoffMs) {
-                    core.info(`- GENERAL old artifact #${art.id} "${name}" updated_at=${art.updated_at}`);
+                  if (updatedAt < cutoffGeneral) {
+                    core.info(`- OLD general artifact #${art.id} "${art.name}" updated_at=${art.updated_at}`);
                     if (!dryRun) {
                       await github.rest.actions.deleteArtifact({ owner, repo, artifact_id: art.id });
                     }
-                    deletedGeneral++; deletedTotal++;
+                    delGeneral++;
                   }
                 }
               }
               page++;
             }
 
-            core.notice(`Artifacts scanned: ${scanned} | Deleted (total): ${deletedTotal} | Nightly: ${deletedNightly} | General: ${deletedGeneral} | dry_run=${dryRun}`);
+            core.notice(`Artifacts scanned: ${scanned} | Deleted (Nightly): ${delNightly} | Deleted (General): ${delGeneral} | dry_run=${dryRun}`);
             core.setOutput('scanned', String(scanned));
-            core.setOutput('deleted_total', String(deletedTotal));
-            core.setOutput('deleted_nightly', String(deletedNightly));
-            core.setOutput('deleted_general', String(deletedGeneral));
-        with:
-          retention_days:           ${{ steps.cfg.outputs.retention_days }}
-          nightly_retention_days:   ${{ steps.cfg.outputs.nightly_retention_days }}
-          nightly_name:             ${{ steps.cfg.outputs.nightly_name }}
-          nightly_aliases_csv:      ${{ steps.cfg.outputs.nightly_aliases_csv }}
-          dry_run:                  ${{ steps.cfg.outputs.dry_run }}
+            core.setOutput('deleted_nightly', String(delNightly));
+            core.setOutput('deleted_general', String(delGeneral));
 
       # -----------------------------------------------------------------------
-      # 4) Rich Step Summary for quick review
+      # Step summary
       # -----------------------------------------------------------------------
       - name: Summary
         run: |
@@ -272,7 +274,7 @@ jobs:
             echo ""
             echo "### Artefacts"
             echo "- Scanned: **${{ steps.arts.outputs.scanned || '0' }}**"
-            echo "- Deleted (total): **${{ steps.arts.outputs.deleted_total || '0' }}**"
+            echo "- Deleted (total): **$(( (steps.arts.outputs.deleted_nightly != '' && steps.arts.outputs.deleted_nightly) + (steps.arts.outputs.deleted_general != '' && steps.arts.outputs.deleted_general) ))**"
             echo "  - Nightly: **${{ steps.arts.outputs.deleted_nightly || '0' }}**"
             echo "  - General: **${{ steps.arts.outputs.deleted_general || '0' }}**"
             echo ""
