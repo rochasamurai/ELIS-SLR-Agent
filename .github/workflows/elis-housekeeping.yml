@@ -187,7 +187,7 @@ jobs:
           RET_ALL:   ${{ steps.cfg.outputs.retention_days }}
           RET_N:     ${{ steps.cfg.outputs.nightly_retention_days }}
           NL_NAME:   ${{ steps.cfg.outputs.nightly_name }}
-          NL_ALIASES:${{ steps.cfg.outputs.nightly_aliases_csv }}
+          NL_ALIASES: ${{ steps.cfg.outputs.nightly_aliases_csv }}
           DRY_RUN:   ${{ steps.cfg.outputs.dry_run }}
         with:
           github-token: ${{ github.token }}
