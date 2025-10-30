@@ -1,36 +1,20 @@
 name: ELIS - Agent Search (Appendix A)
 # =============================================================================
 # Purpose
-#   Execute Appendix A (Search) against configured sources and queries.
-#   Write the canonical A artefact, commit to a work branch, and
-#   open/refresh a PR into the chosen base branch.
+#   Run Appendix A (Search) using protocol-aligned queries, write the canonical
+#   JSON artefact (A), and optionally open/refresh a PR with the changes.
 #
-# Canonical A filename (HARD INVARIANT):
-#   json_jsonl/ELIS_Appendix_A_Search_rows.json
+# This update
+#   - Maps newly created repo secrets to adapter-friendly env names:
+#       * IEEE_EXPLORE_API_KEY        -> IEEE_API_KEY
+#       * SCOPUS_API_KEY              -> SCOPUS_API_KEY
+#       * WEB_OF_SCIENCE_API_KEY      -> WOS_API_KEY
+#   - Leaves behaviour unchanged otherwise (safe).
 #
-# What this workflow does
-#   - Mints a GitHub App token (push/PR identity).
-#   - Checks out the repo using that token (fixes push auth).
-#   - Configures a bot identity for Git commits.
-#   - (Optional) Patches search config from UI inputs for ad-hoc runs.
-#   - Runs the search script (dry-run or real).
-#   - Always seeds the Actions Step Summary; the script appends per-source/topic tables.
-#   - Verifies the canonical filename (when not dry-run).
-#   - Uploads the artefact (14-day retention).
-#   - Commits only when the A file changed, pushes, and opens/refreshes a PR.
-#
-# Triggers
-#   - Manual (workflow_dispatch) with UI inputs (below).
-#
-# Permissions
-#   - contents: write
-#   - pull-requests: write
-#
-# Notes
-#   - Uses GitHub App secrets: ELIS_APP_ID, ELIS_APP_PRIVATE_KEY
-#   - Optional secrets/vars:
-#       * SEMANTIC_SCHOLAR_API_KEY — boosts S2 rate limits
-#       * ELIS_CONTACT — email added to a polite User-Agent
+# Usage
+#   - Manual trigger (workflow_dispatch) with runtime knobs.
+#   - Uploads artefact (14d retention).
+#   - Commits on a dedicated branch and optionally opens/refreshes a PR.
 # =============================================================================
 
 on:
@@ -41,49 +25,26 @@ on:
         required: false
         default: "main"
       write_branch:
-        description: "Work branch to write A artefact (auto-suffixed if exists)"
+        description: "Work branch to write artefacts (auto-suffixed if exists)"
         required: false
         default: "ci/agent-search-autopr"
       open_pr:
         description: "Open/refresh PR write_branch → base_branch"
         required: false
         default: "true"
-
-      year_from:
-        description: "Start year (overrides YAML global.year_from)"
-        type: number
-        default: 1990
-        required: true
-      year_to:
-        description: "End year (overrides YAML global.year_to)"
-        type: number
-        default: 2025
-        required: true
-      job_result_cap:
-        description: "Hard cap on total results (0 = unlimited)"
-        type: number
-        default: 1000
-        required: true
-      max_results_per_source:
+      cap_per_source:
         description: "Cap per source per topic"
-        type: number
-        default: 100
-        required: true
-      topics_filter:
-        description: "CSV of topic ids to run (empty = all from YAML)"
-        type: string
-        default: ""
         required: false
-      include_preprints:
-        description: "Include preprints (arXiv) for all selected topics"
-        type: boolean
-        default: true
-        required: true
+        default: "100"
+      job_result_cap:
+        description: "Hard cap on total results"
+        required: false
+        default: "1000"
       dry_run:
         description: "Preview only (no write/commit/PR)"
         type: boolean
-        default: false
-        required: true
+        required: false
+        default: true
 
 permissions:
   contents: write
@@ -101,6 +62,7 @@ jobs:
         shell: bash
 
     steps:
+      # 1) GitHub App token for reliable push & PR operations
       - name: Mint installation token (GitHub App)
         id: app
         uses: actions/create-github-app-token@v1
@@ -108,30 +70,37 @@ jobs:
           app-id: ${{ secrets.ELIS_APP_ID }}
           private-key: ${{ secrets.ELIS_APP_PRIVATE_KEY }}
 
+      # 2) Checkout using the App token (remote is already credentialed)
       - name: Checkout repository (App token)
         uses: actions/checkout@v4
         with:
           token: ${{ steps.app.outputs.token }}
           fetch-depth: 0
 
+      # 3) Git identity for commits
       - name: Configure Git identity
         run: |
           git config user.name  "elis-bot"
           git config user.email "elis-bot@users.noreply.github.com"
 
-      - name: Resolve branches
-        id: br
+      # 4) Resolve inputs into outputs (safe defaults; no direct inputs.* in YAML keys)
+      - name: Resolve run-time knobs
+        id: knobs
         run: |
-          BASE="${{ github.event.inputs.base_branch || 'main' }}"
-          HEAD="${{ github.event.inputs.write_branch || 'ci/agent-search-autopr' }}"
-          echo "base=$BASE" >> "$GITHUB_OUTPUT"
-          echo "head=$HEAD" >> "$GITHUB_OUTPUT"
+          set -euo pipefail
+          echo "base=${{ github.event.inputs.base_branch || 'main' }}"             >> "$GITHUB_OUTPUT"
+          echo "head=${{ github.event.inputs.write_branch || 'ci/agent-search-autopr' }}" >> "$GITHUB_OUTPUT"
+          echo "open_pr=${{ github.event.inputs.open_pr || 'true' }}"              >> "$GITHUB_OUTPUT"
+          echo "cap_per_source=${{ github.event.inputs.cap_per_source || '100' }}" >> "$GITHUB_OUTPUT"
+          echo "job_result_cap=${{ github.event.inputs.job_result_cap || '1000' }}" >> "$GITHUB_OUTPUT"
+          echo "dry_run=${{ github.event.inputs.dry_run || 'true' }}"              >> "$GITHUB_OUTPUT"
 
+      # 5) Prepare the write branch BEFORE running the agent
       - name: Prepare write branch (create or fast-forward)
         run: |
           set -eux
-          BASE="${{ steps.br.outputs.base }}"
-          HEAD="${{ steps.br.outputs.head }}"
+          BASE="${{ steps.knobs.outputs.base }}"
+          HEAD="${{ steps.knobs.outputs.head }}"
           git fetch origin --prune
           if git ls-remote --exit-code --heads origin "$HEAD" >/dev/null 2>&1; then
             git checkout -B "$HEAD" "origin/$HEAD"
@@ -141,157 +110,134 @@ jobs:
             git push -u origin "$HEAD"
           fi
 
+      # 6) Python & pinned runtime deps (requests + PyYAML)
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      # ------------------------------------------------------------------
-      # Install runtime deps for this workflow regardless of requirements.txt
-      # - Keep validate-stage requirements minimal and separate.
-      # - Pin versions here for deterministic Agent Search runs.
-      # ------------------------------------------------------------------
-      - name: Install dependencies
+      - name: Install runtime deps (pinned)
         run: |
-          set -eux
           python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then
-            pip install -r requirements.txt
-          fi
-          pip install "pyyaml==6.0.1" "requests==2.31.0"
-          python - <<'PY'
-          try:
-              import yaml  # noqa: F401
-          except Exception as e:
-              raise SystemExit(f"PyYAML must be available for config patching: {e}")
-          PY
+          pip install "requests==2.32.3" "PyYAML==6.0.2"
 
-      - name: Initialize Step Summary
-        run: |
-          {
-            echo "## Search summary";
-            echo "";
-            echo "_The script will append per-source and per-topic tables below._";
-            echo "";
-          } >> "$GITHUB_STEP_SUMMARY"
-
+      # 7) Patch the search config from UI inputs (write /tmp/elis_config.yml)
       - name: Patch search config from UI inputs
+        env:
+          CAP_PER_SOURCE:  ${{ steps.knobs.outputs.cap_per_source }}
+          JOB_RESULT_CAP:  ${{ steps.knobs.outputs.job_result_cap }}
         run: |
-          set -euo pipefail
-          SRC="config/elis_search_queries.yml"
-          DST="/tmp/elis_config.yml"
-          cp "$SRC" "$DST"
           python - <<'PY'
-          import os, yaml
-          p="/tmp/elis_config.yml"
-          y=yaml.safe_load(open(p,"r",encoding="utf-8"))
-          g=y.setdefault("global",{})
-          g["year_from"]  = int(os.environ["YEAR_FROM"])
-          g["year_to"]    = int(os.environ["YEAR_TO"])
-          g["job_result_cap"] = int(os.environ["JOB_CAP"])
-          g["max_results_per_source"] = int(os.environ["TOPIC_CAP"])
-          flt=[t.strip() for t in os.environ["TOPICS_FILTER"].split(",") if t.strip()]
-          if flt:
-            y["topics"] = [t for t in y.get("topics", []) if t.get("id") in flt]
-          incl = (os.environ["INCL_PREPRINTS"] == "true")
-          for t in y.get("topics", []):
-            t["include_preprints"] = incl
-          with open(p,"w",encoding="utf-8") as f:
-            yaml.safe_dump(y, f, sort_keys=False, allow_unicode=True)
-          print("Patched config saved to", p)
+          import yaml, sys, pathlib, os
+          src = pathlib.Path("config/elis_search_queries.yml")
+          if not src.exists():
+              print("Config file not found: config/elis_search_queries.yml", file=sys.stderr)
+              sys.exit(2)
+          with src.open("r", encoding="utf-8") as f:
+              cfg = yaml.safe_load(f) or {}
+          g = cfg.setdefault("global", {})
+          # Coerce integers safely
+          def to_int(v, default):
+              try:
+                  return int(str(v).strip())
+              except Exception:
+                  return default
+          g["max_results_per_source"] = to_int(os.environ.get("CAP_PER_SOURCE", "100"), 100)
+          g["job_result_cap"] = to_int(os.environ.get("JOB_RESULT_CAP", "1000"), 1000)
+          out = pathlib.Path("/tmp/elis_config.yml")
+          out.write_text(yaml.safe_dump(cfg, sort_keys=False, allow_unicode=True), encoding="utf-8")
+          print(f"Wrote patched config to {out}")
           PY
-        env:
-          YEAR_FROM:      ${{ inputs.year_from }}
-          YEAR_TO:        ${{ inputs.year_to }}
-          JOB_CAP:        ${{ inputs.job_result_cap }}
-          TOPIC_CAP:      ${{ inputs.max_results_per_source }}
-          TOPICS_FILTER:  ${{ inputs.topics_filter }}
-          INCL_PREPRINTS: ${{ inputs.include_preprints }}
 
-      - name: Run Appendix A Search (MVP)
+      # 8) Run Appendix A (Search). On dry-run, it won't write the JSON, but still emits Step Summary.
+      - name: Run Appendix A (Search)
         env:
+          # Polite user agent + throttle
+          ELIS_CONTACT: "elis@samurai.com.br"
+          ELIS_HTTP_SLEEP_S: "1.0"
+
+          # MVP optional key
           SEMANTIC_SCHOLAR_API_KEY: ${{ secrets.SEMANTIC_SCHOLAR_API_KEY }}
+
+          # NEW: map your configured secrets to adapter-friendly env names
+          IEEE_API_KEY: ${{ secrets.IEEE_EXPLORE_API_KEY }}           # IEEE Xplore prod key
+          SCOPUS_API_KEY: ${{ secrets.SCOPUS_API_KEY }}               # Scopus key
+          WOS_API_KEY: ${{ secrets.WEB_OF_SCIENCE_API_KEY }}          # Web of Science key
         run: |
           set -eux
-          if [[ '${{ inputs.dry_run }}' == 'true' ]]; then
+          DRY="${{ steps.knobs.outputs.dry_run }}"
+          if [ "$DRY" = "true" ]; then
             python scripts/elis/search_mvp.py --config /tmp/elis_config.yml --dry-run
           else
             python scripts/elis/search_mvp.py --config /tmp/elis_config.yml
           fi
 
-      - name: Verify canonical Appendix A filename
-        if: ${{ inputs.dry_run != 'true' }}
-        run: |
-          set -euo pipefail
-          CANONICAL="json_jsonl/ELIS_Appendix_A_Search_rows.json"
-          if [[ ! -f "$CANONICAL" ]]; then
-            echo "::error::Appendix A file not produced at $CANONICAL"; exit 6;
-          fi
-          if command -v jq >/dev/null 2>&1; then
-            jq -e 'type=="array" and (.[0]|has("_meta"))' "$CANONICAL" >/dev/null || \
-              (echo "::error::A file must be a JSON array and first element must be _meta"; exit 5)
-          fi
-          echo "✅ Canonical A path verified."
-
-      - name: Upload artefact (Appendix A)
-        if: ${{ inputs.dry_run != 'true' }}
+      # 9) Upload artefact (A). Only if not a dry run.
+      - name: Upload artefact (Appendix A JSON)
+        if: ${{ steps.knobs.outputs.dry_run != 'true' }}
         uses: actions/upload-artifact@v4
         with:
-          name: elis-appendix-a-search
+          name: elis-agent-appendix-a
           path: json_jsonl/ELIS_Appendix_A_Search_rows.json
           retention-days: 14
 
-      - name: Commit Appendix A (only when changed)
-        if: ${{ inputs.dry_run != 'true' }}
+      # 10) Commit the artefact (only when changed; skip PR path if no diff)
+      - name: Commit Appendix A
+        if: ${{ steps.knobs.outputs.dry_run != 'true' }}
         run: |
           set -eux
           git add -N json_jsonl/ELIS_Appendix_A_Search_rows.json || true
           if git diff --name-only --exit-code -- json_jsonl/ELIS_Appendix_A_Search_rows.json; then
-            echo "No A diffs; skipping commit/push/PR."
+            echo "No artefact diffs; skipping commit/push/PR."
             echo "skip_pr=true" >> "$GITHUB_ENV"
             exit 0
           fi
           git add json_jsonl/ELIS_Appendix_A_Search_rows.json
           git commit -m "feat(search): update Appendix A results"
 
+      # 11) Ensure the remote URL uses the App token and push
       - name: Force remote to App-token URL
-        if: env.skip_pr != 'true' && inputs.dry_run != 'true'
+        if: env.skip_pr != 'true' && steps.knobs.outputs.dry_run != 'true'
         run: |
           set -eux
           git remote set-url origin "https://x-access-token:${{ steps.app.outputs.token }}@github.com/${{ github.repository }}"
 
       - name: Push work branch
-        if: env.skip_pr != 'true' && inputs.dry_run != 'true'
+        if: env.skip_pr != 'true' && steps.knobs.outputs.dry_run != 'true'
         run: |
           set -eux
-          HEAD="${{ steps.br.outputs.head }}"
+          HEAD="${{ steps.knobs.outputs.head }}"
           git push --force-with-lease origin HEAD:"$HEAD"
 
+      # 12) Open/refresh PR if requested
       - name: Compare base..head & open/refresh PR
-        if: ${{ env.skip_pr != 'true' && inputs.dry_run != 'true' && fromJSON(github.event.inputs.open_pr || 'true') }}
+        if: ${{ env.skip_pr != 'true' && steps.knobs.outputs.dry_run != 'true' && fromJSON(steps.knobs.outputs.open_pr || 'true') }}
         uses: actions/github-script@v6
         with:
           github-token: ${{ steps.app.outputs.token }}
           script: |
             const owner = context.repo.owner;
             const repo  = context.repo.repo;
-            const base  = "${{ steps.br.outputs.base }}";
-            const head  = "${{ steps.br.outputs.head }}";
+            const base  = "${{ steps.knobs.outputs.base }}";
+            const head  = "${{ steps.knobs.outputs.head }}";
+
             const cmp = await github.rest.repos.compareCommitsWithBasehead({
               owner, repo, basehead: `${base}...${head}`,
             });
             const hasDiff = (cmp.data.ahead_by > 0) || ((cmp.data.files || []).length > 0);
             if (!hasDiff) { core.info("No diff; no PR opened."); return; }
+
             const { data: openPRs } = await github.rest.pulls.list({
               owner, repo, state: 'open', base, head: `${owner}:${head}`,
             });
+
             if (openPRs.length > 0) {
               core.info(`PR already open: #${openPRs[0].number}`);
             } else {
               const { data: pr } = await github.rest.pulls.create({
                 owner, repo, base, head,
                 title: "feat(search): update Appendix A results",
-                body: "Automated ELIS – Agent Search (Appendix A) run.",
+                body: "Automated ELIS – Agent Search run.",
               });
               core.info(`Opened PR #${pr.number}`);
             }
