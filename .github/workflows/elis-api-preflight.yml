@@ -1,5 +1,4 @@
-# .github/workflows/elis-api-preflight.yml
-name: ELIS – API Preflight
+name: ELIS - API Preflight
 
 on:
   workflow_dispatch:
@@ -37,26 +36,22 @@ jobs:
         run: |
           set -euo pipefail
           PROV="${{ steps.cfg.outputs.prov }}"
-          TMP_BODY="$(mktemp)"
+          TMP_BODY="$GITHUB_WORKSPACE/.preflight_body"
+          : > "$TMP_BODY"
           HTTP=000
 
           case "$PROV" in
             scopus)
-              # Simple metadata ping (1 record)
               HTTP="$(curl -sS -o "$TMP_BODY" -w '%{http_code}' \
                 -H "X-ELS-APIKey: ${SCOPUS_API_KEY:?missing SCOPUS_API_KEY}" \
                 "https://api.elsevier.com/content/search/scopus?query=TITLE-ABS-KEY(election)&count=1")"
               ;;
-
             ieee)
-              # Basic IEEE Xplore search (1 record)
               : "${IEEE_EXPLORE_API_KEY:?missing IEEE_EXPLORE_API_KEY}"
               HTTP="$(curl -sS -o "$TMP_BODY" -w '%{http_code}' \
                 "https://ieeexploreapi.ieee.org/api/v1/search/articles?apikey=${IEEE_EXPLORE_API_KEY}&format=json&max_records=1&querytext=blockchain")"
               ;;
-
             wos)
-              # WoS Lite: expect 200 only after subscription approval
               : "${WEB_OF_SCIENCE_API_KEY:?missing WEB_OF_SCIENCE_API_KEY}"
               HTTP="$(curl -sS -o "$TMP_BODY" -w '%{http_code}' \
                 -H "X-ApiKey: ${WEB_OF_SCIENCE_API_KEY}" \
@@ -64,21 +59,21 @@ jobs:
               ;;
           esac
 
-          # Truncate preview to keep logs tidy
-          PREVIEW="$(head -c 500 "$TMP_BODY" | tr -d '\000')"
-          echo "http=$HTTP" >> "$GITHUB_OUTPUT"
-          echo "preview<<EOF" >> "$GITHUB_OUTPUT"
-          echo "$PREVIEW" >> "$GITHUB_OUTPUT"
-          echo "EOF" >> "$GITHUB_OUTPUT"
+          PREVIEW_FILE="$GITHUB_WORKSPACE/.preflight_preview"
+          head -c 500 "$TMP_BODY" > "$PREVIEW_FILE" || true
 
-          # Exit non-zero on hard network errors (HTTP code still printed)
-          test -s "$TMP_BODY"
+          echo "http=$HTTP" >> "$GITHUB_OUTPUT"
+          echo "preview_file=$PREVIEW_FILE" >> "$GITHUB_OUTPUT"
+
+          # Ensure file exists (network OK enough to create body)
+          test -f "$PREVIEW_FILE"
 
       - name: Step Summary
         run: |
+          set -euo pipefail
           PROV="${{ steps.cfg.outputs.prov }}"
           HTTP="${{ steps.run.outputs.http }}"
-          PREVIEW="${{ steps.run.outputs.preview }}"
+          PREVIEW_FILE="${{ steps.run.outputs.preview_file }}"
           {
             printf "## API Preflight\n\n"
             printf "- Provider: **%s**\n" "$PROV"
@@ -97,11 +92,10 @@ jobs:
 
             printf "### Response preview (first 500 bytes)\n"
             printf "%s\n" '```'
-            printf "%s\n" "$PREVIEW"
-            printf "%s\n" '```'
+            if [ -f "$PREVIEW_FILE" ]; then head -c 500 "$PREVIEW_FILE"; fi
+            printf "\n%s\n" '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
-          # Make the job fail on clearly bad HTTP codes to surface issues in the run badge
           case "$HTTP" in
             200) exit 0 ;;
             401|403|429) exit 1 ;;
