@@ -65,35 +65,34 @@ jobs:
           echo "http=$HTTP" >> "$GITHUB_OUTPUT"
           echo "preview_file=$PREVIEW_FILE" >> "$GITHUB_OUTPUT"
 
-          # Ensure file exists (network OK enough to create body)
-          test -f "$PREVIEW_FILE"
-
       - name: Step Summary
         run: |
           set -euo pipefail
           PROV="${{ steps.cfg.outputs.prov }}"
           HTTP="${{ steps.run.outputs.http }}"
           PREVIEW_FILE="${{ steps.run.outputs.preview_file }}"
-          {
-            printf "## API Preflight\n\n"
-            printf "- Provider: **%s**\n" "$PROV"
-            printf "- HTTP status: **%s**\n\n" "$HTTP"
 
-            printf "### Quick interpretation\n"
+          {
+            printf '%s\n' '## API Preflight'
+            printf '%s\n' "- Provider: **${PROV}**"
+            printf '%s\n' "- HTTP status: **${HTTP}**"
+            printf '\n'
+
+            printf '%s\n' '### Quick interpretation'
             if [ "$HTTP" = "200" ]; then
-              printf "✅ Key and endpoint look **OK**.\n\n"
+              printf '%s\n\n' '✅ Key and endpoint look **OK**.'
             elif [ "$HTTP" = "401" ] || [ "$HTTP" = "403" ]; then
-              printf "⚠️  **Not authorised**. For WoS this is normal until approval; otherwise check the key/entitlements.\n\n"
+              printf '%s\n\n' '⚠️  **Not authorised**. For WoS this is normal until approval; otherwise check the key/entitlements.'
             elif [ "$HTTP" = "429" ]; then
-              printf "⚠️  **Rate limited**. Reduce caps or raise ELIS_HTTP_SLEEP_S.\n\n"
+              printf '%s\n\n' '⚠️  **Rate limited**. Reduce caps or raise ELIS_HTTP_SLEEP_S.'
             else
-              printf "ℹ️  Received HTTP %s – see response preview below.\n\n" "$HTTP"
+              printf '%s\n\n' "ℹ️  Received HTTP ${HTTP} – see response preview below."
             fi
 
-            printf "### Response preview (first 500 bytes)\n"
-            printf "%s\n" '```'
+            printf '%s\n' '### Response preview (first 500 bytes)'
+            printf '%s\n' '```'
             if [ -f "$PREVIEW_FILE" ]; then head -c 500 "$PREVIEW_FILE"; fi
-            printf "\n%s\n" '```'
+            printf '\n%s\n' '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
           case "$HTTP" in
