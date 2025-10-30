@@ -1,0 +1,206 @@
+# .github/workflows/elis-api-preflight.yml
+name: ELIS - API Preflight
+# =============================================================================
+# Purpose
+#   Tiny, on-demand connectivity check against a single provider chosen in UI:
+#     - Scopus (Elsevier)
+#     - IEEE Xplore
+#     - Web of Science (Clarivate)
+#
+# Behaviour
+#   - Uses workflow_dispatch with a choice input `provider`.
+#   - Sends a minimal, throttled request and reports the HTTP status.
+#   - Fails the job on non-200 to make problems visible at a glance.
+#   - Never prints secrets; no `set -x` and Python keeps apiKey in params.
+#
+# Notes
+#   - This test is read-only and tiny (count=1 / max_records=1).
+#   - GitHub automatically masks secrets in logs, but we avoid echoing them.
+#   - Add providers later by extending the `case` block and UI options.
+# =============================================================================
+
+on:
+  workflow_dispatch:
+    inputs:
+      provider:
+        description: "Choose a single provider to test"
+        type: choice
+        required: true
+        options:
+          - scopus
+          - ieee
+          - wos
+        default: scopus
+      query:
+        description: "Tiny test query (kept narrow; URL-encoded in the step)"
+        required: false
+        default: "electoral integrity"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: api-preflight-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      # Resolve inputs (avoid using inputs.* directly in YAML keys)
+      - name: Resolve inputs
+        id: cfg
+        run: |
+          echo "provider=${{ github.event.inputs.provider }}" >> "$GITHUB_OUTPUT"
+          echo "query=${{ github.event.inputs.query }}"       >> "$GITHUB_OUTPUT"
+
+      # Python for IEEE test (uses query param apikey=; safer via requests)
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install requests (pinned)
+        run: |
+          python -m pip install --upgrade pip
+          pip install "requests==2.32.3"
+
+      # Run provider-specific minimal requests
+      - name: Preflight selected provider
+        id: ping
+        env:
+          PROVIDER: ${{ steps.cfg.outputs.provider }}
+          QUERY: ${{ steps.cfg.outputs.query }}
+          ELIS_CONTACT: "elis@samurai.com.br"
+          # Secrets mapped to env for use in the step (never echoed)
+          SCOPUS_API_KEY:         ${{ secrets.SCOPUS_API_KEY }}
+          IEEE_API_KEY:           ${{ secrets.IEEE_EXPLORE_API_KEY }}
+          WOS_API_KEY:            ${{ secrets.WEB_OF_SCIENCE_API_KEY }}
+        run: |
+          set -euo pipefail
+
+          STATUS=0
+          NOTE=""
+
+          case "${PROVIDER}" in
+            scopus)
+              # Elsevier Scopus: header X-ELS-APIKey; JSON result; 200 on success.
+              # Keep request tiny: count=1; simple TITLE-ABS-KEY query.
+              URL='https://api.elsevier.com/content/search/scopus'
+              STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+                --get "${URL}" \
+                -H "X-ELS-APIKey: ${SCOPUS_API_KEY}" \
+                -H "Accept: application/json" \
+                --data-urlencode "query=TITLE-ABS-KEY(${QUERY}) AND PUBYEAR > 1989" \
+                --data-urlencode "count=1")
+              NOTE="Scopus HTTP ${STATUS}"
+              ;;
+            ieee)
+              # IEEE Xplore: apiKey is a query param; do it in Python to avoid echoing.
+              python - <<'PY'
+              import os, sys, requests, urllib.parse
+              q   = os.environ.get("QUERY","electoral integrity")
+              key = os.environ.get("IEEE_API_KEY","")
+              url = "https://ieeexploreapi.ieee.org/api/v1/search/articles"
+              try:
+                  r = requests.get(url, params={"apikey": key, "query": q, "max_records":"1"}, timeout=30)
+                  # Emit status and a tiny note via a shell-friendly line:
+                  print(f"STATUS={r.status_code}")
+                  print(f"NOTE=IEEE Xplore HTTP {r.status_code}")
+              except Exception as e:
+                  print("STATUS=599")
+                  print(f"NOTE=IEEE Xplore ERROR: {e}")
+              PY
+              ;;
+            wos)
+              # Web of Science: header X-ApiKey; product path may vary by subscription.
+              # This generic endpoint works for many WoS REST setups.
+              BASE='https://api.clarivate.com/apis/wos'
+              # Build TS=(query) and URL-encode it
+              TS="TS=(${QUERY})"
+              # shellcheck disable=SC2001
+              ENCODED_TS=$(python - <<'PY'
+              import os, urllib.parse
+              print(urllib.parse.quote(os.environ["TS"]))
+              PY
+              )
+              STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+                --get "${BASE}" \
+                -H "X-ApiKey: ${WOS_API_KEY}" \
+                --data-urlencode "databaseId=WOS" \
+                --data-urlencode "usrQuery=${ENCODED_TS}" \
+                --data-urlencode "count=1")
+              NOTE="WoS HTTP ${STATUS} (401/403 expected until product approval)"
+              ;;
+            *)
+              echo "Unsupported provider: ${PROVIDER}" >&2
+              exit 2
+              ;;
+          esac
+
+          # For IEEE, STATUS/NOTE are printed by Python; capture them if present
+          if [ "${PROVIDER}" = "ieee" ]; then
+            # read the last two lines emitted by the python snippet
+            # (GitHub captures full stdout; re-grep them robustly)
+            STATUS=$(grep -Eo '^STATUS=[0-9]+' -m1 <(tail -n 10 "$GITHUB_STEP_SUMMARY" 2>/dev/null || true) | sed 's/STATUS=//' || true)
+            NOTE_LINE=$(grep -Eo '^NOTE=.*' -m1 <(tail -n 10 "$GITHUB_STEP_SUMMARY" 2>/dev/null || true) || true)
+            # If not found in $GITHUB_STEP_SUMMARY (e.g. first run), fallback by re-running python and capturing output
+            if [ -z "${STATUS}" ]; then
+              OUT=$(python - <<'PY'
+              import os, sys, requests
+              q   = os.environ.get("QUERY","electoral integrity")
+              key = os.environ.get("IEEE_API_KEY","")
+              url = "https://ieeexploreapi.ieee.org/api/v1/search/articles"
+              try:
+                  r = requests.get(url, params={"apikey": key, "query": q, "max_records":"1"}, timeout=30)
+                  print(f"STATUS={r.status_code}")
+                  print(f"NOTE=IEEE Xplore HTTP {r.status_code}")
+              except Exception as e:
+                  print("STATUS=599")
+                  print(f"NOTE=IEEE Xplore ERROR: {e}")
+              PY
+              )
+              STATUS=$(printf '%s\n' "$OUT" | awk -F= '/^STATUS=/{print $2; exit}')
+              NOTE=$(printf '%s\n' "$OUT" | awk -F= '/^NOTE=/{print substr($0,6)}' | head -n1)
+            else
+              NOTE="${NOTE_LINE#NOTE=}"
+            fi
+          fi
+
+          # Emit outputs for the summary step
+          echo "provider=${PROVIDER}"  >> "$GITHUB_OUTPUT"
+          echo "status=${STATUS}"      >> "$GITHUB_OUTPUT"
+          echo "note=${NOTE}"          >> "$GITHUB_OUTPUT"
+
+          # Non-200 should fail the job to surface issues clearly
+          if [ "${STATUS}" != "200" ]; then
+            exit 1
+          fi
+
+      - name: Step Summary
+        if: always()
+        run: |
+          PROV="${{ steps.ping.outputs.provider || 'unknown' }}"
+          STAT="${{ steps.ping.outputs.status || 'n/a' }}"
+          NOTE="${{ steps.ping.outputs.note || '' }}"
+
+          {
+            echo "## API Preflight"
+            echo ""
+            echo "- Provider: **${PROV}**"
+            echo "- Timestamp: **$(date -u +%Y-%m-%dT%H:%M:%SZ)**"
+            echo "- HTTP status: **${STAT}**"
+            if [ -n "${NOTE}" ]; then
+              echo "- Note: ${NOTE}"
+            fi
+            echo ""
+            echo "### Hints"
+            echo "- 200 = OK (key valid and minimal query accepted)"
+            echo "- 401/403 = key invalid or not yet approved (WoS often needs approval)"
+            echo "- 429 = rate-limited; raise \`ELIS_HTTP_SLEEP_S\` or reduce caps"
+            echo "- 5xx/timeouts = endpoint or transient network issue"
+          } >> "$GITHUB_STEP_SUMMARY"
