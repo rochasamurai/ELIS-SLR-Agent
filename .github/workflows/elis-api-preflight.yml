@@ -1,142 +1,109 @@
-name: ELIS - API Preflight
-# =============================================================================
-# Purpose
-#   Tiny, on-demand connectivity check against a single provider chosen in UI:
-#     - Scopus (Elsevier)
-#     - IEEE Xplore
-#     - Web of Science (Clarivate)
-#
-# Behaviour
-#   - Dispatch-only (manual run).
-#   - Choice input `provider`, optional `query`.
-#   - Minimal request (count/max_records=1), polite and safe.
-#   - Never prints secrets (no `set -x`); only HTTP status is logged.
-#   - Fails the job on non-200 so issues are visible at a glance.
-#
-# Notes
-#   - Implemented with curl only (no heredocs), eliminating shell heredoc pitfalls.
-#   - You can extend providers by adding new `case` arms and UI options.
-# =============================================================================
+# .github/workflows/elis-api-preflight.yml
+name: ELIS – API Preflight
 
 on:
   workflow_dispatch:
     inputs:
       provider:
-        description: "Choose a single provider to test"
-        type: choice
+        description: "Which API to test (scopus | ieee | wos)"
         required: true
-        options:
-          - scopus
-          - ieee
-          - wos
-        default: scopus
-      query:
-        description: "Tiny test query"
-        required: false
-        default: "electoral integrity"
+        default: "scopus"
 
 permissions:
   contents: read
 
-concurrency:
-  group: api-preflight-${{ github.ref }}
-  cancel-in-progress: false
-
 jobs:
   preflight:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
+    env:
+      SCOPUS_API_KEY: ${{ secrets.SCOPUS_API_KEY }}
+      IEEE_EXPLORE_API_KEY: ${{ secrets.IEEE_EXPLORE_API_KEY }}
+      WEB_OF_SCIENCE_API_KEY: ${{ secrets.WEB_OF_SCIENCE_API_KEY }}
 
     steps:
-      # Resolve inputs (avoid using inputs.* directly in YAML keys)
       - name: Resolve inputs
         id: cfg
         run: |
-          echo "provider=${{ github.event.inputs.provider }}" >> "$GITHUB_OUTPUT"
-          echo "query=${{ github.event.inputs.query }}"       >> "$GITHUB_OUTPUT"
+          set -euo pipefail
+          PROV="${{ inputs.provider }}"
+          case "$PROV" in
+            scopus|ieee|wos) ;;
+            *) echo "Unsupported provider: $PROV"; exit 2 ;;
+          esac
+          echo "prov=$PROV" >> "$GITHUB_OUTPUT"
 
-      # Provider-specific minimal HTTP checks (no secrets printed)
       - name: Preflight selected provider
-        id: ping
-        env:
-            PROVIDER: ${{ steps.cfg.outputs.provider }}
-            QUERY:    ${{ steps.cfg.outputs.query }}
-            # Secrets mapped to env for safe use in curl (not echoed)
-            SCOPUS_API_KEY:       ${{ secrets.SCOPUS_API_KEY }}
-            IEEE_API_KEY:         ${{ secrets.IEEE_EXPLORE_API_KEY }}
-            WOS_API_KEY:          ${{ secrets.WEB_OF_SCIENCE_API_KEY }}
+        id: run
         run: |
           set -euo pipefail
+          PROV="${{ steps.cfg.outputs.prov }}"
+          TMP_BODY="$(mktemp)"
+          HTTP=000
 
-          status="0"
-          note=""
-
-          case "${PROVIDER}" in
+          case "$PROV" in
             scopus)
-              # Elsevier Scopus: header X-ELS-APIKey; JSON result; 200 on success.
-              url='https://api.elsevier.com/content/search/scopus'
-              status="$(curl -s -o /dev/null -w "%{http_code}" \
-                --get "${url}" \
-                -H "X-ELS-APIKey: ${SCOPUS_API_KEY}" \
-                -H "Accept: application/json" \
-                --data-urlencode "query=TITLE-ABS-KEY(${QUERY}) AND PUBYEAR > 1989" \
-                --data-urlencode "count=1")"
-              note="Scopus HTTP ${status}"
+              # Simple metadata ping (1 record)
+              HTTP="$(curl -sS -o "$TMP_BODY" -w '%{http_code}' \
+                -H "X-ELS-APIKey: ${SCOPUS_API_KEY:?missing SCOPUS_API_KEY}" \
+                "https://api.elsevier.com/content/search/scopus?query=TITLE-ABS-KEY(election)&count=1")"
               ;;
+
             ieee)
-              # IEEE Xplore: apiKey is a query param; use --get + --data-urlencode (no echo).
-              url='https://ieeexploreapi.ieee.org/api/v1/search/articles'
-              status="$(curl -s -o /dev/null -w "%{http_code}" \
-                --get "${url}" \
-                --data-urlencode "apikey=${IEEE_API_KEY}" \
-                --data-urlencode "query=${QUERY}" \
-                --data-urlencode "max_records=1")"
-              note="IEEE Xplore HTTP ${status}"
+              # Basic IEEE Xplore search (1 record)
+              : "${IEEE_EXPLORE_API_KEY:?missing IEEE_EXPLORE_API_KEY}"
+              HTTP="$(curl -sS -o "$TMP_BODY" -w '%{http_code}' \
+                "https://ieeexploreapi.ieee.org/api/v1/search/articles?apikey=${IEEE_EXPLORE_API_KEY}&format=json&max_records=1&querytext=blockchain")"
               ;;
+
             wos)
-              # Web of Science: header X-ApiKey; product path may vary by subscription.
-              base='https://api.clarivate.com/apis/wos'
-              status="$(curl -s -o /dev/null -w "%{http_code}" \
-                --get "${base}" \
-                -H "X-ApiKey: ${WOS_API_KEY}" \
-                --data-urlencode "databaseId=WOS" \
-                --data-urlencode "usrQuery=TS=(${QUERY})" \
-                --data-urlencode "count=1")"
-              note="WoS HTTP ${status} (401/403 expected until product approval)"
-              ;;
-            *)
-              echo "Unsupported provider: ${PROVIDER}" >&2
-              exit 2
+              # WoS Lite: expect 200 only after subscription approval
+              : "${WEB_OF_SCIENCE_API_KEY:?missing WEB_OF_SCIENCE_API_KEY}"
+              HTTP="$(curl -sS -o "$TMP_BODY" -w '%{http_code}' \
+                -H "X-ApiKey: ${WEB_OF_SCIENCE_API_KEY}" \
+                "https://api.clarivate.com/api/woslite?databaseId=WOS&usrQuery=TS=(election)&count=1")"
               ;;
           esac
 
-          echo "provider=${PROVIDER}"  >> "$GITHUB_OUTPUT"
-          echo "status=${status}"      >> "$GITHUB_OUTPUT"
-          echo "note=${note}"          >> "$GITHUB_OUTPUT"
+          # Truncate preview to keep logs tidy
+          PREVIEW="$(head -c 500 "$TMP_BODY" | tr -d '\000')"
+          echo "http=$HTTP" >> "$GITHUB_OUTPUT"
+          echo "preview<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$PREVIEW" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
 
-          # Non-200 should fail the job to surface issues clearly
-          if [ "${status}" != "200" ]; then
-            exit 1
-          fi
+          # Exit non-zero on hard network errors (HTTP code still printed)
+          test -s "$TMP_BODY"
 
       - name: Step Summary
-        if: always()
         run: |
-          PROV="${{ steps.ping.outputs.provider || 'unknown' }}"
-          STAT="${{ steps.ping.outputs.status || 'n/a' }}"
-          NOTE="${{ steps.ping.outputs.note || '' }}"
-
+          PROV="${{ steps.cfg.outputs.prov }}"
+          HTTP="${{ steps.run.outputs.http }}"
+          PREVIEW="${{ steps.run.outputs.preview }}"
           {
-            echo "## API Preflight"
-            echo ""
-            echo "- Provider: **${PROV}**"
-            echo "- Timestamp: **$(date -u +%Y-%m-%dT%H:%M:%SZ)**"
-            echo "- HTTP status: **${STAT}**"
-            if [ -n "${NOTE}" ]; then
-              echo "- Note: ${NOTE}"
+            printf "## API Preflight\n\n"
+            printf "- Provider: **%s**\n" "$PROV"
+            printf "- HTTP status: **%s**\n\n" "$HTTP"
+
+            printf "### Quick interpretation\n"
+            if [ "$HTTP" = "200" ]; then
+              printf "✅ Key and endpoint look **OK**.\n\n"
+            elif [ "$HTTP" = "401" ] || [ "$HTTP" = "403" ]; then
+              printf "⚠️  **Not authorised**. For WoS this is normal until approval; otherwise check the key/entitlements.\n\n"
+            elif [ "$HTTP" = "429" ]; then
+              printf "⚠️  **Rate limited**. Reduce caps or raise ELIS_HTTP_SLEEP_S.\n\n"
+            else
+              printf "ℹ️  Received HTTP %s – see response preview below.\n\n" "$HTTP"
             fi
-            echo ""
-            echo "### Hints"
-            echo "- 200 =
+
+            printf "### Response preview (first 500 bytes)\n"
+            printf "%s\n" '```'
+            printf "%s\n" "$PREVIEW"
+            printf "%s\n" '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          # Make the job fail on clearly bad HTTP codes to surface issues in the run badge
+          case "$HTTP" in
+            200) exit 0 ;;
+            401|403|429) exit 1 ;;
+            *) exit 1 ;;
+          esac
