@@ -1,22 +1,17 @@
 name: ELIS - Imports Convert
 # =============================================================================
 # Purpose
-#   Convert manual exports from external providers (e.g. Scopus CSV) into
-#   an ELIS Appendix A-style JSON file that can be screened by Appendix B.
+#   Convert manual exports from external databases (e.g. Scopus, WoS, IEEE)
+#   into the canonical Appendix A JSON format used by ELIS SLR Agent.
+#   The job runs a small Python converter and:
+#     - writes json_jsonl/ELIS_Appendix_A_Search_rows.json in the workspace
+#     - uploads it as a short-lived artifact for download / PR review.
 #
-# Scope (MVP)
-#   - Currently supports: provider="scopus_csv" via imports_to_appendix_a.py.
-#   - Reads a CSV checked into the repo (imports/...).
-#   - Writes a JSON file into json_jsonl/ with a leading _meta block.
-#
-# Usage
-#   Actions → ELIS - Imports Convert → "Run workflow"
-#   Fill in:
-#     - Export provider/format (currently: scopus_csv)
-#     - Path to the export file under the repo
-#     - Topic id for provenance (e.g., scopus_ui_manual)
-#     - Exact search string used in the provider UI (optional)
-#     - Year bounds and languages (metadata only)
+# Notes
+#   - This workflow does NOT commit to the repository; reviewers should
+#     download the artifact and update the JSON file via a PR (or we add
+#     an auto-PR mode in a later iteration).
+#   - Only Scopus CSV is supported in this MVP (provider = scopus_csv).
 # =============================================================================
 
 on:
@@ -24,42 +19,48 @@ on:
     inputs:
       provider:
         description: "Export provider/format (currently: scopus_csv)"
-        type: string
-        default: "scopus_csv"
+        type: choice
         required: true
+        default: scopus_csv
+        options:
+          - scopus_csv
       csv_path:
         description: "Path to the export file under the repo (e.g., imports/scopus_export.csv)"
         type: string
+        required: true
         default: "imports/scopus_export.csv"
-        required: true
-      query_topic:
-        description: "Topic id for provenance (e.g., scopus_ui_manual)"
+      topic_id:
+        description: "Topic id for provenance (e.g., integrity_auditability_core)"
         type: string
+        required: true
         default: "scopus_ui_manual"
-        required: true
       search_string:
-        description: "Exact search string used in the provider UI (optional)"
+        description: "Exact search string used in the provider UI (optional, for provenance)"
         type: string
-        default: ""
         required: false
+        default: ""
       year_from:
         description: "Lower bound year used in the search (for metadata only)"
         type: number
-        default: 1990
         required: true
+        default: 1990
       year_to:
         description: "Upper bound year used in the search (for metadata only)"
         type: number
-        default: 2025
         required: true
-      languages_csv:
+        default: 2025
+      languages:
         description: "Comma-separated list of languages (for metadata only)"
         type: string
-        default: "en,fr,es,pt"
         required: true
+        default: "en,fr,es,pt"
 
 permissions:
   contents: read
+
+concurrency:
+  group: imports-convert-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   convert:
@@ -72,45 +73,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # -----------------------------------------------------------------------
-      # Resolve inputs (sanity checks, defaults) into a single cfg step.
-      # -----------------------------------------------------------------------
-      - name: Resolve inputs
-        id: cfg
-        env:
-          PROVIDER_IN:   ${{ inputs.provider }}
-          CSV_PATH_IN:   ${{ inputs.csv_path }}
-          TOPIC_IN:      ${{ inputs.query_topic }}
-          QUERY_IN:      ${{ inputs.search_string }}
-          YEAR_FROM_IN:  ${{ inputs.year_from }}
-          YEAR_TO_IN:    ${{ inputs.year_to }}
-          LANGS_IN:      ${{ inputs.languages_csv }}
-        run: |
-          set -euo pipefail
-
-          provider="${PROVIDER_IN:-scopus_csv}"
-          csv_path="${CSV_PATH_IN:-imports/scopus_export.csv}"
-          topic="${TOPIC_IN:-manual_import}"
-          query="${QUERY_IN:-}"
-          year_from="${YEAR_FROM_IN:-1990}"
-          year_to="${YEAR_TO_IN:-2025}"
-          langs="${LANGS_IN:-en,fr,es,pt}"
-
-          if [ ! -f "$csv_path" ]; then
-            echo "::error::CSV export not found at path: $csv_path"
-            exit 1
-          fi
-
-          {
-            echo "provider=$provider"
-            echo "csv_path=$csv_path"
-            echo "query_topic=$topic"
-            echo "query_string=$query"
-            echo "year_from=$year_from"
-            echo "year_to=$year_to"
-            echo "languages_csv=$langs"
-          } >> "$GITHUB_OUTPUT"
-
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
@@ -120,67 +82,116 @@ jobs:
         run: |
           set -euo pipefail
           python -m pip install --upgrade pip
-          # pandas / pyyaml are used by scripts/elis/imports_to_appendix_a.py
           pip install "pandas==2.2.2" "pyyaml==6.0.2"
 
-      # -----------------------------------------------------------------------
-      # Run the converter with the argument names that the script expects.
-      # -----------------------------------------------------------------------
+      # ------------------------------------------------------------------
+      # Resolve inputs safely (no shell injection) and run the converter
+      # ------------------------------------------------------------------
       - name: Convert export to Appendix A JSON
+        id: convert
         env:
-          PROVIDER:    ${{ steps.cfg.outputs.provider }}
-          CSV_PATH:    ${{ steps.cfg.outputs.csv_path }}
-          QUERY_TOPIC: ${{ steps.cfg.outputs.query_topic }}
-          QUERY_STR:   ${{ steps.cfg.outputs.query_string }}
-          YEAR_FROM:   ${{ steps.cfg.outputs.year_from }}
-          YEAR_TO:     ${{ steps.cfg.outputs.year_to }}
-          LANGS:       ${{ steps.cfg.outputs.languages_csv }}
+          PROVIDER:      ${{ inputs.provider }}
+          CSV_PATH:      ${{ inputs.csv_path }}
+          TOPIC_ID:      ${{ inputs.topic_id }}
+          SEARCH_STRING: ${{ inputs.search_string }}
+          YEAR_FROM:     ${{ inputs.year_from }}
+          YEAR_TO:       ${{ inputs.year_to }}
+          LANGUAGES:     ${{ inputs.languages }}
         run: |
           set -euo pipefail
 
-          echo "Running imports_to_appendix_a.py"
-          echo "  provider      = $PROVIDER"
-          echo "  csv_path      = $CSV_PATH"
-          echo "  query_topic   = $QUERY_TOPIC"
-          echo "  year_from/to  = $YEAR_FROM → $YEAR_TO"
-          echo "  languages     = $LANGS"
+          # Build argument list in an array to keep quoting safe
+          args=( --provider "$PROVIDER" --csv "$CSV_PATH" --query-topic "$TOPIC_ID" --year-from "$YEAR_FROM" --year-to "$YEAR_TO" --languages "$LANGUAGES" )
 
-          if [ -n "$QUERY_STR" ]; then
-            python scripts/elis/imports_to_appendix_a.py \
-              --provider "$PROVIDER" \
-              --csv "$CSV_PATH" \
-              --query-topic "$QUERY_TOPIC" \
-              --query-string "$QUERY_STR" \
-              --year-from "$YEAR_FROM" \
-              --year-to "$YEAR_TO" \
-              --languages "$LANGS"
-          else
-            python scripts/elis/imports_to_appendix_a.py \
-              --provider "$PROVIDER" \
-              --csv "$CSV_PATH" \
-              --query-topic "$QUERY_TOPIC" \
-              --year-from "$YEAR_FROM" \
-              --year-to "$YEAR_TO" \
-              --languages "$LANGS"
+          if [ -n "${SEARCH_STRING:-}" ]; then
+            args+=( --query-string "$SEARCH_STRING" )
           fi
 
-      - name: Step Summary
-        env:
-          PROVIDER:    ${{ steps.cfg.outputs.provider }}
-          CSV_PATH:    ${{ steps.cfg.outputs.csv_path }}
-          QUERY_TOPIC: ${{ steps.cfg.outputs.query_topic }}
-          YEAR_FROM:   ${{ steps.cfg.outputs.year_from }}
-          YEAR_TO:     ${{ steps.cfg.outputs.year_to }}
+          python scripts/elis/imports_to_appendix_a.py "${args[@]}"
+
+      # ------------------------------------------------------------------
+      # Generate a human-friendly Step Summary by reading the JSON _meta
+      # ------------------------------------------------------------------
+      - name: Imports → Appendix A summary
+        if: ${{ always() }}
         run: |
           set -euo pipefail
-          {
-            echo "## Imports → Appendix A"
-            echo ""
-            echo "- Provider: \`${PROVIDER}\`"
-            echo "- CSV path: \`${CSV_PATH}\`"
-            echo "- Query topic: \`${QUERY_TOPIC}\`"
-            echo "- Year range (metadata): \`${YEAR_FROM}–${YEAR_TO}\`"
-            echo ""
-            echo "The converter writes an Appendix A-style JSON file into \`json_jsonl/\`."
-            echo "You can now run Appendix B screening against that artefact."
-          } >> "$GITHUB_STEP_SUMMARY"
+          python - << 'PY'
+          import json
+          from pathlib import Path
+          import os
+
+          summary_path = Path("json_jsonl/ELIS_Appendix_A_Search_rows.json")
+          if not summary_path.is_file():
+            print("No Appendix A JSON found; skipping summary.")
+            raise SystemExit(0)
+
+          data = json.loads(summary_path.read_text(encoding="utf-8"))
+          if not data:
+            print("Empty JSON payload; skipping summary.")
+            raise SystemExit(0)
+
+          meta = data[0] if isinstance(data[0], dict) else {}
+          summary = meta.get("summary", {})
+          total = int(summary.get("total", meta.get("record_count", max(len(data) - 1, 0))))
+
+          per_source = summary.get("per_source", {})
+          per_topic = summary.get("per_topic", {})
+
+          lines = []
+          lines.append("## Imports → Appendix A summary")
+          lines.append("")
+          lines.append(f"- Channel: `{meta.get('channel', 'manual_import')}`")
+          lines.append(f"- Provider: `{meta.get('provider', 'unknown')}`")
+          lines.append(f"- Output file: `{summary_path.as_posix()}`")
+          lines.append(f"- Total unique records: **{total}**")
+          lines.append("")
+          if per_source:
+            lines.append("### Per source")
+            lines.append("")
+            lines.append("| Source | Records |")
+            lines.append("|--------|---------|")
+            for src, count in per_source.items():
+              lines.append(f"| {src} | {count} |")
+            lines.append("")
+          if per_topic:
+            lines.append("### Per topic")
+            lines.append("")
+            lines.append("| Topic ID | Records |")
+            lines.append("|----------|---------|")
+            for topic, count in per_topic.items():
+              lines.append(f"| {topic} | {count} |")
+            lines.append("")
+
+          lines.append("## Imports → Appendix A")
+          lines.append("")
+          lines.append(f"- Provider: `{meta.get('provider', 'unknown')}`")
+          lines.append(f"- CSV path: `{meta.get('source_csv_path', 'N/A')}`")
+          lines.append(f"- Query topic: `{meta.get('query_topic', 'N/A')}`")
+          yr = meta.get("year_range") or {}
+          y0 = yr.get("from")
+          y1 = yr.get("to")
+          if y0 and y1:
+            lines.append(f"- Year range (metadata): `{y0}–{y1}`")
+          lines.append("")
+          lines.append("The converter writes an Appendix A-style JSON file into `json_jsonl/`.")
+          lines.append("You can now run Appendix B screening against that artefact after persisting it in the repository.")
+
+          step_summary = os.environ.get("GITHUB_STEP_SUMMARY")
+          if step_summary:
+            with open(step_summary, "a", encoding="utf-8") as fh:
+              fh.write("\n".join(lines) + "\n")
+          PY
+
+      # ------------------------------------------------------------------
+      # Persist the output as a short-lived artifact so reviewers can
+      # download and then update json_jsonl/ELIS_Appendix_A_Search_rows.json
+      # via a PR without any local Python run.
+      # ------------------------------------------------------------------
+      - name: Upload Appendix A JSON artifact
+        if: ${{ always() && hashFiles('json_jsonl/ELIS_Appendix_A_Search_rows.json') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: elis-imports-appendix-a
+          path: json_jsonl/ELIS_Appendix_A_Search_rows.json
+          retention-days: 14
