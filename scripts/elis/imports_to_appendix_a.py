@@ -254,13 +254,13 @@ def build_summary(records: List[Dict[str, Any]]) -> Dict[str, Any]:
         "per_source": dict(
             sorted(per_source.items(), key=lambda x: (-x[1], x[0] or ""))
         ),
-        "per_topic": dict(
-            sorted(per_topic.items(), key=lambda x: (-x[1], x[0] or ""))
-        ),
+        "per_topic": dict(sorted(per_topic.items(), key=lambda x: (-x[1], x[0] or ""))),
     }
 
 
-def write_json_array(path: str, records: List[Dict[str, Any]], meta: Dict[str, Any]) -> None:
+def write_json_array(
+    path: str, records: List[Dict[str, Any]], meta: Dict[str, Any]
+) -> None:
     """
     Write a JSON array with a leading _meta element followed by records.
 
@@ -379,7 +379,9 @@ def main(argv: List[str]) -> int:
 
     provider = args.provider.strip().lower()
     if provider != "scopus_csv":
-        sys.stderr.write(f"Unsupported provider: {provider!r} (MVP only handles scopus_csv)\n")
+        sys.stderr.write(
+            f"Unsupported provider: {provider!r} (MVP only handles scopus_csv)\n"
+        )
         return 2
 
     csv_paths = args.csv_paths or []
@@ -390,11 +392,7 @@ def main(argv: List[str]) -> int:
     records = convert_scopus_csv(csv_paths, args.query_topic, args.query_string)
     summary = build_summary(records)
 
-    languages = [
-        s.strip()
-        for s in (args.languages or "").split(",")
-        if s.strip()
-    ]
+    languages = [s.strip() for s in (args.languages or "").split(",") if s.strip()]
 
     meta: Dict[str, Any] = {
         "protocol_version": "ELIS 2025 (MVP)",
