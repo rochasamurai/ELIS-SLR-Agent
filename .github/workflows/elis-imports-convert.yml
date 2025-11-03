@@ -65,11 +65,6 @@ on:
         type: string
         default: "ci/imports-appendix-a-autopr"
         required: true
-      open_pr:
-        description: "Open/refresh PR write_branch → base_branch"
-        type: boolean
-        default: true
-        required: true
       preview_only:
         description: "Preview only (no commit/PR; artefact + summary only)"
         type: boolean
@@ -176,7 +171,6 @@ jobs:
             exit 1
           fi
 
-          # Total records (skip _meta at index 0)
           total=$(jq '.[1:] | length' "${file}")
           echo "total=${total}" >> "$GITHUB_OUTPUT"
 
@@ -215,10 +209,10 @@ jobs:
           path: ${{ env.APPENDIX_A_PATH }}
 
       # -----------------------------------------------------------------------
-      # Optionally create/update a PR with the updated Appendix A file
+      # Create/update PR with the updated Appendix A file (non-preview only)
       # -----------------------------------------------------------------------
       - name: Create or update PR with converted Appendix A
-        if: ${{ inputs.preview_only == false && inputs.open_pr == true }}
+        if: ${{ inputs.preview_only == false }}
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
