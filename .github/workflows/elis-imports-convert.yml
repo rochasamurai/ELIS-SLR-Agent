@@ -1,0 +1,158 @@
+name: ELIS - Imports Convert
+# =============================================================================
+# Workflow: ELIS - Imports Convert
+#
+# Purpose
+#   Convert manual database exports (currently: Scopus CSV) stored under
+#   the `imports/` folder into the canonical Appendix A JSON artefact:
+#
+#       json_jsonl/ELIS_Appendix_A_Search_rows.json
+#
+#   The resulting JSON can then be reviewed and, if desired, committed
+#   to the repository or used as input to the Screening (Appendix B)
+#   workflow.
+#
+# Triggers
+#   - Manual only (workflow_dispatch) with UI inputs; no push/schedule.
+#
+# Permissions
+#   - contents: read   (read the repository)
+#   - actions: write   (upload artefacts)
+#
+# Notes
+#   - No commits are made by this workflow; it is purely a converter.
+#   - The Python script writes a Step Summary so you can quickly see
+#     record counts and topics.
+# =============================================================================
+
+on:
+  workflow_dispatch:
+    inputs:
+      provider:
+        description: "Export provider/format (currently: scopus_csv)"
+        required: true
+        default: "scopus_csv"
+      input_path:
+        description: "Path to the export file under the repo (e.g., imports/scopus_export.csv)"
+        required: true
+        default: "imports/scopus_export.csv"
+      query_topic:
+        description: "Topic id for provenance (e.g., integrity_auditability_core)"
+        required: true
+        default: "scopus_ui_manual"
+      query_string:
+        description: "Exact search string used in the provider UI (optional)"
+        required: false
+        default: ""
+      year_from:
+        description: "Lower bound year used in the search (for metadata only)"
+        required: true
+        default: 1990
+        type: number
+      year_to:
+        description: "Upper bound year used in the search (for metadata only)"
+        required: true
+        default: 2025
+        type: number
+      languages_csv:
+        description: "Comma-separated list of languages (for metadata only)"
+        required: true
+        default: "en,fr,es,pt"
+
+permissions:
+  contents: read
+  actions: write
+
+concurrency:
+  group: imports-convert-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  convert-imports:
+    runs-on: ubuntu-latest
+
+    steps:
+      # -----------------------------------------------------------------------
+      # Resolve inputs into stable step outputs (dispatch-only values).
+      # -----------------------------------------------------------------------
+      - name: Resolve inputs
+        id: cfg
+        run: |
+          set -euo pipefail
+          PROV="${{ inputs.provider }}"
+          INPUT_PATH="${{ inputs.input_path }}"
+          TOPIC="${{ inputs.query_topic }}"
+          QUERY="${{ inputs.query_string }}"
+          YEAR_FROM="${{ inputs.year_from }}"
+          YEAR_TO="${{ inputs.year_to }}"
+          LANGS="${{ inputs.languages_csv }}"
+
+          echo "provider=${PROV}" >> "$GITHUB_OUTPUT"
+          echo "input_path=${INPUT_PATH}" >> "$GITHUB_OUTPUT"
+          echo "query_topic=${TOPIC}" >> "$GITHUB_OUTPUT"
+          echo "query_string=${QUERY}" >> "$GITHUB_OUTPUT"
+          echo "year_from=${YEAR_FROM}" >> "$GITHUB_OUTPUT"
+          echo "year_to=${YEAR_TO}" >> "$GITHUB_OUTPUT"
+          echo "languages_csv=${LANGS}" >> "$GITHUB_OUTPUT"
+
+          echo "Configuration:"
+          echo "  provider      = ${PROV}"
+          echo "  input_path    = ${INPUT_PATH}"
+          echo "  query_topic   = ${TOPIC}"
+          echo "  query_string  = ${QUERY}"
+          echo "  year_from     = ${YEAR_FROM}"
+          echo "  year_to       = ${YEAR_TO}"
+          echo "  languages_csv = ${LANGS}"
+
+      # -----------------------------------------------------------------------
+      # Check out the repository contents (read-only).
+      # -----------------------------------------------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # -----------------------------------------------------------------------
+      # Python runtime (standard library only; no additional deps required).
+      # -----------------------------------------------------------------------
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # -----------------------------------------------------------------------
+      # Run the imports → Appendix A converter.
+      # -----------------------------------------------------------------------
+      - name: Convert exports to Appendix A JSON
+        run: |
+          set -euo pipefail
+          PROVIDER="${{ steps.cfg.outputs.provider }}"
+          INPUT_PATH="${{ steps.cfg.outputs.input_path }}"
+          TOPIC="${{ steps.cfg.outputs.query_topic }}"
+          QUERY="${{ steps.cfg.outputs.query_string }}"
+          YEAR_FROM="${{ steps.cfg.outputs.year_from }}"
+          YEAR_TO="${{ steps.cfg.outputs.year_to }}"
+          LANGS="${{ steps.cfg.outputs.languages_csv }}"
+
+          if [ ! -f "${INPUT_PATH}" ]; then
+            echo "::error::Input file not found: ${INPUT_PATH}"
+            exit 2
+          fi
+
+          python scripts/elis/imports_to_appendix_a.py \
+            --provider "${PROVIDER}" \
+            --csv "${INPUT_PATH}" \
+            --config-path "json_jsonl/config/ELIS_Appendix_A_Search_config.json" \
+            --query-topic "${TOPIC}" \
+            --query-string "${QUERY}" \
+            --year-from "${YEAR_FROM}" \
+            --year-to "${YEAR_TO}" \
+            --languages "${LANGS}"
+
+      # -----------------------------------------------------------------------
+      # Upload the canonical Appendix A JSON as an artefact for inspection.
+      # -----------------------------------------------------------------------
+      - name: Upload Appendix A JSON artefact
+        uses: actions/upload-artifact@v4
+        with:
+          name: elis-imports-appendix-a
+          path: json_jsonl/ELIS_Appendix_A_Search_rows.json
+          retention-days: 7
