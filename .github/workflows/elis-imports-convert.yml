@@ -1,81 +1,87 @@
 name: ELIS - Imports Convert
 # =============================================================================
 # Purpose
-#   Convert manual exports from external databases (currently Scopus CSV)
-#   into an Appendix A–style JSON file that the ELIS SLR Agent can treat as
-#   if it had been produced by the automated search.
+#   Convert manual exports from external providers (e.g. Scopus CSV) into
+#   an ELIS Appendix A-style JSON file that can be screened by Appendix B.
+#
+# Scope (MVP)
+#   - Currently supports: provider="scopus_csv" via imports_to_appendix_a.py.
+#   - Reads a CSV checked into the repo (imports/...).
+#   - Writes a JSON file into json_jsonl/ with a leading _meta block.
 #
 # Usage
-#   - Upload the provider export file into the repo (e.g. imports/scopus_export.csv).
-#   - Run this workflow manually via “Actions → ELIS - Imports Convert”.
-#   - The Python helper script writes an Appendix A–compatible JSON under
-#     json_jsonl/, as documented in imports/README.md.
-#
-# Notes
-#   - This workflow is intentionally simple: no auto-commit, no PR.
-#     You can inspect the JSON diff and commit it manually.
-#   - The `search_string` input is metadata only (for provenance) and must
-#     be handled as plain data, never executed by the shell.
+#   Actions → ELIS - Imports Convert → "Run workflow"
+#   Fill in:
+#     - Export provider/format (currently: scopus_csv)
+#     - Path to the export file under the repo
+#     - Topic id for provenance (e.g., scopus_ui_manual)
+#     - Exact search string used in the provider UI (optional)
+#     - Year bounds and languages (metadata only)
 # =============================================================================
 
 on:
   workflow_dispatch:
     inputs:
-      export_provider:
+      provider:
         description: "Export provider/format (currently: scopus_csv)"
+        type: string
+        default: "scopus_csv"
         required: true
-        default: scopus_csv
-      export_path:
+      csv_path:
         description: "Path to the export file under the repo (e.g., imports/scopus_export.csv)"
+        type: string
+        default: "imports/scopus_export.csv"
         required: true
-      topic_id:
-        description: "Topic id for provenance (e.g., integrity_auditability_core)"
+      query_topic:
+        description: "Topic id for provenance (e.g., scopus_ui_manual)"
+        type: string
+        default: "scopus_ui_manual"
         required: true
       search_string:
-        description: "Exact search string used in the provider UI (optional; metadata only)"
+        description: "Exact search string used in the provider UI (optional)"
+        type: string
+        default: ""
         required: false
       year_from:
         description: "Lower bound year used in the search (for metadata only)"
         type: number
-        required: true
         default: 1990
+        required: true
       year_to:
         description: "Upper bound year used in the search (for metadata only)"
         type: number
-        required: true
         default: 2025
+        required: true
       languages_csv:
         description: "Comma-separated list of languages (for metadata only)"
-        required: true
+        type: string
         default: "en,fr,es,pt"
+        required: true
 
 permissions:
-  contents: write
-
-concurrency:
-  group: imports-to-appendix-a-${{ github.ref }}
-  cancel-in-progress: false
+  contents: read
 
 jobs:
-  imports-to-appendix-a:
+  convert:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # --------------------------------------------------------
-      # Resolve inputs / defaults
-      #   Important: treat `search_string` as plain data and pass
-      #   it via $GITHUB_OUTPUT; never execute it as a command.
-      # --------------------------------------------------------
+      # -----------------------------------------------------------------------
+      # Resolve inputs (sanity checks, defaults) into a single cfg step.
+      # -----------------------------------------------------------------------
       - name: Resolve inputs
         id: cfg
         env:
-          PROVIDER_IN:   ${{ inputs.export_provider }}
-          PATH_IN:       ${{ inputs.export_path }}
-          TOPIC_ID_IN:   ${{ inputs.topic_id }}
-          SEARCH_IN:     ${{ inputs.search_string }}
+          PROVIDER_IN:   ${{ inputs.provider }}
+          CSV_PATH_IN:   ${{ inputs.csv_path }}
+          TOPIC_IN:      ${{ inputs.query_topic }}
+          QUERY_IN:      ${{ inputs.search_string }}
           YEAR_FROM_IN:  ${{ inputs.year_from }}
           YEAR_TO_IN:    ${{ inputs.year_to }}
           LANGS_IN:      ${{ inputs.languages_csv }}
@@ -83,93 +89,98 @@ jobs:
           set -euo pipefail
 
           provider="${PROVIDER_IN:-scopus_csv}"
-          export_path="${PATH_IN}"
-          topic_id="${TOPIC_ID_IN:-manual_import}"
-          search_string="${SEARCH_IN:-}"
+          csv_path="${CSV_PATH_IN:-imports/scopus_export.csv}"
+          topic="${TOPIC_IN:-manual_import}"
+          query="${QUERY_IN:-}"
           year_from="${YEAR_FROM_IN:-1990}"
           year_to="${YEAR_TO_IN:-2025}"
-          languages_csv="${LANGS_IN:-en,fr,es,pt}"
+          langs="${LANGS_IN:-en,fr,es,pt}"
 
-          if [ -z "$export_path" ]; then
-            echo "::error::export_path is required (e.g. imports/scopus_export.csv)"; exit 1
+          if [ ! -f "$csv_path" ]; then
+            echo "::error::CSV export not found at path: $csv_path"
+            exit 1
           fi
 
           {
-            echo "export_provider=$provider"
-            echo "export_path=$export_path"
-            echo "topic_id=$topic_id"
-            # Single-line output is enough; spaces are allowed.
-            echo "search_string=$search_string"
+            echo "provider=$provider"
+            echo "csv_path=$csv_path"
+            echo "query_topic=$topic"
+            echo "query_string=$query"
             echo "year_from=$year_from"
             echo "year_to=$year_to"
-            echo "languages_csv=$languages_csv"
+            echo "languages_csv=$langs"
           } >> "$GITHUB_OUTPUT"
-
-      - name: Show resolved configuration
-        run: |
-          echo "Provider:    ${{ steps.cfg.outputs.export_provider }}"
-          echo "Export path: ${{ steps.cfg.outputs.export_path }}"
-          echo "Topic id:    ${{ steps.cfg.outputs.topic_id }}"
-          echo "Year range:  ${{ steps.cfg.outputs.year_from }}–${{ steps.cfg.outputs.year_to }}"
-          echo "Languages:   ${{ steps.cfg.outputs.languages_csv }}"
-          if [ -n "${{ steps.cfg.outputs.search_string }}" ]; then
-            echo "Search string (UI):"
-            echo "  ${{ steps.cfg.outputs.search_string }}"
-          else
-            echo "Search string (UI): <empty>"
-          fi
 
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Install runtime dependencies
+      - name: Install converter dependencies
         run: |
           set -euo pipefail
           python -m pip install --upgrade pip
-          # imports_to_appendix_a.py uses only standard library + pandas (MVP).
-          pip install "pandas==2.2.2"
+          # pandas / pyyaml are used by scripts/elis/imports_to_appendix_a.py
+          pip install "pandas==2.2.2" "pyyaml==6.0.2"
 
+      # -----------------------------------------------------------------------
+      # Run the converter with the argument names that the script expects.
+      # -----------------------------------------------------------------------
       - name: Convert export to Appendix A JSON
         env:
-          PROVIDER:      ${{ steps.cfg.outputs.export_provider }}
-          INPUT_PATH:    ${{ steps.cfg.outputs.export_path }}
-          TOPIC_ID:      ${{ steps.cfg.outputs.topic_id }}
-          SEARCH_STRING: ${{ steps.cfg.outputs.search_string }}
-          YEAR_FROM:     ${{ steps.cfg.outputs.year_from }}
-          YEAR_TO:       ${{ steps.cfg.outputs.year_to }}
-          LANGS_CSV:     ${{ steps.cfg.outputs.languages_csv }}
+          PROVIDER:    ${{ steps.cfg.outputs.provider }}
+          CSV_PATH:    ${{ steps.cfg.outputs.csv_path }}
+          QUERY_TOPIC: ${{ steps.cfg.outputs.query_topic }}
+          QUERY_STR:   ${{ steps.cfg.outputs.query_string }}
+          YEAR_FROM:   ${{ steps.cfg.outputs.year_from }}
+          YEAR_TO:     ${{ steps.cfg.outputs.year_to }}
+          LANGS:       ${{ steps.cfg.outputs.languages_csv }}
         run: |
           set -euo pipefail
-          python scripts/elis/imports_to_appendix_a.py \
-            --provider "$PROVIDER" \
-            --input-path "$INPUT_PATH" \
-            --topic-id "$TOPIC_ID" \
-            --year-from "$YEAR_FROM" \
-            --year-to "$YEAR_TO" \
-            --languages "$LANGS_CSV" \
-            --search-string "$SEARCH_STRING"
 
-      - name: Imports → Appendix A summary
+          echo "Running imports_to_appendix_a.py"
+          echo "  provider      = $PROVIDER"
+          echo "  csv_path      = $CSV_PATH"
+          echo "  query_topic   = $QUERY_TOPIC"
+          echo "  year_from/to  = $YEAR_FROM → $YEAR_TO"
+          echo "  languages     = $LANGS"
+
+          if [ -n "$QUERY_STR" ]; then
+            python scripts/elis/imports_to_appendix_a.py \
+              --provider "$PROVIDER" \
+              --csv "$CSV_PATH" \
+              --query-topic "$QUERY_TOPIC" \
+              --query-string "$QUERY_STR" \
+              --year-from "$YEAR_FROM" \
+              --year-to "$YEAR_TO" \
+              --languages "$LANGS"
+          else
+            python scripts/elis/imports_to_appendix_a.py \
+              --provider "$PROVIDER" \
+              --csv "$CSV_PATH" \
+              --query-topic "$QUERY_TOPIC" \
+              --year-from "$YEAR_FROM" \
+              --year-to "$YEAR_TO" \
+              --languages "$LANGS"
+          fi
+
+      - name: Step Summary
         env:
-          PROVIDER:   ${{ steps.cfg.outputs.export_provider }}
-          INPUT_PATH: ${{ steps.cfg.outputs.export_path }}
-          TOPIC_ID:   ${{ steps.cfg.outputs.topic_id }}
-          YEAR_FROM:  ${{ steps.cfg.outputs.year_from }}
-          YEAR_TO:    ${{ steps.cfg.outputs.year_to }}
-          LANGS:      ${{ steps.cfg.outputs.languages_csv }}
+          PROVIDER:    ${{ steps.cfg.outputs.provider }}
+          CSV_PATH:    ${{ steps.cfg.outputs.csv_path }}
+          QUERY_TOPIC: ${{ steps.cfg.outputs.query_topic }}
+          YEAR_FROM:   ${{ steps.cfg.outputs.year_from }}
+          YEAR_TO:     ${{ steps.cfg.outputs.year_to }}
         run: |
+          set -euo pipefail
           {
             echo "## Imports → Appendix A"
             echo ""
-            echo "- Provider: \`$PROVIDER\`"
-            echo "- Export path: \`$INPUT_PATH\`"
-            echo "- Topic id: \`$TOPIC_ID\`"
-            echo "- Year range: \`$YEAR_FROM–$YEAR_TO\`"
-            echo "- Languages (metadata): \`$LANGS\`"
+            echo "- Provider: \`${PROVIDER}\`"
+            echo "- CSV path: \`${CSV_PATH}\`"
+            echo "- Query topic: \`${QUERY_TOPIC}\`"
+            echo "- Year range (metadata): \`${YEAR_FROM}–${YEAR_TO}\`"
             echo ""
-            echo "The Python helper has written an Appendix A–compatible JSON"
-            echo "file under \`json_jsonl/\`. Review the diff and commit it"
-            echo "manually if you are happy with the import."
+            echo "The converter writes an Appendix A-style JSON file into \`json_jsonl/\`."
+            echo "You can now run Appendix B screening against that artefact."
           } >> "$GITHUB_STEP_SUMMARY"
