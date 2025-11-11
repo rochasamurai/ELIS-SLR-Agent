@@ -5,12 +5,14 @@ API_KEY = os.getenv("SCOPUS_API_KEY")
 INST_TOKEN = os.getenv("SCOPUS_INST_TOKEN")
 
 if not API_KEY or not INST_TOKEN:
-    raise EnvironmentError("Missing SCOPUS_API_KEY or SCOPUS_INST_TOKEN in environment variables.")
+    raise EnvironmentError(
+        "Missing SCOPUS_API_KEY or SCOPUS_INST_TOKEN in environment variables."
+    )
 
 headers = {
     "X-ELS-APIKey": API_KEY,
     "X-ELS-Insttoken": INST_TOKEN,
-    "Accept": "application/json"
+    "Accept": "application/json",
 }
 
 url = "https://api.elsevier.com/content/search/scopus"
