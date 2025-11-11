@@ -16,3 +16,9 @@
 #   as expected and the report renders correctly.
 
 jsonschema==4.23.0
+
+# HTTP client for scripts/scopus_preflight.py
+# - Required to call Scopus API endpoints using insttoken + apikey headers.
+# - Safe pin based on Python 3.11 and GitHub Actions environment (2025-11).
+
+requests==2.31.0
