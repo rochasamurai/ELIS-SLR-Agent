@@ -27,8 +27,9 @@ SCOPUS_INST_TOKEN = os.getenv("SCOPUS_INST_TOKEN")
 HEADERS = {
     "X-ELS-APIKey": SCOPUS_API_KEY,
     "X-ELS-Insttoken": SCOPUS_INST_TOKEN,
-    "Accept": "application/json"
+    "Accept": "application/json",
 }
+
 
 def scopus_search(query: str, count: int = 25, max_results: int = 100):
     """
@@ -46,11 +47,7 @@ def scopus_search(query: str, count: int = 25, max_results: int = 100):
     results = []
     start = 0
     while start < max_results:
-        params = {
-            "query": query,
-            "count": count,
-            "start": start
-        }
+        params = {"query": query, "count": count, "start": start}
         r = requests.get(url, headers=HEADERS, params=params)
         if r.status_code != 200:
             print(f"Error {r.status_code}: {r.text}")
@@ -62,6 +59,7 @@ def scopus_search(query: str, count: int = 25, max_results: int = 100):
         results.extend(entries)
         start += count
     return results
+
 
 if __name__ == "__main__":
     # Placeholder: future version will load dynamic config from json_jsonl/config/
