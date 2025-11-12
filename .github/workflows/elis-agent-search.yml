@@ -160,11 +160,11 @@ jobs:
           fi
 
       - name: Harvest: Scopus Institutional API
-        if: ${{ !steps.knobs.outputs.dry_run }}
+        if: !steps.knobs.outputs.dry_run
         run: |
           # --------------------------------------------
           # Run Scopus Institutional Harvest
-          # Requires valid API key and institution token
+          # Requires valids API key and institution token
           # --------------------------------------------
           set -eux
           export SCOPUS_API_KEY="${{ secrets.SCOPUS_API_KEY }}"
