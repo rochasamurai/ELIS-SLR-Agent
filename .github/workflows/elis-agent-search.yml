@@ -160,7 +160,7 @@ jobs:
           fi
 
       - name: Harvest: Scopus Institutional API
-        if: ${{ steps.knobs.outputs.dry_run != 'true' && steps.knobs.outputs.dry_run != null }}
+        if: ${{ steps.knobs.outputs.dry_run && steps.knobs.outputs.dry_run != 'true' }}
         run: |
           # --------------------------------------------
           # Run Scopus Institutional Harvest
@@ -172,7 +172,7 @@ jobs:
           python scripts/scopus_harvest.py
 
       - name: Upload artefact (Appendix A JSON)
-        if: ${{ steps.knobs.outputs.dry_run != 'true' && steps.knobs.outputs.dry_run != null }}
+        if: ${{ steps.knobs.outputs.dry_run && steps.knobs.outputs.dry_run != 'true' }}
         uses: actions/upload-artifact@v4
         with:
           name: elis-agent-appendix-a
@@ -180,7 +180,7 @@ jobs:
           retention-days: 14
 
       - name: Commit Appendix A
-        if: ${{ steps.knobs.outputs.dry_run != 'true' && steps.knobs.outputs.dry_run != null }}
+        if: ${{ steps.knobs.outputs.dry_run && steps.knobs.outputs.dry_run != 'true' }}
         run: |
           set -eux
           git add -N json_jsonl/ELIS_Appendix_A_Search_rows.json || true
