@@ -161,11 +161,10 @@ jobs:
 
       - name: Harvest: Scopus Institutional API
         if: ${{ steps.knobs.outputs.dry_run != 'true' }}
-        env:
-          SCOPUS_API_KEY: ${{ secrets.SCOPUS_API_KEY }}
-          SCOPUS_INST_TOKEN: ${{ secrets.SCOPUS_INST_TOKEN }}
         run: |
           set -eux
+          export SCOPUS_API_KEY="${{ secrets.SCOPUS_API_KEY }}"
+          export SCOPUS_INST_TOKEN="${{ secrets.SCOPUS_INST_TOKEN }}"
           python scripts/scopus_harvest.py
 
       - name: Upload artefact (Appendix A JSON)
