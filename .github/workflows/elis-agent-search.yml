@@ -159,10 +159,6 @@ jobs:
             python scripts/elis/search_mvp.py --config /tmp/elis_config.yml
           fi
 
-      # 8A) Real API harvest from Scopus (institutional endpoint)
-      #     - Uses institutional API key and token
-      #     - Stores up to 50 documents in: imports/scopus_sample.jsonl
-      #     - Skipped when dry_run is true
       - name: Harvest: Scopus Institutional API
         if: ${{ steps.knobs.outputs.dry_run != 'true' }}
         env:
@@ -194,20 +190,20 @@ jobs:
           git commit -m "feat(search): update Appendix A results"
 
       - name: Force remote to App-token URL
-        if: env.skip_pr != 'true' && steps.knobs.outputs.dry_run != 'true'
+        if: ${{ env.skip_pr != 'true' && steps.knobs.outputs.dry_run != 'true' }}
         run: |
           set -eux
           git remote set-url origin "https://x-access-token:${{ steps.app.outputs.token }}@github.com/${{ github.repository }}"
 
       - name: Push work branch
-        if: env.skip_pr != 'true' && steps.knobs.outputs.dry_run != 'true'
+        if: ${{ env.skip_pr != 'true' && steps.knobs.outputs.dry_run != 'true' }}
         run: |
           set -eux
           HEAD="${{ steps.knobs.outputs.head }}"
           git push --force-with-lease origin HEAD:"$HEAD"
 
       - name: Compare base..head & open/refresh PR
-        if: ${{ env.skip_pr != 'true' && steps.knobs.outputs.dry_run != 'true' && fromJSON(steps.knobs.outputs.open_pr || 'true') }}
+        if: ${{ env.skip_pr != 'true' && steps.knobs.outputs.dry_run != 'true' && steps.knobs.outputs.open_pr == 'true' }}
         uses: actions/github-script@v6
         with:
           github-token: ${{ steps.app.outputs.token }}
