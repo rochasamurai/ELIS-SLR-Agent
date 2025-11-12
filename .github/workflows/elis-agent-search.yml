@@ -160,7 +160,7 @@ jobs:
           fi
 
       - name: Harvest: Scopus Institutional API
-        if: steps.knobs.outputs.dry_run != 'true'
+        if: ${{ steps.knobs.outputs.dry_run != 'true' }}
         run: |
           # --------------------------------------------
           # Run Scopus Institutional Harvest
@@ -172,7 +172,7 @@ jobs:
           python scripts/scopus_harvest.py
 
       - name: Upload artefact (Appendix A JSON)
-        if: steps.knobs.outputs.dry_run != 'true'
+        if: ${{ steps.knobs.outputs.dry_run != 'true' }}
         uses: actions/upload-artifact@v4
         with:
           name: elis-agent-appendix-a
@@ -180,7 +180,7 @@ jobs:
           retention-days: 14
 
       - name: Commit Appendix A
-        if: steps.knobs.outputs.dry_run != 'true'
+        if: ${{ steps.knobs.outputs.dry_run != 'true' }}
         run: |
           set -eux
           git add -N json_jsonl/ELIS_Appendix_A_Search_rows.json || true
@@ -193,20 +193,20 @@ jobs:
           git commit -m "feat(search): update Appendix A results"
 
       - name: Force remote to App-token URL
-        if: env.skip_pr != 'true' && steps.knobs.outputs.dry_run != 'true'
+        if: ${{ env.skip_pr != 'true' && steps.knobs.outputs.dry_run != 'true' }}
         run: |
           set -eux
           git remote set-url origin "https://x-access-token:${{ steps.app.outputs.token }}@github.com/${{ github.repository }}"
 
       - name: Push work branch
-        if: env.skip_pr != 'true' && steps.knobs.outputs.dry_run != 'true'
+        if: ${{ env.skip_pr != 'true' && steps.knobs.outputs.dry_run != 'true' }}
         run: |
           set -eux
           HEAD="${{ steps.knobs.outputs.head }}"
           git push --force-with-lease origin HEAD:"$HEAD"
 
       - name: Compare base..head & open/refresh PR
-        if: env.skip_pr != 'true' && steps.knobs.outputs.dry_run != 'true' && steps.knobs.outputs.open_pr == 'true'
+        if: ${{ env.skip_pr != 'true' && steps.knobs.outputs.dry_run != 'true' && steps.knobs.outputs.open_pr == 'true' }}
         uses: actions/github-script@v6
         with:
           github-token: ${{ steps.app.outputs.token }}
@@ -236,3 +236,4 @@ jobs:
               });
               core.info(`Opened PR #${pr.number}`);
             }
+
