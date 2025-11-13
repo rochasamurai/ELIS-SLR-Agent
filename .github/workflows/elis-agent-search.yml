@@ -160,7 +160,7 @@ jobs:
           fi
 
       - name: Harvest: Scopus Institutional API
-        if: "${{ steps.knobs.outputs.dry_run && steps.knobs.outputs.dry_run != 'true' }}"
+        if: ${{ steps.knobs.outputs.dry_run != 'true' && steps.knobs.outputs.dry_run != null }}
         run: |
           # --------------------------------------------
           # Run Scopus Institutional Harvest
