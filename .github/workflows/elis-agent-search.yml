@@ -85,12 +85,20 @@ jobs:
         id: knobs
         run: |
           set -euo pipefail
-          echo "base=${{ github.event.inputs.base_branch || 'main' }}"             >> "$GITHUB_OUTPUT"
-          echo "head=${{ github.event.inputs.write_branch || 'ci/agent-search-autopr' }}" >> "$GITHUB_OUTPUT"
-          echo "open_pr=${{ github.event.inputs.open_pr || 'true' }}"              >> "$GITHUB_OUTPUT"
-          echo "cap_per_source=${{ github.event.inputs.cap_per_source || '100' }}" >> "$GITHUB_OUTPUT"
-          echo "job_result_cap=${{ github.event.inputs.job_result_cap || '1000' }}" >> "$GITHUB_OUTPUT"
-          echo "dry_run=${{ github.event.inputs.dry_run || 'false' }}"              >> "$GITHUB_OUTPUT"
+
+          BASE="${{ github.event.inputs.base_branch || 'main' }}"
+          HEAD="${{ github.event.inputs.write_branch || 'ci/agent-search-autopr' }}"
+          OPEN_PR="${{ github.event.inputs.open_pr || 'true' }}"
+          CAP_PER_SOURCE="${{ github.event.inputs.cap_per_source || '100' }}"
+          JOB_RESULT_CAP="${{ github.event.inputs.job_result_cap || '1000' }}"
+          DRY_RUN="${{ github.event.inputs.dry_run || 'false' }}"
+
+          echo "base=$BASE" >> "$GITHUB_OUTPUT"
+          echo "head=$HEAD" >> "$GITHUB_OUTPUT"
+          echo "open_pr=$OPEN_PR" >> "$GITHUB_OUTPUT"
+          echo "cap_per_source=$CAP_PER_SOURCE" >> "$GITHUB_OUTPUT"
+          echo "job_result_cap=$JOB_RESULT_CAP" >> "$GITHUB_OUTPUT"
+          echo "dry_run=$DRY_RUN" >> "$GITHUB_OUTPUT"
 
       - name: Prepare write branch (create or fast-forward)
         run: |
@@ -172,7 +180,7 @@ jobs:
           python scripts/scopus_harvest.py
 
       - name: Upload artefact (Appendix A JSON)
-        if: "${{ steps.knobs.outputs.dry_run && steps.knobs.outputs.dry_run != 'true' }}"
+        if: ${{ steps.knobs.outputs.dry_run != 'true' }}
         uses: actions/upload-artifact@v4
         with:
           name: elis-agent-appendix-a
@@ -180,7 +188,7 @@ jobs:
           retention-days: 14
 
       - name: Commit Appendix A
-        if: "${{ steps.knobs.outputs.dry_run && steps.knobs.outputs.dry_run != 'true' }}"
+        if: ${{ steps.knobs.outputs.dry_run != 'true' }}
         run: |
           set -eux
           git add -N json_jsonl/ELIS_Appendix_A_Search_rows.json || true
