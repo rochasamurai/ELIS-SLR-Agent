@@ -90,7 +90,7 @@ jobs:
           echo "open_pr=${{ github.event.inputs.open_pr || 'true' }}"              >> "$GITHUB_OUTPUT"
           echo "cap_per_source=${{ github.event.inputs.cap_per_source || '100' }}" >> "$GITHUB_OUTPUT"
           echo "job_result_cap=${{ github.event.inputs.job_result_cap || '1000' }}" >> "$GITHUB_OUTPUT"
-          echo "dry_run=${{ github.event.inputs.dry_run || 'true' }}"              >> "$GITHUB_OUTPUT"
+          echo "dry_run=${{ github.event.inputs.dry_run || 'false' }}"              >> "$GITHUB_OUTPUT"
 
       - name: Prepare write branch (create or fast-forward)
         run: |
@@ -160,7 +160,7 @@ jobs:
           fi
 
       - name: Harvest: Scopus Institutional API
-        if: ${{ steps.knobs.outputs.dry_run != 'true' && steps.knobs.outputs.dry_run != null }}
+        if: ${{ steps.knobs.outputs.dry_run != 'true' }}
         run: |
           # --------------------------------------------
           # Run Scopus Institutional Harvest
