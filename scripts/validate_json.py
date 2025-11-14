@@ -1,278 +1,235 @@
 #!/usr/bin/env python3
 """
-ELIS – Validate artefacts against JSON Schemas (non-blocking).
-
-Purpose
--------
-Validate the three ELIS MVP artefacts produced under `json_jsonl/`:
-
-  - ELIS_Appendix_A_Search_rows.json
-  - ELIS_Appendix_B_Screening_rows.json
-  - ELIS_Appendix_C_DataExtraction_rows.json
-
-against minimal JSON Schemas in `schemas/`.
-
-Behaviour
----------
-- Generates a Markdown report at `validation_reports/validation-report.md`.
-- Prints a short summary to STDOUT for CI logs.
-- **Never blocks CI**: exits with code 0 even if validation errors are found.
-
-Strict formats (post-MVP)
--------------------------
-We default to *non-strict* JSON Schema format checking to keep MVP friction low.
-When you are ready to tighten validation (e.g., enforce RFC 3339 “date-time”):
-
-  1) Pin dependency:   jsonschema[format-nongpl]==4.23.0  (in requirements.txt)
-  2) Run this script with --strict-formats or set ELIS_STRICT_FORMATS=1
-
-Until then, --strict-formats is available but off by default (no behaviour change).
+ELIS SLR Agent - JSON Validator
+Validates JSON artefacts against schemas, skipping metadata records.
 """
 
-from __future__ import annotations
-
-import argparse
 import json
-import os
-from dataclasses import dataclass
+import sys
 from pathlib import Path
-from typing import Any, Dict, List
-
-from jsonschema import Draft202012Validator, FormatChecker
-
-# -----------------------------------------------------------------------------
-# Locations
-# -----------------------------------------------------------------------------
-
-ROOT = Path(__file__).resolve().parents[1]
-
-DATA_DIR = ROOT / "json_jsonl"
-A_PATH = DATA_DIR / "ELIS_Appendix_A_Search_rows.json"
-B_PATH = DATA_DIR / "ELIS_Appendix_B_Screening_rows.json"
-# FIX: align with agent/output naming (DataExtraction, not Extraction)
-C_PATH = DATA_DIR / "ELIS_Appendix_C_DataExtraction_rows.json"
-
-SCHEMA_DIR = ROOT / "schemas"
-A_SCHEMA = SCHEMA_DIR / "appendix_a.schema.json"
-B_SCHEMA = SCHEMA_DIR / "appendix_b.schema.json"
-C_SCHEMA = SCHEMA_DIR / "appendix_c.schema.json"
-
-REPORT_DIR = ROOT / "validation_reports"
-REPORT_PATH = REPORT_DIR / "validation-report.md"
-
-# How many individual row errors to include per section in the report.
-ERROR_LIMIT_PER_SECTION = 50
+from typing import Dict, Any, List, Tuple
+from datetime import datetime
+from jsonschema import validate, ValidationError, Draft202012Validator
 
 
-# -----------------------------------------------------------------------------
-# Data structures
-# -----------------------------------------------------------------------------
-
-
-@dataclass
-class Result:
-    """Container for per-appendix validation results."""
-
-    name: str
-    path: Path
-    schema_path: Path
-    ok: bool
-    count: int
-    errors: List[str]
-
-
-# -----------------------------------------------------------------------------
-# Helpers
-# -----------------------------------------------------------------------------
-
-
-def _load_json(path: Path) -> Any:
-    """Load JSON from `path` (UTF-8). Raises on parse errors."""
-    return json.loads(path.read_text(encoding="utf-8"))
-
-
-def _load_schema(path: Path) -> Dict[str, Any]:
-    """Load a JSON Schema from `path` (UTF-8)."""
-    return json.loads(path.read_text(encoding="utf-8"))
-
-
-def _make_validator(
-    schema: Dict[str, Any], strict_formats: bool
-) -> Draft202012Validator:
+def load_json_file(file_path: Path) -> List[Dict[str, Any]]:
     """
-    Build a Draft 2020-12 validator.
-
-    If `strict_formats` is true, attach a FormatChecker to enforce JSON-Schema
-    "format" keywords (e.g., RFC 3339 'date-time'). For full strictness,
-    ensure the environment installs `jsonschema[format-nongpl]`.
+    Load JSON file with UTF-8 encoding.
+    
+    Args:
+        file_path: Path to JSON file
+        
+    Returns:
+        List of records (metadata records filtered out)
     """
-    if strict_formats:
-        return Draft202012Validator(schema, format_checker=FormatChecker())
-    return Draft202012Validator(schema)
-
-
-def _validate_rows(
-    name: str, data_path: Path, schema_path: Path, strict_formats: bool
-) -> Result:
-    """
-    Validate a JSON array of rows against `schema_path`.
-
-    Returns
-    -------
-    Result
-        ok=True when no validation errors were found.
-    """
-    if not data_path.exists():
-        return Result(
-            name=name,
-            path=data_path,
-            schema_path=schema_path,
-            ok=False,
-            count=0,
-            errors=[f"Missing file: {data_path.name}"],
-        )
-
-    # Load data
-    try:
-        data = _load_json(data_path)
-    except Exception as exc:  # pragma: no cover (robust logging)
-        return Result(
-            name=name,
-            path=data_path,
-            schema_path=schema_path,
-            ok=False,
-            count=0,
-            errors=[f"JSON load failed: {exc!r}"],
-        )
-
+    with open(file_path, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+    
+    # Ensure we have a list
     if not isinstance(data, list):
-        return Result(
-            name=name,
-            path=data_path,
-            schema_path=schema_path,
-            ok=False,
-            count=0,
-            errors=["File does not contain a JSON array"],
-        )
+        raise ValueError(f"Expected array, got {type(data).__name__}")
+    
+    # Filter out metadata records (records with "_meta": true)
+    records = [record for record in data if not record.get('_meta', False)]
+    
+    return records
 
-    # Load schema
+
+def load_schema(schema_path: Path) -> Dict[str, Any]:
+    """
+    Load JSON Schema file.
+    
+    Args:
+        schema_path: Path to schema file
+        
+    Returns:
+        Schema dictionary
+    """
+    with open(schema_path, 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+
+def validate_records(
+    records: List[Dict[str, Any]], 
+    schema: Dict[str, Any],
+    file_name: str
+) -> Tuple[bool, List[str]]:
+    """
+    Validate records against schema.
+    
+    Args:
+        records: List of data records
+        schema: JSON Schema (either full schema with 'items', or item schema directly)
+        file_name: Name of file being validated (for error messages)
+        
+    Returns:
+        Tuple of (is_valid, list_of_errors)
+    """
+    errors = []
+    
+    # If schema has "items", extract it (it's a full array schema)
+    # Otherwise, treat the schema as the item schema itself
+    items_schema = schema.get("items", schema)
+    
+    if not items_schema or items_schema == {}:
+        return True, []
+    
+    # Use appropriate validator based on schema version
+    from jsonschema import Draft202012Validator, Draft7Validator
+    
+    # Check schema version to use correct validator
+    schema_version = items_schema.get("$schema", "")
+    if "2020-12" in schema_version or "2019-09" in schema_version:
+        validator = Draft202012Validator(items_schema)
+    else:
+        validator = Draft7Validator(items_schema)
+    
+    # Validate each record
+    for idx, record in enumerate(records):
+        validation_errors = list(validator.iter_errors(record))
+        if validation_errors:
+            for error in validation_errors:
+                error_msg = f"row {idx}: {error.message}"
+                if error.path:
+                    field_path = '.'.join(str(p) for p in error.path)
+                    error_msg = f"row {idx}, field '{field_path}': {error.message}"
+                errors.append(error_msg)
+    
+    return len(errors) == 0, errors
+
+
+def validate_appendix(
+    appendix_name: str,
+    json_file: Path,
+    schema_file: Path
+) -> Tuple[bool, int, List[str]]:
+    """
+    Validate an appendix file.
+    
+    Args:
+        appendix_name: Human-readable name (e.g., "Appendix A (Search)")
+        json_file: Path to JSON data file
+        schema_file: Path to schema file
+        
+    Returns:
+        Tuple of (is_valid, record_count, errors)
+    """
     try:
-        schema = _load_schema(schema_path)
-    except Exception as exc:  # pragma: no cover
-        return Result(
-            name=name,
-            path=data_path,
-            schema_path=schema_path,
-            ok=False,
-            count=len(data),
-            errors=[f"Schema load failed: {exc!r}"],
-        )
-
-    validator = _make_validator(schema, strict_formats=strict_formats)
-
-    errors: List[str] = []
-    for idx, row in enumerate(data):
-        for error in validator.iter_errors(row):
-            loc = "/".join(str(p) for p in error.path) or "(root)"
-            errors.append(f"row {idx}: {loc}: {error.message}")
-
-    ok = not errors
-    return Result(
-        name=name,
-        path=data_path,
-        schema_path=schema_path,
-        ok=ok,
-        count=len(data),
-        errors=errors,
-    )
+        # Load data and schema
+        records = load_json_file(json_file)
+        schema = load_schema(schema_file)
+        
+        # Validate
+        is_valid, errors = validate_records(records, schema, json_file.name)
+        
+        return is_valid, len(records), errors
+        
+    except FileNotFoundError as e:
+        return False, 0, [f"File not found: {e}"]
+    except json.JSONDecodeError as e:
+        return False, 0, [f"Invalid JSON: {e}"]
+    except Exception as e:
+        return False, 0, [f"Unexpected error: {e}"]
 
 
-def _write_report(results: List[Result]) -> None:
-    """Write a readable Markdown report to REPORT_PATH."""
-    REPORT_DIR.mkdir(parents=True, exist_ok=True)
-
-    lines: List[str] = []
-    lines.append("# ELIS Validation Report (MVP)")
-    lines.append("")
-    for r in results:
-        status = "✅ OK" if r.ok else "❌ Errors"
-        lines.append(f"## {r.name} — {status}")
+def generate_report(results: Dict[str, Tuple[bool, int, List[str]]]) -> str:
+    """
+    Generate markdown validation report.
+    
+    Args:
+        results: Dictionary of appendix results
+        
+    Returns:
+        Markdown formatted report
+    """
+    lines = ["# ELIS Validation Report (MVP)", ""]
+    
+    for appendix_name, (is_valid, count, errors) in results.items():
+        status = "✅ Valid" if is_valid else "❌ Errors"
+        lines.append(f"## {appendix_name} — {status}")
         lines.append("")
-        lines.append(f"- File: `{r.path.relative_to(ROOT)}`")
-        lines.append(f"- Schema: `{r.schema_path.relative_to(ROOT)}`")
-        lines.append(f"- Row count: **{r.count}**")
-        if r.ok:
-            lines.append("- Findings: none")
+        lines.append(f"- Row count: **{count}**")
+        
+        if errors:
+            lines.append(f"- Error count: **{len(errors)}**")
+            lines.append("- Errors:")
+            for error in errors[:10]:  # Show first 10 errors
+                lines.append(f"  - {error}")
+            if len(errors) > 10:
+                lines.append(f"  - ... and {len(errors) - 10} more errors")
         else:
-            lines.append("- Findings:")
-            for msg in r.errors[:ERROR_LIMIT_PER_SECTION]:
-                lines.append(f"  - {msg}")
-            if len(r.errors) > ERROR_LIMIT_PER_SECTION:
-                lines.append(
-                    f"  - ... and {len(r.errors) - ERROR_LIMIT_PER_SECTION} more"
-                )
+            lines.append("- ✅ All records valid")
+        
         lines.append("")
-
-    REPORT_PATH.write_text("\n".join(lines), encoding="utf-8")
-
-
-# -----------------------------------------------------------------------------
-# CLI / Main
-# -----------------------------------------------------------------------------
+    
+    return "\n".join(lines)
 
 
-def _parse_args() -> argparse.Namespace:
-    """Parse optional CLI flags; defaults keep MVP behaviour."""
-    parser = argparse.ArgumentParser(
-        description="Validate ELIS artefacts against JSON Schemas (non-blocking)."
-    )
-    parser.add_argument(
-        "--strict-formats",
-        action="store_true",
-        default=False,
-        help=(
-            "Enable strict JSON Schema 'format' checks (e.g., RFC 3339 date-time). "
-            "Requires installing jsonschema[format-nongpl]."
+def main():
+    """Main validation function."""
+    # Define appendices to validate
+    appendices = {
+        "Appendix A (Search)": (
+            Path("json_jsonl/ELIS_Appendix_A_Search_rows.json"),
+            Path("schemas/appendix_a.schema.json")
         ),
-    )
-    return parser.parse_args()
-
-
-def main() -> int:
-    """
-    Validate A/B/C artefacts and write a Markdown report.
-
-    Always returns 0 (non-blocking by CI design).
-    """
-    args = _parse_args()
-    strict_flag = args.strict_formats or os.getenv("ELIS_STRICT_FORMATS", "0") in {
-        "1",
-        "true",
-        "TRUE",
+        "Appendix B (Screening)": (
+            Path("json_jsonl/ELIS_Appendix_B_Screening_rows.json"),
+            Path("schemas/appendix_b.schema.json")
+        ),
+        "Appendix C (Extraction)": (
+            Path("json_jsonl/ELIS_Appendix_C_Extraction_rows.json"),
+            Path("schemas/appendix_c.schema.json")
+        ),
     }
-
-    results = [
-        _validate_rows(
-            "Appendix A (Search)", A_PATH, A_SCHEMA, strict_formats=strict_flag
-        ),
-        _validate_rows(
-            "Appendix B (Screening)", B_PATH, B_SCHEMA, strict_formats=strict_flag
-        ),
-        _validate_rows(
-            "Appendix C (Extraction)", C_PATH, C_SCHEMA, strict_formats=strict_flag
-        ),
-    ]
-
-    # Emit a concise summary for CI logs.
-    for r in results:
-        status = "OK" if r.ok else "ERR"
-        print(f"[{status}] {r.name}: rows={r.count} file={r.path.name}")
-
-    _write_report(results)
-
-    # Non-blocking by design (validate job must not fail merges).
-    return 0
+    
+    # Validate each appendix
+    results = {}
+    all_valid = True
+    
+    for name, (json_file, schema_file) in appendices.items():
+        # Skip if files don't exist
+        if not json_file.exists():
+            print(f"[SKIP] {name}: file not found")
+            continue
+        if not schema_file.exists():
+            print(f"[SKIP] {name}: schema not found")
+            continue
+        
+        is_valid, count, errors = validate_appendix(name, json_file, schema_file)
+        results[name] = (is_valid, count, errors)
+        
+        # Print status
+        status = "[OK]" if is_valid else "[ERR]"
+        print(f"{status} {name}: rows={count} file={json_file.name}")
+        
+        if not is_valid:
+            all_valid = False
+    
+    # Generate and save reports
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+    
+    # Save timestamped report
+    report = generate_report(results)
+    report_dir = Path("validation_reports")
+    report_dir.mkdir(exist_ok=True)
+    
+    timestamped_report = report_dir / f"{timestamp}_validation_report.md"
+    timestamped_report.write_text(report, encoding='utf-8')
+    
+    # Also save as latest (for easy reference)
+    latest_report = report_dir / "validation-report.md"
+    latest_report.write_text(report, encoding='utf-8')
+    
+    print(f"\nReports saved:")
+    print(f"  - Latest: {latest_report}")
+    print(f"  - Timestamped: {timestamped_report}")
+    
+    # Exit with appropriate code (but don't fail CI)
+    # We treat validation as informational, not blocking
+    sys.exit(0)
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    main()
+    

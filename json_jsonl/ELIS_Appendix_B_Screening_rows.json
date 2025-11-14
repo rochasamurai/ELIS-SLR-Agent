@@ -5,62 +5,1238 @@
     "title": "N/A",
     "decision": "included",
     "reason": "MVP toy included",
-    "decided_at": "2025-10-22T09:31:58Z"
+    "decided_at": "2025-11-14T11:55:09Z"
   },
   {
-    "id": "B-A-0002",
-    "source_id": "A-0002",
-    "title": "N/A",
+    "id": "B-doi:10.1007/s42979-025-04088-w",
+    "source_id": "doi:10.1007/s42979-025-04088-w",
+    "title": "Building a Scalable and Coercion-Resistant E-Voting System Using Blockchain",
     "decision": "excluded",
     "reason": "MVP toy excluded",
-    "decided_at": "2025-10-22T09:31:58Z"
+    "decided_at": "2025-11-14T11:55:09Z"
   },
   {
-    "id": "B-A-0003",
-    "source_id": "A-0003",
-    "title": "N/A",
+    "id": "B-doi:10.1145/3719384.3719452",
+    "source_id": "doi:10.1145/3719384.3719452",
+    "title": "Cross-Chain Blockchain Voting System with NFT-Based Authentication",
     "decision": "included",
     "reason": "MVP toy included",
-    "decided_at": "2025-10-22T09:31:58Z"
+    "decided_at": "2025-11-14T11:55:09Z"
   },
   {
-    "id": "B-A-0004",
-    "source_id": "A-0004",
-    "title": "N/A",
+    "id": "B-doi:10.1007/s41870-025-02405-3",
+    "source_id": "doi:10.1007/s41870-025-02405-3",
+    "title": "An innovative and secured electronic voting system based on Elliptic Curved Signing Approach (ECDSA) and digital signatures",
     "decision": "excluded",
     "reason": "MVP toy excluded",
-    "decided_at": "2025-10-22T09:31:58Z"
+    "decided_at": "2025-11-14T11:55:09Z"
   },
   {
-    "id": "B-A-0005",
-    "source_id": "A-0005",
-    "title": "N/A",
+    "id": "B-doi:10.1016/j.comnet.2025.111217",
+    "source_id": "doi:10.1016/j.comnet.2025.111217",
+    "title": "Blockchain-based anonymous and self-tallying voting with time-bounded ballot secrecy",
     "decision": "included",
     "reason": "MVP toy included",
-    "decided_at": "2025-10-22T09:31:58Z"
+    "decided_at": "2025-11-14T11:55:09Z"
   },
   {
-    "id": "B-A-0006",
-    "source_id": "A-0006",
-    "title": "N/A",
+    "id": "B-doi:10.1063/5.0263835",
+    "source_id": "doi:10.1063/5.0263835",
+    "title": "Decentralized Online Voting System Using Blockchain",
     "decision": "excluded",
     "reason": "MVP toy excluded",
-    "decided_at": "2025-10-22T09:31:58Z"
+    "decided_at": "2025-11-14T11:55:09Z"
   },
   {
-    "id": "B-A-0007",
-    "source_id": "A-0007",
-    "title": "N/A",
+    "id": "B-t:3dd4e8ed4484e6c4c39f",
+    "source_id": "t:3dd4e8ed4484e6c4c39f",
+    "title": "AN IOT BASED EFFICIENT E-VOTING SYSTEM USING QR CODE AND EFFT-SWIFFT WITH BLOCKCHAIN FOR ENHANCED SECURITY AND TRANSPARENCY",
     "decision": "included",
     "reason": "MVP toy included",
-    "decided_at": "2025-10-22T09:31:58Z"
+    "decided_at": "2025-11-14T11:55:09Z"
   },
   {
-    "id": "B-A-0008",
-    "source_id": "A-0008",
-    "title": "N/A",
+    "id": "B-t:22aa9e2e7c928cc58039",
+    "source_id": "t:22aa9e2e7c928cc58039",
+    "title": "AIBC 2024 - 2024 5th International Artificial Intelligence and Blockchain Conference",
     "decision": "excluded",
     "reason": "MVP toy excluded",
-    "decided_at": "2025-10-22T09:31:58Z"
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-t:f6749eb4f808a8c31121",
+    "source_id": "t:f6749eb4f808a8c31121",
+    "title": "9th Workshop on Advances in Secure Electronic Voting Schemes, Voting 2024, 4th Workshop on Decentralized Finance, DeFI 2024, 8th Workshop on Trusted Smart Contracts, WTSC 2024, 5th Workshop on Coordination of Decentralized Finance, CoDecFin 2024 held in conjunction with the 28th International Conference on Financial Cryptography, FC 2024",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1007/978-3-031-77153-8_3",
+    "source_id": "doi:10.1007/978-3-031-77153-8_3",
+    "title": "Enhancing Election Security Through Blockchain: An In-Depth Study of Encrypted NFTs and Smart Contracts",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1109/jiot.2024.3478231",
+    "source_id": "doi:10.1109/jiot.2024.3478231",
+    "title": "Building Efficient and Flexible Voting Protocols: An Approach to Fairness and Anonymity",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1007/978-981-96-2329-7_30",
+    "source_id": "doi:10.1007/978-981-96-2329-7_30",
+    "title": "A Cloud-Based Intelligent Internet Voting Using Cryptography and Variable Steganography",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1109/icdici66477.2025.11134882",
+    "source_id": "doi:10.1109/icdici66477.2025.11134882",
+    "title": "A Lightweight Blockchain Framework for Secure and Efficient Small-Scale E-Voting",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1109/tnsm.2025.3604833",
+    "source_id": "doi:10.1109/tnsm.2025.3604833",
+    "title": "Send Message to the Future? Blockchain-Based Time Machines for Decentralized Reveal of Locked Information",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.12688/f1000research.160087.3",
+    "source_id": "doi:10.12688/f1000research.160087.3",
+    "title": "Blockchain-enhanced electoral integrity: a robust model for secure digital voting systems in Oman",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1007/s13198-025-02927-w",
+    "source_id": "doi:10.1007/s13198-025-02927-w",
+    "title": "Towards secure democracy: a hybrid blockchain-enabled secure and scalable e-voting system with sharding and post-quantum cryptography",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1109/iciss63372.2025.11076493",
+    "source_id": "doi:10.1109/iciss63372.2025.11076493",
+    "title": "Android-based Blockchain E-Voting System for Secure and Transparent Elections",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-t:f10c423702e5e1c4c09b",
+    "source_id": "t:f10c423702e5e1c4c09b",
+    "title": "8th International Conference on ICT for Sustainable Development, ICT4SD 2024",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1109/tifs.2025.3564877",
+    "source_id": "doi:10.1109/tifs.2025.3564877",
+    "title": "RandFlash: Breaking the Quadratic Barrier in Large-Scale Distributed Randomness Beacons",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-t:647cfa27bd636192bdcc",
+    "source_id": "t:647cfa27bd636192bdcc",
+    "title": "23rd International Conference on Informatics in Economy, IE 2024",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1007/978-981-96-0161-5_21",
+    "source_id": "doi:10.1007/978-981-96-0161-5_21",
+    "title": "Enhanced Blockchain-Based e-Voting System Using Zero-Knowledge Proofs",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1007/978-3-031-87054-5_12",
+    "source_id": "doi:10.1007/978-3-031-87054-5_12",
+    "title": "Formally Verified Verifiable Group Generators",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1007/978-3-031-80943-9_47",
+    "source_id": "doi:10.1007/978-3-031-80943-9_47",
+    "title": "Proposing ZKP Scheme Based on the RSA Cryptosystem and Cryptographic Hash Function for IoT Devices Authentication in Smart Home Network",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-t:c7f163642ceac337126f",
+    "source_id": "t:c7f163642ceac337126f",
+    "title": "6th International Congress on Blockchain and Applications, BLOCKCHAIN 2024",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1109/tnse.2025.3550290",
+    "source_id": "doi:10.1109/tnse.2025.3550290",
+    "title": "Self-Tallying E-Voting Using Homomorphic Time-Lock Puzzles and ZK-SNARKs",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.3390/network4040021",
+    "source_id": "doi:10.3390/network4040021",
+    "title": "Blockchain-Based E-Voting Mechanisms: A Survey and a Proposal †",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1371/journal.pone.0312817",
+    "source_id": "doi:10.1371/journal.pone.0312817",
+    "title": "SRFACS: A secure and robust framework for anonymous communication systems",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1007/s41109-024-00650-2",
+    "source_id": "doi:10.1007/s41109-024-00650-2",
+    "title": "Anonymous voting using distributed ledger-assisted secure multi-party computation",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.3390/fi16110388",
+    "source_id": "doi:10.3390/fi16110388",
+    "title": "Decentralizing Democracy: Secure and Transparent E-Voting Systems with Blockchain Technology in the Context of Palestine",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1016/j.jisa.2024.103837",
+    "source_id": "doi:10.1016/j.jisa.2024.103837",
+    "title": "Blockchain in inter-organizational collaboration: A privacy-preserving voting system for collective decision-making",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-t:5edbb6e7ed2673c0b93c",
+    "source_id": "t:5edbb6e7ed2673c0b93c",
+    "title": "VALIDATION OF SECURE E-VOTING SYSTEM BASED BLOCKCHAIN IMMUTABILITY: THE JORDANIAN PARLIAMENTARY ELECTIONS",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.11591/ijeecs.v33.i3.pp1793-1801",
+    "source_id": "doi:10.11591/ijeecs.v33.i3.pp1793-1801",
+    "title": "Analysis and design on acceptance of blockchain based e-voting system",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-t:300efebbbdb4843e76cb",
+    "source_id": "t:300efebbbdb4843e76cb",
+    "title": "8th International Conference on ICT for Sustainable Development, ICT4SD 2024",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-t:2aebcde8ea0385090329",
+    "source_id": "t:2aebcde8ea0385090329",
+    "title": "2024 6th International Conference on Blockchain Computing and Applications, BCCA 2024",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-t:6b719f9e7ab2ff77bc3f",
+    "source_id": "t:6b719f9e7ab2ff77bc3f",
+    "title": "4th International Conference on Next Generation Computing Applications, NextComp 2024 - Proceedings",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1109/scisisis61014.2024.10760236",
+    "source_id": "doi:10.1109/scisisis61014.2024.10760236",
+    "title": "Scalability Evaluation of zk-SNARK Authentication in Blockchain-Based E-Voting",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1109/bcca62388.2024.10844450",
+    "source_id": "doi:10.1109/bcca62388.2024.10844450",
+    "title": "Comparative E-Voting Security Evaluation: Multi-Modal Authentication Approaches",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1109/access.2024.3495981",
+    "source_id": "doi:10.1109/access.2024.3495981",
+    "title": "A Methodology for Vulnerability Assessment and Threat Modelling of an e-Voting Platform Based on Ethereum Blockchain",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-t:531a2bcbf866026f056f",
+    "source_id": "t:531a2bcbf866026f056f",
+    "title": "2nd International Conference on Deep Sciences for Computing and Communications, IconDeepCom 2023",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1109/csf61375.2024.00013",
+    "source_id": "doi:10.1109/csf61375.2024.00013",
+    "title": "Accountable Bulletin Boards: Definition and Provably Secure Implementation",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1109/ojcs.2024.3463649",
+    "source_id": "doi:10.1109/ojcs.2024.3463649",
+    "title": "Verifiable Random Function Schemes Based on SM2 Digital Signature Algorithm and its Applications for Committee Elections",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-t:bdc2052c4bf1b251c4a0",
+    "source_id": "t:bdc2052c4bf1b251c4a0",
+    "title": "2nd International Conference on Innovations in Data Analytics, ICIDA 2023",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-t:e69f99f59de9f7d0024a",
+    "source_id": "t:e69f99f59de9f7d0024a",
+    "title": "3rd International Conference on Innovation in Engineering, ICIE 2024",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1109/iscs61804.2024.10581204",
+    "source_id": "doi:10.1109/iscs61804.2024.10581204",
+    "title": "Unleashing Innovation: Experimental Evaluation of Blockchain Assisted Electronic Voting System Using Secured Authentication Scheme",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-t:3dc5fdb945fd37179a0f",
+    "source_id": "t:3dc5fdb945fd37179a0f",
+    "title": "2024 1st International Conference on Trends in Engineering Systems and Technologies, ICTEST 2024",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1109/assic60049.2024.10507924",
+    "source_id": "doi:10.1109/assic60049.2024.10507924",
+    "title": "Blockchain-Based Comparative Analysis of E-Voting Systems: A Review",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1201/9781003393580-106",
+    "source_id": "doi:10.1201/9781003393580-106",
+    "title": "Comparative analysis of electronic voting methods based on blockchain technology",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1007/978-981-99-9785-5_38",
+    "source_id": "doi:10.1007/978-981-99-9785-5_38",
+    "title": "Electronic Voting Privacy Protection Scheme Based on Double Signature in Consortium Blockchain",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1109/tcss.2023.3247464",
+    "source_id": "doi:10.1109/tcss.2023.3247464",
+    "title": "A Comparative Analysis of Centralized and Decentralized Developer Autonomous Organizations Managing Conflicts in Discussing External Crises",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-t:02bb3931aab42eaa2429",
+    "source_id": "t:02bb3931aab42eaa2429",
+    "title": "4th Workshop on Coordination of Decentralized Finance, CoDecFin 2023, 3rd Workshop on Decentralized Finance, DeFi 2023, 8th Workshop on Advances in Secure Electronic Voting, VOTING 2023, and 7th Workshop on Trusted Smart Contracts, WTSC 2023, held in Association with the 27th International Conference on Financial Cryptography and Data Security, FC 2023",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1109/icaaeei63658.2024.10899136",
+    "source_id": "doi:10.1109/icaaeei63658.2024.10899136",
+    "title": "E-Voting Application Development Utilizing Blockchain Technology: Evaluation of Blockchain's Usage to Solve E-Voting Data Security Problem",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1145/3576915.3623171",
+    "source_id": "doi:10.1145/3576915.3623171",
+    "title": "How Hard is Takeover in DPoS Blockchains? Understanding the Security of Coin-based Voting Governance",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.5281/zenodo.8313097",
+    "source_id": "doi:10.5281/zenodo.8313097",
+    "title": "A Comparative Analysis of Symmetric Cryptographic Algorithm as a Data Security Tool: A Survey",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1145/3555776.3578603",
+    "source_id": "doi:10.1145/3555776.3578603",
+    "title": "SBvote: Scalable Self-Tallying Blockchain-Based Voting",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1109/eict61409.2023.10427881",
+    "source_id": "doi:10.1109/eict61409.2023.10427881",
+    "title": "Enhancing E-Voting Security with Blockchain-Backed Decentralized Authorization",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.3991/ijim.v17i23.45257",
+    "source_id": "doi:10.3991/ijim.v17i23.45257",
+    "title": "A Review of Blockchain-Based E-Voting Systems: Comparative Analysis and Findings",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1109/icalter61411.2023.10372915",
+    "source_id": "doi:10.1109/icalter61411.2023.10372915",
+    "title": "Audit model using controls from ISO/IEC 27002 for the information security of electronic voting based on IoT and Blockchain",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1109/icccnt56998.2023.10307550",
+    "source_id": "doi:10.1109/icccnt56998.2023.10307550",
+    "title": "A Comparative Analysis of Traditional versus Blockchain-based Voting Systems",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.24996/ijs.2023.64.4.36",
+    "source_id": "doi:10.24996/ijs.2023.64.4.36",
+    "title": "Review Study of E-Voting System Based on Smart Contracts Using Blockchain Technology; دراسة مراجعة في نظام التصويت اإللكتروني القائم على العقد الذكي باستخدام تقنية البلوكجين",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1109/icabcd59051.2023.10220467",
+    "source_id": "doi:10.1109/icabcd59051.2023.10220467",
+    "title": "Blockchain Electoral Vote Counting Solutions: A Comparative Analysis of Methods, Constraints, and Approaches",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1007/978-3-031-30122-3_2",
+    "source_id": "doi:10.1007/978-3-031-30122-3_2",
+    "title": "A Survey on Identity-Based Blind Signature",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-t:40dd2c31e58c3503569d",
+    "source_id": "t:40dd2c31e58c3503569d",
+    "title": "International Conference on Cybersecurity, Situational Awareness, and Social Media, Cyber Science 2022",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-t:89c533286d831969dbcc",
+    "source_id": "t:89c533286d831969dbcc",
+    "title": "3rd Workshop on Coordination of Decentralized Finance, CoDecFin 2022, 2nd Workshop on Decentralized Finance, DeFi 2022, 7th Workshop on Advances in Secure Electronic Voting, VOTING 2022, and 6th Workshop on Trusted Smart Contracts, WTSC 2022, held in Association with the 26th International Conference on Financial Cryptography and Data Security, FC 2022",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1145/3560905.3568181",
+    "source_id": "doi:10.1145/3560905.3568181",
+    "title": "A Survey of Blockchain-Based Electronic Voting Mechanisms in Sensor Networks",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.18280/isi.270506",
+    "source_id": "doi:10.18280/isi.270506",
+    "title": "Iraqi Paradigm E-Voting System Based on Hyperledger Fabric Blockchain Platform",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.18280/ria.360410",
+    "source_id": "doi:10.18280/ria.360410",
+    "title": "Performance Evaluation of E-Voting Based on Hyperledger Fabric Blockchain Platform",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1587/transinf.2021edk0005",
+    "source_id": "doi:10.1587/transinf.2021edk0005",
+    "title": "Development of a Blockchain-Based Online Secret Electronic Voting System",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.3389/fbloc.2022.927013",
+    "source_id": "doi:10.3389/fbloc.2022.927013",
+    "title": "Paillier Cryptosystem Based ChainNode for Secure Electronic Voting",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1109/icct56141.2022.10072408",
+    "source_id": "doi:10.1109/icct56141.2022.10072408",
+    "title": "Privacy Preserving Electronic Scoring Scheme based on CKKS",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1109/ictc55196.2022.9952594",
+    "source_id": "doi:10.1109/ictc55196.2022.9952594",
+    "title": "PUPVOTE: Blockchain-Based Voting System Using NEAR Protocol",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-t:f0fd362faaed0debe5dc",
+    "source_id": "t:f0fd362faaed0debe5dc",
+    "title": "24th International Symposium on Stabilization, Safety, and Security of Distributed Systems, SSS 2022",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1109/bcca55292.2022.9921940",
+    "source_id": "doi:10.1109/bcca55292.2022.9921940",
+    "title": "Sancus: an Anonymous and Trustworthy Blockchain-based Electronic Voting Architecture",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1155/2022/4436824",
+    "source_id": "doi:10.1155/2022/4436824",
+    "title": "A Practical Anonymous Voting Scheme Based on Blockchain for Internet of Energy",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1109/iciem54221.2022.9853068",
+    "source_id": "doi:10.1109/iciem54221.2022.9853068",
+    "title": "Development and Performance Evaluation of a Blockchain Associated E-Voting System in IoT-Enabled Smart-Cities",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1007/978-981-19-2177-3_46",
+    "source_id": "doi:10.1007/978-981-19-2177-3_46",
+    "title": "Blockchain-Based Decentralized E-Voting System Using Smart Contract",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-t:3fdc62d9b12dd5310964",
+    "source_id": "t:3fdc62d9b12dd5310964",
+    "title": "24th International Conference on Information Security and Cryptology, ICISC 2021",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1109/icbc54727.2022.9805556",
+    "source_id": "doi:10.1109/icbc54727.2022.9805556",
+    "title": "ProvotuMN: Decentralized, Mix-Net-based, and Receipt-free Voting System",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1109/access.2022.3180168",
+    "source_id": "doi:10.1109/access.2022.3180168",
+    "title": "A Framework to Make Voting System Transparent Using Blockchain Technology",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1007/978-3-030-89546-4_3",
+    "source_id": "doi:10.1007/978-3-030-89546-4_3",
+    "title": "A Secure Electronic Voting System Using Multifactor Authentication and Blockchain Technologies",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-t:63e7bb1a9b3a90d350d9",
+    "source_id": "t:63e7bb1a9b3a90d350d9",
+    "title": "8th International Conference on Electronic Governance and Open Society: Challenges in Eurasia, EGOSE 2021",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.32604/cmc.2022.023846",
+    "source_id": "doi:10.32604/cmc.2022.023846",
+    "title": "A Framework for e-Voting System Based on Blockchain and Distributed Ledger Technologies",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-t:775ebde40257ac17a9a4",
+    "source_id": "t:775ebde40257ac17a9a4",
+    "title": "6th International Conference on Emerging Research in Computing, Information, Communication and Applications, ERCICA 2020",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1186/s13174-021-00139-6",
+    "source_id": "doi:10.1186/s13174-021-00139-6",
+    "title": "A comparative analysis of the platforms for decentralized autonomous organizations in the Ethereum blockchain",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1145/3479645.3479706",
+    "source_id": "doi:10.1145/3479645.3479706",
+    "title": "An Ethereum Based Distributed Application for Ensuring the Integrity of Stored E-Voting Data",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.3390/s21123958",
+    "source_id": "doi:10.3390/s21123958",
+    "title": "A scalable implementation of anonymous voting over ethereum blockchain",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1002/cpe.5813",
+    "source_id": "doi:10.1002/cpe.5813",
+    "title": "Design and practical implementation of verify-your-vote protocol",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1109/ictai53825.2021.9673389",
+    "source_id": "doi:10.1109/ictai53825.2021.9673389",
+    "title": "Securing the E-voting system through blockchain using the concept of proof of work",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1155/2021/9988646",
+    "source_id": "doi:10.1155/2021/9988646",
+    "title": "BEvote: Bitcoin-Enabled E-Voting Scheme with Anonymity and Robustness",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1007/978-3-030-75107-4_5",
+    "source_id": "doi:10.1007/978-3-030-75107-4_5",
+    "title": "An Empirical Investigation of Blockchain Scalability",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-t:0a1b505316df0518862f",
+    "source_id": "t:0a1b505316df0518862f",
+    "title": "Blockchain and its applications in healthcare data: A survey",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-t:b2fbdcbad24be4f3e915",
+    "source_id": "t:b2fbdcbad24be4f3e915",
+    "title": "14th International Conference on ICT, Society, and Human Beings, ICT 2021, 18th International Conference on Web Based Communities and Social Media, WBC 2021 and 13th International Conference on e-Health, EH 2021 - Held at the 15th Multi-Conference on Computer Science and Information Systems, MCCSIS 2021",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.12928/telkomnika.v19i5.20415",
+    "source_id": "doi:10.12928/telkomnika.v19i5.20415",
+    "title": "Go-Ethereum for electronic voting system using clique as proof-of-authority",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1109/tifs.2021.3108494",
+    "source_id": "doi:10.1109/tifs.2021.3108494",
+    "title": "PriScore: Blockchain-Based Self-Tallying Election System Supporting Score Voting",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-t:4ddf70f526f3c8086cb3",
+    "source_id": "t:4ddf70f526f3c8086cb3",
+    "title": "27th International Conference on Selected Areas in Cryptography, SAC 2020",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1007/978-3-030-80960-7_5",
+    "source_id": "doi:10.1007/978-3-030-80960-7_5",
+    "title": "Proactive Provenance Policies for Automatic Cryptographic Data Centric Security",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1007/978-3-030-72725-3_11",
+    "source_id": "doi:10.1007/978-3-030-72725-3_11",
+    "title": "A Privacy Preserving E-Voting System Based on Blockchain",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1007/978-3-030-71593-9_4",
+    "source_id": "doi:10.1007/978-3-030-71593-9_4",
+    "title": "A Digital Voting System for the 21st Century",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-t:7457784f94759414f7df",
+    "source_id": "t:7457784f94759414f7df",
+    "title": "2nd International Conference on Advances in Cyber Security, ACeS 2020",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1016/j.cose.2020.102081",
+    "source_id": "doi:10.1016/j.cose.2020.102081",
+    "title": "Empirical analysis of transaction malleability within blockchain-based e-Voting",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1109/icimcis51567.2020.9354310",
+    "source_id": "doi:10.1109/icimcis51567.2020.9354310",
+    "title": "Implementation and evaluation of blockchain based e-voting system with Ethereum and Metamask",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1016/j.future.2019.10.016",
+    "source_id": "doi:10.1016/j.future.2019.10.016",
+    "title": "HSE-Voting: A secure high-efficiency electronic voting scheme based on homomorphic signcryption",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.4018/978-1-7998-5351-0.ch071",
+    "source_id": "doi:10.4018/978-1-7998-5351-0.ch071",
+    "title": "Secure digital voting system based on blockchain technology",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1142/9789811205279_0008",
+    "source_id": "doi:10.1142/9789811205279_0008",
+    "title": "Blockchain-based e-voting application",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1016/j.ins.2019.07.031",
+    "source_id": "doi:10.1016/j.ins.2019.07.031",
+    "title": "An efficient approach for secure multi-party computation without authenticated channel",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.3390/informatics7020016",
+    "source_id": "doi:10.3390/informatics7020016",
+    "title": "Architecture-centric evaluation of blockchain-based smart contract E-voting for national elections",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1109/incet49848.2020.9154116",
+    "source_id": "doi:10.1109/incet49848.2020.9154116",
+    "title": "Implementing electronic voting system with blockchain technology",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1016/j.compeleceng.2020.106583",
+    "source_id": "doi:10.1016/j.compeleceng.2020.106583",
+    "title": "Simulation of transaction malleability attack for blockchain-based e-Voting",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1145/3366424.3382708",
+    "source_id": "doi:10.1145/3366424.3382708",
+    "title": "Hybrid-Voting: A Hybrid Structured Electronic Voting System",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1145/3383219.3383274",
+    "source_id": "doi:10.1145/3383219.3383274",
+    "title": "Blockchain Applications in Human Resources Management: Opportunities and Challenges",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1145/3390566.3391677",
+    "source_id": "doi:10.1145/3390566.3391677",
+    "title": "The Fit of Blockchain into Rural Area Financial Management Accountability in Indonesia",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1145/3390566.3391673",
+    "source_id": "doi:10.1145/3390566.3391673",
+    "title": "The Impact of Block Parameters on the Throughput and Security of Blockchains",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-t:cdce0cfc2f1e9f8a3afb",
+    "source_id": "t:cdce0cfc2f1e9f8a3afb",
+    "title": "5th International Joint Conference on Electronic Voting, E-Vote-ID 2020",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1007/978-3-030-60347-2_8",
+    "source_id": "doi:10.1007/978-3-030-60347-2_8",
+    "title": "A unified evaluation of two-candidate ballot-polling election auditing methods",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1007/978-3-030-54455-3_32",
+    "source_id": "doi:10.1007/978-3-030-54455-3_32",
+    "title": "How to dynamically incentivize sufficient level of iot security",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1007/978-3-030-54455-3_28",
+    "source_id": "doi:10.1007/978-3-030-54455-3_28",
+    "title": "Characterizing types of smart contracts in the ethereum landscape",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1016/j.procs.2020.03.303",
+    "source_id": "doi:10.1016/j.procs.2020.03.303",
+    "title": "Blockchain Ethereum Clients Performance Analysis Considering E-Voting Application",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1007/978-3-030-43725-1_18",
+    "source_id": "doi:10.1007/978-3-030-43725-1_18",
+    "title": "How to Assess the Usability Metrics of E-Voting Schemes",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1007/978-3-030-36687-2_54",
+    "source_id": "doi:10.1007/978-3-030-36687-2_54",
+    "title": "A Transparent Referendum Protocol with Immutable Proceedings and Verifiable Outcome for Trustless Networks",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-t:1ccabdeb9673163a1da8",
+    "source_id": "t:1ccabdeb9673163a1da8",
+    "title": "13th International Conference on Innovative Mobile and Internet Services in Ubiquitous Computing, IMIS 2019",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1109/chilecon47746.2019.8988084",
+    "source_id": "doi:10.1109/chilecon47746.2019.8988084",
+    "title": "Blockchain electronic vote system",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1109/icict46931.2019.8977657",
+    "source_id": "doi:10.1109/icict46931.2019.8977657",
+    "title": "Comparative Study Indian Electoral Reforms in Indian Context",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.35940/ijrte.a2199.078219",
+    "source_id": "doi:10.35940/ijrte.a2199.078219",
+    "title": "Effectiveness of electronic voting machine in the electoral system of India: New opportunities and challenges",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1109/eurosp.2019.00050",
+    "source_id": "doi:10.1109/eurosp.2019.00050",
+    "title": "Private votes on untrusted platforms: Models, attacks and provable scheme",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1109/rivf.2019.8713661",
+    "source_id": "doi:10.1109/rivf.2019.8713661",
+    "title": "Votereum: An ethereum-based e-voting system",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-t:6d17c9c520e15fd0e103",
+    "source_id": "t:6d17c9c520e15fd0e103",
+    "title": "Proceedings - 2019 4th International Conference on Internet of Things: Smart Innovation and Usages, IoT-SIU 2019",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-t:99a4bdfe47509f159900",
+    "source_id": "t:99a4bdfe47509f159900",
+    "title": "13th International Conference on Network and System Security, NSS 2019",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1007/978-981-15-0758-8_18",
+    "source_id": "doi:10.1007/978-981-15-0758-8_18",
+    "title": "Blockchain-based threshold electronic voting system",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-t:b19fc1488ba292f8649d",
+    "source_id": "t:b19fc1488ba292f8649d",
+    "title": "6th Workshop on Engineering Applications, WEA 2019",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1007/978-3-030-26948-7_5",
+    "source_id": "doi:10.1007/978-3-030-26948-7_5",
+    "title": "Lattice-Based Zero-Knowledge Proofs: New Techniques for Shorter and Faster Constructions and Applications",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-t:ed0568a759f20578d265",
+    "source_id": "t:ed0568a759f20578d265",
+    "title": "Evaluation of system reliability referring EVM and VVPAT W.R.T. its components",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1007/978-3-662-58820-8_23",
+    "source_id": "doi:10.1007/978-3-662-58820-8_23",
+    "title": "Comparative analysis of the legal concept of title rights in real estate and the technology of tokens: How can titles become tokens?",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-t:49d38400518d800464f8",
+    "source_id": "t:49d38400518d800464f8",
+    "title": "22nd International Conference on Financial Cryptography and Data Security, FC 2018",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1109/access.2019.2897252",
+    "source_id": "doi:10.1109/access.2019.2897252",
+    "title": "SeVEP: Secure and Verifiable Electronic Polling System",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1145/3173574.3173750",
+    "source_id": "doi:10.1145/3173574.3173750",
+    "title": "What did i really vote for? On the usability of verifiable e-voting schemes",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.4018/ijegr.2018010103",
+    "source_id": "doi:10.4018/ijegr.2018010103",
+    "title": "Secure digital voting system based on blockchain technology",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.3837/tiis.2017.11.020",
+    "source_id": "doi:10.3837/tiis.2017.11.020",
+    "title": "New proxy blind signcryption scheme for secure multiple digital messages transmission based on elliptic curve cryptography",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1145/3133956.3134068",
+    "source_id": "doi:10.1145/3133956.3134068",
+    "title": "New techniques for structural batch verification in bilinear groups with applications to groth-sahai proofs",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1016/j.jisa.2017.08.002",
+    "source_id": "doi:10.1016/j.jisa.2017.08.002",
+    "title": "A practical, secure, and auditable e-voting system",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1007/978-3-662-54388-7_11",
+    "source_id": "doi:10.1007/978-3-662-54388-7_11",
+    "title": "Ceremonies for end-to-end verifiable elections",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1109/icdcs.2016.56",
+    "source_id": "doi:10.1109/icdcs.2016.56",
+    "title": "D-DEMOS: A Distributed, End-to-End Verifiable, Internet Voting System",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-t:207331023305b61acb15",
+    "source_id": "t:207331023305b61acb15",
+    "title": "International Workshops on Financial Cryptography and Data Security, FC 2016",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1109/ares.2015.75",
+    "source_id": "doi:10.1109/ares.2015.75",
+    "title": "Efficiency evaluation of cryptographic protocols for boardroom voting",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1504/ijics.2015.069214",
+    "source_id": "doi:10.1504/ijics.2015.069214",
+    "title": "Implementing generic security requirements in e-voting using modified stegano-cryptographic approach",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.4018/978-1-4666-5820-2.ch002",
+    "source_id": "doi:10.4018/978-1-4666-5820-2.ch002",
+    "title": "Analysis of security and cryptographic approaches to provide secret and verifiable electronic voting",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1007/978-3-642-39185-9_10",
+    "source_id": "doi:10.1007/978-3-642-39185-9_10",
+    "title": "Prêt à Voter providing everlasting privacy",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1109/pst.2012.6297919",
+    "source_id": "doi:10.1109/pst.2012.6297919",
+    "title": "Privacy-preserving resource evaluation in social networks",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1007/978-3-642-13861-4_37",
+    "source_id": "doi:10.1007/978-3-642-13861-4_37",
+    "title": "Blind Signatures in Electronic Voting Systems",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1007/978-3-642-14292-5_24",
+    "source_id": "doi:10.1007/978-3-642-14292-5_24",
+    "title": "Student's polls for teaching quality evaluation as an electronic voting system",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1109/icds.2010.13",
+    "source_id": "doi:10.1109/icds.2010.13",
+    "title": "Electronic Voting using Identity Based Cryptography",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-t:7558e11b8d479884485f",
+    "source_id": "t:7558e11b8d479884485f",
+    "title": "Identity based threshold cryptography and blind signatures for electronic voting",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-t:bf161cd4bae5f0539fbe",
+    "source_id": "t:bf161cd4bae5f0539fbe",
+    "title": "Identity-based threshold cryptography for electronic voting",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1109/tifs.2009.2034903",
+    "source_id": "doi:10.1109/tifs.2009.2034903",
+    "title": "Development, formal verification, and evaluation of an e-voting system with VVPAT",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-t:d6b3414b77c6cd1be0cd",
+    "source_id": "t:d6b3414b77c6cd1be0cd",
+    "title": "EVT 2008 - 2008 USENIX/ACCURATE Electronic Voting Technology Workshop",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-doi:10.1109/ares.2007.83",
+    "source_id": "doi:10.1109/ares.2007.83",
+    "title": "Evaluation function for synthesizing security protocols by means of genetic algorithms",
+    "decision": "excluded",
+    "reason": "MVP toy excluded",
+    "decided_at": "2025-11-14T11:55:09Z"
+  },
+  {
+    "id": "B-t:c9ca22c3c3cfd5ff9feb",
+    "source_id": "t:c9ca22c3c3cfd5ff9feb",
+    "title": "19th Annual International Cryptology Conference, CRYPTO 1999",
+    "decision": "included",
+    "reason": "MVP toy included",
+    "decided_at": "2025-11-14T11:55:09Z"
   }
 ]
