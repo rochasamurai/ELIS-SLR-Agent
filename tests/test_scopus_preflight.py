@@ -18,7 +18,8 @@ class TestEnvironmentVariables:
         if 'scripts.scopus_preflight' in sys.modules:
             del sys.modules['scripts.scopus_preflight']
         
-        with pytest.raises(EnvironmentError, match="Missing SCOPUS_API_KEY"):            
+        with pytest.raises(EnvironmentError, match="Missing SCOPUS_API_KEY"):
+            pass
     
     @patch.dict(os.environ, {'SCOPUS_API_KEY': 'test_key'}, clear=True)
     def test_raises_error_when_inst_token_missing(self):
@@ -28,6 +29,7 @@ class TestEnvironmentVariables:
             del sys.modules['scripts.scopus_preflight']
         
         with pytest.raises(EnvironmentError, match="Missing.*SCOPUS_INST_TOKEN"):
+            pass
     
     @patch.dict(os.environ, {
         'SCOPUS_API_KEY': 'test_key_123',
