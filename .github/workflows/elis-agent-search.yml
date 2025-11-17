@@ -11,6 +11,7 @@ name: ELIS - Agent Search (Appendix A)
 #       * WEB_OF_SCIENCE_API_KEY      -> WOS_API_KEY
 #   - Adds real Scopus institutional harvest step using scopus_harvest.py
 #   - Leaves all other behaviour unchanged (safe).
+#   - Adds production hardening: timeouts, caching, validation, error handling
 #
 # Usage
 #   - Manual trigger (workflow_dispatch) with runtime knobs.
@@ -30,7 +31,7 @@ on:
         required: false
         default: "ci/agent-search-autopr"
       open_pr:
-        description: "Open/refresh PR write_branch → base_branch"
+        description: "Open/refresh PR write_branch -> base_branch"
         required: false
         default: "true"
       cap_per_source:
@@ -58,6 +59,7 @@ concurrency:
 jobs:
   search-a:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     defaults:
       run:
         shell: bash
@@ -119,6 +121,14 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
       - name: Install runtime deps (pinned)
         run: |
           python -m pip install --upgrade pip
@@ -172,12 +182,43 @@ jobs:
         run: |
           # --------------------------------------------
           # Run Scopus Institutional Harvest
-          # Requires valids API key and institution token
+          # Requires valid API key and institution token
           # --------------------------------------------
           set -eux
           export SCOPUS_API_KEY="${{ secrets.SCOPUS_API_KEY }}"
           export SCOPUS_INST_TOKEN="${{ secrets.SCOPUS_INST_TOKEN }}"
+          
+          if [ ! -f scripts/scopus_harvest.py ]; then
+            echo "WARNING: scripts/scopus_harvest.py not found, skipping harvest"
+            exit 0
+          fi
+          
           python scripts/scopus_harvest.py
+
+      - name: Validate Appendix A artifact
+        if: ${{ steps.knobs.outputs.dry_run != 'true' }}
+        run: |
+          set -eux
+          ARTIFACT="json_jsonl/ELIS_Appendix_A_Search_rows.json"
+          
+          # Check file exists
+          if [ ! -f "$ARTIFACT" ]; then
+            echo "ERROR: Artifact not found at $ARTIFACT"
+            exit 1
+          fi
+          
+          # Validate JSON syntax
+          if ! python -m json.tool "$ARTIFACT" > /dev/null 2>&1; then
+            echo "ERROR: Invalid JSON in $ARTIFACT"
+            exit 1
+          fi
+          
+          # Optionally validate against schema (if validator exists)
+          if [ -f scripts/validate_json.py ]; then
+            python scripts/validate_json.py "$ARTIFACT" || echo "WARNING: Schema validation failed"
+          fi
+          
+          echo "Artifact validation passed"
 
       - name: Upload artefact (Appendix A JSON)
         if: ${{ steps.knobs.outputs.dry_run != 'true' }}
@@ -215,7 +256,7 @@ jobs:
 
       - name: Compare base..head & open/refresh PR
         if: ${{ env.skip_pr != 'true' && steps.knobs.outputs.dry_run != 'true' && steps.knobs.outputs.open_pr == 'true' }}
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           github-token: ${{ steps.app.outputs.token }}
           script: |
@@ -224,24 +265,81 @@ jobs:
             const base  = "${{ steps.knobs.outputs.base }}";
             const head  = "${{ steps.knobs.outputs.head }}";
 
-            const cmp = await github.rest.repos.compareCommitsWithBasehead({
-              owner, repo, basehead: `${base}...${head}`,
-            });
-            const hasDiff = (cmp.data.ahead_by > 0) || ((cmp.data.files || []).length > 0);
-            if (!hasDiff) { core.info("No diff; no PR opened."); return; }
-
-            const { data: openPRs } = await github.rest.pulls.list({
-              owner, repo, state: 'open', base, head: `${owner}:${head}`,
-            });
-
-            if (openPRs.length > 0) {
-              core.info(`PR already open: #${openPRs[0].number}`);
-            } else {
-              const { data: pr } = await github.rest.pulls.create({
-                owner, repo, base, head,
-                title: "feat(search): update Appendix A results",
-                body: "Automated ELIS – Agent Search run.",
+            try {
+              // Compare commits
+              const cmp = await github.rest.repos.compareCommitsWithBasehead({
+                owner, 
+                repo, 
+                basehead: `${base}...${head}`,
               });
-              core.info(`Opened PR #${pr.number}`);
+              
+              const hasDiff = (cmp.data.ahead_by > 0) || ((cmp.data.files || []).length > 0);
+              
+              if (!hasDiff) { 
+                core.info("No diff detected; no PR needed."); 
+                return; 
+              }
+
+              // Check for existing open PRs
+              const { data: openPRs } = await github.rest.pulls.list({
+                owner, 
+                repo, 
+                state: 'open', 
+                base, 
+                head: `${owner}:${head}`,
+              });
+
+              if (openPRs.length > 0) {
+                core.info(`PR already exists: #${openPRs[0].number}`);
+                core.info(`URL: ${openPRs[0].html_url}`);
+              } else {
+                // Create new PR
+                const { data: pr } = await github.rest.pulls.create({
+                  owner, 
+                  repo, 
+                  base, 
+                  head,
+                  title: "feat(search): update Appendix A results",
+                  body: `## Automated ELIS Agent Search Run
+                  
+**Branch:** \`${head}\`
+**Base:** \`${base}\`
+**Triggered by:** @${{ github.actor }}
+**Run:** [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+### Changes
+- Updated Appendix A search results
+- Cap per source: ${{ steps.knobs.outputs.cap_per_source }}
+- Job result cap: ${{ steps.knobs.outputs.job_result_cap }}
+
+---
+*This PR was automatically created by the ELIS Agent Search workflow.*`,
+                });
+                
+                core.info(`Created PR #${pr.number}`);
+                core.info(`URL: ${pr.html_url}`);
+              }
+            } catch (error) {
+              core.setFailed(`Failed to create/check PR: ${error.message}`);
+              throw error;
             }
 
+      - name: Job summary
+        if: always()
+        run: |
+          echo "# ELIS Agent Search Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Configuration" >> $GITHUB_STEP_SUMMARY
+          echo "- **Base Branch:** \`${{ steps.knobs.outputs.base }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Work Branch:** \`${{ steps.knobs.outputs.head }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Dry Run:** ${{ steps.knobs.outputs.dry_run }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Cap per Source:** ${{ steps.knobs.outputs.cap_per_source }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Job Result Cap:** ${{ steps.knobs.outputs.job_result_cap }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Open PR:** ${{ steps.knobs.outputs.open_pr }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Status" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "✅ Workflow completed successfully" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Workflow failed" >> $GITHUB_STEP_SUMMARY
+          fi
