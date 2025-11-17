@@ -266,7 +266,6 @@ jobs:
             const head  = "${{ steps.knobs.outputs.head }}";
 
             try {
-              // Compare commits
               const cmp = await github.rest.repos.compareCommitsWithBasehead({
                 owner, 
                 repo, 
@@ -280,7 +279,6 @@ jobs:
                 return; 
               }
 
-              // Check for existing open PRs
               const { data: openPRs } = await github.rest.pulls.list({
                 owner, 
                 repo, 
@@ -293,30 +291,26 @@ jobs:
                 core.info(`PR already exists: #${openPRs[0].number}`);
                 core.info(`URL: ${openPRs[0].html_url}`);
               } else {
-                // Create new PR
+                const prBody = '## Automated ELIS Agent Search Run\n\n' +
+                  '**Branch:** `' + head + '`\n' +
+                  '**Base:** `' + base + '`\n' +
+                  '**Triggered by:** @${{ github.actor }}\n' +
+                  '**Run:** [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})\n\n' +
+                  '### Changes\n' +
+                  '- Updated Appendix A search results\n' +
+                  '- Cap per source: ${{ steps.knobs.outputs.cap_per_source }}\n' +
+                  '- Job result cap: ${{ steps.knobs.outputs.job_result_cap }}\n\n' +
+                  '---\n' +
+                  '_This PR was automatically created by the ELIS Agent Search workflow._';
+
                 const { data: pr } = await github.rest.pulls.create({
                   owner, 
                   repo, 
                   base, 
                   head,
                   title: "feat(search): update Appendix A results",
-
-body: [
-                    '## Automated ELIS Agent Search Run',
-                    '',
-                    '**Branch:** ' + head,
-                    '**Base:** ' + base,
-                    '**Triggered by:** @${{ github.actor }}',
-                    '**Run:** [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})',
-                    '',
-                    '### Changes',
-                    '- Updated Appendix A search results',
-                    `- Cap per source: ${{ steps.knobs.outputs.cap_per_source }}`,
-                    `- Job result cap: ${{ steps.knobs.outputs.job_result_cap }}`,
-                    '',
-                    '---',
-                    '_This PR was automatically created by the ELIS Agent Search workflow._'
-                  ].join('\n'),
+                  body: prBody,
+                });
                 
                 core.info(`Created PR #${pr.number}`);
                 core.info(`URL: ${pr.html_url}`);
@@ -345,3 +339,4 @@ body: [
           else
             echo "❌ Workflow failed" >> $GITHUB_STEP_SUMMARY
           fi
+          
