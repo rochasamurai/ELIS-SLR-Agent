@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 from typing import Dict, Any, List, Tuple
 from datetime import datetime
-from jsonschema import ValidationError, Draft202012Validator
+from jsonschema import Draft202012Validator
 
 
 def load_json_file(file_path: Path) -> List[Dict[str, Any]]:
@@ -185,7 +185,6 @@ def main():
     
     # Validate each appendix
     results = {}
-    all_valid = True
     
     for name, (json_file, schema_file) in appendices.items():
         # Skip if files don't exist
