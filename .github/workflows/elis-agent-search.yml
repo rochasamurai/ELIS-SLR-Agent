@@ -300,21 +300,23 @@ jobs:
                   base, 
                   head,
                   title: "feat(search): update Appendix A results",
-                  body: `## Automated ELIS Agent Search Run
-                  
-**Branch:** \`${head}\`
-**Base:** \`${base}\`
-**Triggered by:** @${{ github.actor }}
-**Run:** [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
 
-### Changes
-- Updated Appendix A search results
-- Cap per source: ${{ steps.knobs.outputs.cap_per_source }}
-- Job result cap: ${{ steps.knobs.outputs.job_result_cap }}
-
----
-*This PR was automatically created by the ELIS Agent Search workflow.*`,
-                });
+body: [
+                    '## Automated ELIS Agent Search Run',
+                    '',
+                    `**Branch:** \`${head}\``,
+                    `**Base:** \`${base}\``,
+                    `**Triggered by:** @${{ github.actor }}`,
+                    `**Run:** [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})`,
+                    '',
+                    '### Changes',
+                    '- Updated Appendix A search results',
+                    `- Cap per source: ${{ steps.knobs.outputs.cap_per_source }}`,
+                    `- Job result cap: ${{ steps.knobs.outputs.job_result_cap }}`,
+                    '',
+                    '---',
+                    '_This PR was automatically created by the ELIS Agent Search workflow._'
+                  ].join('\n'),
                 
                 core.info(`Created PR #${pr.number}`);
                 core.info(`URL: ${pr.html_url}`);
