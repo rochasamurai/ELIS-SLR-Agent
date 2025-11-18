@@ -22,3 +22,9 @@ jsonschema==4.23.0
 # - Safe pin based on Python 3.11 and GitHub Actions environment (2025-11).
 
 requests==2.31.0
+
+# YAML parser for config/elis_search_queries.yml
+# - Required by scripts/scopus_harvest.py to read search configuration
+# - Pin matches Python 3.11 compatibility
+
+PyYAML==6.0.2
