@@ -20,21 +20,28 @@ import os
 import yaml
 from pathlib import Path
 
-# Retrieve credentials from environment
-SCOPUS_API_KEY = os.getenv("SCOPUS_API_KEY")
-SCOPUS_INST_TOKEN = os.getenv("SCOPUS_INST_TOKEN")
 
-if not SCOPUS_API_KEY or not SCOPUS_INST_TOKEN:
-    raise EnvironmentError(
-        "Missing SCOPUS_API_KEY or SCOPUS_INST_TOKEN environment variables"
-    )
+def get_credentials():
+    """Get and validate Scopus API credentials."""
+    api_key = os.getenv("SCOPUS_API_KEY")
+    inst_token = os.getenv("SCOPUS_INST_TOKEN")
 
-# Set Scopus API headers
-HEADERS = {
-    "X-ELS-APIKey": SCOPUS_API_KEY,
-    "X-ELS-Insttoken": SCOPUS_INST_TOKEN,
-    "Accept": "application/json",
-}
+    if not api_key or not inst_token:
+        raise EnvironmentError(
+            "Missing SCOPUS_API_KEY or SCOPUS_INST_TOKEN environment variables"
+        )
+
+    return api_key, inst_token
+
+
+def get_headers():
+    """Build Scopus API headers with credentials."""
+    api_key, inst_token = get_credentials()
+    return {
+        "X-ELS-APIKey": api_key,
+        "X-ELS-Insttoken": inst_token,
+        "Accept": "application/json",
+    }
 
 
 def scopus_search(query: str, count: int = 25, max_results: int = 100):
@@ -55,7 +62,7 @@ def scopus_search(query: str, count: int = 25, max_results: int = 100):
 
     while start < max_results:
         params = {"query": query, "count": count, "start": start}
-        r = requests.get(url, headers=HEADERS, params=params, timeout=30)
+        r = requests.get(url, headers=get_headers(), params=params, timeout=30)
 
         if r.status_code != 200:
             print(f"Error {r.status_code}: {r.text}")

@@ -1,0 +1,27 @@
+name: ELIS - Web of Science Preflight API Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  wos-preflight:
+    runs-on: ubuntu-latest
+    name: Web of Science API Access Test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Test WoS API Access
+        env:
+          WEB_OF_SCIENCE_API_KEY: ${{ secrets.WEB_OF_SCIENCE_API_KEY }}
+        run: |
+          python scripts/wos_preflight.py
+          

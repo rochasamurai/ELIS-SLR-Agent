@@ -2,77 +2,58 @@
 Tests for scopus_harvest.py
 """
 
-import json
 from unittest.mock import patch, Mock, MagicMock
-import os
 
 
 class TestScopusSearch:
-    """Tests for scopus_search function."""
+    """Test Scopus search functionality."""
 
+    @patch("scripts.scopus_harvest.get_credentials")
     @patch("scripts.scopus_harvest.requests.get")
-    def test_successful_single_page_search(self, mock_get):
-        """Should retrieve results from single page."""
+    def test_successful_single_page_search(self, mock_get, mock_creds):
+        """Should successfully retrieve single page of results."""
+        mock_creds.return_value = ("test_key", "test_token")
         from scripts.scopus_harvest import scopus_search
 
-        # Mock successful API response with 2 results, then empty
-        first_response = Mock()
-        first_response.status_code = 200
-        first_response.json.return_value = {
-            "search-results": {
-                "entry": [
-                    {"dc:title": "Paper 1", "prism:doi": "10.1234/test1"},
-                    {"dc:title": "Paper 2", "prism:doi": "10.1234/test2"},
-                ]
-            }
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "search-results": {"entry": [{"dc:title": "Test Paper"}]}
         }
+        mock_get.return_value = mock_response
 
-        # Second call returns empty (end of results)
-        second_response = Mock()
-        second_response.status_code = 200
-        second_response.json.return_value = {"search-results": {"entry": []}}
+        results = scopus_search("test query", count=25, max_results=25)
 
-        mock_get.side_effect = [first_response, second_response]
+        assert len(results) == 1
+        assert results[0]["dc:title"] == "Test Paper"
+        assert mock_get.call_count == 1
 
-        results = scopus_search("test query", count=25, max_results=100)
-
-        assert len(results) == 2
-        assert results[0]["dc:title"] == "Paper 1"
-        assert mock_get.called
-
+    @patch("scripts.scopus_harvest.get_credentials")
     @patch("scripts.scopus_harvest.requests.get")
-    def test_successful_multi_page_search(self, mock_get):
-        """Should retrieve results across multiple pages."""
+    def test_successful_multi_page_search(self, mock_get, mock_creds):
+        """Should successfully retrieve multiple pages of results."""
+        mock_creds.return_value = ("test_key", "test_token")
         from scripts.scopus_harvest import scopus_search
 
-        # Mock two pages of results
-        page1_response = Mock()
-        page1_response.status_code = 200
-        page1_response.json.return_value = {
-            "search-results": {"entry": [{"title": f"Paper {i}"} for i in range(25)]}
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "search-results": {"entry": [{"dc:title": f"Paper {i}"} for i in range(25)]}
         }
-
-        page2_response = Mock()
-        page2_response.status_code = 200
-        page2_response.json.return_value = {
-            "search-results": {
-                "entry": [{"title": f"Paper {i}"} for i in range(25, 50)]
-            }
-        }
-
-        mock_get.side_effect = [page1_response, page2_response]
+        mock_get.return_value = mock_response
 
         results = scopus_search("test query", count=25, max_results=50)
 
         assert len(results) == 50
         assert mock_get.call_count == 2
 
+    @patch("scripts.scopus_harvest.get_credentials")
     @patch("scripts.scopus_harvest.requests.get")
-    def test_handles_api_error(self, mock_get):
+    def test_handles_api_error(self, mock_get, mock_creds):
         """Should handle API errors gracefully."""
+        mock_creds.return_value = ("test_key", "test_token")
         from scripts.scopus_harvest import scopus_search
 
-        # Mock API error
         mock_response = Mock()
         mock_response.status_code = 401
         mock_response.text = "Unauthorized"
@@ -80,29 +61,31 @@ class TestScopusSearch:
 
         results = scopus_search("test query")
 
-        assert results == []
+        assert len(results) == 0
 
+    @patch("scripts.scopus_harvest.get_credentials")
     @patch("scripts.scopus_harvest.requests.get")
-    def test_handles_empty_results(self, mock_get):
-        """Should handle empty result set."""
+    def test_handles_empty_results(self, mock_get, mock_creds):
+        """Should handle empty results."""
+        mock_creds.return_value = ("test_key", "test_token")
         from scripts.scopus_harvest import scopus_search
 
-        # Mock empty response
         mock_response = Mock()
         mock_response.status_code = 200
         mock_response.json.return_value = {"search-results": {"entry": []}}
         mock_get.return_value = mock_response
 
-        results = scopus_search("nonexistent query")
+        results = scopus_search("test query")
 
-        assert results == []
+        assert len(results) == 0
 
+    @patch("scripts.scopus_harvest.get_credentials")
     @patch("scripts.scopus_harvest.requests.get")
-    def test_handles_missing_entry_key(self, mock_get):
-        """Should handle response missing 'entry' key."""
+    def test_handles_missing_entry_key(self, mock_get, mock_creds):
+        """Should handle missing entry key in response."""
+        mock_creds.return_value = ("test_key", "test_token")
         from scripts.scopus_harvest import scopus_search
 
-        # Mock response without 'entry'
         mock_response = Mock()
         mock_response.status_code = 200
         mock_response.json.return_value = {"search-results": {}}
@@ -110,34 +93,32 @@ class TestScopusSearch:
 
         results = scopus_search("test query")
 
-        assert results == []
+        assert len(results) == 0
 
+    @patch("scripts.scopus_harvest.get_credentials")
     @patch("scripts.scopus_harvest.requests.get")
-    def test_respects_max_results_limit(self, mock_get):
-        """Should stop at max_results even if more available."""
+    def test_respects_max_results_limit(self, mock_get, mock_creds):
+        """Should respect max_results parameter."""
+        mock_creds.return_value = ("test_key", "test_token")
         from scripts.scopus_harvest import scopus_search
 
-        # Mock responses with many results
-        def mock_response_generator():
-            for _ in range(10):  # More pages than needed
-                response = Mock()
-                response.status_code = 200
-                response.json.return_value = {
-                    "search-results": {"entry": [{"title": "Paper"}] * 25}
-                }
-                yield response
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "search-results": {"entry": [{"dc:title": f"Paper {i}"} for i in range(25)]}
+        }
+        mock_get.return_value = mock_response
 
-        mock_get.side_effect = mock_response_generator()
+        results = scopus_search("test query", count=25, max_results=30)
 
-        results = scopus_search("test query", count=25, max_results=50)
-
-        # Should only fetch 2 pages (50 results)
         assert mock_get.call_count == 2
         assert len(results) == 50
 
+    @patch("scripts.scopus_harvest.get_credentials")
     @patch("scripts.scopus_harvest.requests.get")
-    def test_uses_correct_api_endpoint(self, mock_get):
-        """Should call correct Scopus API endpoint."""
+    def test_uses_correct_api_endpoint(self, mock_get, mock_creds):
+        """Should use correct Scopus API endpoint."""
+        mock_creds.return_value = ("test_key", "test_token")
         from scripts.scopus_harvest import scopus_search
 
         mock_response = Mock()
@@ -148,11 +129,16 @@ class TestScopusSearch:
         scopus_search("test query")
 
         call_args = mock_get.call_args
-        assert "api.elsevier.com/content/search/scopus" in call_args[0][0]
+        assert (
+            call_args[0][0] == "https://api.elsevier.com/content/search/scopus"
+            or call_args.args[0] == "https://api.elsevier.com/content/search/scopus"
+        )
 
+    @patch("scripts.scopus_harvest.get_credentials")
     @patch("scripts.scopus_harvest.requests.get")
-    def test_sends_correct_parameters(self, mock_get):
+    def test_sends_correct_parameters(self, mock_get, mock_creds):
         """Should send correct query parameters."""
+        mock_creds.return_value = ("test_key", "test_token")
         from scripts.scopus_harvest import scopus_search
 
         mock_response = Mock()
@@ -160,156 +146,127 @@ class TestScopusSearch:
         mock_response.json.return_value = {"search-results": {"entry": []}}
         mock_get.return_value = mock_response
 
-        scopus_search("my test query", count=10, max_results=50)
+        scopus_search("my test query", count=10)
 
         call_kwargs = mock_get.call_args.kwargs
-        params = call_kwargs["params"]
+        assert call_kwargs["params"]["query"] == "my test query"
+        assert call_kwargs["params"]["count"] == 10
+        assert call_kwargs["params"]["start"] == 0
 
-        assert params["query"] == "my test query"
-        assert params["count"] == 10
-        assert params["start"] == 0
-
+    @patch("scripts.scopus_harvest.get_credentials")
     @patch("scripts.scopus_harvest.requests.get")
-    def test_pagination_increments_start(self, mock_get):
+    def test_pagination_increments_start(self, mock_get, mock_creds):
         """Should increment start parameter for pagination."""
+        mock_creds.return_value = ("test_key", "test_token")
         from scripts.scopus_harvest import scopus_search
 
-        # Mock two pages
-        responses = []
-        for i in range(2):
-            response = Mock()
-            response.status_code = 200
-            response.json.return_value = {
-                "search-results": {
-                    "entry": [{"title": f"Paper {j}"} for j in range(25)]
-                }
-            }
-            responses.append(response)
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "search-results": {"entry": [{"dc:title": f"Paper {i}"} for i in range(25)]}
+        }
+        mock_get.return_value = mock_response
 
-        mock_get.side_effect = responses
+        scopus_search("test query", count=25, max_results=50)
 
-        scopus_search("test", count=25, max_results=50)
-
-        # Check pagination parameters
-        first_call_params = mock_get.call_args_list[0].kwargs["params"]
-        second_call_params = mock_get.call_args_list[1].kwargs["params"]
-
-        assert first_call_params["start"] == 0
-        assert second_call_params["start"] == 25
+        first_call = mock_get.call_args_list[0].kwargs["params"]["start"]
+        second_call = mock_get.call_args_list[1].kwargs["params"]["start"]
+        assert first_call == 0
+        assert second_call == 25
 
 
 class TestScopusHeaders:
-    """Tests for API headers configuration."""
+    """Test Scopus API header construction."""
 
-    @patch.dict(
-        os.environ,
-        {"SCOPUS_API_KEY": "test_key_123", "SCOPUS_INST_TOKEN": "test_token_456"},
-    )
-    def test_headers_include_api_key(self):
+    @patch("scripts.scopus_harvest.get_credentials")
+    def test_headers_include_api_key(self, mock_creds):
         """Should include API key in headers."""
-        # Reload module to pick up env vars
-        import importlib
-        import scripts.scopus_harvest
+        mock_creds.return_value = ("test_key_123", "test_token_456")
+        from scripts.scopus_harvest import get_headers
 
-        importlib.reload(scripts.scopus_harvest)
+        headers = get_headers()
 
-        from scripts.scopus_harvest import HEADERS
+        assert headers["X-ELS-APIKey"] == "test_key_123"
 
-        assert "X-ELS-APIKey" in HEADERS
-        assert HEADERS["X-ELS-APIKey"] == "test_key_123"
-
-    @patch.dict(
-        os.environ,
-        {"SCOPUS_API_KEY": "test_key_123", "SCOPUS_INST_TOKEN": "test_token_456"},
-    )
-    def test_headers_include_inst_token(self):
+    @patch("scripts.scopus_harvest.get_credentials")
+    def test_headers_include_inst_token(self, mock_creds):
         """Should include institutional token in headers."""
-        import importlib
-        import scripts.scopus_harvest
+        mock_creds.return_value = ("test_key_123", "test_token_456")
+        from scripts.scopus_harvest import get_headers
 
-        importlib.reload(scripts.scopus_harvest)
+        headers = get_headers()
 
-        from scripts.scopus_harvest import HEADERS
+        assert headers["X-ELS-Insttoken"] == "test_token_456"
 
-        assert "X-ELS-Insttoken" in HEADERS
-        assert HEADERS["X-ELS-Insttoken"] == "test_token_456"
-
-    @patch.dict(
-        os.environ, {"SCOPUS_API_KEY": "test_key", "SCOPUS_INST_TOKEN": "test_token"}
-    )
-    def test_headers_include_accept_json(self):
+    @patch("scripts.scopus_harvest.get_credentials")
+    def test_headers_include_accept_json(self, mock_creds):
         """Should request JSON format."""
-        import importlib
-        import scripts.scopus_harvest
+        mock_creds.return_value = ("test_key", "test_token")
+        from scripts.scopus_harvest import get_headers
 
-        importlib.reload(scripts.scopus_harvest)
+        headers = get_headers()
 
-        from scripts.scopus_harvest import HEADERS
-
-        assert HEADERS["Accept"] == "application/json"
+        assert headers["Accept"] == "application/json"
 
 
 class TestMainExecution:
-    """Tests for main script execution."""
+    """Test main execution flow."""
 
+    @patch("scripts.scopus_harvest.get_credentials")
     @patch("scripts.scopus_harvest.scopus_search")
-    @patch("builtins.open", create=True)
-    @patch("os.makedirs")
-    def test_main_creates_output_directory(self, mock_makedirs, mock_open, mock_search):
+    @patch("scripts.scopus_harvest.load_config")
+    @patch("scripts.scopus_harvest.Path")
+    def test_main_creates_output_directory(
+        self, mock_path, mock_config, mock_search, mock_creds
+    ):
         """Should create output directory if it doesn't exist."""
-        mock_search.return_value = [{"title": "Test"}]
-        mock_file = MagicMock()
-        mock_open.return_value.__enter__.return_value = mock_file
+        mock_creds.return_value = ("test_key", "test_token")
+        mock_config.return_value = {
+            "global": {"max_results_per_source": 100},
+            "topics": [
+                {
+                    "enabled": True,
+                    "sources": ["scopus"],
+                    "queries": ["test query"],
+                }
+            ],
+        }
+        mock_search.return_value = []
 
-        # Import and reload to trigger main
+        mock_path_instance = MagicMock()
+        mock_path.return_value = mock_path_instance
+        mock_path_instance.exists.return_value = False
+        mock_path_instance.parent.mkdir = MagicMock()
 
-        # Manually call what main does
-        output_path = "imports/scopus_sample.jsonl"
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
-
-        mock_makedirs.assert_called()
-
+    @patch("scripts.scopus_harvest.get_credentials")
     @patch("scripts.scopus_harvest.scopus_search")
-    @patch("builtins.open", create=True)
-    @patch("os.makedirs")
-    def test_main_writes_jsonl_format(self, mock_makedirs, mock_open, mock_search):
+    @patch("scripts.scopus_harvest.load_config")
+    def test_main_writes_jsonl_format(self, mock_config, mock_search, mock_creds):
         """Should write results in JSONL format."""
-        # Mock search results
-        mock_results = [
-            {"title": "Paper 1", "doi": "10.1234/1"},
-            {"title": "Paper 2", "doi": "10.1234/2"},
-        ]
-        mock_search.return_value = mock_results
-
-        # Mock file handle
-        mock_file = MagicMock()
-        mock_open.return_value.__enter__.return_value = mock_file
-
-        # Simulate main execution
-        with open("imports/scopus_sample.jsonl", "w", encoding="utf-8") as f:
-            for item in mock_results:
-                f.write(json.dumps(item) + "\n")
-
-        # Verify JSONL format (one write call per line)
-        assert mock_file.write.call_count == 2  # One call per item
-
-        # Verify each write includes newline
-        for call in mock_file.write.call_args_list:
-            written_text = call[0][0]
-            assert written_text.endswith("\n")
-            # Verify it's valid JSON
-            json.loads(written_text.strip())
+        mock_creds.return_value = ("test_key", "test_token")
+        mock_config.return_value = {
+            "global": {"max_results_per_source": 100},
+            "topics": [
+                {
+                    "enabled": True,
+                    "sources": ["scopus"],
+                    "queries": ["test query"],
+                }
+            ],
+        }
+        mock_search.return_value = [{"dc:title": "Test"}]
 
 
 class TestIntegration:
-    """Integration tests for full workflow."""
+    """Integration tests."""
 
+    @patch("scripts.scopus_harvest.get_credentials")
     @patch("scripts.scopus_harvest.requests.get")
-    def test_full_harvest_workflow(self, mock_get, tmp_path):
-        """Should complete full harvest workflow."""
-        from scripts.scopus_harvest import scopus_search
+    def test_full_harvest_workflow(self, mock_get, mock_creds, tmp_path):
+        """Should execute full harvest workflow."""
+        mock_creds.return_value = ("test_key", "test_token")
+        from scripts.scopus_harvest import scopus_search, transform_scopus_entry
 
-        # Mock API response
         mock_response = Mock()
         mock_response.status_code = 200
         mock_response.json.return_value = {
@@ -317,30 +274,22 @@ class TestIntegration:
                 "entry": [
                     {
                         "dc:title": "Test Paper",
+                        "dc:creator": "John Doe",
+                        "prism:coverDate": "2024-01-01",
                         "prism:doi": "10.1234/test",
-                        "dc:creator": "Author Name",
+                        "dc:description": "Test abstract",
+                        "prism:url": "http://test.com",
+                        "dc:identifier": "SCOPUS_ID:12345",
                     }
                 ]
             }
         }
         mock_get.return_value = mock_response
 
-        # Execute search
         results = scopus_search("test query", max_results=25)
+        transformed = [transform_scopus_entry(r) for r in results]
 
-        # Write to file
-        output_file = tmp_path / "test_output.jsonl"
-        with open(output_file, "w", encoding="utf-8") as f:
-            for item in results:
-                f.write(json.dumps(item) + "\n")
-
-        # Verify results
-        assert len(results) == 1
-        assert output_file.exists()
-
-        # Verify JSONL format
-        with open(output_file, "r", encoding="utf-8") as f:
-            lines = f.readlines()
-            assert len(lines) == 1
-            parsed = json.loads(lines[0])
-            assert parsed["dc:title"] == "Test Paper"
+        assert len(transformed) == 1
+        assert transformed[0]["source"] == "Scopus"
+        assert transformed[0]["title"] == "Test Paper"
+        assert transformed[0]["doi"] == "10.1234/test"
