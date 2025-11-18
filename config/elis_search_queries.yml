@@ -36,7 +36,7 @@ topics:
       - '("paper ballot" OR "paper trail") AND ("risk-limiting audit" OR audit* OR verifi*)'
       - '("public trust" OR confidence) AND ("electronic voting" OR "ballot auditability")'
     include_preprints: false
-    sources: ["scopus", "web_of_science"]  # Protocol sources (§3.2)
+    sources: ["scopus"]  # Protocol-defined source (§3.2)
 
   - id: cryptographic_mechanisms
     enabled: true
@@ -46,9 +46,10 @@ topics:
       - '("end-to-end verifiability" OR E2E) AND ("electronic voting" OR ballot)'
       - '(cryptograph* AND voting) AND (audit OR verifi* OR mixnet OR homomorphic)'
     include_preprints: false
-    sources: ["scopus", "web_of_science"]  # Protocol sources (§3.2)
+    sources: ["scopus"]  # Protocol-defined source (§3.2)
 
 # Future protocol sources (to be implemented):
+# - web_of_science (§3.2)
 # - ieee_xplore (§3.2)
 # - acm (§3.2)
 # - jstor (§3.2)
