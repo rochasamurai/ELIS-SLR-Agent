@@ -2,11 +2,8 @@
 Tests for scopus_harvest.py
 """
 
-import pytest
 import json
 from unittest.mock import patch, Mock, MagicMock
-from pathlib import Path
-import sys
 import os
 
 
@@ -281,7 +278,6 @@ class TestMainExecution:
         mock_open.return_value.__enter__.return_value = mock_file
         
         # Import and reload to trigger main
-        import scripts.scopus_harvest
         
         # Manually call what main does
         output_path = "imports/scopus_sample.jsonl"

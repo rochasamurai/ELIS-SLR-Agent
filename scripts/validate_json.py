@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 from typing import Dict, Any, List, Tuple
 from datetime import datetime
-from jsonschema import validate, ValidationError, Draft202012Validator
+from jsonschema import Draft202012Validator
 
 
 def load_json_file(file_path: Path) -> List[Dict[str, Any]]:
@@ -75,7 +75,7 @@ def validate_records(
         return True, []
     
     # Use appropriate validator based on schema version
-    from jsonschema import Draft202012Validator, Draft7Validator
+    from jsonschema import Draft7Validator
     
     # Check schema version to use correct validator
     schema_version = items_schema.get("$schema", "")
@@ -184,8 +184,7 @@ def main():
     }
     
     # Validate each appendix
-    results = {}
-    all_valid = True
+    results = {} 
     
     for name, (json_file, schema_file) in appendices.items():
         # Skip if files don't exist
@@ -202,10 +201,7 @@ def main():
         # Print status
         status = "[OK]" if is_valid else "[ERR]"
         print(f"{status} {name}: rows={count} file={json_file.name}")
-        
-        if not is_valid:
-            all_valid = False
-    
+            
     # Generate and save reports
     timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
     
@@ -221,7 +217,7 @@ def main():
     latest_report = report_dir / "validation-report.md"
     latest_report.write_text(report, encoding='utf-8')
     
-    print(f"\nReports saved:")
+    print("\nReports saved:")
     print(f"  - Latest: {latest_report}")
     print(f"  - Timestamped: {timestamped_report}")
     

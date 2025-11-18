@@ -4,7 +4,6 @@ Tests for validate_json.py validator.
 
 import json
 import pytest
-from pathlib import Path
 from scripts.validate_json import (
     load_json_file,
     load_schema,

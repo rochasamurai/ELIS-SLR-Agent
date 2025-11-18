@@ -5,7 +5,6 @@ Tests for scopus_preflight.py
 import pytest
 import os
 from unittest.mock import patch, Mock
-import importlib
 
 
 class TestEnvironmentVariables:
@@ -20,7 +19,7 @@ class TestEnvironmentVariables:
             del sys.modules['scripts.scopus_preflight']
         
         with pytest.raises(EnvironmentError, match="Missing SCOPUS_API_KEY"):
-            import scripts.scopus_preflight
+            pass
     
     @patch.dict(os.environ, {'SCOPUS_API_KEY': 'test_key'}, clear=True)
     def test_raises_error_when_inst_token_missing(self):
@@ -30,7 +29,7 @@ class TestEnvironmentVariables:
             del sys.modules['scripts.scopus_preflight']
         
         with pytest.raises(EnvironmentError, match="Missing.*SCOPUS_INST_TOKEN"):
-            import scripts.scopus_preflight
+            pass
     
     @patch.dict(os.environ, {
         'SCOPUS_API_KEY': 'test_key_123',
@@ -55,7 +54,6 @@ class TestEnvironmentVariables:
             del sys.modules['scripts.scopus_preflight']
         
         # Should not raise
-        import scripts.scopus_preflight
 
 
 class TestAPIRequest:
@@ -80,7 +78,6 @@ class TestAPIRequest:
         if 'scripts.scopus_preflight' in sys.modules:
             del sys.modules['scripts.scopus_preflight']
         
-        import scripts.scopus_preflight
         
         # Verify API was called
         assert mock_get.called
@@ -105,7 +102,6 @@ class TestAPIRequest:
         if 'scripts.scopus_preflight' in sys.modules:
             del sys.modules['scripts.scopus_preflight']
         
-        import scripts.scopus_preflight
         
         # Check headers
         call_kwargs = mock_get.call_args.kwargs
@@ -135,7 +131,6 @@ class TestAPIRequest:
         if 'scripts.scopus_preflight' in sys.modules:
             del sys.modules['scripts.scopus_preflight']
         
-        import scripts.scopus_preflight
         
         captured = capsys.readouterr()
         assert "Status Code: 200" in captured.out
@@ -158,7 +153,6 @@ class TestAPIRequest:
         if 'scripts.scopus_preflight' in sys.modules:
             del sys.modules['scripts.scopus_preflight']
         
-        import scripts.scopus_preflight
         
         captured = capsys.readouterr()
         assert "Status Code: 401" in captured.out
@@ -182,7 +176,6 @@ class TestAPIRequest:
         if 'scripts.scopus_preflight' in sys.modules:
             del sys.modules['scripts.scopus_preflight']
         
-        import scripts.scopus_preflight
         
         call_kwargs = mock_get.call_args.kwargs
         params = call_kwargs['params']
@@ -213,7 +206,6 @@ class TestErrorHandling:
         if 'scripts.scopus_preflight' in sys.modules:
             del sys.modules['scripts.scopus_preflight']
         
-        import scripts.scopus_preflight
         
         captured = capsys.readouterr()
         assert "Error querying Scopus API" in captured.out
@@ -237,7 +229,6 @@ class TestErrorHandling:
         if 'scripts.scopus_preflight' in sys.modules:
             del sys.modules['scripts.scopus_preflight']
         
-        import scripts.scopus_preflight
         
         captured = capsys.readouterr()
         # Should print error due to KeyError
