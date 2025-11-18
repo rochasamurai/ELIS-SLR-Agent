@@ -1,9 +1,21 @@
 # ELIS Validation Report (MVP)
 
-## Appendix A (Search) — ✅ Valid
+## Appendix A (Search) — ❌ Errors
 
-- Row count: **154**
-- ✅ All records valid
+- Row count: **70**
+- Error count: **300**
+- Errors:
+  - row 20: 'id' is a required property
+  - row 20: 'retrieved_at' is a required property
+  - row 20: 'query_topic' is a required property
+  - row 20: 'query_string' is a required property
+  - row 20, field 'authors': 'Roy S.' is not of type 'array'
+  - row 20, field 'year': '2026' is not of type 'integer', 'null'
+  - row 21: 'id' is a required property
+  - row 21: 'retrieved_at' is a required property
+  - row 21: 'query_topic' is a required property
+  - row 21: 'query_string' is a required property
+  - ... and 290 more errors
 
 ## Appendix B (Screening) — ✅ Valid
 
