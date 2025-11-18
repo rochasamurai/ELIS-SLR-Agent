@@ -4,15 +4,16 @@
 #   Central place to define search topics, terms, languages, and time window.
 #   The search script reads this file and issues API calls accordingly.
 #
-# Grounding (ELIS Protocol):
+# Grounding (ELIS Protocol v1.7.2):
 #   - Timeframe: 1990–present (Protocol §3.1 Eligibility Criteria) 
 #   - Languages: EN, FR, ES, PT (Protocol §3.1)
 #   - Phenomena: integrity, auditability, verifiability, trust (Protocol §2.2)
+#   - Sources: Scopus, Web of Science, IEEE Xplore, ACM, JSTOR, Google Scholar (Protocol §3.2)
 #
 # Notes:
 #   - `enabled: true` allows you to toggle a topic on/off without deleting it.
-#   - `max_results_per_source` is a soft cap per topic per source (MVP control).
-#   - API sources used in MVP: crossref, semanticscholar, arxiv (no key needed; S2 key optional)
+#   - `max_results_per_source` is a soft cap per topic per source.
+#   - Only protocol-defined sources are used (v1.7.2).
 # =============================================================================
 
 global:
@@ -28,14 +29,14 @@ topics:
     enabled: true
     description: >
       Core integrity/auditability vocabulary for voting systems.
-      Mirrors the Protocol’s PRQ and analytical sub-questions.
+      Mirrors the Protocol's PRQ and analytical sub-questions.
     queries:
       - '"electoral integrity" AND (audit* OR verifi* OR "risk-limiting audit" OR RLA)'
       - '("electronic voting" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR "end-to-end verifiability")'
       - '("paper ballot" OR "paper trail") AND ("risk-limiting audit" OR audit* OR verifi*)'
       - '("public trust" OR confidence) AND ("electronic voting" OR "ballot auditability")'
-    include_preprints: true
-    sources: ["crossref", "semanticscholar", "arxiv"]
+    include_preprints: false
+    sources: ["scopus"]  # Protocol-defined source (§3.2)
 
   - id: cryptographic_mechanisms
     enabled: true
@@ -44,7 +45,12 @@ topics:
     queries:
       - '("end-to-end verifiability" OR E2E) AND ("electronic voting" OR ballot)'
       - '(cryptograph* AND voting) AND (audit OR verifi* OR mixnet OR homomorphic)'
-    include_preprints: true
-    sources: ["crossref", "semanticscholar", "arxiv"]
+    include_preprints: false
+    sources: ["scopus"]  # Protocol-defined source (§3.2)
 
-# You can add region-specific topics here (e.g., Brazil, EU) as needed.
+# Future protocol sources (to be implemented):
+# - web_of_science (§3.2)
+# - ieee_xplore (§3.2)
+# - acm (§3.2)
+# - jstor (§3.2)
+# - google_scholar (§3.2)
