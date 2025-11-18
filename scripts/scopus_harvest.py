@@ -176,7 +176,7 @@ if __name__ == "__main__":
     with output_path.open("w", encoding="utf-8") as f:
         json.dump(existing_results, f, indent=2, ensure_ascii=False)
 
-    print(f"\n✅ Scopus harvest complete")
+    print("\n✅ Scopus harvest complete")
     print(f"✅ New results added: {new_count}")
     print(f"✅ Total records in dataset: {len(existing_results)}")
     print(f"✅ Saved to {output_path}")
