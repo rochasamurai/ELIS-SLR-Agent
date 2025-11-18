@@ -9,6 +9,7 @@ Outputs:
 Usage:
 - Called by CI/CD workflow to retrieve search results for configured queries
 """
+
 import requests
 import json
 import os
@@ -62,41 +63,43 @@ def transform_scopus_entry(entry):
         "source": "Scopus",
         "title": entry.get("dc:title", ""),
         "authors": entry.get("dc:creator", ""),
-        "year": entry.get("prism:coverDate", "")[:4] if entry.get("prism:coverDate") else "",
+        "year": (
+            entry.get("prism:coverDate", "")[:4] if entry.get("prism:coverDate") else ""
+        ),
         "doi": entry.get("prism:doi", ""),
         "abstract": entry.get("dc:description", ""),
         "url": entry.get("prism:url", ""),
         "scopus_id": entry.get("dc:identifier", "").replace("SCOPUS_ID:", ""),
-        "raw_metadata": entry
+        "raw_metadata": entry,
     }
 
 
 if __name__ == "__main__":
     # Define output path (matches workflow expectation)
     output_path = Path("json_jsonl/ELIS_Appendix_A_Search_rows.json")
-    
+
     # Load existing results if file exists
     existing_results = []
     if output_path.exists():
         with output_path.open("r", encoding="utf-8") as f:
             existing_results = json.load(f)
         print(f"Loaded {len(existing_results)} existing results")
-    
+
     # Placeholder: future version will load dynamic config from config/elis_search_queries.yml
     query = "electronic voting AND transparency"
     print(f"Querying Scopus: {query}")
-    
+
     # Fetch Scopus results
     raw_results = scopus_search(query, max_results=50)
     print(f"Retrieved {len(raw_results)} results from Scopus")
-    
+
     # Transform to standard format
     scopus_results = [transform_scopus_entry(entry) for entry in raw_results]
-    
+
     # Merge with existing results (avoid duplicates by DOI)
     existing_dois = {r.get("doi") for r in existing_results if r.get("doi")}
     new_count = 0
-    
+
     for result in scopus_results:
         doi = result.get("doi")
         if not doi or doi not in existing_dois:
@@ -104,13 +107,12 @@ if __name__ == "__main__":
             if doi:
                 existing_dois.add(doi)
             new_count += 1
-    
+
     # Save combined results
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with output_path.open("w", encoding="utf-8") as f:
         json.dump(existing_results, f, indent=2, ensure_ascii=False)
-    
+
     print(f"âœ… Scopus harvest complete: {new_count} new results added")
     print(f"âœ… Total records in dataset: {len(existing_results)}")
     print(f"âœ… Saved to {output_path}")
-    
