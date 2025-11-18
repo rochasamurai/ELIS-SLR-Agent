@@ -2,11 +2,7 @@
 Tests for scopus_harvest.py
 """
 
-import os
 from unittest.mock import patch, Mock, MagicMock
-import pytest
-import json
-from pathlib import Path
 
 
 class TestScopusSearch:
