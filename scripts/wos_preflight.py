@@ -25,7 +25,7 @@ params = {
     "limit": 1,
 }
 
-print(f"Testing Web of Science API access...")
+print("Testing Web of Science API access...")
 print(f"Endpoint: {url}")
 
 response = requests.get(url, headers=headers, params=params, timeout=30)
