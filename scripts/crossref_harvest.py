@@ -36,7 +36,7 @@ def crossref_search(query: str, rows: int = 100, max_results: int = 100):
     url = "https://api.crossref.org/works"
     results = []
     offset = 0
-    
+
     # Get contact email for polite pool
     mailto = os.getenv("ELIS_CONTACT", "elis@samurai.com.br")
 
@@ -157,7 +157,9 @@ if __name__ == "__main__":
     queries = get_crossref_queries(config)
 
     if not queries:
-        print("⚠️  No CrossRef queries found in config (check sources and enabled flags)")
+        print(
+            "⚠️  No CrossRef queries found in config (check sources and enabled flags)"
+        )
         exit(0)
 
     print(f"Found {len(queries)} queries for CrossRef")
@@ -208,4 +210,3 @@ if __name__ == "__main__":
     print(f"✅ New results added: {new_count}")
     print(f"✅ Total records in dataset: {len(existing_results)}")
     print(f"✅ Saved to {output_path}")
-    
