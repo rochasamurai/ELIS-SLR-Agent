@@ -218,6 +218,7 @@
             font-size: 1.8rem;
             color: #666;
             line-height: 2;
+            margin-bottom: 20px;
         }
 
         .icon {
@@ -225,168 +226,260 @@
             margin-right: 15px;
             font-size: 2rem;
         }
+
+        .source-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-top: 40px;
+        }
+
+        .source-item {
+            background: #fff;
+            padding: 25px;
+            border-radius: 12px;
+            border-left: 5px solid #10b981;
+            font-size: 1.5rem;
+        }
+
+        .source-item strong {
+            color: #2563eb;
+            font-size: 1.7rem;
+        }
     </style>
 </head>
 <body>
     <div class="slide-container" id="slideContainer">
         <!-- Slide 1: Title -->
         <div class="slide">
-            <div class="slide-number">1/5</div>
+            <div class="slide-number">1/6</div>
             <h1>ELIS SLR Agent</h1>
-            <div class="subtitle">Automated Systematic Literature Review Pipeline</div>
-            <div class="status-badge">✓ PRODUCTION READY</div>
+            <div class="subtitle">Systematic Literature Review on Electoral Integrity Strategies</div>
+            <div class="status-badge">✓ PROTOCOL v1.8</div>
             <div class="content">
                 <div style="margin-top: 60px;">
                     <p class="repo-info">
                         <strong>Repository:</strong> rochasamurai/ELIS-SLR-Agent
-                    </p>					
-                    <p class="description">
-                        Streamlining academic research by automating Search, Screening, and Data Extraction phases of systematic literature reviews.
                     </p>
-					<p class="description">
-                        <strong>Date:</strong> November, 17, 2025
+                    <p class="description">
+                        <strong>Principal Investigator:</strong> Carlos Rocha (Imperial College Business School)
+                    </p>
+                    <p class="description">
+                        <strong>Supervisor:</strong> Prof. Tommaso Valletti
+                    </p>
+                    <p class="description">
+                        <strong>Sponsor:</strong> Instituto Voto Legal (IVL), São Paulo, Brazil
+                    </p>
+                    <p class="description">
+                        <strong>Date:</strong> November 19, 2025
                     </p>
                 </div>
             </div>
         </div>
 
-        <!-- Slide 2: Architecture -->
+        <!-- Slide 2: Research Question & Objectives -->
         <div class="slide">
-            <div class="slide-number">2/5</div>
-            <h2>Three-Phase Pipeline Architecture</h2>
+            <div class="slide-number">2/6</div>
+            <h2>Research Question</h2>
+            <div class="content">
+                <div style="background: #fff; padding: 50px; border-radius: 20px; border-left: 8px solid #2563eb; margin-bottom: 60px;">
+                    <p style="font-size: 2rem; line-height: 1.8; color: #333;">
+                        <strong>What operational and technological strategies have been shown to improve the integrity or auditability of electoral systems since 1990?</strong>
+                    </p>
+                </div>
+                <h3>Project Overview</h3>
+                <div class="list-item">
+                    <strong>Scope:</strong> Comprehensive, interdisciplinary systematic review covering voting technologies, operational mechanisms, and institutional frameworks
+                </div>
+                <div class="list-item">
+                    <strong>Coverage:</strong> Electronic, paper-based, and hybrid voting systems globally (1990-2025)
+                </div>
+                <div class="list-item">
+                    <strong>Methodology:</strong> PRISMA-P 2015 guidelines with AI-assisted workflow and human oversight
+                </div>
+                <div class="list-item">
+                    <strong>Impact:</strong> Evidence-based recommendations for electoral reform and policy design
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: Information Sources -->
+        <div class="slide">
+            <div class="slide-number">3/6</div>
+            <h2>Information Sources (7 API Integrations)</h2>
+            <div class="source-list">
+                <div class="source-item">
+                    <strong>1. Scopus</strong><br>
+                    Multidisciplinary database<br>
+                    Coverage: 90M+ records
+                </div>
+                <div class="source-item">
+                    <strong>2. Web of Science</strong><br>
+                    High-impact journals<br>
+                    Coverage: 100M+ records
+                </div>
+                <div class="source-item">
+                    <strong>3. IEEE Xplore</strong><br>
+                    Technical literature<br>
+                    Coverage: 6M+ documents
+                </div>
+                <div class="source-item">
+                    <strong>4. Semantic Scholar</strong><br>
+                    AI-enhanced metadata<br>
+                    Coverage: 200M+ papers
+                </div>
+                <div class="source-item">
+                    <strong>5. OpenAlex</strong><br>
+                    Open bibliographic data<br>
+                    Coverage: 250M+ works
+                </div>
+                <div class="source-item">
+                    <strong>6. CrossRef</strong><br>
+                    Publisher-verified metadata<br>
+                    Coverage: 130M+ records
+                </div>
+                <div class="source-item">
+                    <strong>7. CORE</strong><br>
+                    Open access aggregator<br>
+                    Coverage: 300M+ documents
+                </div>
+                <div class="source-item" style="grid-column: 1 / -1; border-left: 5px solid #f97316;">
+                    <strong>Coverage:</strong> All sources provide documented APIs enabling reproducible automated searches<br>
+                    <strong>Selection Rationale:</strong> Disciplinary breadth, methodological diversity, API accessibility, complementary coverage
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: Workflow -->
+        <div class="slide">
+            <div class="slide-number">4/6</div>
+            <h2>Six-Stage Workflow</h2>
             <div class="features">
                 <div class="feature-box">
-                    <div class="feature-title"><span class="icon">📚</span>Appendix A - Search</div>
+                    <div class="feature-title"><span class="icon">1️⃣</span>Search Strategy</div>
                     <div>
-                        • Multi-source academic database queries<br>
-                        • Scopus, IEEE, JSTOR, ACM, Web of Science, Google Scholar<br>
-                        • Configurable parameters & result caps<br>
-                        • Validated JSON artifacts
+                        • Configure queries in YAML<br>
+                        • Test with preflight scripts<br>
+                        • Validate API syntax<br>
+                        • Document decisions
                     </div>
                 </div>
                 <div class="feature-box">
-                    <div class="feature-title"><span class="icon">🔍</span>Appendix B - Screening</div>
+                    <div class="feature-title"><span class="icon">2️⃣</span>Data Harvesting</div>
                     <div>
-                        • Quality assessment & filtering<br>
-                        • Structured screening process<br>
-                        • Schema-based validation<br>
+                        • Run 7 harvest scripts<br>
+                        • Query APIs systematically<br>
+                        • Collect metadata<br>
+                        • Save to JSON
+                    </div>
+                </div>
+                <div class="feature-box">
+                    <div class="feature-title"><span class="icon">3️⃣</span>Consolidation</div>
+                    <div>
+                        • Merge results<br>
+                        • Deduplicate records<br>
+                        • Normalize metadata<br>
+                        • Validate completeness
+                    </div>
+                </div>
+                <div class="feature-box">
+                    <div class="feature-title"><span class="icon">4️⃣</span>Screening</div>
+                    <div>
+                        • Title/abstract screening<br>
+                        • Full-text assessment<br>
+                        • AI-assisted (human validates)<br>
+                        • Log all decisions
+                    </div>
+                </div>
+                <div class="feature-box">
+                    <div class="feature-title"><span class="icon">5️⃣</span>Data Extraction</div>
+                    <div>
+                        • Study characteristics<br>
+                        • Risk of bias assessment<br>
+                        • Primary/secondary outcomes<br>
+                        • GRADE-CERQual ratings
+                    </div>
+                </div>
+                <div class="feature-box">
+                    <div class="feature-title"><span class="icon">6️⃣</span>Synthesis</div>
+                    <div>
+                        • Quantitative analysis<br>
+                        • Qualitative themes<br>
+                        • Mixed methods integration<br>
+                        • PRISMA-compliant report
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5: Current Status -->
+        <div class="slide">
+            <div class="slide-number">5/6</div>
+            <h2>Implementation Status</h2>
+            <div class="stats">
+                <div class="stat-box">
+                    <span class="stat-number">7</span>
+                    <span class="stat-label">API Sources Operational</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-number">v1.8</span>
+                    <span class="stat-label">Protocol Version</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-number">~15K</span>
+                    <span class="stat-label">Expected Records</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-number">100%</span>
+                    <span class="stat-label">Reproducible</span>
+                </div>
+            </div>
+            <div class="content" style="margin-top: 80px;">
+                <h3>✅ Recent Milestones (November 2025)</h3>
+                <div class="list-item">Protocol v1.8 finalized with 7 information sources documented</div>
+                <div class="list-item">All API integrations completed and operational</div>
+                <div class="list-item">Documentation comprehensive: Protocol PDF, CHANGELOG, README</div>
+                <div class="list-item">Repository cleanup: 39 files removed, 4 essential files remain</div>
+                <div class="list-item">Open methodology: Full transparency via GitHub version control</div>
+            </div>
+        </div>
+
+        <!-- Slide 6: Next Steps & Value -->
+        <div class="slide">
+            <div class="slide-number">6/6</div>
+            <h2>Next Steps & Research Impact</h2>
+            <div class="features">
+                <div class="feature-box">
+                    <div class="feature-title"><span class="icon">📊</span>Review Progress</div>
+                    <div>
+                        • <strong>Search:</strong> In progress (~15K records)<br>
+                        • <strong>Deduplication:</strong> Pending<br>
+                        • <strong>Screening:</strong> Pending<br>
+                        • <strong>Synthesis:</strong> Expected Q2 2026
+                    </div>
+                </div>
+                <div class="feature-box">
+                    <div class="feature-title"><span class="icon">🔬</span>Quality Assurance</div>
+                    <div>
+                        • Risk of bias assessment (PRISMA-P, Cochrane ROB-2)<br>
+                        • GRADE-CERQual confidence ratings<br>
+                        • AI-assisted with human oversight<br>
+                        • Full audit trail via GitHub
+                    </div>
+                </div>
+                <div class="feature-box">
+                    <div class="feature-title"><span class="icon">🌐</span>Open Science</div>
+                    <div>
+                        • Protocol registered (Spiral, OSF)<br>
+                        • All code open source (GitHub)<br>
+                        • Search results will be published<br>
                         • Reproducible methodology
                     </div>
                 </div>
                 <div class="feature-box">
-                    <div class="feature-title"><span class="icon">📊</span>Appendix C - Extraction</div>
+                    <div class="feature-title"><span class="icon">🎯</span>Expected Impact</div>
                     <div>
-                        • Structured data extraction<br>
-                        • Standardized output formats<br>
-                        • Schema-validated results<br>
-                        • Audit trail via Git
-                    </div>
-                </div>
-                <div class="feature-box">
-                    <div class="feature-title"><span class="icon">🔧</span>Tech Stack</div>
-                    <div>
-                        • Python 3.11+ with pytest<br>
-                        • GitHub Actions CI/CD<br>
-                        • JSON Schema validation<br>
-                        • Black + Ruff quality tools
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Slide 3: Key Features -->
-        <div class="slide">
-            <div class="slide-number">3/5</div>
-            <h2>Production-Ready Features</h2>
-            <div class="content">
-                <div class="list-item">
-                    <strong>Automated Workflows</strong> - Manual trigger with configurable parameters, dry-run mode, automatic PR creation
-                </div>
-                <div class="list-item">
-                    <strong>Multi-Source Integration</strong> - Scopus (institutional), IEEE Xplore, Web of Science, Semantic Scholar, arXiv
-                </div>
-                <div class="list-item">
-                    <strong>Production Hardening</strong> - 60-min timeout, dependency caching (30% faster), comprehensive error handling
-                </div>
-                <div class="list-item">
-                    <strong>Data Contract v1.0</strong> - Frozen schemas, JSON validation, non-blocking reports, metadata tracking
-                </div>
-                <div class="list-item">
-                    <strong>Quality Assurance</strong> - Pre-commit validation, automated formatting, schema compliance checks
-                </div>
-                <div class="list-item">
-                    <strong>Security & Governance</strong> - Branch protection, secrets management, GitHub App authentication
-                </div>
-            </div>
-        </div>
-
-        <!-- Slide 4: Metrics & Achievements -->
-        <div class="slide">
-            <div class="slide-number">4/5</div>
-            <h2>Project Metrics & Recent Success</h2>
-            <div class="stats">
-                <div class="stat-box">
-                    <span class="stat-number">353</span>
-                    <span class="stat-label">Total Workflow Runs</span>
-                </div>
-                <div class="stat-box">
-                    <span class="stat-number">47</span>
-                    <span class="stat-label">Search Executions</span>
-                </div>
-                <div class="stat-box">
-                    <span class="stat-number">3</span>
-                    <span class="stat-label">JSON Schemas</span>
-                </div>
-                <div class="stat-box">
-                    <span class="stat-number">100%</span>
-                    <span class="stat-label">CI/CD Success</span>
-                </div>
-            </div>
-            <div class="content" style="margin-top: 80px;">
-                <h3>🎉 Today's Major Achievement</h3>
-                <div class="list-item">Fixed critical YAML syntax error (line 305) - workflow now 100% operational</div>
-                <div class="list-item">14 commits merged to production with comprehensive testing</div>
-                <div class="list-item">Full Scopus institutional harvest verified and working</div>
-                <div class="list-item">Generated 25 KB validated JSON artifacts successfully</div>
-            </div>
-        </div>
-
-        <!-- Slide 5: Business Value & Status -->
-        <div class="slide">
-            <div class="slide-number">5/5</div>
-            <h2>Business Value & Next Steps</h2>
-            <div class="features">
-                <div class="feature-box">
-                    <div class="feature-title"><span class="icon">💰</span>Business Impact</div>
-                    <div>
-                        • 70-80% reduction in manual search time<br>
-                        • 100% reproducible via Git versioning<br>
-                        • Standardized, validated outputs<br>
-                        • Scalable multi-source handling
-                    </div>
-                </div>
-                <div class="feature-box">
-                    <div class="feature-title"><span class="icon">📈</span>Current Status</div>
-                    <div>
-                        • ✅ Fully operational on main branch<br>
-                        • ✅ All CI/CD checks passing<br>
-                        • ✅ Scopus harvest tested & working<br>
-                        • ✅ Production-ready deployment
-                    </div>
-                </div>
-                <div class="feature-box">
-                    <div class="feature-title"><span class="icon">🚀</span>Roadmap</div>
-                    <div>
-                        <strong style="color: #2563eb;">Next Sprint:</strong><br>
-                        • Add IEEE, JSTOR, Web of Science<br>
-                        • Add ACM Digital Library support<br>
-                        • Implement Google Scholar API
-                    </div>
-                </div>
-                <div class="feature-box">
-                    <div class="feature-title"><span class="icon">🎯</span>Key Takeaway</div>
-                    <div>
-                        <strong style="color: #10b981;">ELIS SLR Agent is production-ready, fully automated, and delivering measurable time savings for systematic literature reviews.</strong>
+                        <strong style="color: #10b981;">First comprehensive review of electoral integrity strategies across technologies, operations, and institutions (1990-2025)</strong>
                     </div>
                 </div>
             </div>
@@ -400,7 +493,7 @@
 
     <script>
         let currentSlide = 0;
-        const totalSlides = 5;
+        const totalSlides = 6;
 
         function changeSlide(direction) {
             currentSlide += direction;
