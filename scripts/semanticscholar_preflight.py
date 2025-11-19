@@ -38,7 +38,7 @@ if response.status_code == 200:
 
     if data.get("data"):
         paper = data["data"][0]
-        print(f"\nSample result:")
+        print("\nSample result:")
         print(f"  Title: {paper.get('title', 'N/A')}")
         print(f"  Year: {paper.get('year', 'N/A')}")
         print(f"  Citations: {paper.get('citationCount', 0)}")
