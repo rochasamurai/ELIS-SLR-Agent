@@ -1,748 +1,805 @@
 # ELIS SLR Agent
 
-[![CI Status](https://github.com/rochasamurai/ELIS-SLR-Agent/workflows/ELIS%20-%20CI/badge.svg)](https://github.com/rochasamurai/ELIS-SLR-Agent/actions)
-[![Test Coverage](https://img.shields.io/badge/coverage-87%25-brightgreen)](https://github.com/rochasamurai/ELIS-SLR-Agent)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Protocol](https://img.shields.io/badge/protocol-v1.8-purple.svg)](docs/ELIS_2025_SLR_Protocol_v1.8.pdf)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-<!--
-  This README is the authoritative project overview for PMs and engineers.
-  It intentionally includes hyperlinks for easy navigation and HTML comments
-  (like this one) to document design decisions without cluttering the page.
--->
-
-> **Current release:** [v0.1.1-mvp](https://github.com/rochasamurai/ELIS-SLR-Agent/releases)  
-> **Status:** ✅ Production-ready | CI green | Test coverage 87% | Data Contract v1.0 frozen
+> **Electoral Integrity Strategies - Systematic Literature Review Agent**  
+> Open-source Python workflow for systematic literature reviews on electoral integrity, developed at Imperial College Business School.
 
 ---
 
-## Table of contents
-- [What this repository is](#what-this-repository-is)
-- [Production status](#production-status)
-- [Repository map](#repository-map)
-- [Data Contract v1.0 (MVP)](#data-contract-v10-mvp)
-- [Quick start](#quick-start)
-- [Testing](#testing)
-- [Workflows (GitHub Actions)](#workflows-github-actions)
-- [Governance & branch protection](#governance--branch-protection)
-- [Release process](#release-process)
+## Table of Contents
+- [What This Project Is](#what-this-project-is)
+- [Why This Project Exists](#why-this-project-exists)
+- [Information Sources](#information-sources)
+- [How It Works](#how-it-works)
+- [Project Structure](#project-structure)
+- [Quick Start](#quick-start)
+- [Usage Guide](#usage-guide)
+- [Methodology](#methodology)
+- [Current Status](#current-status)
 - [Troubleshooting](#troubleshooting)
-- [Frequently asked questions](#frequently-asked-questions)
 - [Contributing](#contributing)
-- [Changelog](#changelog)
-- [Licence](#licence)
+- [Documentation](#documentation)
+- [Citation](#citation)
+- [Acknowledgments](#acknowledgments)
 
 ---
 
-## What this repository is
-The ELIS SLR Agent is a **production-ready**, reproducible pipeline component for Systematic Literature Review (SLR) workflows. It generates and validates three operational artefacts:
+## What This Project Is
 
-- **Appendix A — Search** (metadata from academic databases)
-- **Appendix B — Screening** (inclusion/exclusion decisions)
-- **Appendix C — Data Extraction** (structured research data)
+The ELIS SLR Agent is a **reproducible, API-driven pipeline** for conducting systematic literature reviews in political science and electoral studies. It automates the retrieval, screening, and synthesis of academic literature across multiple databases.
 
-The repository includes:
-- ✅ **Validated agents** for search, screening, and data extraction
-- ✅ **JSON Schema-based data contracts** (v1.0 frozen)
-- ✅ **Comprehensive test suite** (50 tests, 87% coverage)
-- ✅ **14 GitHub Actions workflows** for CI/CD automation
-- ✅ **Audit trail** via timestamped validation reports
+**Key capabilities:**
+- ✅ **Multi-source harvesting** — Queries 7 academic databases via APIs
+- ✅ **Reproducible searches** — Version-controlled queries and configurations
+- ✅ **Automated validation** — Schema-based data quality checks
+- ✅ **Open methodology** — Full transparency and audit trail via GitHub
+- ✅ **AI-assisted workflow** — LLM integration with human oversight
 
-> **For PMs:** Read [Quick start](#quick-start), [Production status](#production-status), and [Release process](#release-process).  
-> **For Engineers:** See [Repository map](#repository-map), [Testing](#testing), [Workflows](#workflows-github-actions), and [Governance](#governance--branch-protection).
+**Research Question:**  
+*What operational and technological strategies have been shown to improve the integrity or auditability of electoral systems since 1990?*
 
----
-
-## Production status
-
-### Quality metrics
-| Metric | Status | Details |
-|--------|--------|---------|
-| **Test Coverage** | 87% | 50 tests across 4 test files |
-| **CI/CD** | ✅ Passing | 14 automated workflows |
-| **Code Quality** | ✅ Passing | Black + Ruff enforced |
-| **Validation** | ✅ All passing | JSON Schema v1.0 compliance |
-| **Performance** | ⚡ Fast | Tests run in <2 seconds |
-
-### Test coverage breakdown
-- `scopus_preflight.py`: 100% ⭐
-- `validate_json.py`: 92%
-- `agent.py`: 79%
-- `scopus_harvest.py`: 75%
-- `hello_bot.py`: 100% ⭐
-
-### Recent improvements
-- ✅ **JSON Schema 2020-12 support** — Enhanced validator compatibility
-- ✅ **UTF-8 encoding** — International character support
-- ✅ **Timestamped reports** — Audit trail compliance
-- ✅ **Comprehensive testing** — 87% coverage (industry-leading)
-- ✅ **Bug fixes** — Metadata filtering, error handling
-
-### Production readiness checklist
-- ✅ All tests passing (50/50)
-- ✅ CI/CD green on main branch
-- ✅ Code quality checks enforced
-- ✅ Data contracts validated
-- ✅ Documentation complete
-- ✅ Branch protection enabled
-- ✅ Release process documented
+**Principal Investigator:** Carlos Rocha (Imperial College Business School)  
+**Supervisor:** Prof. Tommaso Valletti  
+**Sponsor:** Instituto Voto Legal (IVL), São Paulo, Brazil
 
 ---
 
-## Repository map
-> Jump directly to important files and folders.
+## Why This Project Exists
 
-### Core components
+### The Research Problem
 
-#### Agent and tools
-- `scripts/agent.py` — Main agent that produces A/B/C artefacts  
-  ↳ [Open file](https://github.com/rochasamurai/ELIS-SLR-Agent/blob/main/scripts/agent.py)
-- `scripts/validate_json.py` — JSON artefact validator (92% tested)  
-  ↳ [Open file](https://github.com/rochasamurai/ELIS-SLR-Agent/blob/main/scripts/validate_json.py)
+Electoral integrity is fundamental to democratic legitimacy, yet systematic evidence on what actually works remains fragmented across disciplines. Existing literature reviews tend to focus on:
+- Single technologies (e.g., electronic voting security)
+- Narrow aspects (e.g., voter turnout)
+- Single countries or regions
 
-#### MVP scripts (production agents)
-- `scripts/elis/search_mvp.py` — Scopus search agent  
-  ↳ [Open file](https://github.com/rochasamurai/ELIS-SLR-Agent/blob/main/scripts/elis/search_mvp.py)
-- `scripts/elis/screen_mvp.py` — Screening agent  
-  ↳ [Open file](https://github.com/rochasamurai/ELIS-SLR-Agent/blob/main/scripts/elis/screen_mvp.py)
-- `scripts/elis/imports_to_appendix_a.py` — Import converter  
-  ↳ [Open file](https://github.com/rochasamurai/ELIS-SLR-Agent/blob/main/scripts/elis/imports_to_appendix_a.py)
+**No consolidated review exists** that jointly examines technological, operational, and institutional strategies across both electronic and paper-based voting systems.
 
-#### Scopus integration
-- `scripts/scopus_harvest.py` — Scopus API harvester (75% tested)  
-  ↳ [Open file](https://github.com/rochasamurai/ELIS-SLR-Agent/blob/main/scripts/scopus_harvest.py)
-- `scripts/scopus_preflight.py` — API connectivity check (100% tested)  
-  ↳ [Open file](https://github.com/rochasamurai/ELIS-SLR-Agent/blob/main/scripts/scopus_preflight.py)
+### The Solution
 
-### Data contracts (JSON Schemas)
-- Appendix A (Search) — `schemas/appendix_a.schema.json`  
-  ↳ [Open file](https://github.com/rochasamurai/ELIS-SLR-Agent/blob/main/schemas/appendix_a.schema.json)
-- Appendix B (Screening) — `schemas/appendix_b.schema.json`  
-  ↳ [Open file](https://github.com/rochasamurai/ELIS-SLR-Agent/blob/main/schemas/appendix_b.schema.json)
-- Appendix C (Extraction) — `schemas/appendix_c.schema.json`  
-  ↳ [Open file](https://github.com/rochasamurai/ELIS-SLR-Agent/blob/main/schemas/appendix_c.schema.json)
+This project conducts a **comprehensive, interdisciplinary systematic review** covering:
+- 🗳️ **Voting technologies** (electronic, paper, hybrid systems)
+- ⚙️ **Operational mechanisms** (audits, transparency measures)
+- 🏛️ **Institutional frameworks** (oversight, legal requirements)
+- 🌍 **Global scope** (comparative evidence from 1990-2025)
 
-### CI & automation (14 workflows)
-All workflows under `.github/workflows/`:
+### Impact
 
-**Core workflows:**
-- `ci.yml` — Quality, tests, validation  
-  ↳ [Open file](https://github.com/rochasamurai/ELIS-SLR-Agent/blob/main/.github/workflows/ci.yml)
-- `elis-validate.yml` — Validation reporting  
-  ↳ [Open file](https://github.com/rochasamurai/ELIS-SLR-Agent/blob/main/.github/workflows/elis-validate.yml)
-
-**Agent workflows:**
-- `elis-agent-search.yml` — Search automation  
-- `elis-agent-screen.yml` — Screening automation  
-- `elis-agent-nightly.yml` — Scheduled runs
-
-**Utility workflows:**
-- `autoformat.yml` — Code formatting  
-- `bot-commit.yml` — Automated commits  
-- `elis-housekeeping.yml` — Maintenance tasks  
-- `export-docx.yml` — Document export
-
-**[View all workflows →](https://github.com/rochasamurai/ELIS-SLR-Agent/tree/main/.github/workflows)**
-
-### Testing
-- `tests/` — Comprehensive test suite (50 tests)
-  - `tests/test_validate_json.py` — Validator tests (24 tests)  
-    ↳ [Open file](https://github.com/rochasamurai/ELIS-SLR-Agent/blob/main/tests/test_validate_json.py)
-  - `tests/test_scopus_harvest.py` — Harvester tests (15 tests)  
-    ↳ [Open file](https://github.com/rochasamurai/ELIS-SLR-Agent/blob/main/tests/test_scopus_harvest.py)
-  - `tests/test_scopus_preflight.py` — Preflight tests (10 tests)  
-    ↳ [Open file](https://github.com/rochasamurai/ELIS-SLR-Agent/blob/main/tests/test_scopus_preflight.py)
-  - `tests/test_agent_step_b.py` — Agent tests (1 test)
-
-### Documentation
-- `docs/` — Technical documentation
-  - `docs/ELIS_SLR_Workflow.md` — Complete workflow guide
-  - `docs/ELIS_Source_Registry.md` — Data source documentation
-  - `docs/CI_Housekeeping.md` — CI/CD maintenance guide
-- `CHANGELOG.md` — Version history  
-  ↳ [Open file](https://github.com/rochasamurai/ELIS-SLR-Agent/blob/main/CHANGELOG.md)
-- `requirements.txt` — Python dependencies  
-  ↳ [Open file](https://github.com/rochasamurai/ELIS-SLR-Agent/blob/main/requirements.txt)
-
-### Data & reports
-- `json_jsonl/` — Generated artefacts (agent output)  
-  ↳ [Open folder](https://github.com/rochasamurai/ELIS-SLR-Agent/tree/main/json_jsonl)
-- `validation_reports/` — Timestamped validation reports  
-  ↳ [Open folder](https://github.com/rochasamurai/ELIS-SLR-Agent/tree/main/validation_reports)
-- `imports/` — Raw data imports (Scopus CSV)  
-  ↳ [Open folder](https://github.com/rochasamurai/ELIS-SLR-Agent/tree/main/imports)
+The synthesis aims to:
+- 📊 **Inform policy design** — Evidence-based electoral reform recommendations
+- 🔬 **Identify research gaps** — Guide future academic inquiry
+- 🌐 **Support practitioners** — Actionable insights for election administrators
+- 🎓 **Advance methodology** — Demonstrate AI-assisted systematic reviews
 
 ---
 
-## Data Contract v1.0 (MVP)
-The data contract is expressed as three JSON Schemas (Draft 2020-12). They capture **only the minimal fields** required for MVP; additional fields can be proposed via PRs.
+## Information Sources
 
-**Schemas:**
-- [Appendix A (Search)](https://github.com/rochasamurai/ELIS-SLR-Agent/blob/main/schemas/appendix_a.schema.json) — Search metadata and results
-- [Appendix B (Screening)](https://github.com/rochasamurai/ELIS-SLR-Agent/blob/main/schemas/appendix_b.schema.json) — Screening decisions
-- [Appendix C (Extraction)](https://github.com/rochasamurai/ELIS-SLR-Agent/blob/main/schemas/appendix_c.schema.json) — Extracted data
+### Overview
 
-**Validation:**
-- Automated via `scripts/validate_json.py`
-- Runs on every push (non-blocking)
-- Generates timestamped reports for audit trail
-- 92% test coverage ensures reliability
+The review queries **7 academic databases** providing comprehensive coverage across political science, computer science, law, and governance. All sources provide documented APIs enabling reproducible automated searches.
 
-<!-- Design choice: keep schemas intentionally small to make review and governance simpler. -->
+### Implemented Sources (7 API Integrations)
+
+1. ✅ **Scopus**  
+   Multidisciplinary database with comprehensive coverage across political science, governance, law, and engineering.  
+   *Coverage:* 90M+ records | *API:* Elsevier Scopus API
+
+2. ✅ **Web of Science**  
+   High-impact journal indexing platform enabling detailed citation analysis across disciplines.  
+   *Coverage:* 100M+ records | *API:* Clarivate Web of Science API
+
+3. ✅ **IEEE Xplore**  
+   Technical literature repository covering electronic voting systems, cryptographic security, and system auditability.  
+   *Coverage:* 6M+ documents | *API:* IEEE Xplore API
+
+4. ✅ **Semantic Scholar**  
+   AI-enhanced bibliographic database covering 200M+ papers across computer science and interdisciplinary research, with citation graphs and semantic indexing.  
+   *Coverage:* 200M+ papers | *API:* Semantic Scholar API
+
+5. ✅ **OpenAlex**  
+   Open bibliographic database providing comprehensive metadata including institutions, citations, and concept tagging.  
+   *Coverage:* 250M+ works | *API:* OpenAlex API
+
+6. ✅ **CrossRef**  
+   DOI registration agency providing publisher-verified metadata, enabling robust deduplication and citation tracking.  
+   *Coverage:* 130M+ records | *API:* CrossRef REST API
+
+7. ✅ **CORE**  
+   Open access aggregator covering papers, theses, and preprints from institutional repositories worldwide.  
+   *Coverage:* 300M+ documents | *API:* CORE API v3
+
+### Source Selection Rationale
+
+These sources were selected to provide:
+
+- **Disciplinary breadth:** Coverage across political science, computer science, law, and governance
+- **Methodological diversity:** Inclusion of both empirical studies and technical evaluations
+- **API accessibility:** All sources provide documented APIs enabling reproducible automated searches
+- **Complementary coverage:** Combination of subscription databases (Scopus, WoS, IEEE) and open sources (Semantic Scholar, OpenAlex, CORE) maximizes retrieval while supporting open science principles
+
+### Unavailable Sources
+
+The following sources were considered but not implemented due to API limitations:
+
+- ❌ **ACM Digital Library** — No public API available
+- ❌ **JSTOR** — No real-time API for systematic searches
+- ❌ **Google Scholar** — Terms of Service restrictions on automated access
+
+*Full methodology documented in [Protocol v1.8](docs/ELIS_2025_SLR_Protocol_v1.8.pdf), Section 3.2.*
 
 ---
 
-## Quick start
-> **Requirements:** Python 3.11+ | Tested on macOS/Linux/Windows
+## How It Works
+
+### Workflow Overview
+```
+┌─────────────────────────────────────────────────────────────┐
+│  1. SEARCH STRATEGY                                          │
+│  Configure queries in YAML → Test with preflight scripts    │
+└──────────────────┬──────────────────────────────────────────┘
+                   │
+┌──────────────────▼──────────────────────────────────────────┐
+│  2. DATA HARVESTING                                          │
+│  Run 7 harvest scripts → Query APIs → Collect metadata      │
+└──────────────────┬──────────────────────────────────────────┘
+                   │
+┌──────────────────▼──────────────────────────────────────────┐
+│  3. DATA CONSOLIDATION                                       │
+│  Merge results → Deduplicate → Normalize → Validate         │
+└──────────────────┬──────────────────────────────────────────┘
+                   │
+┌──────────────────▼──────────────────────────────────────────┐
+│  4. SCREENING (Manual + AI-Assisted)                         │
+│  Title/abstract → Full-text → Eligibility → Inclusion log   │
+└──────────────────┬──────────────────────────────────────────┘
+                   │
+┌──────────────────▼──────────────────────────────────────────┐
+│  5. DATA EXTRACTION                                          │
+│  Extract study characteristics → Risk of bias → Outcomes    │
+└──────────────────┬──────────────────────────────────────────┘
+                   │
+┌──────────────────▼──────────────────────────────────────────┐
+│  6. SYNTHESIS & REPORTING                                    │
+│  Thematic analysis → Confidence ratings → Final report       │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Detailed Steps
+
+#### 1. Search Strategy
+- **Define queries** in `config/elis_search_queries.yml`
+- **Test connectivity** using preflight scripts
+- **Validate syntax** against each API's requirements
+- **Document decisions** in protocol amendments
+
+#### 2. Data Harvesting
+Each source has two scripts:
+- **Preflight script** (`*_preflight.py`) — Tests API connectivity and configuration
+- **Harvest script** (`*_harvest.py`) — Executes search and retrieves results
+
+All results saved to: `json_jsonl/ELIS_Appendix_A_Search_rows.json`
+
+#### 3. Data Consolidation
+- **Deduplication** — Identify duplicate records across sources
+- **Normalization** — Standardize metadata fields
+- **Validation** — Check completeness and data types
+- **Enrichment** — Add citation counts, DOIs, full-text links
+
+#### 4. Screening (Human-Led)
+- **Title/abstract screening** — Apply inclusion/exclusion criteria
+- **Full-text screening** — Detailed eligibility assessment
+- **AI assistance** — LLMs suggest classifications (human validates)
+- **Logging** — Record all decisions with rationales
+
+#### 5. Data Extraction
+- **Study characteristics** — Design, population, intervention
+- **Risk of bias** — Structured assessment using adapted tools
+- **Outcomes** — Primary and secondary outcomes
+- **Confidence** — GRADE-CERQual ratings per theme
+
+#### 6. Synthesis
+- **Quantitative** — Descriptive statistics, frequency tables
+- **Qualitative** — Thematic synthesis, narrative summary
+- **Mixed methods** — Integration of findings
+- **Reporting** — PRISMA-compliant manuscript
+
+---
+
+## Project Structure
+```
+ELIS-SLR-Agent/
+│
+├── config/
+│   └── elis_search_queries.yml          # Search configuration (YAML)
+│
+├── docs/
+│   ├── CHANGELOG.md                      # Protocol version history
+│   ├── CONTRIBUTING.md                   # Contributor guidelines
+│   ├── ELIS_2025_SLR_Protocol_v1.8.pdf  # Current protocol
+│   └── README.md                         # Documentation overview
+│
+├── scripts/
+│   ├── scopus_preflight.py              # Scopus API connectivity test
+│   ├── scopus_harvest.py                # Scopus data harvester
+│   ├── wos_preflight.py                 # Web of Science connectivity test
+│   ├── wos_harvest.py                   # Web of Science harvester
+│   ├── ieee_preflight.py                # IEEE Xplore connectivity test
+│   ├── ieee_harvest.py                  # IEEE Xplore harvester
+│   ├── semanticscholar_preflight.py     # Semantic Scholar connectivity test
+│   ├── semanticscholar_harvest.py       # Semantic Scholar harvester
+│   ├── openalex_preflight.py            # OpenAlex connectivity test
+│   ├── openalex_harvest.py              # OpenAlex harvester
+│   ├── crossref_preflight.py            # CrossRef connectivity test
+│   ├── crossref_harvest.py              # CrossRef harvester
+│   ├── core_preflight.py                # CORE connectivity test
+│   └── core_harvest.py                  # CORE harvester
+│
+├── json_jsonl/
+│   └── ELIS_Appendix_A_Search_rows.json # Consolidated search results
+│
+├── .github/
+│   └── workflows/
+│       ├── elis-scopus-preflight.yml    # Scopus CI workflow
+│       ├── elis-wos-preflight.yml       # Web of Science CI workflow
+│       ├── elis-ieee-preflight.yml      # IEEE Xplore CI workflow
+│       ├── elis-semanticscholar-preflight.yml  # Semantic Scholar CI
+│       ├── elis-openalex-preflight.yml  # OpenAlex CI workflow
+│       ├── elis-crossref-preflight.yml  # CrossRef CI workflow
+│       └── elis-core-preflight.yml      # CORE CI workflow
+│
+├── requirements.txt                      # Python dependencies
+├── .env.example                          # Environment variables template
+├── .gitignore                            # Git ignore rules
+└── README.md                             # This file
+```
+
+### Key Files
+
+#### Configuration
+- **`config/elis_search_queries.yml`** — Search queries for all sources  
+  [View file →](config/elis_search_queries.yml)
+
+#### Documentation
+- **`docs/ELIS_2025_SLR_Protocol_v1.8.pdf`** — Complete systematic review protocol  
+  [View file →](docs/ELIS_2025_SLR_Protocol_v1.8.pdf)
+- **`docs/CHANGELOG.md`** — Version history and amendments  
+  [View file →](docs/CHANGELOG.md)
+
+#### Core Scripts
+- **Preflight scripts** — Test API connectivity before harvesting
+- **Harvest scripts** — Execute searches and retrieve results
+- **All scripts** documented with inline comments and docstrings
+
+#### Output
+- **`json_jsonl/ELIS_Appendix_A_Search_rows.json`** — Consolidated search results
+
+---
+
+## Quick Start
+
+### Prerequisites
+
+- **Python 3.11+** (tested on 3.11 and 3.12)
+- **API keys** for subscription databases (see Configuration)
+- **Git** for version control
+- **Operating system:** macOS, Linux, or Windows (WSL recommended)
 
 ### Installation
-
 ```bash
-# 1) Clone the repository
+# 1. Clone the repository
 git clone https://github.com/rochasamurai/ELIS-SLR-Agent.git
 cd ELIS-SLR-Agent
 
-# 2) Create and activate virtual environment
+# 2. Create virtual environment (recommended)
 python -m venv .venv
 
-# On Windows:
+# Activate on Windows:
 .venv\Scripts\activate
 
-# On macOS/Linux:
+# Activate on macOS/Linux:
 source .venv/bin/activate
 
-# 3) Upgrade pip and install dependencies
+# 3. Upgrade pip
 python -m pip install --upgrade pip
-pip install -r requirements.txt
 
-# 4) Install development tools
-pip install ruff==0.6.9 black==24.8.0 pytest pytest-cov
+# 4. Install dependencies
+pip install -r requirements.txt --break-system-packages
 ```
 
-### Basic usage
+### Configuration
 
+Create a `.env` file in the project root:
 ```bash
-# Generate toy artefacts (writes to json_jsonl/)
-python scripts/agent.py
+# Copy template
+cp .env.example .env
 
-# Validate artefacts (generates timestamped report)
-python scripts/validate_json.py
-
-# Run test suite
-pytest -v
-
-# Check test coverage
-pytest --cov=scripts --cov-report=term-missing
-
-# Format code
-black .
-
-# Lint code
-ruff check .
+# Edit with your API keys
+nano .env  # or use your preferred editor
 ```
 
-### Quick validation check
-
+**Required API keys:**
 ```bash
-# Check if everything works
-python scripts/validate_json.py
-# Expected: [OK] for all appendices
+# Scopus (Elsevier)
+SCOPUS_API_KEY=your_scopus_key_here
+SCOPUS_INST_TOKEN=your_institution_token_here
 
-# View latest validation report
-cat validation_reports/validation-report.md
+# Web of Science (Clarivate)
+WEB_OF_SCIENCE_API_KEY=your_wos_key_here
+
+# IEEE Xplore
+IEEE_EXPLORE_API_KEY=your_ieee_key_here
+
+# CORE
+CORE_API_KEY=your_core_key_here
+
+# Optional but recommended
+SEMANTIC_SCHOLAR_API_KEY=your_semantic_scholar_key_here
 ```
 
-### Run via GitHub Actions (no local setup needed)
-- **Run CI manually:** Actions → ELIS - CI → Run workflow
-- **Try the agent:** Actions → ELIS - Agent Run
-- **View validation:** Actions → ELIS - Validate
+**Note:** OpenAlex and CrossRef provide public APIs that don't require authentication.
 
----
-
-## Testing
-
-### Test suite overview
-**Total tests:** 50 | **Coverage:** 87% | **Execution time:** <2 seconds
-
+### Verify Installation
 ```bash
-# Run all tests
-pytest -v
+# Test all API connections
+python scripts/scopus_preflight.py
+python scripts/wos_preflight.py
+python scripts/ieee_preflight.py
+python scripts/semanticscholar_preflight.py
+python scripts/openalex_preflight.py
+python scripts/crossref_preflight.py
+python scripts/core_preflight.py
 
-# Run with coverage report
-pytest --cov=scripts --cov-report=term-missing --cov-report=html
-
-# Run specific test file
-pytest tests/test_validate_json.py -v
-
-# Run tests matching pattern
-pytest -k "test_validates" -v
+# All should return: ✅ Connection successful
 ```
-
-### Test files
-| File | Tests | Coverage | Purpose |
-|------|-------|----------|---------|
-| `test_validate_json.py` | 24 | 92% | Validator functionality |
-| `test_scopus_harvest.py` | 15 | 75% | API harvesting |
-| `test_scopus_preflight.py` | 10 | 100% | Connectivity checks |
-| `test_agent_step_b.py` | 1 | 79% | Agent workflows |
-
-### Coverage goals
-- **Current:** 87% (169/195 lines)
-- **Target:** 80%+ (✅ achieved)
-- **Industry average:** 50-60%
-- **Status:** Top 10% of Python projects 🏆
-
-### Continuous testing
-All tests run automatically via GitHub Actions on:
-- Every push to any branch
-- Every pull request
-- Manual workflow dispatch
-- Scheduled nightly runs
 
 ---
 
-## Workflows (GitHub Actions)
-<!--
-  Only the essentials are required for MVP. Heavy gates (typing/security/audit)
-  exist but are optional and can be turned on by labelling PRs or manual runs.
--->
+## Usage Guide
 
-### Core workflows
+### Basic Workflow
 
-#### 1) ELIS - CI (`ci.yml`)
-**Purpose:** Quality gates for all changes
+#### 1. Test API Connectivity
+```bash
+# Run all preflight checks
+python scripts/scopus_preflight.py
+python scripts/wos_preflight.py
+python scripts/ieee_preflight.py
+python scripts/semanticscholar_preflight.py
+python scripts/openalex_preflight.py
+python scripts/crossref_preflight.py
+python scripts/core_preflight.py
+```
 
-- **quality:** Ruff + Black (check). Fails on issues.
-- **tests:** Runs pytest when `tests/**/*.py` exists; exit 5 ("no tests") treated as success.
-- **validate:** Always runs; **non-blocking**; produces/updates validation report.
+#### 2. Run Individual Harvesters
+```bash
+# Scopus
+python scripts/scopus_harvest.py
 
-[Open file →](https://github.com/rochasamurai/ELIS-SLR-Agent/blob/main/.github/workflows/ci.yml)
+# Web of Science
+python scripts/wos_harvest.py
 
-#### 2) ELIS - Validate (`elis-validate.yml`)
-**Purpose:** Validation reporting and audit trail
+# IEEE Xplore
+python scripts/ieee_harvest.py
 
-- Validates all appendices against JSON Schemas
-- Generates timestamped reports
-- Opens PR when validation status changes
-- Non-blocking (informational only)
+# Semantic Scholar
+python scripts/semanticscholar_harvest.py
 
-[Open file →](https://github.com/rochasamurai/ELIS-SLR-Agent/blob/main/.github/workflows/elis-validate.yml)
+# OpenAlex
+python scripts/openalex_harvest.py
 
-#### 3) ELIS - Agent Search (`elis-agent-search.yml`)
-**Purpose:** Automated academic search
+# CrossRef
+python scripts/crossref_harvest.py
 
-- Queries Scopus API with configured topics
-- Generates Appendix A (Search results)
-- Handles deduplication and metadata enrichment
-- Supports both manual and scheduled runs
+# CORE
+python scripts/core_harvest.py
+```
 
-#### 4) ELIS - Agent Screen (`elis-agent-screen.yml`)
-**Purpose:** Automated screening workflow
+#### 3. Check Results
+```bash
+# View consolidated results
+cat json_jsonl/ELIS_Appendix_A_Search_rows.json
 
-- Processes Appendix A results
-- Applies inclusion/exclusion criteria
-- Generates Appendix B (Screening decisions)
+# Count records
+python -c "import json; data=json.load(open('json_jsonl/ELIS_Appendix_A_Search_rows.json')); print(f'Total records: {len(data)}')"
+```
 
-### Automation workflows
+### Advanced Usage
 
-#### ELIS - Bot Commit (`bot-commit.yml`)
-Create/update a single file on a working branch with automated commit and optional PR.
+#### Modify Search Queries
+```bash
+# Edit search configuration
+nano config/elis_search_queries.yml
 
-**Inputs:**
-- `file_path`: Target file path
-- `content_raw` or `content_b64`: File content
-- `commit_message`: Commit message
-- `work_branch`: Working branch name
-- `open_pr`: Whether to create PR (boolean)
+# Test new queries
+python scripts/scopus_preflight.py  # Tests query syntax
 
-[Open file →](https://github.com/rochasamurai/ELIS-SLR-Agent/blob/main/.github/workflows/bot-commit.yml)
+# Run harvest with new queries
+python scripts/scopus_harvest.py
+```
 
-#### ELIS - Autoformat (`autoformat.yml`)
-Formats code with Black, normalises line endings (CRLF→LF), and optionally opens PR.
+#### Schedule Automated Runs
+GitHub Actions workflows can be triggered:
+- **Manually** — Actions tab → Select workflow → Run workflow
+- **On schedule** — Configure cron in workflow YAML
+- **On push** — Automatic CI/CD on code changes
 
-[Open file →](https://github.com/rochasamurai/ELIS-SLR-Agent/blob/main/.github/workflows/autoformat.yml)
-
-#### ELIS - Housekeeping (`elis-housekeeping.yml`)
-Maintenance tasks: cleanup, reorganisation, log rotation.
-
-### Utility workflows
-- **Agent Run** (`agent-run.yml`) — Run agent against any ref with artifact upload
-- **Deep Review** (`deep-review.yml`) — Optional heavy validation gate
-- **Export Docx** (`export-docx.yml`) — Convert reports to Word documents
-- **Nightly** (`elis-agent-nightly.yml`) — Scheduled agent runs
-
-[View all workflows →](https://github.com/rochasamurai/ELIS-SLR-Agent/actions)
+#### Export Results
+```bash
+# Convert JSON to CSV (requires pandas)
+python -c "
+import json, pandas as pd
+data = json.load(open('json_jsonl/ELIS_Appendix_A_Search_rows.json'))
+df = pd.DataFrame(data)
+df.to_csv('search_results.csv', index=False)
+print('Exported to search_results.csv')
+"
+```
 
 ---
 
-## Governance & branch protection
+## Methodology
 
-### Branch protection (main)
-- ✅ **Required status checks:** `quality`, `validate`
-- ✅ **Require pull request reviews:** 1 approval
-- ✅ **Dismiss stale reviews** on new commits
-- ✅ **Require branches to be up to date**
-- ✅ **No force pushes**
-- ✅ **Delete head branches** after merge
+### AI-Assisted Workflow
 
-### Code quality standards
-- **Formatting:** Black (line length: 88)
-- **Linting:** Ruff (enforced rules: imports, style, complexity)
-- **Testing:** pytest with 80%+ coverage target
-- **Documentation:** UK English, clear commit messages
+This project integrates Large Language Models (LLMs) while maintaining rigorous human oversight:
 
-### Change workflow
-1. Create feature branch from `main`
-2. Make changes (one logical change per commit)
-3. Run tests locally: `pytest -v`
-4. Format code: `black .`
-5. Push to GitHub
-6. CI runs automatically
-7. Create PR when ready
-8. Address review feedback
-9. Squash and merge to `main`
-10. Delete feature branch
+**LLMs Used:**
+- ChatGPT (OpenAI) — Query generation, code review
+- Claude (Anthropic) — Synthesis suggestions, thematic analysis
+- NotebookLM (Google) — Literature summarization
 
-### Commit message conventions
-```
-type: Brief description (imperative mood)
+**AI Tasks:**
+- 🤖 **Query generation** — Suggest search terms and Boolean logic
+- 🤖 **Pattern detection** — Identify recurring themes in results
+- 🤖 **Code assistance** — Generate and debug Python scripts
+- 🤖 **Synthesis** — Suggest thematic clusters from extracted data
 
-- Detailed explanation if needed
-- Use bullet points for multiple changes
-- Reference issues: fixes #123
+**Human Oversight:**
+- ✅ **All final decisions** made by human reviewer
+- ✅ **All AI outputs** validated before acceptance
+- ✅ **Full audit trail** maintained in GitHub
+- ✅ **No automated exclusions** — Every study manually reviewed
 
-Types: feat, fix, docs, test, refactor, chore, ci
-```
+### Quality Assurance
 
-**Examples:**
-```
-feat: Add Scopus API harvester with pagination support
-fix: Handle UTF-8 encoding in validation reports
-test: Add comprehensive tests for validator (87% coverage)
-docs: Update README with production status
-```
+**Risk of Bias Assessment:**
+- Structured checklist adapted from PRISMA-P and Cochrane ROB-2
+- Domain-level ratings: study design, data transparency, outcome measurement
+- Independent assessment with documented rationales
 
-> **Tip:** For small, independent edits use **ELIS - Bot Commit** with short-lived working branches.
+**Confidence in Evidence:**
+- GRADE-CERQual approach for qualitative/mixed-methods findings
+- Four domains: methodological limitations, coherence, data adequacy, relevance
+- Ratings: High, Moderate, Low, or Very Low confidence
+
+**Version Control:**
+- All decisions logged in GitHub with commit history
+- Protocol amendments documented and versioned
+- Data extraction forms tracked in version control
+- Reproducible workflow enables replication studies
+
+### Transparency Commitments
+
+- 📖 **Open protocol** — Full methodology documented and registered
+- 💻 **Open source** — All code publicly available on GitHub
+- 📊 **Open data** — Search results and extracted data will be published
+- 🔍 **Open audit trail** — Every decision documented and versioned
 
 ---
 
-## Release process
+## Current Status
 
-### Standard release workflow
-1. **Ensure main is green**
-   - All CI checks passing ✅
-   - All tests passing (50/50)
-   - Validation reports clean
+### Implementation Status
 
-2. **Update CHANGELOG.md**
-   - Document all changes since last release
-   - Include breaking changes prominently
-   - Credit contributors
+| Component | Status | Notes |
+|-----------|--------|-------|
+| **Protocol v1.8** | ✅ Complete | 7 sources finalized and documented |
+| **Scopus** | ✅ Operational | Preflight + harvest scripts working |
+| **Web of Science** | ✅ Operational | Preflight + harvest scripts working |
+| **IEEE Xplore** | ✅ Operational | Preflight + harvest scripts working |
+| **Semantic Scholar** | ✅ Operational | Preflight + harvest scripts working |
+| **OpenAlex** | ✅ Operational | Preflight + harvest scripts working |
+| **CrossRef** | ✅ Operational | Preflight + harvest scripts working |
+| **CORE** | ⚠️ Operational | Occasional server timeouts (documented) |
 
-3. **Create release**
-   - Go to: [Releases → Draft new release](https://github.com/rochasamurai/ELIS-SLR-Agent/releases/new)
-   - Tag: `v0.1.2-mvp` (increment from v0.1.1-mvp)
-   - Target: `main`
-   - Title: Same as tag
-   - Description: Copy from CHANGELOG.md
+### Review Progress
 
-4. **Publish release**
-   - Click "Publish release" (not pre-release)
-   - GitHub creates git tag automatically
-   - Release appears in sidebar
+| Stage | Status | Records |
+|-------|--------|---------|
+| **Search** | 🔄 In Progress | ~15,000 expected |
+| **Deduplication** | ⏳ Pending | TBD |
+| **Title/Abstract Screening** | ⏳ Pending | TBD |
+| **Full-Text Screening** | ⏳ Pending | TBD |
+| **Data Extraction** | ⏳ Pending | TBD |
+| **Synthesis** | ⏳ Pending | TBD |
 
-5. **Post-release tasks** (optional)
-   - Run: **ELIS - Agent Run** (smoke test)
-   - Run: **ELIS - Housekeeping** (cleanup)
-   - Update project documentation
+**Expected completion:** Q2 2026
 
-### Versioning scheme
-```
-v<major>.<minor>.<patch>-<stage>
+### Recent Updates
 
-Examples:
-- v0.1.1-mvp (current)
-- v0.2.0-mvp (minor feature)
-- v1.0.0 (first production release)
-```
+- ✅ **2025-11-19:** Protocol v1.8 finalized (7 sources documented)
+- ✅ **2025-11:** CORE API integration completed
+- ✅ **2025-10:** CrossRef API integration completed
+- ✅ **2025-10:** OpenAlex API integration completed
+- ✅ **2025-09:** Semantic Scholar API integration completed
+- ✅ **2025-09:** IEEE Xplore API integration completed
+- ✅ **2025-08:** Web of Science API integration completed
+- ✅ **2025-08:** Scopus API integration completed
 
-### Release checklist
-```
-□ All CI passing on main
-□ Test coverage ≥80%
-□ CHANGELOG.md updated
-□ Version number incremented
-□ Breaking changes documented
-□ Release notes written
-□ Git tag created
-□ Release published
-□ Smoke tests run
-```
-
-**Release pages:**
-- [Releases](https://github.com/rochasamurai/ELIS-SLR-Agent/releases)
-- [Tags](https://github.com/rochasamurai/ELIS-SLR-Agent/tags)
+*Full changelog: [docs/CHANGELOG.md](docs/CHANGELOG.md)*
 
 ---
 
 ## Troubleshooting
 
-### Common issues
+### Common Issues
 
-#### Black "would reformat" error on CI
-**Problem:** Code not formatted according to Black style.
+#### API Connection Failures
+
+**Problem:** Preflight script returns authentication error.
 
 **Solutions:**
 ```bash
-# Option 1: Format locally
-black .
-git add -u
-git commit -m "style: Apply black formatting"
-git push
+# Check API key is set
+echo $SCOPUS_API_KEY  # Should print your key
 
-# Option 2: Use GitHub Actions
-# Run: ELIS - Autoformat workflow on your branch
+# Check .env file exists
+cat .env
+
+# Reload environment variables
+source .env  # Linux/macOS
+# or restart your terminal
+
+# Test with curl (example for Scopus)
+curl -H "X-ELS-APIKey: YOUR_KEY" \
+  "https://api.elsevier.com/content/search/scopus?query=election"
 ```
 
-#### Ruff I001 (imports unsorted)
-**Problem:** Import statements not sorted alphabetically.
+#### Rate Limiting
 
-**Solution:**
+**Problem:** "429 Too Many Requests" error.
+
+**Solutions:**
+- Most APIs have rate limits (e.g., 3 requests/second)
+- Scripts include built-in delays
+- If hit rate limit, wait 1 hour and retry
+- Consider spreading harvests across multiple days
+
+#### Empty Results
+
+**Problem:** Harvest script returns 0 results.
+
+**Solutions:**
 ```bash
-ruff --fix .
-git add -u
-git commit -m "style: Sort imports"
-git push
+# Check query syntax in config file
+cat config/elis_search_queries.yml
+
+# Test with simpler query first
+# Edit YAML to use: query: "election"
+
+# Check API status pages:
+# - Scopus: status.elsevier.com
+# - Web of Science: status.clarivate.com
+# - IEEE: ieeexplore.ieee.org/about/help
 ```
 
-#### Validation failures
-**Problem:** JSON artefacts don't match schema.
+#### JSON Parsing Errors
 
-**Solution:**
+**Problem:** "JSONDecodeError: Expecting value" error.
+
+**Solutions:**
 ```bash
-# Check validation report
-cat validation_reports/validation-report.md
+# Check JSON file is valid
+python -m json.tool json_jsonl/ELIS_Appendix_A_Search_rows.json
 
-# Common issues:
-# - Missing required fields
-# - Wrong data types
-# - Extra fields not allowed by schema
-
-# Fix data generation and re-run
-python scripts/agent.py
-python scripts/validate_json.py
+# If corrupted, delete and re-run harvest
+rm json_jsonl/ELIS_Appendix_A_Search_rows.json
+python scripts/scopus_harvest.py
 ```
 
-#### Test failures
-**Problem:** Tests failing locally or on CI.
+#### CORE Server Errors
+
+**Problem:** CORE API returns 502/503 errors intermittently.
 
 **Solution:**
+This is a known issue with CORE infrastructure. The harvest script automatically retries failed requests. If problems persist:
 ```bash
-# Run tests with verbose output
-pytest -v
+# Wait 30 minutes and retry
+# CORE issues usually resolve quickly
 
-# Run specific test
-pytest tests/test_validate_json.py::TestValidateRecords::test_validate_valid_records -v
-
-# Check coverage
-pytest --cov=scripts --cov-report=term-missing
-
-# Common issues:
-# - Missing dependencies: pip install -r requirements.txt
-# - Wrong Python version: python --version (need 3.11+)
-# - Environment variables missing (for Scopus tests)
+# Check CORE status
+curl https://api.core.ac.uk/v3/search/works?q=test
 ```
 
-#### Non fast-forward push error
-**Problem:** Cannot push because remote has changes.
+### Getting Help
 
-**Solution:**
-```bash
-# Pull with rebase
-git pull --rebase origin main
-
-# Or for automation: use fresh short-lived branches
-# ELIS - Bot Commit handles this automatically
-```
-
-#### UTF-8 encoding errors
-**Problem:** Files with international characters fail to load.
-
-**Solution:**
-The validator now handles UTF-8 automatically. If you encounter encoding issues:
-```python
-# In your code, always specify encoding
-with open(file, 'r', encoding='utf-8') as f:
-    data = f.read()
-```
-
-### Getting help
-- **Bug reports:** [Open an issue](https://github.com/rochasamurai/ELIS-SLR-Agent/issues/new)
-- **Questions:** Check [FAQ](#frequently-asked-questions) first
-- **CI failures:** Check [Actions tab](https://github.com/rochasamurai/ELIS-SLR-Agent/actions)
-- **Documentation:** See `docs/` folder
-
----
-
-## Frequently asked questions
-
-### General
-
-**Q: Is validation required to pass for merging?**  
-A: No. Validation is **non-blocking** by design. It produces informational reports and PRs when validation status changes, but never blocks merges.
-
-**Q: Where do generated artefacts go?**  
-A: All artefacts are written to `json_jsonl/` directory at the repository root. This folder is created automatically on first run.
-
-**Q: What Python version is required?**  
-A: Python 3.11 or higher. The project is tested on Python 3.11+ and works on macOS, Linux, and Windows (WSL recommended for Windows).
-
-**Q: Can I run this locally without GitHub?**  
-A: Yes! All scripts run locally. GitHub Actions are optional convenience workflows.
-
-### Testing
-
-**Q: How do I run tests?**  
-A: `pytest -v` runs all tests. Use `pytest --cov=scripts` for coverage reports.
-
-**Q: Why are some tests skipped?**  
-A: Tests requiring environment variables (like Scopus API credentials) are skipped if those variables aren't set. This is normal and expected.
-
-**Q: What's the coverage goal?**  
-A: We maintain 80%+ coverage. Current coverage is 87%, placing this project in the top 10% of Python projects.
-
-### Validation
-
-**Q: Can we validate strict RFC 3339 date-time?**  
-A: Yes. Add `jsonschema[format-nongpl]` and enable `FormatChecker` in `scripts/validate_json.py` for stricter date-time validation.
-
-**Q: Why timestamped reports?**  
-A: Timestamped reports (format: `YYYY-MM-DD_HHMMSS_validation_report.md`) create an audit trail showing validation history over time. The `validation-report.md` file always contains the latest report for convenience.
-
-**Q: How do I fix validation errors?**  
-A: Check `validation_reports/validation-report.md` for detailed error messages. Most errors are missing required fields or type mismatches. Fix the data generation code and re-run validation.
-
-### Workflows
-
-**Q: How do I trigger workflows manually?**  
-A: Go to Actions tab → Select workflow → Click "Run workflow" button → Choose branch → Run.
-
-**Q: Can I disable some workflows?**  
-A: Yes. Workflows can be disabled in repository settings or by removing their YAML files. Core workflows (CI, Validate) should remain enabled.
-
-**Q: What's the difference between CI and Validate workflows?**  
-A: CI runs quality checks (format, lint, tests). Validate generates validation reports. CI must pass; Validate is informational.
-
-### Development
-
-**Q: How do I add a new field to the schema?**  
-A: Edit the appropriate schema file in `schemas/`, update the data generation code, add tests, and create a PR. Schema changes should be discussed first as they affect the data contract.
-
-**Q: Can I use a different JSON Schema validator?**  
-A: The project uses jsonschema library with Draft 2020-12 schemas. You can use other validators, but ensure compatibility with the schema version.
-
-**Q: How do I add a new data source beyond Scopus?**  
-A: Create a new harvester script in `scripts/`, implement tests achieving 70%+ coverage, add corresponding workflow, and document in `docs/ELIS_Source_Registry.md`.
+- 📧 **Contact:** c.rocha@imperial.ac.uk
+- 🐛 **Bug reports:** [Open an issue](https://github.com/rochasamurai/ELIS-SLR-Agent/issues)
+- 📖 **Documentation:** See [docs/](docs/) folder
+- 💬 **Questions:** Check [Protocol v1.8](docs/ELIS_2025_SLR_Protocol_v1.8.pdf) first
 
 ---
 
 ## Contributing
 
-### How to contribute
-1. **Fork the repository** on GitHub
-2. **Clone your fork** locally
-3. **Create a feature branch** (`git checkout -b feature/amazing-feature`)
-4. **Make your changes** following our standards
-5. **Write tests** (maintain 80%+ coverage)
-6. **Run quality checks** (`black .` and `ruff check .`)
-7. **Commit your changes** (use conventional commits)
-8. **Push to your fork** (`git push origin feature/amazing-feature`)
-9. **Open a Pull Request** with clear description
+This is an active research project. While external contributions are not currently accepted, the codebase is open for:
 
-### Contribution guidelines
-- ✅ **Small, focused PRs** — One logical change per PR
-- ✅ **Tests required** — Add tests for new functionality
-- ✅ **Coverage maintained** — Don't decrease overall coverage
-- ✅ **Documentation** — Update docs for user-facing changes
-- ✅ **UK English** — All comments and docs in UK English
-- ✅ **Code style** — Black formatting, Ruff linting
-- ✅ **CI must pass** — All checks green before merge
+### Permitted Uses
+- ✅ **Replication studies** — Reproduce methodology for your own research
+- ✅ **Methodology review** — Audit and verify our approach
+- ✅ **Educational purposes** — Learn systematic review methods
+- ✅ **Fork for adaptation** — Adapt for your own SLR project
 
-### Code style
-```python
-# Use Black formatting (line length: 88)
-black .
+### How to Adapt This Project
+```bash
+# 1. Fork the repository on GitHub
 
-# Use Ruff for linting
-ruff check .
-ruff --fix .  # Auto-fix issues
+# 2. Clone your fork
+git clone https://github.com/YOUR_USERNAME/ELIS-SLR-Agent.git
 
-# Type hints encouraged
-def validate_json(file_path: Path, schema: Dict[str, Any]) -> bool:
-    """Validate JSON file against schema."""
-    pass
+# 3. Modify search queries
+# Edit: config/elis_search_queries.yml
 
-# Docstrings for all public functions
-def my_function(param: str) -> int:
-    """
-    Brief description.
-    
-    Args:
-        param: Parameter description
-        
-    Returns:
-        Return value description
-    """
-    pass
+# 4. Update protocol
+# Edit: docs/ELIS_2025_SLR_Protocol_v1.8.pdf
+
+# 5. Run your own systematic review
+# Follow the same workflow documented here
 ```
 
-### Testing guidelines
-```python
-# Test file structure
-tests/test_module_name.py
+### Citation Requirement
 
-# Test class grouping
-class TestFunctionName:
-    """Tests for function_name()."""
-    
-    def test_handles_valid_input(self):
-        """Should return expected output for valid input."""
-        pass
-    
-    def test_raises_error_for_invalid_input(self):
-        """Should raise ValueError for invalid input."""
-        pass
+If you use this methodology or code in your research, please cite:
+```bibtex
+@software{rocha2025elis,
+  author = {Rocha, Carlos},
+  title = {ELIS SLR Agent: Systematic Literature Review on Electoral Integrity Strategies},
+  year = {2025},
+  publisher = {GitHub},
+  url = {https://github.com/rochasamurai/ELIS-SLR-Agent},
+  note = {Protocol v1.8}
+}
 ```
 
-### Review process
-1. **Automated checks** run via GitHub Actions
-2. **Code review** by maintainer (1 approval required)
-3. **Address feedback** if requested
-4. **Squash and merge** when approved
-5. **Branch auto-deleted** after merge
+### Guidelines for Derived Works
+
+If adapting this project:
+- ✅ Credit original methodology
+- ✅ Document your modifications
+- ✅ Share your protocol publicly (if possible)
+- ✅ Maintain open science principles
+
+See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for detailed guidelines.
 
 ---
 
-## Changelog
-See [CHANGELOG.md](https://github.com/rochasamurai/ELIS-SLR-Agent/blob/main/CHANGELOG.md) for detailed version history.
+## Documentation
 
-### Recent releases
-- **v0.1.1-mvp** (Current) — Enhanced validator, 87% test coverage, production-ready
-- **v0.1.0-mvp** — Initial MVP release with frozen Data Contract v1.0
+### Core Documents
+
+- **Protocol v1.8** — Complete systematic review methodology  
+  [View PDF →](docs/ELIS_2025_SLR_Protocol_v1.8.pdf)
+
+- **Changelog** — Version history and amendments  
+  [View changelog →](docs/CHANGELOG.md)
+
+- **Search Queries** — Configured search strategies  
+  [View YAML →](config/elis_search_queries.yml)
+
+### Protocol Sections
+
+The Protocol v1.8 includes:
+1. **Administrative Information** — Registration, authors, amendments
+2. **Introduction** — Rationale and objectives
+3. **Methods** — Eligibility criteria, search strategy, screening
+4. **Quality Assessment** — Risk of bias, confidence ratings
+5. **Annexes** — Search strings, data extraction forms, bias tools
+
+### API Documentation
+
+Each source has official API documentation:
+
+- [Scopus API Docs](https://dev.elsevier.com/documentation/ScopusSearchAPI.wadl)
+- [Web of Science API Docs](https://developer.clarivate.com/apis/wos)
+- [IEEE Xplore API Docs](https://developer.ieee.org/docs)
+- [Semantic Scholar API Docs](https://api.semanticscholar.org/)
+- [OpenAlex API Docs](https://docs.openalex.org/)
+- [CrossRef API Docs](https://www.crossref.org/documentation/retrieve-metadata/rest-api/)
+- [CORE API Docs](https://core.ac.uk/documentation/api/)
 
 ---
 
-## Licence
-Internal project for the ELIS SLR Agent. External licence text is intentionally omitted here.
+## Citation
 
-For questions about usage or licensing, please contact the project maintainers.
+### Citing This Project
+```bibtex
+@software{rocha2025elis,
+  author = {Rocha, Carlos},
+  title = {ELIS SLR Agent: Systematic Literature Review on Electoral Integrity Strategies},
+  year = {2025},
+  publisher = {GitHub},
+  url = {https://github.com/rochasamurai/ELIS-SLR-Agent},
+  note = {Protocol v1.8}
+}
+```
+
+### Citing the Protocol
+```bibtex
+@techreport{rocha2025protocol,
+  author = {Rocha, Carlos},
+  title = {Protocol for the Systematic Literature Review on Electoral Integrity Strategies (ELIS 2025)},
+  institution = {Imperial College Business School},
+  year = {2025},
+  type = {Research Protocol},
+  note = {Version 1.8}
+}
+```
 
 ---
 
-## Acknowledgements
-Built with Python 3.11+, pytest, Black, Ruff, and GitHub Actions.
+## Acknowledgments
 
-Validated against JSON Schema Draft 2020-12 using the jsonschema library.
+### People
+
+- **Carlos Rocha** — Principal Investigator  
+  Visiting Researcher, Imperial College Business School  
+  📧 c.rocha@imperial.ac.uk | 🔗 [ORCID: 0009-0009-6741-2193](https://orcid.org/0009-0009-6741-2193)
+
+- **Prof. Tommaso Valletti** — Research Supervisor  
+  Professor of Economics, Imperial College Business School
+
+### Institutions
+
+- **Imperial College Business School** — Host institution
+- **Instituto Voto Legal (IVL)** — Project sponsor, São Paulo, Brazil
+
+### Data Providers
+
+- **Elsevier** — Scopus API access
+- **Clarivate** — Web of Science API access
+- **IEEE** — IEEE Xplore API access
+- **Semantic Scholar** — Open API (Allen Institute for AI)
+- **OpenAlex** — Open bibliographic data (OurResearch)
+- **CrossRef** — DOI metadata services
+- **CORE** — Open access aggregation (Open University)
+
+### Technology
+
+Built with:
+- Python 3.11+ | requests | pyyaml
+- GitHub Actions for CI/CD
+- Zotero for reference management
+- ChatGPT, Claude, NotebookLM for AI assistance
+
+---
+
+## License
+
+MIT License
+
+Copyright (c) 2025 Carlos Rocha, Imperial College London
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 
 ---
 
