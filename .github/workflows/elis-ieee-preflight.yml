@@ -1,0 +1,27 @@
+name: ELIS - IEEE Xplore Preflight API Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  ieee-preflight:
+    runs-on: ubuntu-latest
+    name: IEEE Xplore API Access Test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Test IEEE API Access
+        env:
+          IEEE_API_KEY: ${{ secrets.IEEE_EXPLORE_API_KEY }}
+        run: |
+          python scripts/ieee_preflight.py
+          
