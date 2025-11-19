@@ -33,7 +33,7 @@ if response.status_code == 200:
     results = data.get("results", [])
     if results:
         work = results[0]
-        print(f"\nSample result:")
+        print("\nSample result:")
         print(f"  Title: {work.get('title', 'N/A')}")
         print(f"  Year: {work.get('publication_year', 'N/A')}")
         print(f"  Citations: {work.get('cited_by_count', 0)}")
