@@ -42,7 +42,7 @@ The ELIS SLR Agent is a **reproducible, API-driven pipeline** for conducting sys
 *What operational and technological strategies have been shown to improve the integrity or auditability of electoral systems since 1990?*
 
 **Principal Investigator:** Carlos Rocha (Imperial College Business School)  
-**Supervisor:** Prof. Tommaso Valletti  
+
 **Sponsor:** Instituto Voto Legal (IVL), São Paulo, Brazil
 
 ---
@@ -317,7 +317,7 @@ Create a `.env` file in the project root:
 # Copy template
 cp .env.example .env
 
-# Edit with your API keys
+FF# Edit with your API keys
 nano .env  # or use your preferred editor
 ```
 
@@ -749,8 +749,6 @@ Each source has official API documentation:
   Visiting Researcher, Imperial College Business School  
   📧 c.rocha@imperial.ac.uk | 🔗 [ORCID: 0009-0009-6741-2193](https://orcid.org/0009-0009-6741-2193)
 
-- **Prof. Tommaso Valletti** — Research Supervisor  
-  Professor of Economics, Imperial College Business School
 
 ### Institutions
 
