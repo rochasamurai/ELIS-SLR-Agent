@@ -163,11 +163,6 @@ Imperial College Business School
 📧 c.rocha@imperial.ac.uk  
 🔗 [ORCID: 0009-0009-6741-2193](https://orcid.org/0009-0009-6741-2193)
 
-**Supervisor:**  
-Prof. Tommaso Valletti  
-Professor of Economics  
-Imperial College Business School
-
 ---
 
 ## 📄 Citation
