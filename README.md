@@ -41,7 +41,13 @@ The ELIS SLR Agent is a **reproducible, API-driven pipeline** for conducting sys
 **Research Question:**  
 *What operational and technological strategies have been shown to improve the integrity or auditability of electoral systems since 1990?*
 
-**Principal Investigator:** Carlos Rocha (Imperial College Business School)  
+**Principal Investigator:**  
+Carlos Rocha  
+Visiting Researcher  
+Imperial College Business School  
+🌐 [electoralintegrity.org](https://electoralintegrity.org)  
+📧 elis@electoralintegrity.org | c.rocha@imperial.ac.uk  
+🔗 [ORCID: 0009-0009-6741-2193](https://orcid.org/0009-0009-6741-2193)
 
 **Sponsor:** Instituto Voto Legal (IVL), São Paulo, Brazil
 
@@ -617,10 +623,11 @@ curl https://api.core.ac.uk/v3/search/works?q=test
 
 ### Getting Help
 
-- 📧 **Contact:** c.rocha@imperial.ac.uk
-- 🐛 **Bug reports:** [Open an issue](https://github.com/rochasamurai/ELIS-SLR-Agent/issues)
-- 📖 **Documentation:** See [docs/](docs/) folder
-- 💬 **Questions:** Check [Protocol v1.8](docs/ELIS_2025_SLR_Protocol_v1.8.pdf) first
+- 🌐 **Website:** [electoralintegrity.org](https://electoralintegrity.org)
+- 📧 **General contact:** [elis@electoralintegrity.org](mailto:elis@electoralintegrity.org)
+- 📧 **Research inquiries:** [research@electoralintegrity.org](mailto:research@electoralintegrity.org)
+- 📧 **Principal Investigator:** [c.rocha@imperial.ac.uk](mailto:c.rocha@imperial.ac.uk)
+- 🐛 **Bug reports:** [Open an issue](...)
 
 ---
 
@@ -746,9 +753,11 @@ Each source has official API documentation:
 ### People
 
 - **Carlos Rocha** — Principal Investigator  
-  Visiting Researcher, Imperial College Business School  
-  📧 c.rocha@imperial.ac.uk | 🔗 [ORCID: 0009-0009-6741-2193](https://orcid.org/0009-0009-6741-2193)
-
+  Visiting Researcher  
+  Imperial College Business School  
+  🌐 [electoralintegrity.org](https://electoralintegrity.org)  
+  📧 elis@electoralintegrity.org | c.rocha@imperial.ac.uk  
+  🔗 [ORCID: 0009-0009-6741-2193](...)
 
 ### Institutions
 
