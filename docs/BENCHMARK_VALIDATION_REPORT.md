@@ -1,6 +1,6 @@
 # ELIS Benchmark Validation Report
 
-**Date:** 2026-01-26 11:58:56  
+**Date:** 2026-01-26 13:35:41  
 **Status:** ❌ FAIL
 
 ## Benchmark Standard
@@ -33,19 +33,19 @@ AND ("election" OR "voting" OR "electoral" OR "ballot")
 
 | Metric | Value | Target | Status |
 |--------|-------|--------|--------|
-| **Retrieval Rate** | 0.0% (0/78) | ≥70.0% | ❌ |
-| **Precision** | 0.0% | ≥75.0% | ❌ |
-| **Recall** | 0.0% | ≥70.0% | ❌ |
-| **ELIS Total Results** | 70 | - | - |
-| **Additional Studies** | 70 | - | ℹ️ |
+| **Retrieval Rate** | 9.0% (7/78) | ≥70.0% | ❌ |
+| **Precision** | 7.1% | ≥75.0% | ❌ |
+| **Recall** | 9.0% | ≥70.0% | ❌ |
+| **ELIS Total Results** | 99 | - | - |
+| **Additional Studies** | 92 | - | ℹ️ |
 
 ### Interpretation
 
-**Matched Studies:** 0/78 studies from Darmawan's benchmark were successfully retrieved by ELIS.
+**Matched Studies:** 7/78 studies from Darmawan's benchmark were successfully retrieved by ELIS.
 
-**Missed Studies:** 78 studies from Darmawan were not found by ELIS. See detailed list below.
+**Missed Studies:** 71 studies from Darmawan were not found by ELIS. See detailed list below.
 
-**Additional Studies:** ELIS found 70 additional studies not in Darmawan's review, likely due to:
+**Additional Studies:** ELIS found 92 additional studies not in Darmawan's review, likely due to:
 - Broader database coverage (Scopus, Web of Science vs. Google Scholar)
 - Systematic search methodology
 - Different search string optimization
@@ -54,7 +54,7 @@ AND ("election" OR "voting" OR "electoral" OR "ballot")
 
 ### ❌ VALIDATION FAILED
 
-ELIS retrieved only **0.0%** of Darmawan's studies, below the minimum threshold of 70.0%.
+ELIS retrieved only **9.0%** of Darmawan's studies, below the minimum threshold of 70.0%.
 
 **Action Required:** 
 1. Review search string optimization
@@ -66,13 +66,11 @@ ELIS retrieved only **0.0%** of Darmawan's studies, below the minimum threshold 
 
 ## Detailed Analysis
 
-### Missed Studies (78 studies)
+### Missed Studies (71 studies)
 
 | ID | Year | Authors | Title |
 |---|------|---------|-------|
 | 1 | 2005 | Xenakis and Machintosh | Trust analysis of the UK e-voting pilots... |
-| 2 | 2005 | Schaupp and Carter | E-voting: From apathy to adoption... |
-| 3 | 2005 | Garner and Spolaore | Why chads? Determinants of voting equipment use in the Unite... |
 | 4 | 2005 | Roseman Jr. and Stephenson | The effect of voting technology on voter turnout: Do compute... |
 | 5 | 2005 | Oostven and van de Besselaar | Trust, identity, and the effects of voting technologies on v... |
 | 6 | 2005 | Houston, Yao, Okoli and Watson | Will remote electronic voting systems increase participation... |
@@ -80,13 +78,23 @@ ELIS retrieved only **0.0%** of Darmawan's studies, below the minimum threshold 
 | 8 | 2007 | Smith | Securing e-voting as a legitimate option for e-governance... |
 | 9 | 2007 | Dee | Technology and voter intent: Evidence from the California re... |
 | 10 | 2007 | Card and Moretti | Does voting technology affect election outcomes? Touch-scree... |
+| 11 | 2007 | Yao and Murphy | Remote electronic voting systems: An exploration of voters' ... |
+| 12 | 2008 | De Jong, van Hoof, and Goosselt | Voters' perceptions of voting technology: Paper ballots vers... |
 
-*...and 68 more. See `data/benchmark/missed_studies.csv` for complete list.*
+*...and 61 more. See `data/benchmark/missed_studies.csv` for complete list.*
 
 
-### Sample Matched Studies (0 of 0)
+### Sample Matched Studies (7 of 7)
 
-*No studies matched yet - ELIS search pending.*
+| ID | Year | Authors | Title |
+|---|------|---------|-------|
+| 2 | 2005 | Schaupp and Carter | E-voting: From apathy to adoption... |
+| 3 | 2005 | Garner and Spolaore | Why chads? Determinants of voting equipment use in the Unite... |
+| 33 | 2013 | Salimonu, Osman, Shittu and Jimoh | Adoption of e-voting system in Nigeria: A conceptual framewo... |
+| 43 | 2016 | Alomari | E-voting adoption in a developing country... |
+| 47 | 2016 | Dolatabadi | Towards a comprehensive conceptualisation of e-voting adopti... |
+| 66 | 2020 | Zhu, Azizah and Hsiao | Examining multi-dimensional trust of technology in citizens'... |
+| 74 | 2020 | Mensah | Impact of performance expectancy, effort expectancy, and cit... |
 
 
 ## Next Steps
@@ -100,7 +108,7 @@ ELIS retrieved only **0.0%** of Darmawan's studies, below the minimum threshold 
 
 ---
 
-**Report Generated:** 2026-01-26 11:58:56  
+**Report Generated:** 2026-01-26 13:35:41  
 **Script:** `scripts/run_benchmark.py`  
 **Configuration:** `configs/benchmark_config.yaml`  
 **Gold Standard:** `data/benchmark/darmawan_2021_references.json`

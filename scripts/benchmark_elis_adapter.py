@@ -132,13 +132,25 @@ class BenchmarkElisAdapter:
         Load results from ELIS output JSON.
         
         Args:
-            output_path: Path to ELIS_Appendix_A_Search_rows.json
+            output_path: Path to search results JSON
         """
         if output_path is None:
-            output_path = PROJECT_ROOT / "json_jsonl" / "ELIS_Appendix_A_Search_rows.json"
+            # Try benchmark results first, fall back to ELIS results
+            benchmark_path = PROJECT_ROOT / "json_jsonl" / "benchmark_search_results.json"
+            elis_path = PROJECT_ROOT / "json_jsonl" / "ELIS_Appendix_A_Search_rows.json"
+            
+            if benchmark_path.exists():
+                output_path = benchmark_path
+                print(f"✓ Using benchmark search results: {benchmark_path}")
+            elif elis_path.exists():
+                output_path = elis_path
+                print(f"✓ Using ELIS results: {elis_path}")
+            else:
+                print("⚠️  No results files found")
+                return pd.DataFrame()
         
         if not output_path.exists():
-            print(f"⚠️  ELIS results file not found: {output_path}")
+            print(f"⚠️  Results file not found: {output_path}")
             return pd.DataFrame()
         
         try:
@@ -149,7 +161,7 @@ class BenchmarkElisAdapter:
             if data and isinstance(data[0], dict) and data[0].get('_meta'):
                 metadata = data[0]
                 records = data[1:]
-                print(f"✓ Loaded {len(records)} records from ELIS")
+                print(f"✓ Loaded {len(records)} records")
                 print(f"   Metadata: {metadata.get('protocol_version', 'unknown')}")
             else:
                 records = data
@@ -159,9 +171,11 @@ class BenchmarkElisAdapter:
             return df
             
         except Exception as e:
-            print(f"❌ Error loading ELIS results: {e}")
-            return pd.DataFrame()
-    
+            print(f"❌ Error loading results: {e}")
+            import traceback
+            traceback.print_exc()
+            return pd.DataFrame()       
+
     def normalize_results(self, elis_df: pd.DataFrame) -> pd.DataFrame:
         """
         Normalize ELIS results to benchmark matching format.

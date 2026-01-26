@@ -11,28 +11,6 @@
     "doi": NaN
   },
   {
-    "id": 2,
-    "year": 2005,
-    "authors": "Schaupp and Carter",
-    "title": "E-voting: From apathy to adoption",
-    "journal": "Journal of Enterprise Information Management",
-    "country": "United States",
-    "category": "adoption_factors",
-    "priority": "high",
-    "doi": NaN
-  },
-  {
-    "id": 3,
-    "year": 2005,
-    "authors": "Garner and Spolaore",
-    "title": "Why chads? Determinants of voting equipment use in the United States",
-    "journal": "Public Choice",
-    "country": "United States",
-    "category": "technology_effects",
-    "priority": "medium",
-    "doi": NaN
-  },
-  {
     "id": 4,
     "year": 2005,
     "authors": "Roseman Jr. and Stephenson",
@@ -352,17 +330,6 @@
     "doi": NaN
   },
   {
-    "id": 33,
-    "year": 2013,
-    "authors": "Salimonu, Osman, Shittu and Jimoh",
-    "title": "Adoption of e-voting system in Nigeria: A conceptual framework",
-    "journal": "International Journal of Applied Information Systems (IJAIS)",
-    "country": "Nigeria",
-    "category": "adoption_factors",
-    "priority": "low",
-    "doi": NaN
-  },
-  {
     "id": 34,
     "year": 2013,
     "authors": "Alvarez, Beckett and Stewart III",
@@ -462,17 +429,6 @@
     "doi": NaN
   },
   {
-    "id": 43,
-    "year": 2016,
-    "authors": "Alomari",
-    "title": "E-voting adoption in a developing country",
-    "journal": "Transforming Government: People, Process, and Policy",
-    "country": "Jordan",
-    "category": "adoption_factors",
-    "priority": "high",
-    "doi": NaN
-  },
-  {
     "id": 44,
     "year": 2016,
     "authors": "Vassil, Solvak, Vinkel, et al.",
@@ -503,17 +459,6 @@
     "country": "Hungary",
     "category": "adoption_factors",
     "priority": "low",
-    "doi": NaN
-  },
-  {
-    "id": 47,
-    "year": 2016,
-    "authors": "Dolatabadi",
-    "title": "Towards a comprehensive conceptualisation of e-voting adoption: A theoretical perspective",
-    "journal": "International Journal of Technology, Policy and Management",
-    "country": "Multi-country",
-    "category": "theory",
-    "priority": "medium",
     "doi": NaN
   },
   {
@@ -715,17 +660,6 @@
     "doi": NaN
   },
   {
-    "id": 66,
-    "year": 2020,
-    "authors": "Zhu, Azizah and Hsiao",
-    "title": "Examining multi-dimensional trust of technology in citizens' adoption of e-voting in developing countries",
-    "journal": "Information Development",
-    "country": "Multi-country",
-    "category": "trust",
-    "priority": "medium",
-    "doi": NaN
-  },
-  {
     "id": 67,
     "year": 2020,
     "authors": "Kassen",
@@ -797,17 +731,6 @@
     "authors": "Agbesi",
     "title": "Examining voters' intention to use internet voting system: A case of Ghana",
     "journal": "International Journal of Electronic Governance",
-    "country": "Ghana",
-    "category": "adoption_factors",
-    "priority": "low",
-    "doi": NaN
-  },
-  {
-    "id": 74,
-    "year": 2020,
-    "authors": "Mensah",
-    "title": "Impact of performance expectancy, effort expectancy, and citizen trust on the adoption of electronic voting system in Ghana",
-    "journal": "International Journal of Electronic Government Research",
     "country": "Ghana",
     "category": "adoption_factors",
     "priority": "low",

@@ -1,0 +1,1546 @@
+[
+  {
+    "_meta": true,
+    "protocol_version": "ELIS Benchmark (Darmawan 2021)",
+    "retrieved_at": "2026-01-26T16:13:52.731208Z",
+    "query": "(\"e-voting\" OR \"electronic voting\" OR \"internet voting\" OR \n \"online voting\" OR \"i-voting\" OR \"remote voting\")\nAND (\"adoption\" OR \"implementation\" OR \"deployment\" OR \"acceptance\" \n OR \"intention to use\" OR \"diffusion\")\nAND (\"election\" OR \"voting\" OR \"electoral\" OR \"ballot\")\n",
+    "year_range": "2005-2020",
+    "sources": [
+      "semanticscholar",
+      "openalex"
+    ],
+    "record_count": 99
+  },
+  {
+    "id": "s2_3bddfae3a38e2a57bd4cec59a298996f68b85f28",
+    "title": "The determinants of electronic voting adoption: Independent National Electoral Commission of Nigeria employees' perspective",
+    "authors": [
+      "Salimonu Rasheed lshaq"
+    ],
+    "year": 2014,
+    "venue": "",
+    "abstract": null,
+    "doi": null,
+    "source": "semanticscholar",
+    "source_id": "3bddfae3a38e2a57bd4cec59a298996f68b85f28",
+    "retrieved_at": "2026-01-26T16:13:49.425215Z"
+  },
+  {
+    "id": "s2_c2368b60f057ce04b3264dcdb7b93a13a8e815da",
+    "title": "Modeling the Influence of Information Technology (IT) Adoption Factors on the Electronic Voting (E-Voting) Technology Using Partial Least Squares-Structural Equation Model (PLS-SEM) Methods",
+    "authors": [
+      "I. R. Salimonu",
+      "W. Osman",
+      "A. Shittu"
+    ],
+    "year": 2014,
+    "venue": "",
+    "abstract": null,
+    "doi": null,
+    "source": "semanticscholar",
+    "source_id": "c2368b60f057ce04b3264dcdb7b93a13a8e815da",
+    "retrieved_at": "2026-01-26T16:13:49.425268Z"
+  },
+  {
+    "id": "s2_03a0614d1cacf9c633b287cff1c6a0b4c8d4c455",
+    "title": "Impact of Performance Expectancy, Effort Expectancy, and Citizen Trust on the Adoption of Electronic Voting System in Ghana",
+    "authors": [
+      "Isaac Kofi Mensah"
+    ],
+    "year": 2020,
+    "venue": "International journal of electronic governance and research",
+    "abstract": "This study examined the impact of performance expectancy, effort expectancy, and citizen trust in institutions on the adoption of an electronic voting system. This was done by proposing and validating a unified model of electronic voting system adoption (UMEVSA) based on UTAUT. The results show that while performance expectancy was significant in determining the intention to adopt an e-voting system, effort expectancy does not. However, effort expectancy was found to be a positive determinant of the performance expectancy of an electronic voting system. Also, citizen trust in institutions positively predicts both the performance and effort expectancy of an electronic voting system and the intention to use an electronic voting system. The implications of these findings are discussed.",
+    "doi": "10.4018/ijegr.2020040102",
+    "source": "semanticscholar",
+    "source_id": "03a0614d1cacf9c633b287cff1c6a0b4c8d4c455",
+    "retrieved_at": "2026-01-26T16:13:49.425294Z"
+  },
+  {
+    "id": "s2_26961ef86f238819b28a39652b72942e7efa1fb9",
+    "title": "University Students’ Perceptions on the Adoption of Electronic Voting",
+    "authors": [
+      "Peter Asare-Nuamah",
+      "Agyepong Emmanuel Darko"
+    ],
+    "year": 2016,
+    "venue": "",
+    "abstract": null,
+    "doi": null,
+    "source": "semanticscholar",
+    "source_id": "26961ef86f238819b28a39652b72942e7efa1fb9",
+    "retrieved_at": "2026-01-26T16:13:49.425313Z"
+  },
+  {
+    "id": "s2_92b9991bff6330b91d5b30b8a125e15fc7effed5",
+    "title": "A Framework for the Adoption of Electronic Voting System in Nigeria",
+    "authors": [
+      "Aishatu Shuaibu",
+      "A. Mohammed",
+      "Arthur Ume"
+    ],
+    "year": 2017,
+    "venue": "",
+    "abstract": null,
+    "doi": "10.23956/IJARCSSE/V7I3/01310",
+    "source": "semanticscholar",
+    "source_id": "92b9991bff6330b91d5b30b8a125e15fc7effed5",
+    "retrieved_at": "2026-01-26T16:13:49.425323Z"
+  },
+  {
+    "id": "s2_6b479768e289191956c611325369eb67731b54a2",
+    "title": "Towards a comprehensive conceptualisation of e-voting adoption: a theoretical perspective",
+    "authors": [
+      "Hossein Dolatabadi"
+    ],
+    "year": 2016,
+    "venue": "",
+    "abstract": null,
+    "doi": "10.1504/IJTPM.2016.076313",
+    "source": "semanticscholar",
+    "source_id": "6b479768e289191956c611325369eb67731b54a2",
+    "retrieved_at": "2026-01-26T16:13:49.425335Z"
+  },
+  {
+    "id": "s2_f98548459607880cfd2bda5574b3399d914cd8fa",
+    "title": "Electronic Voting in the Netherlands: From Early Adoption to Early Abolishment",
+    "authors": [
+      "B. Jacobs",
+      "W. Pieters"
+    ],
+    "year": 2009,
+    "venue": "Foundations of Security Analysis and Design",
+    "abstract": null,
+    "doi": "10.1007/978-3-642-03829-7_4",
+    "source": "semanticscholar",
+    "source_id": "f98548459607880cfd2bda5574b3399d914cd8fa",
+    "retrieved_at": "2026-01-26T16:13:49.425344Z"
+  },
+  {
+    "id": "s2_b5383261ec1eee3b717343ab6832f687dfa98299",
+    "title": "The adoption and challenges of electronic voting technologies within the South African context",
+    "authors": [
+      "M. Achieng",
+      "E. Ruhode"
+    ],
+    "year": 2013,
+    "venue": "arXiv.org",
+    "abstract": "Thesis submitted in fulfilment of the requirements for the degree\nMaster of Technology: in Information Technology\nin the Faculty of Informatics and Design\nat the Cape Peninsula University of Technology\nSupervisor: Dr Ephias Ruhode\nCape Town campus\nDecember 2013",
+    "doi": "10.25381/CPUT.9825695.V2",
+    "source": "semanticscholar",
+    "source_id": "b5383261ec1eee3b717343ab6832f687dfa98299",
+    "retrieved_at": "2026-01-26T16:13:49.425353Z"
+  },
+  {
+    "id": "s2_d2ed158da5fbc57acde768bc135fc560c6553cec",
+    "title": "VoteChain: A Blockchain Based E-Voting System",
+    "authors": [
+      "Archit Pandey",
+      "M. Bhasi",
+      "K. Chandrasekaran"
+    ],
+    "year": 2019,
+    "venue": "2019 Global Conference for Advancement in Technology (GCAT)",
+    "abstract": "In the past, electronic voting systems have not seen widespread adoption due to data privacy concerns. Previously proposed e-voting systems make use of a central database to store data, resulting in the servers used to store these databases being a single point of failure. These systems have also been found to be vulnerable to DoS attacks, leading to concerns over their reliability.Blockchains have been used to build secure and scalable distributed systems which have shown several benefits over centralized systems. They have seen uses in sectors ranging from finance and healthcare to food and energy.In this paper, we present VoteChain, a blockchain based voting system to help bring transparency and security to polls. We report on our implementation of VoteChain, as well as the results obtained in testing the system in a real-world poll which prove that such a system can be used in practice for large-scale elections.",
+    "doi": "10.1109/GCAT47503.2019.8978295",
+    "source": "semanticscholar",
+    "source_id": "d2ed158da5fbc57acde768bc135fc560c6553cec",
+    "retrieved_at": "2026-01-26T16:13:49.425362Z"
+  },
+  {
+    "id": "s2_fe5a8e38340723b041ff3d675c31109e8c5cd6b4",
+    "title": "Towards improved adoption of e-voting: analysis of the case of Nigeria",
+    "authors": [
+      "Steve A. Adeshina",
+      "A. Ojo"
+    ],
+    "year": 2014,
+    "venue": "International Conference on Theory and Practice of Electronic Governance",
+    "abstract": null,
+    "doi": "10.1145/2691195.2691255",
+    "source": "semanticscholar",
+    "source_id": "fe5a8e38340723b041ff3d675c31109e8c5cd6b4",
+    "retrieved_at": "2026-01-26T16:13:49.425371Z"
+  },
+  {
+    "id": "s2_fc7f2a449118715a45b8f396ccefcc3960b80f1e",
+    "title": "E-voting experiences: A case of Namibia and Estonia",
+    "authors": [
+      "Noluntu Mpekoa",
+      "Darelle van Greunen"
+    ],
+    "year": 2017,
+    "venue": "IST-Africa Week Conference",
+    "abstract": null,
+    "doi": "10.23919/ISTAFRICA.2017.8102303",
+    "source": "semanticscholar",
+    "source_id": "fc7f2a449118715a45b8f396ccefcc3960b80f1e",
+    "retrieved_at": "2026-01-26T16:13:49.425379Z"
+  },
+  {
+    "id": "s2_7ee3a7f236e906b0517f9df5bc7988d1cb309134",
+    "title": "Culture and Trust in the Adoption of Electronic Voting: A Look at the USA and South Africa",
+    "authors": [
+      "David Gefen",
+      "G. Rose",
+      "Merrill Warkentin",
+      "P. Pavlou"
+    ],
+    "year": 2006,
+    "venue": "",
+    "abstract": null,
+    "doi": "10.4018/978-1-59140-923-6.CH005",
+    "source": "semanticscholar",
+    "source_id": "7ee3a7f236e906b0517f9df5bc7988d1cb309134",
+    "retrieved_at": "2026-01-26T16:13:49.425387Z"
+  },
+  {
+    "id": "s2_c69e4fbc06d99002c1bca23a2847d8e8ce19cd56",
+    "title": "The Good, the Bad, and the Ugly: Two Decades of E-Voting in Brazil",
+    "authors": [
+      "Diego F. Aranha",
+      "Jeroen van de Graaf"
+    ],
+    "year": 2018,
+    "venue": "IEEE Security and Privacy",
+    "abstract": "Brazil pioneered the adoption of nationwide electronic voting 20 years ago. However, today its system is outdated in terms of recent properties. We discuss the system's organization and transparency mechanisms in the context of security requirements derived from a conventional election.",
+    "doi": "10.1109/MSEC.2018.2875318",
+    "source": "semanticscholar",
+    "source_id": "c69e4fbc06d99002c1bca23a2847d8e8ce19cd56",
+    "retrieved_at": "2026-01-26T16:13:49.425396Z"
+  },
+  {
+    "id": "s2_91fbec10e10f445b29f301e56d97f28d7751d27f",
+    "title": "A Secured Cloud-based E-voting System using Information Dispersal Algorithm",
+    "authors": [
+      "John Kingsley Arthur",
+      "Kofi Sarpong Adu-Manu",
+      "Charles Adjetey"
+    ],
+    "year": 2020,
+    "venue": "International Journal of Computer Applications",
+    "abstract": "The introduction of the electronic voting (e-voting) system has received much attention by researchers in recent years. E-voting has been of interest to stakeholders and political party leaders in most countries (that is developed and developing) practicing democracy. Academics and technocrats have delved into technical issues related to e-voting system that could foster its smooth implementation and this have encouraged it’s full acceptance in many countries. The challenge however, is how to secure and maintain a trustworthy e-voting system devoid of security breaches especially from hacking and hijacking. The challenge still remains an open area that calls for novel designs into high level security infrastructure that may enhance and improve the security of e-voting systems to gain the full trust, acceptance, and adoption by the citizenry. Ghana deploys computerized system for registration and verification during the electoral process. During the 2016 election, the Electoral Commission of Ghana adopted the electronic transmission of results although the elections were conducted manually. In this paper, a novel secured framework for electronic voting relying on the principle of the Information Dispersal Algorithm (IDA) is proposed. In our approach, upon voting, the voters vote record is encrypted and split for distribution on several virtual cloud servers. At the end of the voting period, the split vote records are reassembled into their original state for counting to take place. The splitting of the vote records and its assembling are performed by the IDA. The paper further discusses the design and implementation of the IDA in a typical e-voting environment.",
+    "doi": "10.5120/ijca2020920734",
+    "source": "semanticscholar",
+    "source_id": "91fbec10e10f445b29f301e56d97f28d7751d27f",
+    "retrieved_at": "2026-01-26T16:13:49.425404Z"
+  },
+  {
+    "id": "s2_32cbdd0e9cc2564922aff3a7d1a4ae9e7f947412",
+    "title": "Modeling User Acceptance of Electronic Voting: An Extended Technology Acceptance Model (TAM) Approach",
+    "authors": [
+      "O. Okediran",
+      "M. Oyediran",
+      "A. A. Sijuade",
+      "W. Wahab"
+    ],
+    "year": 2020,
+    "venue": "Current Journal of Applied Science and Technology",
+    "abstract": "Election voting has emerged as a significant alternative to conventional voting methods with testimonials of its implementation showing various degrees of success in some countries of the western world. Lately, many developing countries are also looking at its prospects as a replacement or supplement for traditional paper balloting which is, the principal voting method in most of these countries. However, the voting populace’ acceptance of this technology is a major factor that needs to be considered before its actual introduction owning to factors that includes, digital divides, low literacy level, norms and beliefs, high poverty level and so on. From another viewpoint, due to the peculiarity of contextual ICT infrastructural challenges of developing countries, there is a need to investigate the factors that will influence adoption decision and eventual usage when planning to introduce electronic voting so that the evolving system will not end up being impractical for the target users. In this study, an empirical investigation of the factors influencing the adoption decision of electronic voting was carried out.  More specifically, this study aimed at examining the possibilities and intents towards mobile voting (which is a type of electronic voting), among a selected sample population of electorates in Nigeria. In the study, an extended Technology Acceptance Model (TAM) that integrates Subjective norm, Perceived compatibility, Perceived privacy, Perceived security, Perceived price value and Perceived trust into the original TAM constructs was proposed. A total of 1364 sample data were collected from a selected population of electorates who had at one time or the other participated in at least an electioneering process in Nigeria.  The data was then analyzed statistically using Partial Least Square           Structural Equation Modeling (PLS-SEM). The results obtained show that all variables have significant effect on the electorates’ behavioural intention to use mobile voting except for perceived privacy.",
+    "doi": "10.9734/cjast/2020/v39i2930973",
+    "source": "semanticscholar",
+    "source_id": "32cbdd0e9cc2564922aff3a7d1a4ae9e7f947412",
+    "retrieved_at": "2026-01-26T16:13:49.425417Z"
+  },
+  {
+    "id": "s2_f7f99df44b55323cb2bebd43fa6025d7fcaa1049",
+    "title": "E-Voting Using Blockchain With Biometric Authentication",
+    "authors": [
+      "Sunita Suralkar",
+      "Sanjay Udasi",
+      "Sumit Gagnani",
+      "Mayur Tekwani",
+      "Mohit Bhatia"
+    ],
+    "year": 2019,
+    "venue": "",
+    "abstract": null,
+    "doi": null,
+    "source": "semanticscholar",
+    "source_id": "f7f99df44b55323cb2bebd43fa6025d7fcaa1049",
+    "retrieved_at": "2026-01-26T16:13:49.425430Z"
+  },
+  {
+    "id": "s2_c821ed1b21ca61648e1dc7e959a2aa8bdf01aeeb",
+    "title": "E-voting w wyborach parlamentarnych w Belgii",
+    "authors": [
+      "Elżbieta Kużelewska"
+    ],
+    "year": 2019,
+    "venue": "Przegląd europejski",
+    "abstract": "Belgium has been a federal state since 1993, divided into linguistic communities, regions and language regions. The cultural, religious, ethnic and linguistic differences of the inhabitants of Belgium led to the adoption of the federal structure of the state. The federal parliament consists of two chambers. The composition of the Senate reflects the diversity of Belgium. The ethnic and linguistic distinctiveness of the Belgians are also included in the electoral system of the federal parliament of Belgium. Worthy of note is the pioneering attitude of Belgium with regard to the introduction of mandatory voting throughout the country in 1893 and electronic voting in the early 1990s.",
+    "doi": "10.5604/01.3001.0013.0861",
+    "source": "semanticscholar",
+    "source_id": "c821ed1b21ca61648e1dc7e959a2aa8bdf01aeeb",
+    "retrieved_at": "2026-01-26T16:13:49.425443Z"
+  },
+  {
+    "id": "s2_30ab48dac5b3630ac0c39b0c401a3963f9999c77",
+    "title": "How do the Swiss Perceive Electronic Voting? Social Insights from an Exploratory Qualitative Research",
+    "authors": [
+      "E. Fragnière",
+      "Sandra Grèzes",
+      "Randolf Ramseyer"
+    ],
+    "year": 2019,
+    "venue": "International Joint Conference on Electronic Voting",
+    "abstract": null,
+    "doi": "10.1007/978-3-030-30625-0_7",
+    "source": "semanticscholar",
+    "source_id": "30ab48dac5b3630ac0c39b0c401a3963f9999c77",
+    "retrieved_at": "2026-01-26T16:13:49.425458Z"
+  },
+  {
+    "id": "s2_369f9371467f48b1d511385c122d5adb3c26efff",
+    "title": "Adoption of E-Voting System in Nigeria: A Conceptual Framework",
+    "authors": [
+      "R. IshaqSalimonu",
+      "W. Osman",
+      "A. Shittu",
+      "J. Jimoh"
+    ],
+    "year": 2013,
+    "venue": "",
+    "abstract": null,
+    "doi": "10.5120/IJAIS13-450912",
+    "source": "semanticscholar",
+    "source_id": "369f9371467f48b1d511385c122d5adb3c26efff",
+    "retrieved_at": "2026-01-26T16:13:49.425472Z"
+  },
+  {
+    "id": "s2_e6040a3f49f4d817905cb149cd36e3d86ef1c0ef",
+    "title": "Advancing electronic voting systems in Nigeria's electoral process: legal challenges and future directions",
+    "authors": [
+      "Obinne Obiefuna-Oguejiofor"
+    ],
+    "year": 2018,
+    "venue": "Journal of Sustainable Development Law and Policy",
+    "abstract": "This article aims to examine the legal and policy challenges associated with adopting an electronic voting (e-voting) system in Nigeria’s electoral process. Nigeria, Africa’s largest democracy, has for many years been held down by issues of election fraud, thuggery, violence as seen in past manual elections in the country. The article argues that, if properly implemented and financed, e-election offers great promise and potential as the panacea for voter fraud in Nigeria’s electoral system. First, it examines the theoretical, legal and constitutional basis for e-voting. Second, drawing lessons from other jurisdictions, it analyses practical challenges for the implementation and adoption of an e-voting system in Nigeria. These challenges include the possible compromise of e-voting devices, by viruses or other malicious software; manipulation by people with privileged access to the system, either system developers, system administrators or malicious hackers; denial-of-service attacks (attacks that result in the e-voting facility being disabled or otherwise unavailable for voters to use); lack of adequate supervision mechanisms; and the difficulties of proving electronic attacks in courts of law among other things. Many of these problems are beyond the contemplation of and, therefore, are unaddressed by Nigeria’s Electoral Act, making the law currently incapable and unsuitable to effectively respond to these problems. The article calls for a reform of the Nigerian Electoral Act to better address peculiar legal and constitutional challenges associated with e-voting systems. Keywords : E-elections, Hacking, Democracy, Election Piloting",
+    "doi": "10.4314/JSDLP.V9I2.10",
+    "source": "semanticscholar",
+    "source_id": "e6040a3f49f4d817905cb149cd36e3d86ef1c0ef",
+    "retrieved_at": "2026-01-26T16:13:49.425480Z"
+  },
+  {
+    "id": "s2_bf8bd044550b99dfb244b19e0f11e73a3ef0e099",
+    "title": "Framework for an E-Voting System Applicable in Developing Economies",
+    "authors": [
+      "L. Osho",
+      "Muhammad Bashir Abdullahi",
+      "Oluwafemi Osho"
+    ],
+    "year": 2016,
+    "venue": "",
+    "abstract": "Information technology has pervaded virtually every facet of human life. Even in the delivery of governance, information technology has gradually found a place. One of its applications is the use of electronic voting, also known as e-voting, as opposed to the traditional manual method of voting. This form of voting, however, is not immune to challenges generally associated with voting. Two of these include guaranteeing voting access to all eligible voters, and providing necessary voting security. The challenge of accessibility is especially peculiar to developing countries where IT adoption is still relatively low. This paper proposes a framework for an e-voting system that would most benefit developing economies. It ensures availability of the system to only eligible voters and integrity of the voting process through its capacity to identify and prevent ineligible voters and multiple voting. To guarantee accessibility to all eligible voters, it supports both online and offline voting capabilities. Adopting electronic form of voting would provide a more robust, easier to use, and reliable system of voting, which, consequently, would contribute towards enhancing the delivery of democratic dividends.",
+    "doi": "10.5815/IJIEEB.2016.06.02",
+    "source": "semanticscholar",
+    "source_id": "bf8bd044550b99dfb244b19e0f11e73a3ef0e099",
+    "retrieved_at": "2026-01-26T16:13:49.425489Z"
+  },
+  {
+    "id": "s2_9ac30721f3e27789e56f3b5ed6f67eb889467ffb",
+    "title": "Anonymous and Coercion-Resistant Distributed Electronic Voting",
+    "authors": [
+      "Ehab Zaghloul",
+      "Tongtong Li",
+      "Jian Ren"
+    ],
+    "year": 2020,
+    "venue": "International Conference on Computing, Networking and Communications",
+    "abstract": "Electronic voting (e-voting) presents a convenient and cost-effective alternative to current paper ballot-based voting. It provides many benefits such as increased voter turnout and accuracy in the decision-making process. While presenting many improvements, e-voting still faces serious security challenges that hinder its adoption. In this paper, we propose a novel remote e-voting scheme that can enhance the integrity, efficiency, and voter turnout of the election process. Our proposed work is secure and preserves the privacy of voters through secure multi-party computations performed by parties of differing allegiances. It also leverages a blockchain running smart contracts as a publicly accessible and tamper-resistant bulletin board to permanently store votes and prevent double-voting. In our security and privacy analysis, we show that our proposed scheme is secure against potential threats and provides voter anonymity. Our performance discussion shows that the proposed scheme is practical for large-scale elections. Index Terms—Remote e-voting, blockchain, smart contract.",
+    "doi": "10.1109/ICNC47757.2020.9049653",
+    "source": "semanticscholar",
+    "source_id": "9ac30721f3e27789e56f3b5ed6f67eb889467ffb",
+    "retrieved_at": "2026-01-26T16:13:49.425498Z"
+  },
+  {
+    "id": "s2_74c68480951fbb6f010bf876dbe2d0fe40bee333",
+    "title": "Adoption of E-Voting Systems: A case study of Independent National Electoral Commission (INEC), Nigeria: A Preliminary Study",
+    "authors": [
+      "Salimonu R. Ishaq",
+      "Jimoh R.G.",
+      "W. Osman",
+      "A. Shittu"
+    ],
+    "year": 2012,
+    "venue": "",
+    "abstract": null,
+    "doi": null,
+    "source": "semanticscholar",
+    "source_id": "74c68480951fbb6f010bf876dbe2d0fe40bee333",
+    "retrieved_at": "2026-01-26T16:13:49.425506Z"
+  },
+  {
+    "id": "s2_31b7920490edf58bf8e05dc86a246d195273c137",
+    "title": "Introduction of e-voting in Bulgaria",
+    "authors": [
+      "Janet Zaharieva",
+      "E. Gourova"
+    ],
+    "year": 2016,
+    "venue": "",
+    "abstract": null,
+    "doi": null,
+    "source": "semanticscholar",
+    "source_id": "31b7920490edf58bf8e05dc86a246d195273c137",
+    "retrieved_at": "2026-01-26T16:13:49.425515Z"
+  },
+  {
+    "id": "s2_e8ccfe02e31de24f8dfc802253e5fe00980035b5",
+    "title": "RESISTANCE TO CHANGE : PENOLAKAN MASYARAKAT TERHADAP RENCANA PELAKSANAAN PEMILIHAN KEPALA DESA (PILKADES) BERBASIS ELECTRONIC-VOTING DI KABUPATEN SLEMAN PROVINSI DAERAH ISTIMEWA YOGYAKARTA",
+    "authors": [
+      "Fauzan Hidayat"
+    ],
+    "year": 2020,
+    "venue": "Jurnal Ilmu Pemerintahan Suara Khatulistiwa",
+    "abstract": "This research is a study of policy implementation that focuses on resistance to the changes in pattern of village heads general election (pilkades) policy form the conventional to the electronic way (e-voting). The study began with a demonstration against this policy conducted by a number of village heads in Sleman Regency. The e-voting system in the pilkades is not a new thing in the history of democracy in Indonesia. Some districts such as Jembrana, Boyolali, Pemalang, Musi Rawas and other regions have implemente this new pattern of elections without any significant problems especially in the form of resistance form the communit. \nThis study uses a qualitative descriptive method, by describing what is expressed by the informant of a phenomenon that occurs in the midst of the community in addressing such technology adoption (e-voting). Based on the results of this study found two categories of reasons for resistantion, namely : objective reasons and subjective reasons, including: (1) Objective Reasons: Not Easy, Economic Threats, Damaging Regulatory Values, and Fear of Loss of Status and POwer. (2) Subjective Reasons: Fear of Failure, Damaging Cultural Values, and Low Trust. \nThose reasons are in harmony with the nine causes of resistance to change as stated by Gary A. Yukl in his book entitled “Leadership in Organization” (2010). he nine reasons for the emergence of resistance are mady by the author as a theoritical basis in studying the resistance factor of the e-voting election policy. \n  \nKeywords : resistance, e-voting, pilkades, change, policy",
+    "doi": "10.33701/JIPSK.V5I1.890",
+    "source": "semanticscholar",
+    "source_id": "e8ccfe02e31de24f8dfc802253e5fe00980035b5",
+    "retrieved_at": "2026-01-26T16:13:49.425523Z"
+  },
+  {
+    "id": "s2_80fcb810c2cba7e97bbaa2dc01ec040c2924a27b",
+    "title": "Issues and Challenges of Transition to e-Voting Technology in Nigeria",
+    "authors": [
+      "Sabo Ahmad",
+      "Siti Alida John Abdullah",
+      "R. Arshad"
+    ],
+    "year": 2015,
+    "venue": "",
+    "abstract": null,
+    "doi": null,
+    "source": "semanticscholar",
+    "source_id": "80fcb810c2cba7e97bbaa2dc01ec040c2924a27b",
+    "retrieved_at": "2026-01-26T16:13:49.425531Z"
+  },
+  {
+    "id": "s2_cd01def171766972c5e47abf4e4fc2970790a060",
+    "title": "E-voting: from apathy to adoption",
+    "authors": [
+      "L. Schaupp",
+      "Lemuria D. Carter"
+    ],
+    "year": 2005,
+    "venue": "Journal of Enterprise Information Management",
+    "abstract": null,
+    "doi": "10.1108/17410390510624025",
+    "source": "semanticscholar",
+    "source_id": "cd01def171766972c5e47abf4e4fc2970790a060",
+    "retrieved_at": "2026-01-26T16:13:49.425539Z"
+  },
+  {
+    "id": "s2_ab905d6caa1d0b2f9a5cd628bb5246e0b2a4cda6",
+    "title": "Current State of Personal Data Protection in Electronic Voting: Criteria and Indicator for Effective Implementation",
+    "authors": [
+      "M. Lubis",
+      "M. Kartiwi",
+      "Sonny Zulhuda"
+    ],
+    "year": 2018,
+    "venue": "",
+    "abstract": "The adoption of electronic voting has been done in various countries related to cost and time reduction operationally. On the other hand, recent publication has been informed several issues occurred such as technicality, reliability, security and privacy due to the compromised system were used. In small scale, there are certain group of people who want to exploit the vulnerabilities for their own benefit in the election, while in the greater scale, it can reduce public confidence to entrust the adoption of e-voting system to augment participation rate, to improve the quality of voting and to aid the political right effectively. This paper aims to investigate the characteristic of people demanding the legislative to address the criteria and indicator for effective implementation in electronic voting. By understanding the perception of voters in viewing current electoral regulation are essential to provide some ideas and opinions for better enhancement, either through recommendation and drafting related legislation to cater the needs.",
+    "doi": "10.12928/TELKOMNIKA.V16I1.7718",
+    "source": "semanticscholar",
+    "source_id": "ab905d6caa1d0b2f9a5cd628bb5246e0b2a4cda6",
+    "retrieved_at": "2026-01-26T16:13:49.425547Z"
+  },
+  {
+    "id": "s2_5b36fcc14b4bd9f61efa8bb07c0f44d2d6f2871c",
+    "title": "E-Voting: India and the Philippines – A Comparative Analysis for Possible Adaptation in Africa",
+    "authors": [
+      "Surendra Thakur"
+    ],
+    "year": 2015,
+    "venue": "",
+    "abstract": null,
+    "doi": "10.4018/978-1-4666-6296-4.CH003",
+    "source": "semanticscholar",
+    "source_id": "5b36fcc14b4bd9f61efa8bb07c0f44d2d6f2871c",
+    "retrieved_at": "2026-01-26T16:13:49.425556Z"
+  },
+  {
+    "id": "s2_a6c27690520099235f17728aa2f62b3339462bf6",
+    "title": "SUGGEST TRUST AS MEDIATION TO ADOPT ELECTRONIC VOTING SYSTEM IN IRAQ",
+    "authors": [
+      "Samer B. Alkhakani",
+      "Saad M. Hassan"
+    ],
+    "year": 2018,
+    "venue": "",
+    "abstract": null,
+    "doi": null,
+    "source": "semanticscholar",
+    "source_id": "a6c27690520099235f17728aa2f62b3339462bf6",
+    "retrieved_at": "2026-01-26T16:13:49.425567Z"
+  },
+  {
+    "id": "s2_ea10d6fcbbc5fbf99c4a1e3d2007ccdf5c8e6198",
+    "title": "Security Shortcomings of Electronic Web Based Voting Systems for Universities in Kenya",
+    "authors": [
+      "Prestone Simiyu",
+      "S. Mbugua",
+      "Daniel Otanga"
+    ],
+    "year": 2019,
+    "venue": "",
+    "abstract": null,
+    "doi": null,
+    "source": "semanticscholar",
+    "source_id": "ea10d6fcbbc5fbf99c4a1e3d2007ccdf5c8e6198",
+    "retrieved_at": "2026-01-26T16:13:49.425575Z"
+  },
+  {
+    "id": "s2_fc77ea375ff50c80538454ea77771b476b1e5eb2",
+    "title": "Performance Evaluation of modified Stegano-Cryptographic model for Secured E-voting",
+    "authors": [
+      "Olayemi Mikail Olaniyi",
+      "Arulogun O T"
+    ],
+    "year": 2014,
+    "venue": "",
+    "abstract": null,
+    "doi": null,
+    "source": "semanticscholar",
+    "source_id": "fc77ea375ff50c80538454ea77771b476b1e5eb2",
+    "retrieved_at": "2026-01-26T16:13:49.425583Z"
+  },
+  {
+    "id": "s2_d1bdeca4076d4d3b507eef7108d4e5495236ff26",
+    "title": "A Framework for Adopting E-Voting in Jordan",
+    "authors": [
+      "A. Nu’man"
+    ],
+    "year": 2013,
+    "venue": "",
+    "abstract": null,
+    "doi": null,
+    "source": "semanticscholar",
+    "source_id": "d1bdeca4076d4d3b507eef7108d4e5495236ff26",
+    "retrieved_at": "2026-01-26T16:13:49.425591Z"
+  },
+  {
+    "id": "s2_a50af8ffd46d3f69c4feff1fc3cd67a2ffa870fe",
+    "title": "Electronic Voting as an Additional Method of Participating in Elections. Opinions of Poles",
+    "authors": [
+      "Magdalena Musiał-Karg"
+    ],
+    "year": 2016,
+    "venue": "International Joint Conference on Electronic Voting",
+    "abstract": null,
+    "doi": "10.1007/978-3-319-52240-1_14",
+    "source": "semanticscholar",
+    "source_id": "a50af8ffd46d3f69c4feff1fc3cd67a2ffa870fe",
+    "retrieved_at": "2026-01-26T16:13:49.425599Z"
+  },
+  {
+    "id": "s2_085c40274edc579d274e94fec959c693d8d9eddb",
+    "title": "Current state of personal data protection in electronic voting: Demand on Legislature's Bill",
+    "authors": [
+      "M. Lubis",
+      "M. Kartiwi",
+      "Sonny Zulhuda"
+    ],
+    "year": 2016,
+    "venue": "International Conference on Intelligent Computing",
+    "abstract": null,
+    "doi": "10.1109/IAC.2016.7905721",
+    "source": "semanticscholar",
+    "source_id": "085c40274edc579d274e94fec959c693d8d9eddb",
+    "retrieved_at": "2026-01-26T16:13:49.425607Z"
+  },
+  {
+    "id": "s2_0f4f643ac7350a8ee8e9bbc380634294e79b383e",
+    "title": "E-VOTING IMPLEMENTATION IN NIGERIA: The Success Factors",
+    "authors": [
+      "C. Ayo",
+      "A. Adebiyi",
+      "A. Sofoluwe"
+    ],
+    "year": 2012,
+    "venue": "",
+    "abstract": null,
+    "doi": null,
+    "source": "semanticscholar",
+    "source_id": "0f4f643ac7350a8ee8e9bbc380634294e79b383e",
+    "retrieved_at": "2026-01-26T16:13:49.425615Z"
+  },
+  {
+    "id": "s2_8ff4b6c650f3d60cfbeec1a080c6529d65a4b8d8",
+    "title": "Identification of Non-Functional Requirements for Electronic Voting Systems: A Systematic Mapping",
+    "authors": [
+      "S. Sepúlveda",
+      "Mauricio Bustamante",
+      "Ania Cravero"
+    ],
+    "year": 2015,
+    "venue": "IEEE Latin America Transactions",
+    "abstract": null,
+    "doi": "10.1109/TLA.2015.7112018",
+    "source": "semanticscholar",
+    "source_id": "8ff4b6c650f3d60cfbeec1a080c6529d65a4b8d8",
+    "retrieved_at": "2026-01-26T16:13:49.425624Z"
+  },
+  {
+    "id": "s2_ad8741708c1306ea011078ed6ea4505efbc048c5",
+    "title": "Enhancing E-Voting Systems By Leveraging Biometric Key Generation (Bkg)",
+    "authors": [
+      "V. C. Ossai"
+    ],
+    "year": 2013,
+    "venue": "",
+    "abstract": null,
+    "doi": null,
+    "source": "semanticscholar",
+    "source_id": "ad8741708c1306ea011078ed6ea4505efbc048c5",
+    "retrieved_at": "2026-01-26T16:13:49.425631Z"
+  },
+  {
+    "id": "s2_f87210b89261bf2c9d8b7252595f87228ca6621e",
+    "title": "Performance Evaluation of an Enhanced Crypto-Watermarking Model for Secure Electronic Voting",
+    "authors": [
+      "O. O. Mikail",
+      "Folorunso Taliha Abiodun",
+      "A. Mohammed",
+      "Joseph Oluwagbemiga"
+    ],
+    "year": 2015,
+    "venue": "Web Information System and Application Conference",
+    "abstract": null,
+    "doi": null,
+    "source": "semanticscholar",
+    "source_id": "f87210b89261bf2c9d8b7252595f87228ca6621e",
+    "retrieved_at": "2026-01-26T16:13:49.425639Z"
+  },
+  {
+    "id": "s2_872c8a9445095a5216bd8291625fa25898b25d7f",
+    "title": "SMARESiM: AN IMPROVED MODEL OF E-VOTING SYSTEM BASED ON BIOMETRIC KEY BINDING",
+    "authors": [
+      "V. C. Ossai",
+      "K C OKAFOR",
+      "H. Inyama"
+    ],
+    "year": 2013,
+    "venue": "",
+    "abstract": null,
+    "doi": null,
+    "source": "semanticscholar",
+    "source_id": "872c8a9445095a5216bd8291625fa25898b25d7f",
+    "retrieved_at": "2026-01-26T16:13:49.425648Z"
+  },
+  {
+    "id": "s2_bf2bee717c1541021de24e09b68b270b7fa429de",
+    "title": "E-VOTING SYSTEMS: A TOOL FOR E-DEMOCRACY",
+    "authors": [
+      "E. Abu-Shanab",
+      "Michael B. Knight",
+      "Heba Refai"
+    ],
+    "year": 2010,
+    "venue": "",
+    "abstract": null,
+    "doi": null,
+    "source": "semanticscholar",
+    "source_id": "bf2bee717c1541021de24e09b68b270b7fa429de",
+    "retrieved_at": "2026-01-26T16:13:49.425656Z"
+  },
+  {
+    "id": "s2_98328a6d7d52c8fc58df9031ebf79123db46dc70",
+    "title": "E-voting: dependability requirements and design for dependability",
+    "authors": [
+      "J. Bryans",
+      "B. Littlewood",
+      "P. Ryan",
+      "L. Strigini"
+    ],
+    "year": 2006,
+    "venue": "ARES",
+    "abstract": null,
+    "doi": "10.1109/ARES.2006.56",
+    "source": "semanticscholar",
+    "source_id": "98328a6d7d52c8fc58df9031ebf79123db46dc70",
+    "retrieved_at": "2026-01-26T16:13:49.425667Z"
+  },
+  {
+    "id": "s2_70b244ee028bd521ca6ff7246584d9d236a7cf6a",
+    "title": "Why electronic voting ?",
+    "authors": [
+      "M. Prandini",
+      "L. Sartori",
+      "A. Oostveen"
+    ],
+    "year": 2014,
+    "venue": "",
+    "abstract": null,
+    "doi": null,
+    "source": "semanticscholar",
+    "source_id": "70b244ee028bd521ca6ff7246584d9d236a7cf6a",
+    "retrieved_at": "2026-01-26T16:13:49.425684Z"
+  },
+  {
+    "id": "s2_87665ea9a29f49013d7f06e746f0bcf3bb398e5a",
+    "title": "An Examination of Factors Affecting Multilevel E-Voting",
+    "authors": [
+      "David P. Kitlan"
+    ],
+    "year": 2008,
+    "venue": "",
+    "abstract": null,
+    "doi": null,
+    "source": "semanticscholar",
+    "source_id": "87665ea9a29f49013d7f06e746f0bcf3bb398e5a",
+    "retrieved_at": "2026-01-26T16:13:49.425696Z"
+  },
+  {
+    "id": "s2_e3531b31aeaa3a525322c39b78a531369ad03123",
+    "title": "Political Implications of E-voting in Korea",
+    "authors": [
+      "Hyeon-woo Lee"
+    ],
+    "year": 2008,
+    "venue": "",
+    "abstract": null,
+    "doi": null,
+    "source": "semanticscholar",
+    "source_id": "e3531b31aeaa3a525322c39b78a531369ad03123",
+    "retrieved_at": "2026-01-26T16:13:49.425720Z"
+  },
+  {
+    "id": "s2_9e0e34b2a15d5cde718226ff5f7db56e008f31f3",
+    "title": "Malfunction or Misfits: Comparing Requirements, Inputs, and Public Confidence Outcomes of E-Voting in the U.S. and Europe",
+    "authors": [
+      "J. Sebes",
+      "Gregory A. Miller"
+    ],
+    "year": 2008,
+    "venue": "Electronic Voting",
+    "abstract": null,
+    "doi": null,
+    "source": "semanticscholar",
+    "source_id": "9e0e34b2a15d5cde718226ff5f7db56e008f31f3",
+    "retrieved_at": "2026-01-26T16:13:49.425733Z"
+  },
+  {
+    "id": "s2_cc8935a6502decb1f494de8753961e9857536e74",
+    "title": "Enhancing Learning and Teaching Using Electronic Voting Systems – The Development of a Framework for an Institutional Approach for their Introduction",
+    "authors": [
+      "A. Jefferies",
+      "M. Cubric",
+      "M. Russell"
+    ],
+    "year": 2013,
+    "venue": "",
+    "abstract": null,
+    "doi": "10.1108/S2044-9968(2013)000006E004",
+    "source": "semanticscholar",
+    "source_id": "cc8935a6502decb1f494de8753961e9857536e74",
+    "retrieved_at": "2026-01-26T16:13:49.425748Z"
+  },
+  {
+    "id": "s2_24347a5d5803f7028a9629e818aba70d3b79bf2d",
+    "title": "Enhanced Stegano-Cryptographic Model for Secure Electronic Voting",
+    "authors": [
+      "Olayemi Mikail Olaniyi",
+      "Oladiran Tayo Arulogun",
+      "Omidiora E.O",
+      "O. Okediran"
+    ],
+    "year": 2015,
+    "venue": "",
+    "abstract": null,
+    "doi": null,
+    "source": "semanticscholar",
+    "source_id": "24347a5d5803f7028a9629e818aba70d3b79bf2d",
+    "retrieved_at": "2026-01-26T16:13:49.425761Z"
+  },
+  {
+    "id": "s2_04f7dfb7b0023a5e963821f7cf05f59545d4dfa0",
+    "title": "DualVote : addressing usability and verifiability issues in electronic voting systems",
+    "authors": [
+      "Damien MacNamara",
+      "T. Scully",
+      "John Paul Gibson",
+      "Ken Oakley",
+      "Francis Carmody",
+      "Elizabeth Quane"
+    ],
+    "year": 2011,
+    "venue": "",
+    "abstract": null,
+    "doi": null,
+    "source": "semanticscholar",
+    "source_id": "04f7dfb7b0023a5e963821f7cf05f59545d4dfa0",
+    "retrieved_at": "2026-01-26T16:13:49.425778Z"
+  },
+  {
+    "id": "s2_bcf3a9b7d6e7b0250e0ad996b974a6e884a3706e",
+    "title": "A Proposed Multiple Scan Biometric-Based System for Electronic Voting",
+    "authors": [
+      "O. Olaniyan",
+      "S. Adejumo",
+      "Adejumo Adejumo",
+      "T. Mapayi"
+    ],
+    "year": 2011,
+    "venue": "",
+    "abstract": null,
+    "doi": null,
+    "source": "semanticscholar",
+    "source_id": "bcf3a9b7d6e7b0250e0ad996b974a6e884a3706e",
+    "retrieved_at": "2026-01-26T16:13:49.425792Z"
+  },
+  {
+    "id": "s2_bf4e12bcbab74b8e52d5c6925498c51eec74cc8c",
+    "title": "Implementation of an Electronic Voting System with Contactless IC Cards for Small-Scale Voting",
+    "authors": [
+      "Chung-Huang Yang",
+      "Shih-Yi Tu",
+      "P. Yen"
+    ],
+    "year": 2009,
+    "venue": "2009 Fifth International Conference on Information Assurance and Security",
+    "abstract": null,
+    "doi": "10.1109/IAS.2009.337",
+    "source": "semanticscholar",
+    "source_id": "bf4e12bcbab74b8e52d5c6925498c51eec74cc8c",
+    "retrieved_at": "2026-01-26T16:13:49.425805Z"
+  },
+  {
+    "id": "s2_28cc701f011bf1f16100b1c0d1dfffe559068c29",
+    "title": "Towards an Improved Stegano-Cryptographic Model for Secured Electronic Voting",
+    "authors": [],
+    "year": 2013,
+    "venue": "",
+    "abstract": null,
+    "doi": null,
+    "source": "semanticscholar",
+    "source_id": "28cc701f011bf1f16100b1c0d1dfffe559068c29",
+    "retrieved_at": "2026-01-26T16:13:49.425819Z"
+  },
+  {
+    "id": "s2_8568b07aa995ff6d6faac8cda1389057800e05f2",
+    "title": "Secure Digital Voting System Based on Blockchain Technology",
+    "authors": [
+      "Kashif Mehboob Khan",
+      "J. Arshad",
+      "Muhammad Mubashir Khan"
+    ],
+    "year": 2018,
+    "venue": "International journal of electronic governance and research",
+    "abstract": "Electronic voting or e-voting has been used in varying forms since 1970s with fundamental benefits over paper-based systems such as increased efficiency and reduced errors. However, challenges remain to the achieving of wide spread adoption of such systems, especially with respect to improving their resilience against potential faults. Blockchain is a disruptive technology of the current era and promises to improve the overall resilience of e-voting systems. This article presents an effort to leverage benefits of blockchain such as cryptographic foundations and transparency to achieve an effective scheme for e-voting. The proposed scheme conforms to the fundamental requirements for e-voting schemes and achieves end-to-end verifiability. The article presents details of the proposed e-voting scheme along with its implementation using Multichain platform. The article also presents an in-depth evaluation of the scheme which successfully demonstrates its effectiveness to achieve an end-to-end verifiable e-voting scheme.",
+    "doi": "10.4018/IJEGR.2018010103",
+    "source": "semanticscholar",
+    "source_id": "8568b07aa995ff6d6faac8cda1389057800e05f2",
+    "retrieved_at": "2026-01-26T16:13:49.425833Z"
+  },
+  {
+    "id": "s2_438c1955912d1f8839723255b3747ca764ca9bb3",
+    "title": "Platform-independent Secure Blockchain-Based Voting System",
+    "authors": [
+      "Bin Yu",
+      "Joseph K. Liu",
+      "A. Sakzad",
+      "S. Nepal",
+      "Paul Rimba",
+      "Ron Steinfeld",
+      "M. Au"
+    ],
+    "year": 2018,
+    "venue": "IACR Cryptology ePrint Archive",
+    "abstract": null,
+    "doi": "10.1007/978-3-319-99136-8_20",
+    "source": "semanticscholar",
+    "source_id": "438c1955912d1f8839723255b3747ca764ca9bb3",
+    "retrieved_at": "2026-01-26T16:13:49.425850Z"
+  },
+  {
+    "id": "s2_0a954386b36717010e3b07391da43916afa72ad1",
+    "title": "The utilization of e‐government services: citizen trust, innovation and acceptance factors *",
+    "authors": [
+      "Lemuria D. Carter",
+      "F. Bélanger"
+    ],
+    "year": 2005,
+    "venue": "Information Systems Journal",
+    "abstract": null,
+    "doi": "10.1111/j.1365-2575.2005.00183.x",
+    "source": "semanticscholar",
+    "source_id": "0a954386b36717010e3b07391da43916afa72ad1",
+    "retrieved_at": "2026-01-26T16:13:49.425865Z"
+  },
+  {
+    "id": "s2_0cea5eb8ed34f1c0ac02b21dca93bcd85d2093ab",
+    "title": "Voting Application using Blockchain Technology",
+    "authors": [
+      "Ranjana Vittal"
+    ],
+    "year": 2019,
+    "venue": "International Journal for Research in Applied Science and Engineering Technology",
+    "abstract": ": The aspect of electoral fraud and lack of transparency in the conventional voting system employed in India is a major problem that requires attention. The objective is to implement a secure e-voting system based on blockchain technology that counteracts the above-mentioned issues. The aim is to fight electoral malpractices by developing a system which will keep data secure in digital voting and prevent tampering of data while introducing a level of transparency in the system. One might argue that online voting is susceptible to database manipulation, however the adoption of blockchain technology solves this by its inherent property of decentralization wherein data is not stored in a central database, rather distributed over a vast network of peered systems. Electoral fraud in the form of voter impersonation and voting multiple times can be solved by the use of biometric voter authentication which has been implemented in the prototype of an Electronic Voting Machine (EVM). This paper discusses the design and implementation of the system proposed.",
+    "doi": "10.22214/ijraset.2019.9105",
+    "source": "semanticscholar",
+    "source_id": "0cea5eb8ed34f1c0ac02b21dca93bcd85d2093ab",
+    "retrieved_at": "2026-01-26T16:13:49.425879Z"
+  },
+  {
+    "id": "s2_767f7ef7dde8f07b9d1a78d5a54f8eb7dac3d4dc",
+    "title": "The Impact of Trust and Relative Advantage on Internet Voting Diffusion",
+    "authors": [
+      "Lemuria D. Carter",
+      "Ronald Campbell"
+    ],
+    "year": 2011,
+    "venue": "Journal of Theoretical and Applied Electronic Commerce Research",
+    "abstract": "Internet voting is an emerging e-government phenomenon. In the United States, several state and local governments have experimented with Internet voting. This study presents a model of Internet voting adoption that integrates diffusion of innovation theory, institution-based trust and e-government utilization. To test the model a survey is administered to 372 citizens. The results of structural equation modeling indicate that relative advantage, Internet trust, and e-government information utilization have a significant impact on intention to use Internet voting. In addition to these direct effects, disposition to trust has a significant impact on Internet trust and accessibility has a significant impact on relative advantage. Not only are citizens interested in using the Internet to obtain government information, but also to cast their ballot. As a result, opportunities for Internet use in the political process are constantly emerging. Government agencies should take advantage of technological innovations to improve the accessibility of the electronic ballot, to communicate the advantages of this phenomenon and to engender trust among the citizenry.",
+    "doi": "10.4067/s0718-18762011000300004",
+    "source": "semanticscholar",
+    "source_id": "767f7ef7dde8f07b9d1a78d5a54f8eb7dac3d4dc",
+    "retrieved_at": "2026-01-26T16:13:49.425898Z"
+  },
+  {
+    "id": "s2_953d63d72727b01a3466ba7aaf543580fd76353a",
+    "title": "Security Analysis of the Diebold AccuVote-TS Voting Machine",
+    "authors": [
+      "Ariel J. Feldman",
+      "J. A. Halderman",
+      "E. Felten"
+    ],
+    "year": 2007,
+    "venue": "USENIX Workshop on Accurate Electronic Voting Technology",
+    "abstract": null,
+    "doi": null,
+    "source": "semanticscholar",
+    "source_id": "953d63d72727b01a3466ba7aaf543580fd76353a",
+    "retrieved_at": "2026-01-26T16:13:49.425908Z"
+  },
+  {
+    "id": "s2_da2d59447820b16a24d3ef938d68377a20691c63",
+    "title": "Cultural Diversity and Trust in IT Adoption: A Comparison of Potential e-Voters in the USA and South Africa",
+    "authors": [
+      "David Gefen",
+      "G. Rose",
+      "Merrill Warkentin",
+      "P. Pavlou"
+    ],
+    "year": 2005,
+    "venue": "Journal of Global Information Management",
+    "abstract": null,
+    "doi": "10.4018/jgim.2005010103",
+    "source": "semanticscholar",
+    "source_id": "da2d59447820b16a24d3ef938d68377a20691c63",
+    "retrieved_at": "2026-01-26T16:13:49.425917Z"
+  },
+  {
+    "id": "s2_293faa036720a066bdcb652f13482c3860a320d3",
+    "title": "Remote Internet voting: developing a secure and efficient frontend",
+    "authors": [
+      "V. George",
+      "bullet M P Sebastian"
+    ],
+    "year": 2013,
+    "venue": "CSI Transactions on ICT",
+    "abstract": null,
+    "doi": "10.1007/s40012-013-0021-5",
+    "source": "semanticscholar",
+    "source_id": "293faa036720a066bdcb652f13482c3860a320d3",
+    "retrieved_at": "2026-01-26T16:13:49.425965Z"
+  },
+  {
+    "id": "s2_96bb5d3477dd9516ebeb4dceda3ad6523ac81974",
+    "title": "Why chads? Determinants of voting equipment use in the United States",
+    "authors": [
+      "P. Garner",
+      "Enrico Spolaore"
+    ],
+    "year": 2005,
+    "venue": "",
+    "abstract": null,
+    "doi": "10.1007/S11127-005-7167-0",
+    "source": "semanticscholar",
+    "source_id": "96bb5d3477dd9516ebeb4dceda3ad6523ac81974",
+    "retrieved_at": "2026-01-26T16:13:49.425987Z"
+  },
+  {
+    "id": "s2_5cd65bb8819525b5ecd4e70e891a17b0b30a0191",
+    "title": "Verification-Centric Realization of Electronic Vote Counting",
+    "authors": [
+      "J. Kiniry",
+      "Dermot Cochran",
+      "Patrick E. Tierney"
+    ],
+    "year": 2007,
+    "venue": "USENIX Workshop on Accurate Electronic Voting Technology",
+    "abstract": null,
+    "doi": null,
+    "source": "semanticscholar",
+    "source_id": "5cd65bb8819525b5ecd4e70e891a17b0b30a0191",
+    "retrieved_at": "2026-01-26T16:13:49.425999Z"
+  },
+  {
+    "id": "s2_34fbea46dfde4b6448cadd360580de5674419598",
+    "title": "Usability is not Enough: Lessons Learned from 'Human Factors in Security' Research for Verifiability",
+    "authors": [
+      "O. Kulyk",
+      "M. Volkamer"
+    ],
+    "year": 2018,
+    "venue": "IACR Cryptology ePrint Archive",
+    "abstract": null,
+    "doi": null,
+    "source": "semanticscholar",
+    "source_id": "34fbea46dfde4b6448cadd360580de5674419598",
+    "retrieved_at": "2026-01-26T16:13:49.426007Z"
+  },
+  {
+    "id": "s2_30cd0c4561148bbb61a939a77fc3192224144352",
+    "title": "Electronic Public Relations",
+    "authors": [
+      "Anastasios P. Panopoulos"
+    ],
+    "year": 2010,
+    "venue": "",
+    "abstract": null,
+    "doi": "10.1002/9781444316568.WIEM04027",
+    "source": "semanticscholar",
+    "source_id": "30cd0c4561148bbb61a939a77fc3192224144352",
+    "retrieved_at": "2026-01-26T16:13:49.426015Z"
+  },
+  {
+    "id": "s2_fb672f8e869fbb86b9b12fcacf9f6d40ea3fbbf3",
+    "title": "CONFIABILIDAD Y CONSIDERACIONES DEL VOTO ELECTRÓNICO, UNA VISIÓN GLOBAL.",
+    "authors": [
+      "Jussibeth Tatiana Places Chungata",
+      "E. López",
+      "O. Granizo",
+      "Miguel Botto-Tobar"
+    ],
+    "year": 2017,
+    "venue": "",
+    "abstract": "This article is intended to perform an analysis of all the aspects that comprise and revolve around the use or implementation of new technologies in election processes such as automation of democracy; this is done through the collection of bibliographic information from articles, books, and other sources on concepts, differences, comparisons, methodology of citizen participation, experiences, among others. With the purpose of establishing the utility or inconveniences that may present this electronic voting system to use it in real elections. There are realized general descriptions of every topic, where little by little possible factors of adoption are explored or I reject to this new technology, clarifying in the functionality, used elements and factors to comply. As a result, it reflects on the positive and negative impact that have these systems in society, giving points to consider about this Automation at different stages which comprise the electoral processes, from the construction, configuration, storage up to the transmission and consolidation of results. Is leaves clear them criteria that is should evaluate a system of vote electronic that van from reliability to effectiveness in their processes, to determine the need and relationship of costs - benefits. Without leaving of side our country, there is described the current condition that has the system of electronic vote in our electoral processes, which until now has not been implemented, only has performed testing of printing in our community.",
+    "doi": "10.26910/ISSN.2528-8083VOL2ISS5.2017PP26-38",
+    "source": "semanticscholar",
+    "source_id": "fb672f8e869fbb86b9b12fcacf9f6d40ea3fbbf3",
+    "retrieved_at": "2026-01-26T16:13:49.426026Z"
+  },
+  {
+    "id": "s2_8bd9915b99f1aaec90c2c0fa15ffce9fa2372a77",
+    "title": "Relationship of Personal Data Protection towards the Electoral Measures: Partial Least Square Analysis",
+    "authors": [
+      "M. Lubis",
+      "Arif Ridho Lubis",
+      "A. Almaarif",
+      "Asti Amalia Nur Fajrillah"
+    ],
+    "year": 2020,
+    "venue": "Journal of Physics: Conference Series",
+    "abstract": "The adoption of e-voting in several countries poses certain challenges, which are very similar when electronic means are applied to any activities, such as e-governance or e-commerce. Therefore, some people due to economics, politics or social reasons expect the e-voting use will facilitate and solve previous election’s problem. Unfortunately, the most complex and difficult practical implementation with distinct problems depends on the particular condition or culture. One of essential factor concerning the adoption related to privacy protection. Thus, this study examines the relationship of perceived benefit and privacy concern towards personal data protection by establishing model of formative measurement. For the generalization purposes, a survey questionnaire consists of 4 categories of 45 items was distributed offline and online to approximately 800 people with purposive sampling in selected multicultural cities in Indonesia. The result suggested that the Perceived Benefit (PBen) has the strongest predictive value of ƒ2 and Q2 compare to Privacy Concern (PCon) with 0.212 and 0.083 respectively.",
+    "doi": "10.1088/1742-6596/1566/1/012111",
+    "source": "semanticscholar",
+    "source_id": "8bd9915b99f1aaec90c2c0fa15ffce9fa2372a77",
+    "retrieved_at": "2026-01-26T16:13:49.426034Z"
+  },
+  {
+    "id": "s2_eba2813c8d592f9fe5c95c28dc249a91c1907edc",
+    "title": "TRIBUNAL SUPERIOR ELEITORAL",
+    "authors": [
+      "Cícero José Alves Soares Neto"
+    ],
+    "year": 2016,
+    "venue": "",
+    "abstract": null,
+    "doi": null,
+    "source": "semanticscholar",
+    "source_id": "eba2813c8d592f9fe5c95c28dc249a91c1907edc",
+    "retrieved_at": "2026-01-26T16:13:49.426042Z"
+  },
+  {
+    "id": "s2_b846a78d4965f98c2e1901121a9f74692c22923a",
+    "title": "Treating Voters as an Afterthought? The Legacies of a Decade of Electoral Modernisation in the United Kingdom",
+    "authors": [
+      "S. Wilks‐Heeg"
+    ],
+    "year": 2009,
+    "venue": "",
+    "abstract": null,
+    "doi": "10.1111/J.1467-923X.2009.01958.X",
+    "source": "semanticscholar",
+    "source_id": "b846a78d4965f98c2e1901121a9f74692c22923a",
+    "retrieved_at": "2026-01-26T16:13:49.426049Z"
+  },
+  {
+    "id": "s2_1dff4ff8b438739eb62c00b47b86405e12ce03aa",
+    "title": "股東行動主義與股東會召集、決議機制之變革—與日本法之比較為中心",
+    "authors": [
+      "賴盈孜"
+    ],
+    "year": 2016,
+    "venue": "",
+    "abstract": null,
+    "doi": "10.6342/NTU201602531",
+    "source": "semanticscholar",
+    "source_id": "1dff4ff8b438739eb62c00b47b86405e12ce03aa",
+    "retrieved_at": "2026-01-26T16:13:49.426057Z"
+  },
+  {
+    "id": "s2_869873a0b56ebefe9d00e06a8406d40227e1c258",
+    "title": "Foundations of Security Analysis and Design V, FOSAD 2007/2008/2009 Tutorial Lectures",
+    "authors": [
+      "A. Aldini",
+      "G. Barthe",
+      "R. Gorrieri"
+    ],
+    "year": 2009,
+    "venue": "Foundations of Security Analysis and Design",
+    "abstract": null,
+    "doi": "10.1007/978-3-642-03829-7",
+    "source": "semanticscholar",
+    "source_id": "869873a0b56ebefe9d00e06a8406d40227e1c258",
+    "retrieved_at": "2026-01-26T16:13:49.426065Z"
+  },
+  {
+    "id": "s2_045866bbc8ac781daca3f4d27f2f2690298c577f",
+    "title": "E-records readiness at the national archives of Zimbabwe",
+    "authors": [
+      "Gugulethu Shamaine Nkala",
+      "P. Ngulube"
+    ],
+    "year": 2012,
+    "venue": "",
+    "abstract": null,
+    "doi": null,
+    "source": "semanticscholar",
+    "source_id": "045866bbc8ac781daca3f4d27f2f2690298c577f",
+    "retrieved_at": "2026-01-26T16:13:49.426073Z"
+  },
+  {
+    "id": "s2_37ddcd01c03b87c8c8ff94c1a2176714dd3a981b",
+    "title": "eVoting in Nigeria: The case of the Independent National Electoral Commission (INEC)",
+    "authors": [
+      "L. Brooks",
+      "Ahmed B. Mohammed"
+    ],
+    "year": 2014,
+    "venue": "International Conference on Electronic Governance and Open Society",
+    "abstract": null,
+    "doi": "10.1145/2729104.2729106",
+    "source": "semanticscholar",
+    "source_id": "37ddcd01c03b87c8c8ff94c1a2176714dd3a981b",
+    "retrieved_at": "2026-01-26T16:13:49.426081Z"
+  },
+  {
+    "id": "s2_e4115313c54149106360dd847afca45e729e5d0d",
+    "title": "ELECTRONIC-VOTING (E-VOTING) POLICY IN CONSISTENT GENERAL ELECTIONS TOWARDS A DEMOCRACY SYSTEM IN INDONESIA",
+    "authors": [
+      "Karmanis Karolan"
+    ],
+    "year": 2020,
+    "venue": "Dialogue : Jurnal Ilmu Administrasi Publik",
+    "abstract": "Indonesia as a democratic country has entered the era of the millennium in the implementation of general elections simultaneously, it is necessary to utilize computer technology using the Electronic-Voting (E-Voting) method. Several regions in Indonesia have used the E-Voting method as a means of democracy which is applied at the hamlet and village head election levels. Village Head election policy with E-Voting as a new means of democracy through a touch of the monitor screen and E-Verification through voters' E-KTP. For example: Pemalang Regency (Ujunggede Village), Jembrana Regency in Bali (Mendoyo Dangin Tukad Village). Elections through e-voting must be designed as best as possible to realize the principles of direct elections, namely direct, general, free, secret (overflow) and honest and fair (fair) in direct elections. Electronic voting systems (e-voting) must be taken seriously and ensure transparency, certainty, security, accountability, and accuracy. In addition to technology readiness, of course, it must be supported by the readiness of the community in implementing this e-voting system in the future. The government's unpreparedness and lack of socialization of e-voting can also be a factor triggering failure in implementing this system.",
+    "doi": "10.14710/dialogue.v2i2.9805",
+    "source": "semanticscholar",
+    "source_id": "e4115313c54149106360dd847afca45e729e5d0d",
+    "retrieved_at": "2026-01-26T16:13:49.426088Z"
+  },
+  {
+    "id": "s2_406bb21c449e4d6556f6b4c3e7b8ad8cbceb360a",
+    "title": "ANALISIS PEMANFAATAN TEKNOLOGI QR CODE PADA SISTEM ELECTRONIC VOTING (E-VOTING) UNTUK PEMILIHAN KEPALA DAERAH",
+    "authors": [
+      "Wijaya Wijaya",
+      "Andi Adriansyah"
+    ],
+    "year": 2020,
+    "venue": "",
+    "abstract": "ABSTRACT: General elections as a means of democracy pillar have been used in most countries in the world, including Indonesia. Along with current technological developments, voting can be done electronically, which is known as electronic voting (E-Voting). The application of E-Voting is expected to be able to overcome the problems that occur when using conventional systems, such as process effectiveness, the accuracy of the result, implementation costs and community satisfaction. One of the problems that remain to be resolved with this system is related to data security and its results. Many methods can be used to support security systems, one of which is the QR Code. This research tries to develop a security system using the QR Code. An E-Voting system with QR Code-based security has been designed and tested. Based on the results, the system has an accuracy rate of 93%, an average detection rate of 4 seconds, and 7% undetectable data with an average speed of 8 seconds. In general, it can be said that the system can run well with the expected performance. ABSTRAK: Pemilihan umum sebagai sarana demokrasi telah digunakan di sebagian besar negara di dunia termasuk Indonesia. Seiring dengan perkembangan teknologi saat ini, voting dapat dilakukan secara elektronik, yang disebut dengan elektronik voting (E-Voting). Penerapan E-Voting diharapkan mampu mengatasi permasalahan yang terjadi saat menggunakan sistem konvensional, seperti efektifitas proses, tingkat akurasi, biaya pelaksanaan dan kepuasan masyarakat. Salah satu problem yang masih harus diselesaikan pada sistem ini adalah terkait pengamanan data dan hasilnya. Banyak metode yang dapat digunakan untuk mendukung sistem keamanan, salah satunya QR Code. Penelitian ini mencoba mengembangkan sistem pengamanan menggunakan QR Code. Sebuah sistem E-Voting dengan pengamanan berbasis QR Code telah dirancang dan diuji coba. Dari hasi uji coba didapat sistem memiliki tingkat akurasi sebesar 93%, tingkat deteksi rata-rata kecepatan 4 detik, serta 7% data tidak terdeteksi dengan rata-rata kecepatan 8 detik. Secara umum dapat dikatakan bahwa sistem hasil perancangan dapat berjalan dengan baik dengan performa sesuai yang diharapkan.",
+    "doi": "10.21831/JEE.V4I2.35451",
+    "source": "semanticscholar",
+    "source_id": "406bb21c449e4d6556f6b4c3e7b8ad8cbceb360a",
+    "retrieved_at": "2026-01-26T16:13:49.426096Z"
+  },
+  {
+    "id": "s2_51d9052bd3a1864b8f3297d8b5174bc177bb3c21",
+    "title": "Implementation of Smart Contracts Ethereum Blockchain in Web-Based Electronic Voting (e-voting)",
+    "authors": [
+      "A. Susanto"
+    ],
+    "year": 2020,
+    "venue": "",
+    "abstract": "The increasing of digital technology today has helped many people to fulfill their needs. But the election system, still conventionally using paper in its implementation. Elections in general still use a centralized system, where there is an organization that manages it. Some of the problems that may occur in traditional electoral systems are that there are organizations that have full control over the database and system, so the possibility of hacking the database is quite a big opportunity. Blockchain innovation is one arrangement that can be utilized in light of the fact that it has a decentralized framework and the whole database is duplicated by all clients. Blockchain itself has been used by Bitcoin and Ethereum cryptocurrency which is known as a decentralized system. By using the blockchain in database recording on an e-voting system can reduce one source of fraud that is database manipulation. This study discusses the recording of voting data using blockchain technology. The implementation of Smart Contracts contained in the Ethereum Blockchain will be implemented to create this voting system",
+    "doi": "10.26623/transformatika.v18i1.1779",
+    "source": "semanticscholar",
+    "source_id": "51d9052bd3a1864b8f3297d8b5174bc177bb3c21",
+    "retrieved_at": "2026-01-26T16:13:49.426104Z"
+  },
+  {
+    "id": "s2_ccadb17c8c50a643938207d6329c3845ae79d391",
+    "title": "PERANCANGAN ELECTRONIC VOTING (E-VOTING) BERBASIS WEB UNTUK PEMILIHAN REKTOR UNIVERSITAS NEGERI MAKASSAR",
+    "authors": [
+      "Muhammad Mahdinul Bahar",
+      "Muhammad Syahid Nurwahid"
+    ],
+    "year": 2020,
+    "venue": "",
+    "abstract": null,
+    "doi": null,
+    "source": "semanticscholar",
+    "source_id": "ccadb17c8c50a643938207d6329c3845ae79d391",
+    "retrieved_at": "2026-01-26T16:13:49.426113Z"
+  },
+  {
+    "id": "s2_1b7b987c1623af5f47e39cd24fe082f6a40e4dbb",
+    "title": "IMPLEMENTASI KEBIJAKAN ELECTRONIC-VOTING (E-VOTING) DALAM PEMILIHAN KEPALA DESA DI KABUPATEN PEMALANG TAHUN 2016 (Studi Kasus Pilkades Sistem E-Voting di Desa Ujunggede 2016)",
+    "authors": [
+      "B. Firmansyah",
+      "Yuwanto"
+    ],
+    "year": 2018,
+    "venue": "",
+    "abstract": null,
+    "doi": null,
+    "source": "semanticscholar",
+    "source_id": "1b7b987c1623af5f47e39cd24fe082f6a40e4dbb",
+    "retrieved_at": "2026-01-26T16:13:49.426133Z"
+  },
+  {
+    "id": "s2_55aa76f7b1da8810b0b5036a868931d56eab080c",
+    "title": "Examining multi-dimensional trust of technology in citizens’ adoption of e-voting in developing countries",
+    "authors": [
+      "Yu-Qian Zhu",
+      "Anik Hanifatul Azizah",
+      "Bo Hsiao"
+    ],
+    "year": 2020,
+    "venue": "Information Development",
+    "abstract": "Prior research has highlighted the pivotal role of trust in the adoption of e-voting. However, trust as a construct has generally been studied without clear specifications of its underlying dimensions. As part of building a more comprehensive understanding of trust in e-voting, we propose and validate the underlying dimensions of trust in technology to be security, usability, privacy and validity. In an application to e-voting, we propose that greater trust in its technology could mitigate its perceived risks, and lead to higher intentions to use e-voting. To test our model, we collected data from 426 voters in East Java province, Indonesia. The findings confirmed the validity of all proposed dimensions of trust of technology. Trust of technology is a significant determinant of intention to use e-voting. Trust of technology also indirectly influences intentions to use e-voting through perceived risks.",
+    "doi": "10.1177/0266666920902819",
+    "source": "semanticscholar",
+    "source_id": "55aa76f7b1da8810b0b5036a868931d56eab080c",
+    "retrieved_at": "2026-01-26T16:13:49.426142Z"
+  },
+  {
+    "id": "s2_5058b1241490d6ceded7fca843fedae83fd9044e",
+    "title": "Electronic Voting (E-Voting) in Indonesia: Reflection On E-Voting Practices in Some Countries",
+    "authors": [
+      "E. Fanida",
+      "Darman Manda",
+      "Marthinus Mandagi"
+    ],
+    "year": 2018,
+    "venue": "",
+    "abstract": "Recently, the term e-voting has often been discussed in Indonesia. This is due to the emergence of the discourse on the implementation of the e-voting system in the Indonesian Presidential Election which will be held in 2019. This e-voting option is used as an alternative solution because the hope of the election can be implemented at a cost that is more affordable, faster and practical. However, before giving support or rejecting the idea, it is better to conduct a study related to how the application of e-voting in several countries and what electronic systems are needed in the implementation of elections in Indonesia. Keywords—election, electronic, e-voting, Indonesia, practices",
+    "doi": "10.2991/ICSS-18.2018.34",
+    "source": "semanticscholar",
+    "source_id": "5058b1241490d6ceded7fca843fedae83fd9044e",
+    "retrieved_at": "2026-01-26T16:13:49.426150Z"
+  },
+  {
+    "id": "s2_086bbc565ab411e551f2f9218165f04c7a8e96c0",
+    "title": "KINERJA BADAN PEMBERDAYAAN MASYARAKAT DAN PEMERINTAHAN DESA (BPMPD) DALAM PELAKSANAAN PEMILIHAN KEPALA DESA SERENTAK MELALUI METODE ELECTRONIC VOTING (E-VOTING) DI KABUPATEN BANTAENG PROVINSI SULAWESI SELATAN (Studi Kasus pada Pemilihan Kepala Desa Serentak Gelombang I)",
+    "authors": [
+      "Fernandes Simangunsong",
+      "Taufiq Anshari Rasak"
+    ],
+    "year": 2017,
+    "venue": "Jurnal Ilmu Politik dan Komunikasi",
+    "abstract": "Tujuan penelitian ini untuk mengetahui kinerja BPMPD dalam pemilihan kepala desa serentak melalui metode e-voting, untuk mengetahui faktor pendukung dan penghambat kinerja BPMPD, serta untuk mengetahui upaya dalam mengatasi faktor penghambat yang terjadi. Penelitian ini menggunakan metode penelitian kualitatif eksploratif dengan pendekatan induktif. Sumber data penelitiannya adalah person, place, dan paper. Data dikumpulkan melalui wawancara, observasi dan dokumentasi. Adapun informan yang diwawancarai ialah Sekretaris Daerah Kabupaten Bantaeng, Ketua DPRD Kabupaten Bantaeng, Asisten Daerah I Kabupaten Bantaeng, Ketua Divisi KPUD Kabupaten Bantaeng, Kasubbid Pemdes BPMPD, dan Kepala Desa Rappoa Kabupaten Bantaeng. Sedangkan data dianalisis dengan teknik analisis data, penyajian data, dan penarikan kesimpulan. Berdasarkan hasil penelitian, menunjukkan bahwa kinerja BPMPD dalam pilkades e-voting telah berjalan dengan baik. Setiap indikator pengukuran dari kinerja BPMPD yaitu masukan, keluaran, hasil, manfaat dan dampak telah terpenuhi capaiannya, di samping itu terdapat proses hubungan yang baik dan saling terkait dari indikator awal (masukan) hingga ke indikator akhir (dampak) yang memperlihatkan kualitas kinerja BPMPD sehingga tercipta pencapaian hasil dari pelaksanaan kegiatan tersebut. Walaupun terdapat beberapa hambatan dalam penyelenggaraannya seperti kurangnya kompetensi pegawai, gangguan peralatan dan rendahnya tingkat pendidikan masyarakat, tetapi berbagai upaya telah dilakukan untuk menanggulanginya dan secara umum hambatan-hambatan tersebut tidak mengganggu pencapaian kinerja BPMPD secara keseluruhan.",
+    "doi": "10.34010/jipsi.v6i1.236",
+    "source": "semanticscholar",
+    "source_id": "086bbc565ab411e551f2f9218165f04c7a8e96c0",
+    "retrieved_at": "2026-01-26T16:13:49.426161Z"
+  },
+  {
+    "id": "s2_9507caf687c5229c499cebf0883688cad0e420f0",
+    "title": "Design and development of voting data security for electronic voting (E-Voting)",
+    "authors": [
+      "S. Djanali",
+      "B. Pratomo",
+      "Karsono Puguh Nindyo Cipto",
+      "Astandro Koesriputranto",
+      "Hudan Studiawan"
+    ],
+    "year": 2016,
+    "venue": "International Conference on Information and Communicatiaon Technology",
+    "abstract": null,
+    "doi": null,
+    "source": "semanticscholar",
+    "source_id": "9507caf687c5229c499cebf0883688cad0e420f0",
+    "retrieved_at": "2026-01-26T16:13:49.426172Z"
+  },
+  {
+    "id": "s2_f2cc92b10a0cc6bf8a3f1946cdc20c43e70bf726",
+    "title": "Preparatory Component for Adoption E-Voting",
+    "authors": [
+      "Slamet Risnanto",
+      "Yahaya Abdul Rahim",
+      "N. S. Herman"
+    ],
+    "year": 2019,
+    "venue": "International Conference on Telecommunication Systems, Services, and Applications",
+    "abstract": "General election is a general activity conducted by democratic countries. The process of conventional general election is highly risky, among others resulted in controversy and requires a relatively great amount of cost. There are many countries that try to shift using e-voting technology in general elections. Large democratic countries that were successful in applying e-voting were India and Brazil, and some that were unsuccessful including England and the Netherlands. This study proposes a comprehensive research, assessment and development scheme for the readiness of the implementation of e-voting so that in the future there will be no obstacles and will end successfully",
+    "doi": "10.1109/TSSA48701.2019.8985461",
+    "source": "semanticscholar",
+    "source_id": "f2cc92b10a0cc6bf8a3f1946cdc20c43e70bf726",
+    "retrieved_at": "2026-01-26T16:13:49.426180Z"
+  },
+  {
+    "id": "s2_f209cfd20a45e7380e43dbff3b4f69c30e755e16",
+    "title": "MODEL SISTEM ELECTRONIC VOTING (E-VOTING) BERBASIS WEB DENGAN MENERAPKAN QUICK RESPONSE CODE (QR-CODE) SEBAGAI SISTEM KEAMANAN DALAM PEMILIHAN LEGISLATIF",
+    "authors": [
+      "Andri Sulistyo"
+    ],
+    "year": 2016,
+    "venue": "",
+    "abstract": null,
+    "doi": null,
+    "source": "semanticscholar",
+    "source_id": "f209cfd20a45e7380e43dbff3b4f69c30e755e16",
+    "retrieved_at": "2026-01-26T16:13:49.426188Z"
+  },
+  {
+    "id": "s2_0160497ba630014b8fcf9206d7acbdb4c748a18b",
+    "title": "Supervised Public Network Direct Recording Electronic Voting (PNDRE Voting) on Existing Global System for Mobile Communication Infrastructure; a Panacea for Cheap E-voting System Implementation in Nigeria",
+    "authors": [
+      "Nwogu Emeka",
+      "Onwuachu Uzochukwu"
+    ],
+    "year": 2016,
+    "venue": "",
+    "abstract": null,
+    "doi": "10.20431/2349-4859.0302004",
+    "source": "semanticscholar",
+    "source_id": "0160497ba630014b8fcf9206d7acbdb4c748a18b",
+    "retrieved_at": "2026-01-26T16:13:49.426196Z"
+  },
+  {
+    "id": "s2_c62b9222efc5da03643059bd1d7c457741624c4e",
+    "title": "Technology Criteria Analysis and E-Voting Adoption Factors in the 2019 Indonesian Presidential Election",
+    "authors": [
+      "Hillary Goretta",
+      "B. Purwandari",
+      "Larastri Kumaralalita",
+      "O. Anggoro"
+    ],
+    "year": 2018,
+    "venue": "International Conference on Advanced Computer Science and Information System",
+    "abstract": "As the fourth populous country in the world, presidential and vice-presidential election is a huge nationwide event held every five years in Indonesia. The current method used in the election in Indonesia is voting held by the General Elections Commission (KPU). Issues related to the utilization of e-voting in the election is being discussed even had predicted would be implemented in the election for president and vice president in 2014 ago. This research will identify the factors that influence the adoption of e-voting technology in Indonesia as well as the criteria and sub criteria of these technologies in the presidential and vicepresidential election 2019. The method is used to determine the criteria and sub criteria likewise weighting of criteria and sub criteria using likert scale and Analytical Hierarchy Process (AHP). Moreover, to identify the factor, this study uses interviews and thematic analysis. This research contributes to establish the criteria and sub criteria for e-voting technology and the weight of each criteria and sub-criteria. In addition, this study also identifies factors influencing the adoption of e-voting technology in Indonesia by employing the Diffusion of Innovation (DoI) theory. The result of this study shows that security criteria has highest weight to determine e-voting technology, and this study successfully proves the importance of attributes of relative advantage, complexity and compatibility in the process of dissemination and adoption of e-voting technology in Indonesia",
+    "doi": "10.1109/ICACSIS.2018.8618215",
+    "source": "semanticscholar",
+    "source_id": "c62b9222efc5da03643059bd1d7c457741624c4e",
+    "retrieved_at": "2026-01-26T16:13:49.426205Z"
+  },
+  {
+    "id": "s2_7a5c4dee864aee28e7cdd608b7c58f0ec60f7c10",
+    "title": "Adoption and Use of an Electronic Voting System in Ghana",
+    "authors": [
+      "Isaac Kofi Mensah"
+    ],
+    "year": 2017,
+    "venue": "",
+    "abstract": null,
+    "doi": null,
+    "source": "semanticscholar",
+    "source_id": "7a5c4dee864aee28e7cdd608b7c58f0ec60f7c10",
+    "retrieved_at": "2026-01-26T16:13:49.426212Z"
+  },
+  {
+    "id": "s2_10ffb29676b22ae4fca1a7c4797e01c42d2eaac0",
+    "title": "Factors for e-voting adoption - analysis of general elections in Nigeria",
+    "authors": [
+      "Steve A. Adeshina",
+      "A. Ojo"
+    ],
+    "year": 2017,
+    "venue": "Government Information Quarterly",
+    "abstract": null,
+    "doi": "10.1016/J.GIQ.2017.09.006",
+    "source": "semanticscholar",
+    "source_id": "10ffb29676b22ae4fca1a7c4797e01c42d2eaac0",
+    "retrieved_at": "2026-01-26T16:13:49.426220Z"
+  },
+  {
+    "id": "s2_c7aa9abd6dd85d4509afea18b940e26d7c1c7625",
+    "title": "E-voting adoption in a developing country",
+    "authors": [
+      "M. Alomari"
+    ],
+    "year": 2016,
+    "venue": "",
+    "abstract": null,
+    "doi": "10.1108/TG-11-2015-0046",
+    "source": "semanticscholar",
+    "source_id": "c7aa9abd6dd85d4509afea18b940e26d7c1c7625",
+    "retrieved_at": "2026-01-26T16:13:49.426229Z"
+  },
+  {
+    "id": "s2_53163394dd46cb92d167f968b88350e8f56b0b61",
+    "title": "Beyond Organizational Motives of e-Government Adoption: The Case of e-Voting Initiative in Indonesian Villages",
+    "authors": [
+      "Manik Hapsara",
+      "Ahmed Imran",
+      "Tim Turner"
+    ],
+    "year": 2017,
+    "venue": "",
+    "abstract": null,
+    "doi": "10.1016/J.PROCS.2017.12.166",
+    "source": "semanticscholar",
+    "source_id": "53163394dd46cb92d167f968b88350e8f56b0b61",
+    "retrieved_at": "2026-01-26T16:13:49.426236Z"
+  },
+  {
+    "id": "s2_d0a0c1678968e5b8bce2b3e7bc09c8bf77f37f8e",
+    "title": "Assessing Voters' Attitudes towards Electronic Voting in Latin America: Evidence from Colombia's 2007 E-Voting Pilot",
+    "authors": [
+      "Name R Michael Alvarez",
+      "R. Michael Alvarez",
+      "Gabriel Katz",
+      "R. Llamosa",
+      "Hugo E. Martinez"
+    ],
+    "year": 2009,
+    "venue": "International Conference on E-Voting and Identity",
+    "abstract": null,
+    "doi": "10.1007/978-3-642-04135-8_5",
+    "source": "semanticscholar",
+    "source_id": "d0a0c1678968e5b8bce2b3e7bc09c8bf77f37f8e",
+    "retrieved_at": "2026-01-26T16:13:49.426246Z"
+  },
+  {
+    "id": "s2_2f1115adc86d6682653fd6193396d84830fe2a11",
+    "title": "Digital divide impact on e-voting adoption in middle eastern country",
+    "authors": [
+      "M. Alomari"
+    ],
+    "year": 2016,
+    "venue": "International Conference for Internet Technology and Secured Transactions",
+    "abstract": null,
+    "doi": "10.1109/ICITST.2016.7856741",
+    "source": "semanticscholar",
+    "source_id": "2f1115adc86d6682653fd6193396d84830fe2a11",
+    "retrieved_at": "2026-01-26T16:13:49.426256Z"
+  },
+  {
+    "id": "s2_5b442b7bf77dfe701f9ba85e744323b93d9ede23",
+    "title": "Management of Sustainable, Credible and Integrated Electronic Voting (E-Voting) System For Bangladesh",
+    "authors": [
+      "M. Mesbahuddin Sarker",
+      "M Nazrul Islam"
+    ],
+    "year": 2013,
+    "venue": "",
+    "abstract": "Abstract In this modern age countries worldwide evince a growing interest in electronic voting (e-Voting), which brings the idea of modernizing elections through electronic systems and provides many advantages such as efficiency, disseminating results more quickly, and in a cost-effective way. The paper gives a brief overview on recent developments of electronic voting systems in Bangladesh by using electronic voting machine (EVM) and addresses some strategies and principles in order to improve accessibility, easiness, accuracy, and security of election for better democratic process.",
+    "doi": "10.2478/msd-2013-0003",
+    "source": "semanticscholar",
+    "source_id": "5b442b7bf77dfe701f9ba85e744323b93d9ede23",
+    "retrieved_at": "2026-01-26T16:13:49.426265Z"
+  },
+  {
+    "id": "s2_746a27273a37716992aad10390f8f5902c14918e",
+    "title": "Electronic Democracy in Europe: Prospects and Challenges of E-Publics, E-Participation and E-Voting",
+    "authors": [
+      "R. Lindner",
+      "G. Aichholzer",
+      "L. Hennen"
+    ],
+    "year": 2016,
+    "venue": "",
+    "abstract": null,
+    "doi": null,
+    "source": "semanticscholar",
+    "source_id": "746a27273a37716992aad10390f8f5902c14918e",
+    "retrieved_at": "2026-01-26T16:13:49.426275Z"
+  },
+  {
+    "id": "s2_55e1ada1e9fe68ba26d000f8e7ef18d2ba199586",
+    "title": "Network Forensics Tools in a Mixed-Network Environment and the Adoption of E-Voting System in Developing Countries",
+    "authors": [
+      "Oluranti Jonathan",
+      "F. Olajide",
+      "C. Ayo"
+    ],
+    "year": 2016,
+    "venue": "",
+    "abstract": null,
+    "doi": null,
+    "source": "semanticscholar",
+    "source_id": "55e1ada1e9fe68ba26d000f8e7ef18d2ba199586",
+    "retrieved_at": "2026-01-26T16:13:49.426283Z"
+  },
+  {
+    "id": "s2_c55f3b7702ed1b3fd675b596bdcaad92576d6b95",
+    "title": "Every Vote Counts: Ensuring Integrity in Large-Scale Electronic Voting",
+    "authors": [
+      "F. Hao",
+      "M. N. Kreeger",
+      "B. Randell",
+      "D. Clarke",
+      "S. F. Shahandashti",
+      "Peter Hyun-Jeen Lee"
+    ],
+    "year": 2014,
+    "venue": "Conference on Electronic voting technology/workshop on trustworthy elections",
+    "abstract": null,
+    "doi": null,
+    "source": "semanticscholar",
+    "source_id": "c55f3b7702ed1b3fd675b596bdcaad92576d6b95",
+    "retrieved_at": "2026-01-26T16:13:49.426291Z"
+  },
+  {
+    "id": "s2_d62b470b5f6d8391d614e5e274189da8c00d7c56",
+    "title": "Electronic Voting 2006: 2nd International Workshop, Co-organized by Council of Europe, ESF TED, IFIP WG 8.6 and E-Voting.CC, August, 2nd - 4th, 2006 in Castle Hofen, Bregenz, Austria",
+    "authors": [
+      "R. Krimmer"
+    ],
+    "year": 2006,
+    "venue": "Electronic Voting",
+    "abstract": null,
+    "doi": null,
+    "source": "semanticscholar",
+    "source_id": "d62b470b5f6d8391d614e5e274189da8c00d7c56",
+    "retrieved_at": "2026-01-26T16:13:49.426300Z"
+  },
+  {
+    "id": "s2_6362920149d28d737204edbb9f48e36574ad71f7",
+    "title": "A Systematic Review of Challenges and Opportunities of Blockchain for E-Voting",
+    "authors": [
+      "Ruhi Taş",
+      "Ö. Ö. Tanriöver"
+    ],
+    "year": 2020,
+    "venue": "Symmetry",
+    "abstract": "A blockchain is a distributed, digitized and consensus-based secure information storage mechanism. The present article provides an overview of blockchain based e-voting systems. The primary purpose of this review is to study the up-to-date state of blockchain-based voting research along with associated possible challenges while aiming to forecast future directions. The methodology applied in the review is a systematic review approach. Following an introduction to the basic structure and features of the blockchain in relation to e-voting, we provide a conceptual description of the desired blockchain-based e-voting application. Symmetrical and asymmetrical cryptography improvements play a key role in developing blockchain systems. We have extracted and reviewed 63 research papers from scientific databases that have advised the adoption of the blockchain framework to voting systems. These articles indicate that blockchain-supported voting systems may provide different solutions than traditional e-voting. We classified the main prevailing issues into the five following categories: general, integrity, coin-based, privacy and consensus. As a result of this research, it was determined that blockchain systems can provide solutions to certain problems that prevail in current election systems. On the other hand, privacy protection and transaction speed are most frequently emphasized problems in blockchain applications. Security of remote participation and scalability should be improved for sustainable blockchain based e-voting. It was concluded that frameworks needed enhancements in order to be used in voting systems due to these reservations.",
+    "doi": "10.3390/sym12081328",
+    "source": "semanticscholar",
+    "source_id": "6362920149d28d737204edbb9f48e36574ad71f7",
+    "retrieved_at": "2026-01-26T16:13:49.426308Z"
+  },
+  {
+    "id": "s2_81a632f6e741ef168cee25b8c28a95d754e89a4a",
+    "title": "Assessing the Factors That Could Impact the Adoption of E-Voting Technologies with a South African Context",
+    "authors": [
+      "M. Achieng",
+      "E. Ruhode"
+    ],
+    "year": 2016,
+    "venue": "E-Systems for the 21st Century",
+    "abstract": null,
+    "doi": "10.1201/B19889-18",
+    "source": "semanticscholar",
+    "source_id": "81a632f6e741ef168cee25b8c28a95d754e89a4a",
+    "retrieved_at": "2026-01-26T16:13:49.426316Z"
+  },
+  {
+    "id": "s2_9447a0e6a5cd6b8cad3c1e3e6c6b193bdb2779fd",
+    "title": "Web 2.0 and Elections: A Study of Factors Influencing Diaspora Voters Adoption of E-Voting System",
+    "authors": [
+      "Kinn Abass Bakon",
+      "T. Ward"
+    ],
+    "year": 2015,
+    "venue": "",
+    "abstract": "The ever growing number of Ghanaians living abroad and their contribution to the nation’s GDP has propelled the political debate of their voting rights. After formulating policies to enable them to exercise their franchise during elections, E-Voting/Internet Voting was one of the methods proposed to be used by diaspora Ghanaians to effectively exercise their right to vote. Thisresearch investigates and identifies the main determinants of E-Voting Adoption by eligible voters living ab road. A sample of 71 respondents from Malaysia, Singapore and USA has been used to collect the data. Regression and correlation analysis was conducted using SPSS 20. Regression beta coefficient and correlation coefficients were generated to test the hypotheses and to ascertain the effect of Information &amp; Communication Technology, Political and Socio-demographical factors on adopting E-Voting System. The result shows strong linear relationship between some of the factors and E-Voting Adoption.<br>",
+    "doi": "10.24924/IJISE/2015.11/V3.ISS1/01.10",
+    "source": "semanticscholar",
+    "source_id": "9447a0e6a5cd6b8cad3c1e3e6c6b193bdb2779fd",
+    "retrieved_at": "2026-01-26T16:13:49.426324Z"
+  }
+]

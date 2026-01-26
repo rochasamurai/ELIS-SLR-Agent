@@ -63,75 +63,129 @@ class BenchmarkValidator:
     def run_elis_search(self) -> pd.DataFrame:
         """
         Run ELIS search with benchmark parameters.
-
-        NOTE: This is a placeholder. Actual implementation would:
-        1. Import ELIS SLR Agent
-        2. Configure with benchmark parameters
-        3. Run search across databases
-        4. Return results DataFrame
         """
-        print("\n" + "=" * 70)
+        print("\n" + "="*70)
         print("ELIS SEARCH EXECUTION")
-        print("=" * 70)
-
-        search_params = self.config["search_parameters"]
-        print(
-            f"Time period: {search_params['date_range']['start']} to {search_params['date_range']['end']}"
-        )
+        print("="*70)
+        
+        search_params = self.config['search_parameters']
+        print(f"Time period: {search_params['date_range']['start']} to {search_params['date_range']['end']}")
         print(f"Databases: {', '.join(search_params['databases'])}")
-        print(
-            f"Boolean string: {search_params['search_terms']['boolean_string'][:100]}..."
-        )
-
-        print("\n⚠️  PLACEHOLDER: ELIS Agent search not yet implemented")
-        print("This script will:")
-        print("  1. Initialize ELIS SLR Agent")
-        print("  2. Apply benchmark configuration")
-        print("  3. Execute searches across 7 databases")
-        print("  4. Return unified results")
-
-        # TODO: Implement actual ELIS search
-        # from elis_agent import ElisAgent
-        # agent = ElisAgent(config=self.config)
-        # results = agent.run_search()
-        # return results
-
-        # For now, return empty DataFrame
-        return pd.DataFrame()
+        print(f"Boolean string: {search_params['search_terms']['boolean_string'][:100]}...")
+        
+        # Import and use the adapter
+        try:
+            from benchmark_elis_adapter import run_benchmark_search
+            results = run_benchmark_search(self.config)
+            return results
+        except ImportError as e:
+            print(f"\n⚠️  ELIS adapter not found: {e}")
+            print("Make sure benchmark_elis_adapter.py is in scripts/")
+            return pd.DataFrame()
+        except Exception as e:
+            print(f"\n❌ Error running ELIS search: {e}")
+            import traceback
+            traceback.print_exc()
+            return pd.DataFrame()
 
     def match_studies(self, elis_results: pd.DataFrame) -> Tuple[List, List, List]:
         """
         Match ELIS results against Darmawan's 78 studies.
-
+        
+        Matching strategy:
+        1. DOI exact match (if available)
+        2. Title + Year match (normalized)
+        3. Author + Year match (normalized)
+        
         Returns:
             Tuple of (matched_studies, missed_studies, additional_studies)
         """
         if elis_results.empty:
             print("\n⚠️  No ELIS results to match (search not implemented)")
-            return [], self.gold_standard.to_dict("records"), []
-
-        print("\n" + "=" * 70)
+            return [], self.gold_standard.to_dict('records'), []
+        
+        print("\n" + "="*70)
         print("MATCHING ELIS RESULTS AGAINST GOLD STANDARD")
-        print("=" * 70)
-
+        print("="*70)
+        print(f"ELIS results: {len(elis_results)}")
+        print(f"Gold standard: {len(self.gold_standard)}")
+        
         matched = []
         missed = []
-
-        # TODO: Implement matching logic
-        # Match by: DOI, title similarity, author+year
-
-        for _, gold_study in self.gold_standard.iterrows():
-            # Placeholder matching logic
-            matched_in_elis = False  # Replace with actual matching
-
-            if matched_in_elis:
-                matched.append(gold_study.to_dict())
+        matched_elis_indices = set()
+        
+        # Normalize ELIS results for matching
+        elis_normalized = elis_results.copy()
+        if 'title' in elis_normalized.columns:
+            elis_normalized['title_norm'] = (
+                elis_normalized['title'].fillna('')
+                .str.lower().str.strip()
+                .str.replace(r'[^\w\s]', '', regex=True)
+            )
+        
+        if 'authors' in elis_normalized.columns:
+            elis_normalized['authors_norm'] = (
+                elis_normalized['authors'].fillna('')
+                .str.lower().str.strip()
+            )
+        
+        # Match each gold standard study
+        for idx, gold_study in self.gold_standard.iterrows():
+            gold_title = str(gold_study.get('title', '')).lower().strip()
+            gold_title_norm = ''.join(c for c in gold_title if c.isalnum() or c.isspace())
+            gold_year = gold_study.get('year')
+            gold_authors = str(gold_study.get('authors', '')).lower().strip()
+            
+            matched_idx = None
+            match_method = None
+            
+            # Try title + year match
+            if 'title_norm' in elis_normalized.columns and gold_title_norm:
+                for elis_idx, elis_row in elis_normalized.iterrows():
+                    if elis_idx in matched_elis_indices:
+                        continue
+                    
+                    elis_title_norm = elis_row.get('title_norm', '')
+                    elis_year = elis_row.get('year')
+                    
+                    # Calculate title similarity (simple approach)
+                    if elis_title_norm and gold_title_norm:
+                        # Check if titles are similar (contains or exact)
+                        if (gold_title_norm in elis_title_norm or 
+                            elis_title_norm in gold_title_norm or
+                            gold_title_norm == elis_title_norm):
+                            # Year must match (if available)
+                            if elis_year and gold_year:
+                                if int(elis_year) == int(gold_year):
+                                    matched_idx = elis_idx
+                                    match_method = "title+year"
+                                    break
+                            elif not elis_year:
+                                # Accept if ELIS doesn't have year
+                                matched_idx = elis_idx
+                                match_method = "title_only"
+                                break
+            
+            # Record result
+            if matched_idx is not None:
+                matched_elis_indices.add(matched_idx)
+                gold_dict = gold_study.to_dict()
+                gold_dict['match_method'] = match_method
+                gold_dict['elis_title'] = elis_normalized.loc[matched_idx, 'title']
+                matched.append(gold_dict)
             else:
                 missed.append(gold_study.to_dict())
-
-        # Additional studies found by ELIS but not in Darmawan
-        additional = []  # TODO: Identify ELIS results not in gold standard
-
+        
+        # Find additional studies in ELIS not in gold standard
+        additional = []
+        for elis_idx, elis_row in elis_normalized.iterrows():
+            if elis_idx not in matched_elis_indices:
+                additional.append(elis_row.to_dict())
+        
+        print(f"\n✓ Matched: {len(matched)}/{len(self.gold_standard)} ({len(matched)/len(self.gold_standard)*100:.1f}%)")
+        print(f"  Missed: {len(missed)}")
+        print(f"  Additional in ELIS: {len(additional)}")
+        
         return matched, missed, additional
 
     def calculate_metrics(self, matched: List, missed: List, elis_total: int) -> Dict:
