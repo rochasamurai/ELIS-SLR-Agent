@@ -1,0 +1,25 @@
+global:
+  job_result_cap: 0
+  languages:
+  - en
+  max_results_per_source: 500
+  year_from: 2005
+  year_to: 2020
+topics:
+- description: E-voting adoption benchmark (Darmawan 2021)
+  enabled: true
+  id: benchmark_darmawan_2021
+  include_preprints: false
+  queries:
+  - "(\"e-voting\" OR \"electronic voting\" OR \"internet voting\" OR \n \"online\
+    \ voting\" OR \"i-voting\" OR \"remote voting\")\nAND (\"adoption\" OR \"implementation\"\
+    \ OR \"deployment\" OR \"acceptance\" \n OR \"intention to use\" OR \"diffusion\"\
+    )\nAND (\"election\" OR \"voting\" OR \"electoral\" OR \"ballot\")\n"
+  sources:
+  - scopus
+  - web_of_science
+  - semantic_scholar
+  - openalex
+  - crossref
+  - ieee_xplore
+  - core
