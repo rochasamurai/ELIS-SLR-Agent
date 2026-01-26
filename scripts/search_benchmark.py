@@ -3,7 +3,7 @@
 Benchmark Search Script
 
 Executes searches specifically for Darmawan (2021) benchmark validation.
-Uses free APIs (Semantic Scholar, OpenAlex, arXiv) to avoid API key requirements.
+Uses all available ELIS database harvesters.
 
 Author: Carlos Rocha
 Date: 2026-01-26
@@ -12,28 +12,27 @@ Date: 2026-01-26
 import sys
 import json
 import yaml
-import requests
 import time
 from pathlib import Path
 from datetime import datetime
 from typing import List, Dict
 
-# Define PROJECT_ROOT first
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
-
-# Now import ELIS harvest functions
 sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
-from semanticscholar_harvest import search_semantic_scholar
-from openalex_harvest import search_openalex
-from core_harvest import search_core
-from crossref_harvest import search_crossref
-from scopus_harvest import search_scopus
-from wos_harvest import search_wos
-from ieee_harvest import search_ieee
+
+# Import ELIS harvest functions
+from semanticscholar_harvest import semanticscholar_search, transform_semanticscholar_entry
+from openalex_harvest import openalex_search, transform_openalex_entry
+from core_harvest import core_search, transform_core_entry
+from crossref_harvest import crossref_search, transform_crossref_entry
+from scopus_harvest import scopus_search, transform_scopus_entry
+from wos_harvest import wos_search, transform_wos_entry
+from ieee_harvest import ieee_search, transform_ieee_entry
+
 
 class BenchmarkSearcher:
-    """Execute benchmark searches using free academic APIs."""
+    """Execute benchmark searches using all ELIS database APIs."""
     
     def __init__(self, config_path: str):
         """Initialize with benchmark configuration."""
@@ -52,102 +51,109 @@ class BenchmarkSearcher:
             return topics[0]['queries'][0]
         return ""
     
-    def search_semantic_scholar(self) -> List[Dict]:
-        """Search Semantic Scholar (free API)."""
+    def search_all_databases(self) -> List[Dict]:
+        """Search all available databases."""
+        all_results = []
+        
+        # Semantic Scholar
         print("\n🔍 Searching Semantic Scholar...")
-        
-        url = "https://api.semanticscholar.org/graph/v1/paper/search"
-        
-        # Simplify query for S2
-        simple_query = 'e-voting OR "electronic voting" adoption'
-        
-        params = {
-            'query': simple_query,
-            'year': f'{self.year_from}-{self.year_to}',
-            'fields': 'title,authors,year,venue,abstract,publicationDate,externalIds',
-            'limit': 100
-        }
-        
-        headers = {'User-Agent': 'ELIS-Benchmark/1.0 (research)'}
-        
         try:
-            response = requests.get(url, params=params, headers=headers, timeout=30)
-            response.raise_for_status()
-            data = response.json()
-            
-            papers = data.get('data', [])
-            print(f"  Found {len(papers)} results")
-            
-            # Normalize to ELIS format
-            normalized = []
-            for paper in papers:
-                normalized.append({
-                    'id': f"s2_{paper.get('paperId', 'unknown')}",
-                    'title': paper.get('title', ''),
-                    'authors': [a.get('name', '') for a in paper.get('authors', [])],
-                    'year': paper.get('year'),
-                    'venue': paper.get('venue', ''),
-                    'abstract': paper.get('abstract', ''),
-                    'doi': paper.get('externalIds', {}).get('DOI'),
-                    'source': 'semanticscholar',
-                    'source_id': paper.get('paperId'),
-                    'retrieved_at': datetime.utcnow().isoformat() + 'Z'
-                })
-            
-            return normalized
-            
+            simple_query = 'e-voting OR "electronic voting" adoption'
+            results = semanticscholar_search(simple_query, limit=100, max_results=200)
+            normalized = [self._normalize_entry(transform_semanticscholar_entry(r), 'semanticscholar') for r in results]
+            print(f"  Found {len(normalized)} results")
+            all_results.extend(normalized)
         except Exception as e:
-            print(f"  ⚠️ Semantic Scholar error: {e}")
-            return []
-    
-    def search_openalex(self) -> List[Dict]:
-        """Search OpenAlex (free API)."""
+            print(f"  ⚠️ Error: {e}")
+        time.sleep(1)
+        
+        # OpenAlex
         print("\n🔍 Searching OpenAlex...")
-        
-        url = "https://api.openalex.org/works"
-        
-        # Build OpenAlex query
-        query = 'e-voting OR electronic voting'
-        
-        params = {
-            'search': query,
-            'filter': f'publication_year:{self.year_from}-{self.year_to}',
-            'per_page': 100,
-            'mailto': 'elis-benchmark@research.org'  # Polite pool
-        }
-        
         try:
-            response = requests.get(url, params=params, timeout=30)
-            response.raise_for_status()
-            data = response.json()
-            
-            works = data.get('results', [])
-            print(f"  Found {len(works)} results")
-            
-            # Normalize to ELIS format
-            normalized = []
-            for work in works:
-                authors = [a.get('author', {}).get('display_name', '') 
-                          for a in work.get('authorships', [])]
-                
-                normalized.append({
-                    'id': f"openalex_{work.get('id', '').split('/')[-1]}",
-                    'title': work.get('title', ''),
-                    'authors': authors,
-                    'year': work.get('publication_year'),
-                    'venue': work.get('primary_location', {}).get('source', {}).get('display_name', ''),
-                    'abstract': work.get('abstract', ''),
-                    'doi': work.get('doi', '').replace('https://doi.org/', '') if work.get('doi') else None,
-                    'source': 'openalex',
-                    'source_id': work.get('id'),
-                    'retrieved_at': datetime.utcnow().isoformat() + 'Z'
-                })
-            
-            return normalized
-            
+            query = 'e-voting OR electronic voting'
+            results = openalex_search(query, per_page=100, max_results=200)
+            normalized = [self._normalize_entry(transform_openalex_entry(r), 'openalex') for r in results]
+            print(f"  Found {len(normalized)} results")
+            all_results.extend(normalized)
         except Exception as e:
-            print(f"  ⚠️ OpenAlex error: {e}")
-            return []
+            print(f"  ⚠️ Error: {e}")
+        time.sleep(1)
+        
+        # CORE
+        print("\n🔍 Searching CORE...")
+        try:
+            query = 'e-voting OR "electronic voting" adoption'
+            results = core_search(query, limit=100, max_results=200)
+            normalized = [self._normalize_entry(transform_core_entry(r), 'core') for r in results]
+            print(f"  Found {len(normalized)} results")
+            all_results.extend(normalized)
+        except Exception as e:
+            print(f"  ⚠️ Error: {e}")
+        time.sleep(1)
+        
+        # CrossRef
+        print("\n🔍 Searching CrossRef...")
+        try:
+            query = 'e-voting electronic voting adoption'
+            results = crossref_search(query, rows=100, max_results=200)
+            normalized = [self._normalize_entry(transform_crossref_entry(r), 'crossref') for r in results]
+            print(f"  Found {len(normalized)} results")
+            all_results.extend(normalized)
+        except Exception as e:
+            print(f"  ⚠️ Error: {e}")
+        time.sleep(1)
+        
+        # Scopus (requires API key)
+        print("\n🔍 Searching Scopus...")
+        try:
+            query = 'e-voting OR "electronic voting" AND adoption'
+            results = scopus_search(query, count=25, max_results=200)
+            normalized = [self._normalize_entry(transform_scopus_entry(r), 'scopus') for r in results]
+            print(f"  Found {len(normalized)} results")
+            all_results.extend(normalized)
+        except Exception as e:
+            print(f"  ⚠️ Scopus error (may need API key): {e}")
+        time.sleep(1)
+        
+        # Web of Science (requires API key)
+        print("\n🔍 Searching Web of Science...")
+        try:
+            query = 'e-voting OR "electronic voting" AND adoption'
+            results = wos_search(query, limit=50, max_results=200)
+            normalized = [self._normalize_entry(transform_wos_entry(r), 'wos') for r in results]
+            print(f"  Found {len(normalized)} results")
+            all_results.extend(normalized)
+        except Exception as e:
+            print(f"  ⚠️ WoS error (may need API key): {e}")
+        time.sleep(1)
+        
+        # IEEE (requires API key)
+        print("\n🔍 Searching IEEE Xplore...")
+        try:
+            query = '("e-voting" OR "electronic voting") AND adoption'
+            results = ieee_search(query, max_records=200)
+            normalized = [self._normalize_entry(transform_ieee_entry(r), 'ieee') for r in results]
+            print(f"  Found {len(normalized)} results")
+            all_results.extend(normalized)
+        except Exception as e:
+            print(f"  ⚠️ IEEE error (may need API key): {e}")
+        
+        return all_results
+    
+    def _normalize_entry(self, entry: Dict, source: str) -> Dict:
+        """Normalize entry to standard format."""
+        return {
+            'id': f"{source}_{entry.get('id', 'unknown')}",
+            'title': entry.get('title', ''),
+            'authors': entry.get('authors', []),
+            'year': entry.get('year'),
+            'venue': entry.get('venue', ''),
+            'abstract': entry.get('abstract', ''),
+            'doi': entry.get('doi'),
+            'source': source,
+            'source_id': entry.get('source_id', entry.get('id')),
+            'retrieved_at': datetime.utcnow().isoformat() + 'Z'
+        }
     
     def deduplicate(self, results: List[Dict]) -> List[Dict]:
         """Remove duplicates by DOI and title."""
@@ -176,77 +182,18 @@ class BenchmarkSearcher:
             unique.append(item)
         
         return unique
-
+    
     def run(self) -> List[Dict]:
         """Execute all searches and return deduplicated results."""
         print("="*70)
-        print("BENCHMARK SEARCH EXECUTION")
+        print("BENCHMARK SEARCH EXECUTION - ALL DATABASES")
         print("="*70)
         print(f"Query: {self.query[:100]}...")
         print(f"Period: {self.year_from}-{self.year_to}")
         print("="*70)
         
-        all_results = []
-        
-        # Free APIs (no keys required)
-        print("\n📚 FREE APIs:")
-        all_results.extend(self.search_semantic_scholar())
-        time.sleep(1)
-        
-        all_results.extend(self.search_openalex())
-        time.sleep(1)
-        
-        # Add CORE
-        print("\n🔍 Searching CORE...")
-        try:
-            core_results = search_core(self.query, self.year_from, self.year_to)
-            print(f"  Found {len(core_results)} results")
-            all_results.extend(core_results)
-        except Exception as e:
-            print(f"  ⚠️ CORE error: {e}")
-        time.sleep(1)
-        
-        # Add CrossRef
-        print("\n🔍 Searching CrossRef...")
-        try:
-            crossref_results = search_crossref(self.query, self.year_from, self.year_to)
-            print(f"  Found {len(crossref_results)} results")
-            all_results.extend(crossref_results)
-        except Exception as e:
-            print(f"  ⚠️ CrossRef error: {e}")
-        time.sleep(1)
-        
-        # Paid APIs (require keys from GitHub secrets)
-        print("\n🔐 PAID APIs (require keys):")
-        
-        # Scopus
-        print("\n🔍 Searching Scopus...")
-        try:
-            scopus_results = search_scopus(self.query, self.year_from, self.year_to)
-            print(f"  Found {len(scopus_results)} results")
-            all_results.extend(scopus_results)
-        except Exception as e:
-            print(f"  ⚠️ Scopus error (may need API key): {e}")
-        time.sleep(1)
-        
-        # Web of Science
-        print("\n🔍 Searching Web of Science...")
-        try:
-            wos_results = search_wos(self.query, self.year_from, self.year_to)
-            print(f"  Found {len(wos_results)} results")
-            all_results.extend(wos_results)
-        except Exception as e:
-            print(f"  ⚠️ WoS error (may need API key): {e}")
-        time.sleep(1)
-        
-        # IEEE
-        print("\n🔍 Searching IEEE Xplore...")
-        try:
-            ieee_results = search_ieee(self.query, self.year_from, self.year_to)
-            print(f"  Found {len(ieee_results)} results")
-            all_results.extend(ieee_results)
-        except Exception as e:
-            print(f"  ⚠️ IEEE error (may need API key): {e}")
+        # Search all databases
+        all_results = self.search_all_databases()
         
         # Deduplicate
         unique_results = self.deduplicate(all_results)
@@ -254,8 +201,8 @@ class BenchmarkSearcher:
         print(f"\n✓ Total results: {len(all_results)}")
         print(f"✓ After deduplication: {len(unique_results)}")
         
-        return unique_results    
-
+        return unique_results
+    
     def save(self, results: List[Dict], output_path: str):
         """Save results in ELIS format."""
         output = Path(output_path)
@@ -269,7 +216,7 @@ class BenchmarkSearcher:
                 'retrieved_at': datetime.utcnow().isoformat() + 'Z',
                 'query': self.query,
                 'year_range': f'{self.year_from}-{self.year_to}',
-                'sources': ['semanticscholar', 'openalex'],
+                'sources': ['semanticscholar', 'openalex', 'core', 'crossref', 'scopus', 'wos', 'ieee'],
                 'record_count': len(results)
             }
         ]
@@ -301,3 +248,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+    
