@@ -58,6 +58,8 @@ validation_targets:
   sample_test_minimum: 0.75
 
 output:
-  results_file: "data/benchmark/benchmark_results.csv"
+  results_file: "data/benchmark/benchmark_results.json"
   report_file: "docs/BENCHMARK_VALIDATION_REPORT.md"
-  
+  matched_studies: "data/benchmark/matched_studies.json"
+  missed_studies: "data/benchmark/missed_studies.json"
+  additional_studies: "data/benchmark/additional_studies.json"

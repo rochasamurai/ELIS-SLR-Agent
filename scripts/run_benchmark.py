@@ -312,16 +312,16 @@ ELIS retrieved only **{metrics['retrieval_rate_percent']}%** of Darmawan's studi
         
         # Save matched studies
         if matched:
-            matched_df = pd.DataFrame(matched)
-            matched_file = output_dir / "matched_studies.csv"
-            matched_df.to_csv(matched_file, index=False)
+            matched_file = output_dir / "matched_studies.json"
+            with open(matched_file, 'w', encoding='utf-8') as f:
+                json.dump(matched, f, indent=2)
             print(f"✓ Saved matched studies: {matched_file}")
         
         # Save missed studies
         if missed:
-            missed_df = pd.DataFrame(missed)
-            missed_file = output_dir / "missed_studies.csv"
-            missed_df.to_csv(missed_file, index=False)
+            missed_file = output_dir / "missed_studies.json"
+            with open(missed_file, 'w', encoding='utf-8') as f:
+                json.dump(missed, f, indent=2)
             print(f"✓ Saved missed studies: {missed_file}")
         
         # Save report
@@ -384,4 +384,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-    
