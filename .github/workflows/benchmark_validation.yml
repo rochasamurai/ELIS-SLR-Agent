@@ -1,0 +1,73 @@
+name: Benchmark Validation - Darmawan 2021
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_description:
+        description: 'Description of this benchmark run'
+        required: false
+        default: 'Manual benchmark validation'
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout benchmark branch
+        uses: actions/checkout@v4
+        with:
+          ref: benchmark/darmawan-2021
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pandas pyyaml
+      
+      - name: Check existing ELIS results
+        run: |
+          echo "Using existing ELIS results from json_jsonl/"
+          ls -la json_jsonl/ || echo "No json_jsonl directory found"
+          if [ -f "json_jsonl/ELIS_Appendix_A_Search_rows.json" ]; then
+            echo "Found ELIS results file"
+            head -n 5 json_jsonl/ELIS_Appendix_A_Search_rows.json
+          else
+            echo "No ELIS results file found"
+          fi
+      
+      - name: Run benchmark validation
+        run: |
+          python scripts/run_benchmark.py
+      
+      - name: Upload validation report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: benchmark-validation-report
+          path: |
+            docs/BENCHMARK_VALIDATION_REPORT.md
+            data/benchmark/*.json
+      
+      - name: Display results summary
+        if: always()
+        run: |
+          echo "## Benchmark Validation Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -f "docs/BENCHMARK_VALIDATION_REPORT.md" ]; then
+            cat docs/BENCHMARK_VALIDATION_REPORT.md >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Report file not generated" >> $GITHUB_STEP_SUMMARY
+          fi
+      
+      - name: Show metrics
+        if: always()
+        run: |
+          if [ -f "data/benchmark/benchmark_results.json" ]; then
+            echo "Benchmark metrics:"
+            cat data/benchmark/benchmark_results.json
+          fi
+          
