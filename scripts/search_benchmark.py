@@ -29,7 +29,7 @@ from crossref_harvest import crossref_search, transform_crossref_entry
 from scopus_harvest import scopus_search, transform_scopus_entry
 from wos_harvest import wos_search, transform_wos_entry
 from ieee_harvest import ieee_search, transform_ieee_entry
-
+from google_scholar_harvest import google_scholar_search, transform_google_scholar_entry
 
 class BenchmarkSearcher:
     """Execute benchmark searches using all ELIS database APIs."""
@@ -136,10 +136,23 @@ class BenchmarkSearcher:
             print(f"  Found {len(normalized)} results")
             all_results.extend(normalized)
         except Exception as e:
-            print(f"  ⚠️ IEEE error (may need API key): {e}")
+            print(f"  ⚠️ IEEE error (may need API key): {e}")   
+
+        # Google Scholar (via Apify)
+        print("\n🎓 Searching Google Scholar (via Apify)...")
+        try:
+            query_simple = 'e-voting OR "electronic voting" adoption'
+            results = google_scholar_search(query_simple, max_items=200, 
+                                          newer_than=self.year_from, 
+                                          older_than=self.year_to)
+            normalized = [self._normalize_entry(transform_google_scholar_entry(r), 'google_scholar') for r in results]
+            print(f"  Found {len(normalized)} results")
+            all_results.extend(normalized)
+        except Exception as e:
+            print(f"  ⚠️ Google Scholar error: {e}")
         
         return all_results
-    
+        
     def _normalize_entry(self, entry: Dict, source: str) -> Dict:
         """Normalize entry to standard format."""
         return {
@@ -216,7 +229,7 @@ class BenchmarkSearcher:
                 'retrieved_at': datetime.utcnow().isoformat() + 'Z',
                 'query': self.query,
                 'year_range': f'{self.year_from}-{self.year_to}',
-                'sources': ['semanticscholar', 'openalex', 'core', 'crossref', 'scopus', 'wos', 'ieee'],
+                'sources': ['semanticscholar', 'openalex', 'core', 'crossref', 'scopus', 'wos', 'ieee', 'google_scholar'],
                 'record_count': len(results)
             }
         ]
