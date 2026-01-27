@@ -55,17 +55,17 @@ class BenchmarkSearcher:
         """Search all available databases."""
         all_results = []
         
-        # Semantic Scholar
+        # Semantic Scholar (1 req/sec rate limit!)
         print("\n🔍 Searching Semantic Scholar...")
         try:
             simple_query = 'e-voting OR "electronic voting" adoption'
-            results = semanticscholar_search(simple_query, limit=100, max_results=200)
+            results = semanticscholar_search(simple_query, limit=100, max_results=100)  # Reduced from 200
             normalized = [self._normalize_entry(transform_semanticscholar_entry(r), 'semanticscholar') for r in results]
             print(f"  Found {len(normalized)} results")
             all_results.extend(normalized)
         except Exception as e:
-            print(f"  ⚠️ Error: {e}")
-        time.sleep(1)
+            print(f"  ⚠️ Semantic Scholar error: {e}")
+        time.sleep(2)  # Increased from 1 to 2 seconds to respect rate limit
         
         # OpenAlex
         print("\n🔍 Searching OpenAlex...")
@@ -118,7 +118,8 @@ class BenchmarkSearcher:
         # Web of Science (requires API key)
         print("\n🔍 Searching Web of Science...")
         try:
-            query = 'e-voting OR "electronic voting" AND adoption'
+            # WoS uses different syntax - simple keyword search
+            query = 'e-voting electronic voting adoption'
             results = wos_search(query, limit=50, max_results=200)
             normalized = [self._normalize_entry(transform_wos_entry(r), 'wos') for r in results]
             print(f"  Found {len(normalized)} results")
