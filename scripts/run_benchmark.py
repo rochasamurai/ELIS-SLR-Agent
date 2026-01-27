@@ -156,12 +156,16 @@ class BenchmarkValidator:
                             gold_title_norm == elis_title_norm):
                             # Year must match (if available)
                             if elis_year and gold_year:
-                                if int(elis_year) == int(gold_year):
-                                    matched_idx = elis_idx
-                                    match_method = "title+year"
-                                    break
-                            elif not elis_year:
-                                # Accept if ELIS doesn't have year
+                                try:
+                                    if int(elis_year) == int(gold_year):
+                                        matched_idx = elis_idx
+                                        match_method = "title+year"
+                                        break
+                                except (ValueError, TypeError):
+                                    # Year conversion failed, skip this match
+                                    continue
+                            elif not elis_year and gold_year:
+                                # Accept title match even without year from ELIS
                                 matched_idx = elis_idx
                                 match_method = "title_only"
                                 break
