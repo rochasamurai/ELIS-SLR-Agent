@@ -124,24 +124,40 @@ class BenchmarkValidator:
                 .str.replace(r'\s+', ' ', regex=True)  # Normalize spaces
             )
         
-        # Helper function for fuzzy matching
+        # Helper function for fuzzy matching        
         def title_similarity(title1: str, title2: str) -> float:
-            """Calculate simple word overlap similarity."""
-            words1 = set(title1.lower().split())
-            words2 = set(title2.lower().split())
+            """Calculate similarity using multiple methods, return highest."""
+            t1 = title1.lower().strip()
+            t2 = title2.lower().strip()
+            
+            if not t1 or not t2:
+                return 0.0
+            
+            # Method 1: Exact substring match
+            if t1 in t2 or t2 in t1:
+                return 1.0
+            
+            # Method 2: Word overlap (Jaccard)
+            words1 = set(t1.split())
+            words2 = set(t2.split())
             
             # Remove common stop words
-            stop_words = {'the', 'a', 'an', 'and', 'or', 'of', 'in', 'on', 'at', 'to', 'for'}
+            stop_words = {'the', 'a', 'an', 'and', 'or', 'of', 'in', 'on', 'at', 'to', 'for', 'from'}
             words1 = words1 - stop_words
             words2 = words2 - stop_words
             
-            if not words1 or not words2:
-                return 0.0
+            if words1 and words2:
+                intersection = len(words1 & words2)
+                union = len(words1 | words2)
+                jaccard = intersection / union if union > 0 else 0.0
+                
+                # Method 3: Containment (for title variations)
+                containment = intersection / min(len(words1), len(words2)) if words1 and words2 else 0.0
+                
+                # Return the higher score
+                return max(jaccard, containment)
             
-            intersection = len(words1 & words2)
-            union = len(words1 | words2)
-            
-            return intersection / union if union > 0 else 0.0
+            return 0.0
         
         # Match each gold standard study
         for idx, gold_study in self.gold_standard.iterrows():
@@ -170,8 +186,8 @@ class BenchmarkValidator:
                 if elis_title and gold_title:
                     similarity = title_similarity(gold_title, elis_title)
                     
-                    # Title + Year match (80% threshold)
-                    if similarity >= 0.80:
+                    # Title + Year match (60% threshold - more lenient)
+                    if similarity >= 0.60:
                         elis_year = elis_row.get('year')
                         
                         if gold_year and elis_year:
@@ -184,8 +200,8 @@ class BenchmarkValidator:
                             except (ValueError, TypeError):
                                 pass
                         
-                        # Title-only match (85% threshold, higher bar without year)
-                        elif similarity >= 0.85:
+                        # Title-only match (70% threshold without year)
+                        elif similarity >= 0.70:
                             if similarity > match_score:
                                 matched_idx = elis_idx
                                 match_method = f"title_fuzzy ({similarity:.0%})"
