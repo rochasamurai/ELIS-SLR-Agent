@@ -76,14 +76,44 @@ def google_scholar_search(query: str, max_items: int = 200,
         # 2. POLL FOR COMPLETION
         max_wait = 300  # 5 minutes max
         waited = 0
+        retry_count = 0
+        max_retries = 3
+        
         while waited < max_wait:
             time.sleep(10)  # Check every 10 seconds
             waited += 10
             
             # Check run status
             status_url = f"https://api.apify.com/v2/acts/marco.gullo~google-scholar-scraper/runs/{run_id}"
-            status_resp = requests.get(status_url, params=params, timeout=10)
-            status_resp.raise_for_status()
+            
+            try:
+                status_resp = requests.get(status_url, params=params, timeout=30)
+                status_resp.raise_for_status()
+                
+                # Reset retry count on successful request
+                retry_count = 0
+                
+            except requests.exceptions.HTTPError as e:
+                if e.response and e.response.status_code == 502:
+                    retry_count += 1
+                    print(f"  ⚠️ Apify gateway error (502), retry {retry_count}/{max_retries}...")
+                    if retry_count < max_retries:
+                        time.sleep(5)  # Wait a bit longer before retry
+                        continue
+                    else:
+                        print(f"  ❌ Max retries reached, giving up")
+                        return []
+                else:
+                    print(f"  ❌ HTTP Error: {e}")
+                    return []
+            except requests.exceptions.RequestException as e:
+                print(f"  ⚠️ Request error: {e}")
+                retry_count += 1
+                if retry_count < max_retries:
+                    time.sleep(5)
+                    continue
+                else:
+                    return []
             
             status_data = status_resp.json()
             status = status_data['data']['status']

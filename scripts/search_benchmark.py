@@ -118,9 +118,9 @@ class BenchmarkSearcher:
         # Web of Science (requires API key)
         print("\n🔍 Searching Web of Science...")
         try:
-            # WoS uses different syntax - simple keyword search
-            query = 'e-voting electronic voting adoption'
-            results = wos_search(query, limit=50, max_results=200)
+            # WoS uses tagged query format: TS=(topic search)
+            query = 'TS=(e-voting OR electronic voting) AND TS=(adoption)'
+            results = wos_search(query, limit=50, max_results=200)            
             normalized = [self._normalize_entry(transform_wos_entry(r), 'wos') for r in results]
             print(f"  Found {len(normalized)} results")
             all_results.extend(normalized)
