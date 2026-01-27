@@ -92,10 +92,10 @@ class BenchmarkValidator:
         """
         Match ELIS results against Darmawan's 78 studies.
         
-        Matching strategy:
+        Matching strategy (in order of priority):
         1. DOI exact match (if available)
-        2. Title + Year match (normalized)
-        3. Author + Year match (normalized)
+        2. Title fuzzy match + Year (>=80% similarity)
+        3. Title fuzzy match only (>=85% similarity)
         
         Returns:
             Tuple of (matched_studies, missed_studies, additional_studies)
@@ -120,61 +120,83 @@ class BenchmarkValidator:
             elis_normalized['title_norm'] = (
                 elis_normalized['title'].fillna('')
                 .str.lower().str.strip()
-                .str.replace(r'[^\w\s]', '', regex=True)
+                .str.replace(r'[^\w\s]', ' ', regex=True)  # Keep spaces
+                .str.replace(r'\s+', ' ', regex=True)  # Normalize spaces
             )
         
-        if 'authors' in elis_normalized.columns:
-            elis_normalized['authors_norm'] = (
-                elis_normalized['authors'].fillna('')
-                .str.lower().str.strip()
-            )
+        # Helper function for fuzzy matching
+        def title_similarity(title1: str, title2: str) -> float:
+            """Calculate simple word overlap similarity."""
+            words1 = set(title1.lower().split())
+            words2 = set(title2.lower().split())
+            
+            # Remove common stop words
+            stop_words = {'the', 'a', 'an', 'and', 'or', 'of', 'in', 'on', 'at', 'to', 'for'}
+            words1 = words1 - stop_words
+            words2 = words2 - stop_words
+            
+            if not words1 or not words2:
+                return 0.0
+            
+            intersection = len(words1 & words2)
+            union = len(words1 | words2)
+            
+            return intersection / union if union > 0 else 0.0
         
         # Match each gold standard study
         for idx, gold_study in self.gold_standard.iterrows():
             gold_title = str(gold_study.get('title', '')).lower().strip()
-            gold_title_norm = ''.join(c for c in gold_title if c.isalnum() or c.isspace())
             gold_year = gold_study.get('year')
-            gold_authors = str(gold_study.get('authors', '')).lower().strip()
+            gold_doi = str(gold_study.get('doi', '')).lower().strip()
             
             matched_idx = None
             match_method = None
+            match_score = 0.0
             
-            # Try title + year match
-            if 'title_norm' in elis_normalized.columns and gold_title_norm:
-                for elis_idx, elis_row in elis_normalized.iterrows():
-                    if elis_idx in matched_elis_indices:
-                        continue
+            for elis_idx, elis_row in elis_normalized.iterrows():
+                if elis_idx in matched_elis_indices:
+                    continue
+                
+                # Try DOI match first
+                elis_doi = str(elis_row.get('doi', '')).lower().strip()
+                if gold_doi and elis_doi and gold_doi == elis_doi and gold_doi != 'nan':
+                    matched_idx = elis_idx
+                    match_method = "doi"
+                    match_score = 1.0
+                    break
+                
+                # Try title fuzzy match
+                elis_title = elis_row.get('title_norm', '')
+                if elis_title and gold_title:
+                    similarity = title_similarity(gold_title, elis_title)
                     
-                    elis_title_norm = elis_row.get('title_norm', '')
-                    elis_year = elis_row.get('year')
-                    
-                    # Calculate title similarity (simple approach)
-                    if elis_title_norm and gold_title_norm:
-                        # Check if titles are similar (contains or exact)
-                        if (gold_title_norm in elis_title_norm or 
-                            elis_title_norm in gold_title_norm or
-                            gold_title_norm == elis_title_norm):
-                            # Year must match (if available)
-                            if elis_year and gold_year:
-                                try:
-                                    if int(elis_year) == int(gold_year):
+                    # Title + Year match (80% threshold)
+                    if similarity >= 0.80:
+                        elis_year = elis_row.get('year')
+                        
+                        if gold_year and elis_year:
+                            try:
+                                if int(elis_year) == int(gold_year):
+                                    if similarity > match_score:
                                         matched_idx = elis_idx
-                                        match_method = "title+year"
-                                        break
-                                except (ValueError, TypeError):
-                                    # Year conversion failed, skip this match
-                                    continue
-                            elif not elis_year and gold_year:
-                                # Accept title match even without year from ELIS
+                                        match_method = f"title_fuzzy+year ({similarity:.0%})"
+                                        match_score = similarity
+                            except (ValueError, TypeError):
+                                pass
+                        
+                        # Title-only match (85% threshold, higher bar without year)
+                        elif similarity >= 0.85:
+                            if similarity > match_score:
                                 matched_idx = elis_idx
-                                match_method = "title_only"
-                                break
+                                match_method = f"title_fuzzy ({similarity:.0%})"
+                                match_score = similarity
             
             # Record result
             if matched_idx is not None:
                 matched_elis_indices.add(matched_idx)
                 gold_dict = gold_study.to_dict()
                 gold_dict['match_method'] = match_method
+                gold_dict['match_score'] = match_score
                 gold_dict['elis_title'] = elis_normalized.loc[matched_idx, 'title']
                 matched.append(gold_dict)
             else:
@@ -189,6 +211,15 @@ class BenchmarkValidator:
         print(f"\n✓ Matched: {len(matched)}/{len(self.gold_standard)} ({len(matched)/len(self.gold_standard)*100:.1f}%)")
         print(f"  Missed: {len(missed)}")
         print(f"  Additional in ELIS: {len(additional)}")
+        
+        # Show match method breakdown
+        match_methods = {}
+        for m in matched:
+            method = m.get('match_method', 'unknown')
+            match_methods[method] = match_methods.get(method, 0) + 1
+        print(f"\n  Match methods:")
+        for method, count in sorted(match_methods.items(), key=lambda x: -x[1]):
+            print(f"    {method}: {count}")
         
         return matched, missed, additional
 
