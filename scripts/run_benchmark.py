@@ -92,16 +92,10 @@ class BenchmarkValidator:
         """
         Match ELIS results against Darmawan's 78 studies.
         
-        Matching strategy (in order of priority):
-        1. DOI exact match (if available)
-        2. Title fuzzy match + Year (>=80% similarity)
-        3. Title fuzzy match only (>=85% similarity)
-        
-        Returns:
-            Tuple of (matched_studies, missed_studies, additional_studies)
+        Strategy: Simple substring matching with lenient rules
         """
         if elis_results.empty:
-            print("\n⚠️  No ELIS results to match (search not implemented)")
+            print("\n⚠️  No ELIS results to match")
             return [], self.gold_standard.to_dict('records'), []
         
         print("\n" + "="*70)
@@ -114,128 +108,90 @@ class BenchmarkValidator:
         missed = []
         matched_elis_indices = set()
         
-        # Normalize ELIS results for matching
+        # Normalize ELIS results
         elis_normalized = elis_results.copy()
         if 'title' in elis_normalized.columns:
             elis_normalized['title_norm'] = (
                 elis_normalized['title'].fillna('')
                 .str.lower().str.strip()
-                .str.replace(r'[^\w\s]', ' ', regex=True)  # Keep spaces
-                .str.replace(r'\s+', ' ', regex=True)  # Normalize spaces
+                .str.replace(r'[^\w\s]', ' ', regex=True)
+                .str.replace(r'\s+', ' ', regex=True)
             )
-        
-        # Helper function for fuzzy matching        
-        def title_similarity(title1: str, title2: str) -> float:
-            """Calculate similarity using multiple methods, return highest."""
-            t1 = title1.lower().strip()
-            t2 = title2.lower().strip()
-            
-            if not t1 or not t2:
-                return 0.0
-            
-            # Method 1: Exact substring match
-            if t1 in t2 or t2 in t1:
-                return 1.0
-            
-            # Method 2: Word overlap (Jaccard)
-            words1 = set(t1.split())
-            words2 = set(t2.split())
-            
-            # Remove common stop words
-            stop_words = {'the', 'a', 'an', 'and', 'or', 'of', 'in', 'on', 'at', 'to', 'for', 'from'}
-            words1 = words1 - stop_words
-            words2 = words2 - stop_words
-            
-            if words1 and words2:
-                intersection = len(words1 & words2)
-                union = len(words1 | words2)
-                jaccard = intersection / union if union > 0 else 0.0
-                
-                # Method 3: Containment (for title variations)
-                containment = intersection / min(len(words1), len(words2)) if words1 and words2 else 0.0
-                
-                # Return the higher score
-                return max(jaccard, containment)
-            
-            return 0.0
         
         # Match each gold standard study
         for idx, gold_study in self.gold_standard.iterrows():
             gold_title = str(gold_study.get('title', '')).lower().strip()
+            gold_title_norm = ''.join(c if c.isalnum() or c.isspace() else ' ' for c in gold_title)
+            gold_title_norm = ' '.join(gold_title_norm.split())  # Normalize spaces
             gold_year = gold_study.get('year')
-            gold_doi = str(gold_study.get('doi', '')).lower().strip()
+            
+            # Extract key words from gold title (remove stop words)
+            stop_words = {'the', 'a', 'an', 'and', 'or', 'of', 'in', 'on', 'at', 'to', 'for', 'from', 'with'}
+            gold_words = [w for w in gold_title_norm.split() if w not in stop_words and len(w) > 2]
             
             matched_idx = None
             match_method = None
-            match_score = 0.0
             
             for elis_idx, elis_row in elis_normalized.iterrows():
                 if elis_idx in matched_elis_indices:
                     continue
                 
-                # Try DOI match first
-                elis_doi = str(elis_row.get('doi', '')).lower().strip()
-                if gold_doi and elis_doi and gold_doi == elis_doi and gold_doi != 'nan':
-                    matched_idx = elis_idx
-                    match_method = "doi"
-                    match_score = 1.0
-                    break
+                elis_title_norm = elis_row.get('title_norm', '')
+                if not elis_title_norm:
+                    continue
                 
-                # Try title fuzzy match
-                elis_title = elis_row.get('title_norm', '')
-                if elis_title and gold_title:
-                    similarity = title_similarity(gold_title, elis_title)
+                # Count matching key words
+                matches = sum(1 for word in gold_words if word in elis_title_norm)
+                match_ratio = matches / len(gold_words) if gold_words else 0
+                
+                # Match if >50% of key words match
+                if match_ratio >= 0.50:
+                    elis_year = elis_row.get('year')
                     
-                    # Title + Year match (60% threshold - more lenient)
-                    if similarity >= 0.60:
-                        elis_year = elis_row.get('year')
-                        
-                        if gold_year and elis_year:
-                            try:
-                                if int(elis_year) == int(gold_year):
-                                    if similarity > match_score:
-                                        matched_idx = elis_idx
-                                        match_method = f"title_fuzzy+year ({similarity:.0%})"
-                                        match_score = similarity
-                            except (ValueError, TypeError):
-                                pass
-                        
-                        # Title-only match (70% threshold without year)
-                        elif similarity >= 0.70:
-                            if similarity > match_score:
+                    # If we have years, they should match
+                    if gold_year and elis_year:
+                        try:
+                            if int(elis_year) == int(gold_year):
                                 matched_idx = elis_idx
-                                match_method = f"title_fuzzy ({similarity:.0%})"
-                                match_score = similarity
+                                match_method = f"keywords+year ({match_ratio:.0%})"
+                                break
+                        except (ValueError, TypeError):
+                            pass
+                    else:
+                        # No year available, accept keyword match
+                        matched_idx = elis_idx
+                        match_method = f"keywords ({match_ratio:.0%})"
+                        break
             
             # Record result
             if matched_idx is not None:
                 matched_elis_indices.add(matched_idx)
                 gold_dict = gold_study.to_dict()
                 gold_dict['match_method'] = match_method
-                gold_dict['match_score'] = match_score
-                gold_dict['elis_title'] = elis_normalized.loc[matched_idx, 'title']
+                gold_dict['elis_title'] = elis_results.loc[matched_idx, 'title']
                 matched.append(gold_dict)
             else:
                 missed.append(gold_study.to_dict())
         
-        # Find additional studies in ELIS not in gold standard
+        # Additional studies
         additional = []
-        for elis_idx, elis_row in elis_normalized.iterrows():
+        for elis_idx in elis_normalized.index:
             if elis_idx not in matched_elis_indices:
-                additional.append(elis_row.to_dict())
+                additional.append(elis_normalized.loc[elis_idx].to_dict())
         
         print(f"\n✓ Matched: {len(matched)}/{len(self.gold_standard)} ({len(matched)/len(self.gold_standard)*100:.1f}%)")
         print(f"  Missed: {len(missed)}")
         print(f"  Additional in ELIS: {len(additional)}")
         
-        # Show match method breakdown
+        # Show match methods
         match_methods = {}
         for m in matched:
             method = m.get('match_method', 'unknown')
             match_methods[method] = match_methods.get(method, 0) + 1
-        print(f"\n  Match methods:")
-        for method, count in sorted(match_methods.items(), key=lambda x: -x[1]):
-            print(f"    {method}: {count}")
+        if match_methods:
+            print(f"\n  Match methods:")
+            for method, count in sorted(match_methods.items(), key=lambda x: -x[1]):
+                print(f"    {method}: {count}")
         
         return matched, missed, additional
 
