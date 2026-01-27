@@ -20,20 +20,10 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-
 def google_scholar_search(query: str, max_items: int = 200, 
                          newer_than: int = None, older_than: int = None) -> List[Dict]:
     """
-    Search Google Scholar via Apify scraper.
-    
-    Args:
-        query: Search query string
-        max_items: Maximum number of results (default 200)
-        newer_than: Only articles from this year onwards
-        older_than: Only articles up to this year
-        
-    Returns:
-        List of article dictionaries
+    Search Google Scholar via Apify scraper (async with polling).
     """
     
     # Get API token from environment
@@ -41,12 +31,10 @@ def google_scholar_search(query: str, max_items: int = 200,
     if not api_token:
         raise ValueError("APIFY_API_TOKEN environment variable not set")
     
-    # Prepare API request
-    url = "https://api.apify.com/v2/acts/marco.gullo~google-scholar-scraper/run-sync-get-dataset-items"
+    # 1. START THE RUN
+    start_url = "https://api.apify.com/v2/acts/marco.gullo~google-scholar-scraper/runs"
     
-    params = {
-        'token': api_token
-    }
+    params = {'token': api_token}
     
     payload = {
         'keyword': query,
@@ -59,7 +47,6 @@ def google_scholar_search(query: str, max_items: int = 200,
         }
     }
     
-    # Add year filters if provided
     if newer_than:
         payload['newerThan'] = newer_than
     if older_than:
@@ -74,17 +61,64 @@ def google_scholar_search(query: str, max_items: int = 200,
         print(f"   Older than: {older_than}")
     
     try:
-        # Make API request (this waits for completion and returns results)
-        response = requests.post(url, params=params, json=payload, timeout=300)
+        # Start the run
+        print("  Starting Apify run...")
+        response = requests.post(start_url, params=params, json=payload, timeout=30)
         response.raise_for_status()
         
-        results = response.json()
+        run_info = response.json()
+        run_id = run_info['data']['id']
+        dataset_id = run_info['data']['defaultDatasetId']
+        
+        print(f"  Run started: {run_id}")
+        print(f"  Waiting for completion...")
+        
+        # 2. POLL FOR COMPLETION
+        max_wait = 300  # 5 minutes max
+        waited = 0
+        while waited < max_wait:
+            time.sleep(10)  # Check every 10 seconds
+            waited += 10
+            
+            # Check run status
+            status_url = f"https://api.apify.com/v2/acts/marco.gullo~google-scholar-scraper/runs/{run_id}"
+            status_resp = requests.get(status_url, params=params, timeout=10)
+            status_resp.raise_for_status()
+            
+            status_data = status_resp.json()
+            status = status_data['data']['status']
+            
+            if status == 'SUCCEEDED':
+                print(f"  ✓ Run completed after {waited}s")
+                break
+            elif status in ['FAILED', 'ABORTED', 'TIMED-OUT']:
+                print(f"  ❌ Run {status}")
+                return []
+            else:
+                print(f"  ⏳ Status: {status} ({waited}s elapsed)")
+        
+        if status != 'SUCCEEDED':
+            print(f"  ⚠️ Timeout waiting for results")
+            return []
+        
+        # 3. GET RESULTS FROM DATASET
+        dataset_url = f"https://api.apify.com/v2/datasets/{dataset_id}/items"
+        dataset_resp = requests.get(dataset_url, params=params, timeout=30)
+        dataset_resp.raise_for_status()
+        
+        results = dataset_resp.json()
+        
+        # DEBUG: Print first result structure
+        # if results:
+        #     print("\n📋 DEBUG - Raw API response (first item):")
+        #     import json
+        #     print(json.dumps(results[0], indent=2))
         
         print(f"  ✓ Found {len(results)} results from Google Scholar")
         return results
         
     except requests.exceptions.Timeout:
-        print(f"  ⚠️ Request timeout (Google Scholar search took >5 minutes)")
+        print(f"  ⚠️ Request timeout")
         return []
     except requests.exceptions.HTTPError as e:
         print(f"  ❌ HTTP Error: {e}")
@@ -96,63 +130,40 @@ def google_scholar_search(query: str, max_items: int = 200,
         traceback.print_exc()
         return []
 
-
 def transform_google_scholar_entry(entry: Dict) -> Dict:
     """
     Transform Apify Google Scholar result to standard format.
     
     Apify returns:
     - title
-    - full_attribution (contains authors)
-    - year (need to extract)
-    - snippet (abstract)
-    - displayed_link
-    - pdf_link
-    - url
-    - cited_by_count
-    - related_articles_link
+    - authors (string, not list)
+    - year (integer)
+    - publication
+    - searchMatch (snippet/abstract)
+    - link
+    - documentLink (PDF)
+    - citations (count)
+    - fullAttribution
     """
     
-    # Extract year from various possible locations
-    year = None
-    full_attr = entry.get('full_attribution', '')
-    
-    # Try to extract year from full_attribution (e.g., "Author - Journal, 2020 - publisher")
-    import re
-    year_match = re.search(r'\b(19|20)\d{2}\b', full_attr)
-    if year_match:
-        year = int(year_match.group(0))
-    
-    # Extract authors from full_attribution
-    # Format is typically: "Author1, Author2 - Journal, Year - Publisher"
-    authors = []
-    if full_attr:
-        # Take everything before the first dash
-        author_part = full_attr.split(' - ')[0] if ' - ' in full_attr else full_attr
-        authors = [author_part]  # Simplified, could parse more
-    
-    # Extract venue/journal
-    venue = ''
-    if ' - ' in full_attr:
-        parts = full_attr.split(' - ')
-        if len(parts) >= 2:
-            venue = parts[1].split(',')[0].strip()
+    # Parse authors - Apify returns as string
+    authors_str = entry.get('authors', '')
+    authors = [authors_str] if authors_str else []
     
     return {
-        'id': entry.get('id', 'unknown'),
+        'id': entry.get('cidCode', 'unknown'),
         'title': entry.get('title', ''),
         'authors': authors,
-        'year': year,
-        'venue': venue,
-        'abstract': entry.get('snippet', ''),
-        'doi': None,  # Google Scholar doesn't always provide DOI
-        'url': entry.get('url', ''),
-        'pdf_url': entry.get('pdf_link'),
-        'cited_by_count': entry.get('cited_by_count', 0),
-        'source_id': entry.get('id', ''),
-        'full_attribution': full_attr
+        'year': entry.get('year'),
+        'venue': entry.get('publication', ''),
+        'abstract': entry.get('searchMatch', ''),
+        'doi': None,  # Google Scholar doesn't provide DOI directly
+        'url': entry.get('link', ''),
+        'pdf_url': entry.get('documentLink'),
+        'cited_by_count': entry.get('citations', 0),
+        'source_id': entry.get('cidCode', ''),
+        'full_attribution': entry.get('fullAttribution', '')
     }
-
 
 def main():
     """Test the Google Scholar harvester."""
@@ -184,4 +195,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-    
