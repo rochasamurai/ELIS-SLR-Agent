@@ -74,7 +74,7 @@ def google_scholar_search(query: str, max_items: int = 200,
         print(f"  Waiting for completion...")
         
         # 2. POLL FOR COMPLETION
-        max_wait = 300  # 5 minutes max
+        max_wait = 420  # 7 minutes max (Google Scholar can be slow)
         waited = 0
         retry_count = 0
         max_retries = 3
