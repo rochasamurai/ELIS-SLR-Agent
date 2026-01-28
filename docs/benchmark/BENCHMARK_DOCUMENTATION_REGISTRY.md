@@ -1,6 +1,6 @@
 # ELIS SLR Agent - Benchmark Documentation Registry
 
-**Registry Date:** January 27, 2026  
+**Registry Date:** January 28, 2026 (Updated)  
 **Project:** ELIS SLR Agent - Electoral Integrity Strategies  
 **Repository:** https://github.com/rochasamurai/ELIS-SLR-Agent  
 **Branch:** benchmark/darmawan-2021  
@@ -9,7 +9,7 @@
 
 ## Document Inventory
 
-### Final Documentation Set - Version 1.0
+### Final Documentation Set - Version 1.1
 
 This registry records the final versions of all benchmark validation documentation produced during the validation study against Darmawan (2021).
 
@@ -156,7 +156,72 @@ References
 
 ---
 
-## 3. INTEGRATION_PLAN_V2.md
+## 3. BENCHMARK_EXECUTIVE_SUMMARY.md
+
+**Purpose:** Quick reference guide for stakeholders and non-technical audiences  
+**Audience:** Project managers, supervisors, stakeholders, new team members  
+**Status:** ✅ Final - Version 1.0  
+
+### Document Metadata
+
+| Property | Value |
+|----------|-------|
+| **Filename** | BENCHMARK_EXECUTIVE_SUMMARY.md |
+| **Version** | 1.0 |
+| **Date Created** | January 28, 2026 |
+| **Author** | Carlos Rocha (Visiting Researcher) |
+| **Format** | Markdown |
+
+### Document Structure
+
+```
+1. Quick Summary
+2. Final Results (Core Metrics)
+3. The Benchmark: Darmawan (2021)
+4. Test Configuration
+5. Performance Evolution (11 Runs)
+6. Matching Algorithm Comparison
+7. Why 42.3% Validates Success
+8. Critical Discoveries
+9. Cost Analysis
+10. Technical Achievements
+11. Matched vs Missed Studies
+12. Key Learnings for Production
+13. Production Deployment Plan
+14. Future Improvements
+15. Production Readiness Checklist
+16. Academic Contributions
+17. Conclusions
+```
+
+### Key Content
+
+- **Visual tables and metrics:** Easy-to-scan results
+- **Non-technical explanations:** Accessible to all audiences
+- **Complete performance timeline:** All 11 runs documented
+- **Algorithm comparison:** Simple visual breakdown
+- **Production roadmap:** 3-week deployment plan
+- **Cost analysis:** Detailed breakdown ($0.86 total)
+
+### Intended Use
+
+- Project status updates
+- Stakeholder presentations
+- Onboarding new team members
+- Quick reference for developers
+- Entry point to detailed documentation
+- Grant/funding applications
+
+### Reading Time
+
+- Quick scan: 5-10 minutes
+- Complete read: 20-30 minutes
+- vs BENCHMARK_FINAL_RESULTS.md: 2-3 hours
+- vs BENCHMARK_OBJECTIVE_SUMMARY.md: 1-2 hours
+
+---
+
+## 4. INTEGRATION_PLAN_V2.md
 
 **Purpose:** Actionable implementation guide for integrating improvements into main ELIS agent  
 **Audience:** Development team, implementation engineers  
@@ -232,7 +297,7 @@ References
 
 ---
 
-## 4. Supporting Documentation
+## 5. Supporting Documentation
 
 ### Previously Created Documents (Referenced)
 
@@ -246,11 +311,25 @@ References
 - Superseded by INTEGRATION_PLAN_V2.md
 - Kept for historical reference
 
+### Archived Documents
+
+**archive/BENCHMARK_VALIDATION_REPORT_v1_RUN01.md**
+- Initial validation results from Run #1 (9.0% retrieval rate)
+- Archived on January 28, 2026
+- Historical record of baseline performance
+- Superseded by BENCHMARK_FINAL_RESULTS.md (42.3% retrieval)
+
 ---
 
 ## Document Relationships
 
 ```
+BENCHMARK_EXECUTIVE_SUMMARY.md (NEW - Entry Point)
+├── Quick overview → All audiences
+├── Points to → BENCHMARK_FINAL_RESULTS.md (technical deep-dive)
+├── Points to → BENCHMARK_OBJECTIVE_SUMMARY.md (academic version)
+└── Points to → INTEGRATION_PLAN_V2.md (implementation)
+
 BENCHMARK_FINAL_RESULTS.md
 ├── Comprehensive reference
 ├── Cites → BENCHMARK_OBJECTIVE_SUMMARY.md (academic version)
@@ -300,6 +379,13 @@ INTEGRATION_PLAN_V2.md
 - ✅ Citations properly formatted
 - ✅ No unverifiable institutional claims
 
+**BENCHMARK_EXECUTIVE_SUMMARY.md:**
+- ✅ Accessible to non-technical audiences
+- ✅ Visual tables and metrics clear
+- ✅ All data matches BENCHMARK_FINAL_RESULTS.md
+- ✅ Production roadmap realistic
+- ✅ No technical jargon without explanation
+
 **INTEGRATION_PLAN_V2.md:**
 - ✅ Code examples tested and functional
 - ✅ Timeline realistic (3 weeks, ~40 hours)
@@ -314,17 +400,21 @@ INTEGRATION_PLAN_V2.md
 
 **GitHub Repository:** https://github.com/rochasamurai/ELIS-SLR-Agent  
 **Branch:** benchmark/darmawan-2021  
-**Directory:** `docs/`
+**Directory:** `docs/benchmark/`
 
-**Recommended Storage:**
+**Current Storage Structure:**
 
 ```
-docs/
-├── BENCHMARK_FINAL_RESULTS.md           # Complete reference
-├── BENCHMARK_OBJECTIVE_SUMMARY.md       # Academic version
-├── BENCHMARK_WORKFLOW_RUNS_SUMMARY.md   # Detailed logs
-├── INTEGRATION_PLAN_V2.md               # Implementation guide
-└── BENCHMARK_DOCUMENTATION_REGISTRY.md  # This file
+docs/benchmark/
+├── BENCHMARK_DARMAWAN_2021.md                    # Test design
+├── BENCHMARK_DOCUMENTATION_REGISTRY.md           # This file (updated)
+├── BENCHMARK_EXECUTIVE_SUMMARY.md                # Quick reference (NEW)
+├── BENCHMARK_FINAL_RESULTS.md                    # Complete technical
+├── BENCHMARK_OBJECTIVE_SUMMARY.md                # Academic version
+├── BENCHMARK_WORKFLOW_RUNS_SUMMARY.md            # Detailed logs
+├── INTEGRATION_PLAN_V2.md                        # Implementation
+└── archive/
+    └── BENCHMARK_VALIDATION_REPORT_v1_RUN01.md   # Historical Run #1
 ```
 
 ### Backup Locations
@@ -336,6 +426,15 @@ docs/
 ---
 
 ## Usage Recommendations
+
+### For Quick Reference / Stakeholder Updates
+
+**Primary Document:** `BENCHMARK_EXECUTIVE_SUMMARY.md`
+- Project status updates
+- Stakeholder presentations
+- Onboarding new team members
+- Quick reference guide
+- Entry point to full documentation
 
 ### For Academic Work
 
@@ -364,10 +463,11 @@ docs/
 
 ### For Project Management
 
-**All Documents:**
-- BENCHMARK_FINAL_RESULTS.md → Project overview
-- BENCHMARK_OBJECTIVE_SUMMARY.md → Stakeholder report
-- INTEGRATION_PLAN_V2.md → Implementation roadmap
+**Document Flow:**
+1. Start: `BENCHMARK_EXECUTIVE_SUMMARY.md` → Project overview
+2. Academic: `BENCHMARK_OBJECTIVE_SUMMARY.md` → Stakeholder report
+3. Implementation: `INTEGRATION_PLAN_V2.md` → Implementation roadmap
+4. Deep Dive: `BENCHMARK_FINAL_RESULTS.md` → Complete technical reference
 
 ---
 
@@ -406,13 +506,31 @@ Retrieved from https://github.com/rochasamurai/ELIS-SLR-Agent
 
 ## Change Log
 
+### Version 1.1 (January 28, 2026)
+
+**Documents Added:**
+- BENCHMARK_EXECUTIVE_SUMMARY.md v1.0 (NEW)
+
+**Documents Archived:**
+- BENCHMARK_VALIDATION_REPORT.md → archive/BENCHMARK_VALIDATION_REPORT_v1_RUN01.md
+
+**Registry Updates:**
+- Added Section 3: BENCHMARK_EXECUTIVE_SUMMARY.md
+- Renumbered Section 3 → Section 4 (INTEGRATION_PLAN_V2.md)
+- Renumbered Section 4 → Section 5 (Supporting Documentation)
+- Updated Document Relationships diagram
+- Added archived documents section
+- Updated file storage structure
+- Added usage recommendations for executive summary
+- Updated registry date to January 28, 2026
+
 ### Version 1.0 (January 27, 2026)
 
 **Documents Created:**
 - BENCHMARK_FINAL_RESULTS.md v1.0
 - BENCHMARK_OBJECTIVE_SUMMARY.md v1.0
 - INTEGRATION_PLAN_V2.md v2.0
-- BENCHMARK_DOCUMENTATION_REGISTRY.md v1.0 (this file)
+- BENCHMARK_DOCUMENTATION_REGISTRY.md v1.0
 
 **Changes from Draft:**
 - ✅ Removed all speculative information
@@ -436,12 +554,14 @@ Retrieved from https://github.com/rochasamurai/ELIS-SLR-Agent
 
 | Use Case | Recommended Document |
 |----------|---------------------|
+| **Quick overview** | BENCHMARK_EXECUTIVE_SUMMARY.md |
+| **Stakeholder update** | BENCHMARK_EXECUTIVE_SUMMARY.md |
+| **Onboarding** | BENCHMARK_EXECUTIVE_SUMMARY.md |
 | Thesis chapter | BENCHMARK_OBJECTIVE_SUMMARY.md |
 | Implementation | INTEGRATION_PLAN_V2.md |
 | Project overview | BENCHMARK_FINAL_RESULTS.md |
 | Journal article | BENCHMARK_OBJECTIVE_SUMMARY.md (adapt) |
 | Code review | INTEGRATION_PLAN_V2.md |
-| Stakeholder report | BENCHMARK_OBJECTIVE_SUMMARY.md |
 | Technical deep-dive | BENCHMARK_FINAL_RESULTS.md |
 | Training material | BENCHMARK_FINAL_RESULTS.md |
 
@@ -471,8 +591,8 @@ This registry certifies that all documented files are:
 - ✅ Ready for distribution (academic/professional use)
 
 **Registry Compiled By:** Claude (Anthropic AI Assistant)  
-**Registry Date:** January 27, 2026  
-**Registry Version:** 1.0  
+**Registry Date:** January 28, 2026  
+**Registry Version:** 1.1  
 **Status:** FINAL
 
 ---
