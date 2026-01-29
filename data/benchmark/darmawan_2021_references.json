@@ -1,0 +1,843 @@
+{
+  "benchmark_metadata": {
+    "paper": {
+      "author": "Darmawan, I.",
+      "year": 2021,
+      "title": "E-voting adoption in many countries: A literature review",
+      "journal": "Asian Journal of Comparative Politics",
+      "volume": 6,
+      "issue": 4,
+      "pages": "482-504",
+      "doi": "10.1177/20578911211040584"
+    },
+    "total_studies": 78,
+    "time_period": "2005-2020",
+    "databases_used": ["Google Scholar", "ACM Digital Library", "Science Direct", "J-STOR"],
+    "inclusion_criteria": "Scopus-indexed journals, English language, 2005-2020",
+    "extraction_date": "2026-01-26",
+    "extracted_by": "Claude AI from Table 4 (pages 11-16)"
+  },
+  "studies": [
+    {
+      "id": 1,
+      "year": 2005,
+      "authors": "Xenakis and Machintosh",
+      "title": "Trust analysis of the UK e-voting pilots",
+      "journal": "Social Science Computer Review",
+      "country": "United Kingdom",
+      "category": "trust",
+      "priority": "high"
+    },
+    {
+      "id": 2,
+      "year": 2005,
+      "authors": "Schaupp and Carter",
+      "title": "E-voting: From apathy to adoption",
+      "journal": "Journal of Enterprise Information Management",
+      "country": "United States",
+      "category": "adoption_factors",
+      "priority": "high"
+    },
+    {
+      "id": 3,
+      "year": 2005,
+      "authors": "Garner and Spolaore",
+      "title": "Why chads? Determinants of voting equipment use in the United States",
+      "journal": "Public Choice",
+      "country": "United States",
+      "category": "technology_effects",
+      "priority": "medium"
+    },
+    {
+      "id": 4,
+      "year": 2005,
+      "authors": "Roseman Jr. and Stephenson",
+      "title": "The effect of voting technology on voter turnout: Do computers scare the elderly?",
+      "journal": "Public Choice",
+      "country": "United States",
+      "category": "turnout",
+      "priority": "medium"
+    },
+    {
+      "id": 5,
+      "year": 2005,
+      "authors": "Oostven and van de Besselaar",
+      "title": "Trust, identity, and the effects of voting technologies on voting behavior",
+      "journal": "Social Science Computer Review",
+      "country": "Netherlands",
+      "category": "trust",
+      "priority": "medium"
+    },
+    {
+      "id": 6,
+      "year": 2005,
+      "authors": "Houston, Yao, Okoli and Watson",
+      "title": "Will remote electronic voting systems increase participation?",
+      "journal": "Electronic Government, an International Journal",
+      "country": "United States",
+      "category": "participation",
+      "priority": "low"
+    },
+    {
+      "id": 7,
+      "year": 2006,
+      "authors": "Choi",
+      "title": "Deliberative democracy, rational participation and e-voting in South Korea",
+      "journal": "Asian Journal of Political Science",
+      "country": "South Korea",
+      "category": "participation",
+      "priority": "medium"
+    },
+    {
+      "id": 8,
+      "year": 2007,
+      "authors": "Smith",
+      "title": "Securing e-voting as a legitimate option for e-governance",
+      "journal": "Electronic Government, an International Journal",
+      "country": "Multi-country",
+      "category": "security",
+      "priority": "low"
+    },
+    {
+      "id": 9,
+      "year": 2007,
+      "authors": "Dee",
+      "title": "Technology and voter intent: Evidence from the California recall election",
+      "journal": "The Review of Economics and Statistics",
+      "country": "United States",
+      "category": "technology_effects",
+      "priority": "medium"
+    },
+    {
+      "id": 10,
+      "year": 2007,
+      "authors": "Card and Moretti",
+      "title": "Does voting technology affect election outcomes? Touch-screen voting and the 2004 Presidential Election",
+      "journal": "The Review of Economics and Statistics",
+      "country": "United States",
+      "category": "technology_effects",
+      "priority": "high"
+    },
+    {
+      "id": 11,
+      "year": 2007,
+      "authors": "Yao and Murphy",
+      "title": "Remote electronic voting systems: An exploration of voters' perceptions and intention to use",
+      "journal": "European Journal of Information Systems",
+      "country": "Multi-country",
+      "category": "perceptions",
+      "priority": "medium"
+    },
+    {
+      "id": 12,
+      "year": 2008,
+      "authors": "De Jong, van Hoof, and Goosselt",
+      "title": "Voters' perceptions of voting technology: Paper ballots versus voting machine with and without paper audit trail",
+      "journal": "Social Science Computer Review",
+      "country": "Netherlands",
+      "category": "perceptions",
+      "priority": "high"
+    },
+    {
+      "id": 13,
+      "year": 2008,
+      "authors": "Stein, Vonnahme, Bryne and Wallach",
+      "title": "Voting technology, election administration, and voter performance",
+      "journal": "Election Law Journal: Rules, Politics, and Policy",
+      "country": "United States",
+      "category": "technology_effects",
+      "priority": "high"
+    },
+    {
+      "id": 14,
+      "year": 2008,
+      "authors": "Prevost and Schaffner",
+      "title": "Digital divide or just another absentee ballot? Evaluating internet voting in the 2004 Michigan Democratic Primary",
+      "journal": "American Politics Research",
+      "country": "United States",
+      "category": "case_study",
+      "priority": "medium"
+    },
+    {
+      "id": 15,
+      "year": 2008,
+      "authors": "Lippert and Ojumu",
+      "title": "Thinking outside of the ballot box: Examining public trust in e-voting technology",
+      "journal": "Journal of Organizational and End User Computing",
+      "country": "United States",
+      "category": "trust",
+      "priority": "medium"
+    },
+    {
+      "id": 16,
+      "year": 2009,
+      "authors": "Alters and Kooreman",
+      "title": "More evidence of the effects of voting technology on election outcomes",
+      "journal": "Public Choice",
+      "country": "Netherlands",
+      "category": "technology_effects",
+      "priority": "medium"
+    },
+    {
+      "id": 17,
+      "year": 2009,
+      "authors": "Alvarez, Hall and Trechsel",
+      "title": "Internet voting in comparative perspective: The case of Estonia",
+      "journal": "PS: Political Science and Politics",
+      "country": "Estonia",
+      "category": "case_study",
+      "priority": "high",
+      "doi": "10.1017/S1049096509090887"
+    },
+    {
+      "id": 18,
+      "year": 2009,
+      "authors": "Avgerou, Ganzaroli, Poulymenakou and Reinhard",
+      "title": "Interpreting the trustworthiness of government mediated by information and communication technology: Lessons from electronic voting in Brazil",
+      "journal": "Information Technology for Development",
+      "country": "Brazil",
+      "category": "trust",
+      "priority": "medium"
+    },
+    {
+      "id": 19,
+      "year": 2009,
+      "authors": "Kimura",
+      "title": "The information and communication technology and electoral modernization: Lessons from the Philippines",
+      "journal": "Philippine Political Science Journal",
+      "country": "Philippines",
+      "category": "case_study",
+      "priority": "low"
+    },
+    {
+      "id": 20,
+      "year": 2009,
+      "authors": "Oostven and van de Besselaar",
+      "title": "Users' experiences with e-voting: A comparative case study",
+      "journal": "International Journal of Electronic Governance",
+      "country": "Multi-country",
+      "category": "perceptions",
+      "priority": "medium"
+    },
+    {
+      "id": 21,
+      "year": 2009,
+      "authors": "Chiang",
+      "title": "Trust and security in the e-voting systems",
+      "journal": "Electronic Government, an International Journal",
+      "country": "Taiwan",
+      "category": "trust",
+      "priority": "low"
+    },
+    {
+      "id": 22,
+      "year": 2009,
+      "authors": "Charles",
+      "title": "The electronic state: Estonia's new media revolution",
+      "journal": "Journal of Contemporary European Research",
+      "country": "Estonia",
+      "category": "case_study",
+      "priority": "low"
+    },
+    {
+      "id": 23,
+      "year": 2010,
+      "authors": "Oostven",
+      "title": "Outsourcing democracy: Losing control of e-voting in the Netherlands",
+      "journal": "Policy and Internet",
+      "country": "Netherlands",
+      "category": "challenges",
+      "priority": "medium"
+    },
+    {
+      "id": 24,
+      "year": 2010,
+      "authors": "Mendez",
+      "title": "Elections and the internet: On the difficulties of 'upgrading' elections in the digital era",
+      "journal": "Representation",
+      "country": "Multi-country",
+      "category": "challenges",
+      "priority": "low"
+    },
+    {
+      "id": 25,
+      "year": 2011,
+      "authors": "Alvarez, Katz and Pomares",
+      "title": "The impact of new technologies on voter confidence in Latin America: Evidence from e-voting experiments in Argentina and Colombia",
+      "journal": "Journal of Information Technology & Politics",
+      "country": "Multi-country",
+      "category": "trust",
+      "priority": "high",
+      "doi": "10.1080/19331681.2011.592067"
+    },
+    {
+      "id": 26,
+      "year": 2011,
+      "authors": "Martin",
+      "title": "Venezuelan presidential recall referendum (2004 PRR): A statistical analysis from the point of view of electronic voting data transmissions",
+      "journal": "Statistical Science",
+      "country": "Venezuela",
+      "category": "case_study",
+      "priority": "low"
+    },
+    {
+      "id": 27,
+      "year": 2011,
+      "authors": "Vassil and Weber",
+      "title": "A bottleneck model of e-voting: Why technology fails to boost turnout",
+      "journal": "New Media and Society",
+      "country": "Estonia",
+      "category": "turnout",
+      "priority": "medium"
+    },
+    {
+      "id": 28,
+      "year": 2011,
+      "authors": "Katz, Alvarez, Calvo, Escolar and Pomares",
+      "title": "Assessing the impact of alternative voting technologies on multi-party elections: Design features, heuristic processing and voter choice",
+      "journal": "Political Behavior",
+      "country": "Argentina",
+      "category": "technology_effects",
+      "priority": "medium"
+    },
+    {
+      "id": 29,
+      "year": 2011,
+      "authors": "Stewart III",
+      "title": "Voting technologies",
+      "journal": "Annual Review of Political Science",
+      "country": "United States",
+      "category": "review",
+      "priority": "high",
+      "doi": "10.1146/annurev-polisci-033110-130956"
+    },
+    {
+      "id": 30,
+      "year": 2012,
+      "authors": "Choi and Kim",
+      "title": "Voter intention to use e-voting technologies: Security, technology acceptance, election type, and political ideology",
+      "journal": "Journal of Information Technology & Politics",
+      "country": "South Korea",
+      "category": "adoption_factors",
+      "priority": "medium"
+    },
+    {
+      "id": 31,
+      "year": 2012,
+      "authors": "Powell, Williams, Bock, Doellman and Allen",
+      "title": "E-voting intent: A comparison of young and elderly voters",
+      "journal": "Government Information Quarterly",
+      "country": "United States",
+      "category": "adoption_factors",
+      "priority": "medium"
+    },
+    {
+      "id": 32,
+      "year": 2012,
+      "authors": "Carter and Campbell",
+      "title": "Internet voting usefulness: An empirical analysis of trust, convenience and accessibility",
+      "journal": "Journal of Organizational and End User Computing",
+      "country": "United States",
+      "category": "trust",
+      "priority": "medium"
+    },
+    {
+      "id": 33,
+      "year": 2013,
+      "authors": "Salimonu, Osman, Shittu and Jimoh",
+      "title": "Adoption of e-voting system in Nigeria: A conceptual framework",
+      "journal": "International Journal of Applied Information Systems (IJAIS)",
+      "country": "Nigeria",
+      "category": "adoption_factors",
+      "priority": "low"
+    },
+    {
+      "id": 34,
+      "year": 2013,
+      "authors": "Alvarez, Beckett and Stewart III",
+      "title": "Voting technology, vote by mail, and residual votes in California, 1990–2010",
+      "journal": "Political Research Quarterly",
+      "country": "United States",
+      "category": "technology_effects",
+      "priority": "high",
+      "doi": "10.1177/1065912912463548"
+    },
+    {
+      "id": 35,
+      "year": 2013,
+      "authors": "Jaradat",
+      "title": "Applying the technology acceptance model to the introduction of mobile voting",
+      "journal": "International Journal Mobile Learning and Organisation",
+      "country": "Jordan",
+      "category": "adoption_factors",
+      "priority": "low"
+    },
+    {
+      "id": 36,
+      "year": 2013,
+      "authors": "Avgerou",
+      "title": "Explaining trust in IT-mediated elections: A case study of e-voting in Brazil",
+      "journal": "Journal of the Association for Information Systems",
+      "country": "Brazil",
+      "category": "trust",
+      "priority": "medium"
+    },
+    {
+      "id": 37,
+      "year": 2013,
+      "authors": "Alvarez, Levin, Pomares and Leiras",
+      "title": "Voting made safe and easy: The impact of e-voting on citizen perceptions",
+      "journal": "Political Science Research and Methods",
+      "country": "Argentina",
+      "category": "perceptions",
+      "priority": "medium"
+    },
+    {
+      "id": 38,
+      "year": 2014,
+      "authors": "Al-Khasawneh and Obeidallah",
+      "title": "Challenges to the successful implementation of online voting for e-democracy in developing countries' initiatives: Jordan as a case study",
+      "journal": "International Journal of Sociotechnology and Knowledge Development",
+      "country": "Jordan",
+      "category": "challenges",
+      "priority": "medium"
+    },
+    {
+      "id": 39,
+      "year": 2015,
+      "authors": "Fujiwara",
+      "title": "Voting technology, political responsiveness, and infant health: Evidence from Brazil",
+      "journal": "Econometrica",
+      "country": "Brazil",
+      "category": "technology_effects",
+      "priority": "high"
+    },
+    {
+      "id": 40,
+      "year": 2015,
+      "authors": "Crothers",
+      "title": "Using the internet in New Zealand elections and support for e-voting",
+      "journal": "Political Science",
+      "country": "New Zealand",
+      "category": "adoption_factors",
+      "priority": "medium"
+    },
+    {
+      "id": 41,
+      "year": 2015,
+      "authors": "Ahmad, Abdullah and Arshad",
+      "title": "Participation and voting policy process in Nigeria: A qualitative study",
+      "journal": "Mediterranean Journal of Social Sciences",
+      "country": "Nigeria",
+      "category": "participation",
+      "priority": "low"
+    },
+    {
+      "id": 42,
+      "year": 2016,
+      "authors": "Machin-Mastromatteo",
+      "title": "The most 'perfect' voting system in the world",
+      "journal": "Information Development",
+      "country": "Venezuela",
+      "category": "case_study",
+      "priority": "low"
+    },
+    {
+      "id": 43,
+      "year": 2016,
+      "authors": "Alomari",
+      "title": "E-voting adoption in a developing country",
+      "journal": "Transforming Government: People, Process, and Policy",
+      "country": "Jordan",
+      "category": "adoption_factors",
+      "priority": "high"
+    },
+    {
+      "id": 44,
+      "year": 2016,
+      "authors": "Vassil, Solvak, Vinkel, et al.",
+      "title": "The diffusion of internet voting: Usage patterns of internet voting in Estonia between 2005 and 2015",
+      "journal": "Government Information Quarterly",
+      "country": "Estonia",
+      "category": "case_study",
+      "priority": "high"
+    },
+    {
+      "id": 45,
+      "year": 2016,
+      "authors": "Gibson, Krimmer, Teague, and Pomares",
+      "title": "A review of e-voting: The past, present, and future",
+      "journal": "Annals of Telecommunications",
+      "country": "Multi-country",
+      "category": "review",
+      "priority": "high"
+    },
+    {
+      "id": 46,
+      "year": 2016,
+      "authors": "Nemeslaki, Aranyossy and Sasvari",
+      "title": "Could on-line voting boost desire to vote? Technology acceptance perceptions of young Hungarian citizens",
+      "journal": "Government Information Quarterly",
+      "country": "Hungary",
+      "category": "adoption_factors",
+      "priority": "low"
+    },
+    {
+      "id": 47,
+      "year": 2016,
+      "authors": "Dolatabadi",
+      "title": "Towards a comprehensive conceptualisation of e-voting adoption: A theoretical perspective",
+      "journal": "International Journal of Technology, Policy and Management",
+      "country": "Multi-country",
+      "category": "theory",
+      "priority": "medium"
+    },
+    {
+      "id": 48,
+      "year": 2016,
+      "authors": "Van, Kim, Sa, Kim and Gim",
+      "title": "The factors affecting user behavior on mobile voting in Vietnam",
+      "journal": "International Journal of Multimedia and Ubiquitous Engineering",
+      "country": "Vietnam",
+      "category": "adoption_factors",
+      "priority": "medium"
+    },
+    {
+      "id": 49,
+      "year": 2016,
+      "authors": "Zucco Jr. and Nicolau",
+      "title": "Trading old errors for new errors? The impact of electronic voting technology on party label votes in Brazil",
+      "journal": "Electoral Studies",
+      "country": "Brazil",
+      "category": "technology_effects",
+      "priority": "medium"
+    },
+    {
+      "id": 50,
+      "year": 2017,
+      "authors": "Anagreh and Abu-Shanab",
+      "title": "Voter's intention to use electronic voting systems",
+      "journal": "International Journal of E-Business Research",
+      "country": "Jordan",
+      "category": "adoption_factors",
+      "priority": "low"
+    },
+    {
+      "id": 51,
+      "year": 2017,
+      "authors": "Germann and Serdult",
+      "title": "Internet voting and turnout: Evidence from Switzerland",
+      "journal": "Electoral Studies",
+      "country": "Switzerland",
+      "category": "turnout",
+      "priority": "high"
+    },
+    {
+      "id": 52,
+      "year": 2017,
+      "authors": "Eraky",
+      "title": "E-voting implementation in Egypt",
+      "journal": "Journal of Contemporary Eastern Asia",
+      "country": "Egypt",
+      "category": "case_study",
+      "priority": "medium"
+    },
+    {
+      "id": 53,
+      "year": 2017,
+      "authors": "Suki and Suki",
+      "title": "Decision-making and satisfaction in campus e-voting: Moderating effect of trust in the system",
+      "journal": "Journal of Enterprise Information Management",
+      "country": "Malaysia",
+      "category": "adoption_factors",
+      "priority": "low"
+    },
+    {
+      "id": 54,
+      "year": 2017,
+      "authors": "Mendez and Serdult",
+      "title": "What drives fidelity to internet voting? Evidence from the roll-out of internet voting in Switzerland",
+      "journal": "Government Information Quarterly",
+      "country": "Switzerland",
+      "category": "adoption_factors",
+      "priority": "medium"
+    },
+    {
+      "id": 55,
+      "year": 2017,
+      "authors": "Adeshina and Ojo",
+      "title": "Factors for e-voting adoption: Analysis of general elections in Nigeria",
+      "journal": "Government Information Quarterly",
+      "country": "Nigeria",
+      "category": "adoption_factors",
+      "priority": "high"
+    },
+    {
+      "id": 56,
+      "year": 2018,
+      "authors": "Alvarez, Levin, and Li",
+      "title": "Fraud, convenience, and e-voting: How voting experience shapes opinions about voting technology",
+      "journal": "Journal of Information, Technology, and Politics",
+      "country": "United States",
+      "category": "trust",
+      "priority": "high"
+    },
+    {
+      "id": 57,
+      "year": 2018,
+      "authors": "Lubis and Lubis",
+      "title": "Dealing with voters' privacy preferences and readiness in electronic voting",
+      "journal": "Indonesian Journal of Electrical Engineering and Computer Science",
+      "country": "Indonesia",
+      "category": "privacy",
+      "priority": "low"
+    },
+    {
+      "id": 58,
+      "year": 2018,
+      "authors": "Warkentin, Sharma, Gefen, Rose, and Pavlou",
+      "title": "Social identity and trust in internet-based voting adoption",
+      "journal": "Government Information Quarterly",
+      "country": "United States",
+      "category": "trust",
+      "priority": "medium"
+    },
+    {
+      "id": 59,
+      "year": 2018,
+      "authors": "Goodman and Stokes",
+      "title": "Reducing the cost of voting: An evaluation of internet voting's effect on turnout",
+      "journal": "British Journal of Political Science",
+      "country": "Canada",
+      "category": "turnout",
+      "priority": "high"
+    },
+    {
+      "id": 60,
+      "year": 2018,
+      "authors": "Cauchan, Jaiswal and Kar",
+      "title": "The acceptance of electronic voting machines in India: A UTAUT approach",
+      "journal": "Electronic Government, an International Journal",
+      "country": "India",
+      "category": "adoption_factors",
+      "priority": "low"
+    },
+    {
+      "id": 61,
+      "year": 2018,
+      "authors": "Ali and Mubarak",
+      "title": "E-voting: An investigation of factors that affect public trust in Kingdom of Bahrain",
+      "journal": "International Journal of Electronic Government Research",
+      "country": "Bahrain",
+      "category": "trust",
+      "priority": "low"
+    },
+    {
+      "id": 62,
+      "year": 2018,
+      "authors": "Al-Khakani and Hassan",
+      "title": "Suggest trust as a mediation to adopt electronic voting system in Iraq",
+      "journal": "Journal of Theoretical and Applied Information Technology",
+      "country": "Iraq",
+      "category": "trust",
+      "priority": "low"
+    },
+    {
+      "id": 63,
+      "year": 2018,
+      "authors": "Goodman, McGregor, Couture and Breux",
+      "title": "Another digital divide? Evidence that elimination of paper voting could lead to digital disenfranchisement",
+      "journal": "Policy & Internet",
+      "country": "Canada",
+      "category": "challenges",
+      "priority": "medium"
+    },
+    {
+      "id": 64,
+      "year": 2019,
+      "authors": "Avgerou, Masiero and Poulymenakou",
+      "title": "Trusting e-voting amid experiences of electoral malpractice: The case of Indian elections",
+      "journal": "Journal of Information Technology",
+      "country": "India",
+      "category": "trust",
+      "priority": "medium"
+    },
+    {
+      "id": 65,
+      "year": 2020,
+      "authors": "Loeber",
+      "title": "Use of technology in the election process: Who governs?",
+      "journal": "Election Law Journal: Rules, Politics, and Policy",
+      "country": "Multi-country",
+      "category": "regulation",
+      "priority": "low"
+    },
+    {
+      "id": 66,
+      "year": 2020,
+      "authors": "Zhu, Azizah and Hsiao",
+      "title": "Examining multi-dimensional trust of technology in citizens' adoption of e-voting in developing countries",
+      "journal": "Information Development",
+      "country": "Multi-country",
+      "category": "trust",
+      "priority": "medium"
+    },
+    {
+      "id": 67,
+      "year": 2020,
+      "authors": "Kassen",
+      "title": "Politicization of e-voting rejection: Reflections from Kazakhstan",
+      "journal": "Transforming Government: People, Process, and Policy",
+      "country": "Kazakhstan",
+      "category": "rejection",
+      "priority": "low"
+    },
+    {
+      "id": 68,
+      "year": 2020,
+      "authors": "Omotayo and Adekunle",
+      "title": "Adoption and use of electronic voting system as an option towards credible elections in Nigeria",
+      "journal": "International Journal of Development Issues",
+      "country": "Nigeria",
+      "category": "adoption_factors",
+      "priority": "low"
+    },
+    {
+      "id": 69,
+      "year": 2020,
+      "authors": "Risnanto, Rahim, Herman and Abdurrohman",
+      "title": "E-voting readiness mapping for general election implementation",
+      "journal": "Journal of Theoretical and Applied Information Technology",
+      "country": "Indonesia",
+      "category": "adoption_factors",
+      "priority": "low"
+    },
+    {
+      "id": 70,
+      "year": 2020,
+      "authors": "Essex and Goodman",
+      "title": "Protecting electoral integrity in the digital age: Developing e-voting regulations in Canada",
+      "journal": "Election Law Journal: Rules, Politics, and Policy",
+      "country": "Canada",
+      "category": "regulation",
+      "priority": "medium"
+    },
+    {
+      "id": 71,
+      "year": 2020,
+      "authors": "Chotim and Pramanti",
+      "title": "E-voting systems to prevent conflicts caused by false results in elections in Indonesia",
+      "journal": "International Journal of Innovation, Creativity and Change",
+      "country": "Indonesia",
+      "category": "case_study",
+      "priority": "low"
+    },
+    {
+      "id": 72,
+      "year": 2020,
+      "authors": "Sheranova",
+      "title": "Cheating the machine: E-voting practices in Kyrgyzstan's local elections",
+      "journal": "European Review",
+      "country": "Kyrgyzstan",
+      "category": "case_study",
+      "priority": "low"
+    },
+    {
+      "id": 73,
+      "year": 2020,
+      "authors": "Agbesi",
+      "title": "Examining voters' intention to use internet voting system: A case of Ghana",
+      "journal": "International Journal of Electronic Governance",
+      "country": "Ghana",
+      "category": "adoption_factors",
+      "priority": "low"
+    },
+    {
+      "id": 74,
+      "year": 2020,
+      "authors": "Mensah",
+      "title": "Impact of performance expectancy, effort expectancy, and citizen trust on the adoption of electronic voting system in Ghana",
+      "journal": "International Journal of Electronic Government Research",
+      "country": "Ghana",
+      "category": "adoption_factors",
+      "priority": "low"
+    },
+    {
+      "id": 75,
+      "year": 2020,
+      "authors": "Sharma",
+      "title": "Can't change my political disaffection! The role of political disaffection, trust, and resistance to change in internet voting",
+      "journal": "Digital Policy, Regulation, and Governance",
+      "country": "Multi-country",
+      "category": "adoption_factors",
+      "priority": "low"
+    },
+    {
+      "id": 76,
+      "year": 2020,
+      "authors": "Schlaufer",
+      "title": "Why do nondemocratic regimes promote e-participation? The case of Moscow's active citizen online voting platform",
+      "journal": "Governance",
+      "country": "Russia",
+      "category": "case_study",
+      "priority": "low"
+    },
+    {
+      "id": 77,
+      "year": 2020,
+      "authors": "Reiners",
+      "title": "Vote electronique in Switzerland: Comparison of relevant pilot projects",
+      "journal": "Journal of Comparative Politics",
+      "country": "Switzerland",
+      "category": "case_study",
+      "priority": "low"
+    },
+    {
+      "id": 78,
+      "year": 2020,
+      "authors": "Rosacker and Rosacker",
+      "title": "Voting is a right: A decade of societal, technological, and experiential progress towards the goal of remote-access voting",
+      "journal": "Transforming Government: People, Process, and Policy",
+      "country": "United States",
+      "category": "adoption_factors",
+      "priority": "low"
+    }
+  ],
+  "sample_20_priority_studies": [
+    1, 2, 10, 12, 13, 17, 25, 29, 34, 39, 43, 44, 45, 51, 52, 55, 56, 59, 63, 70
+  ],
+  "statistics": {
+    "by_year": {
+      "2005": 6,
+      "2006": 1,
+      "2007": 4,
+      "2008": 4,
+      "2009": 7,
+      "2010": 2,
+      "2011": 5,
+      "2012": 3,
+      "2013": 5,
+      "2014": 1,
+      "2015": 3,
+      "2016": 8,
+      "2017": 6,
+      "2018": 8,
+      "2019": 1,
+      "2020": 14
+    },
+    "by_country": {
+      "United States": 20,
+      "Jordan": 4,
+      "Nigeria": 4,
+      "Switzerland": 4,
+      "Brazil": 4,
+      "Estonia": 3,
+      "Netherlands": 3,
+      "Indonesia": 3,
+      "Canada": 3,
+      "Argentina": 3,
+      "Multi-country": 6
+    },
+    "total_countries": 31
+  }
+}

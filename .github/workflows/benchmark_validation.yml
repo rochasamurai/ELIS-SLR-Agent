@@ -28,17 +28,23 @@ jobs:
           pip install -r requirements.txt
           pip install pandas pyyaml
       
-      - name: Check existing ELIS results
+      - name: Clean old results
         run: |
-          echo "Using existing ELIS results from json_jsonl/"
-          ls -la json_jsonl/ || echo "No json_jsonl directory found"
-          if [ -f "json_jsonl/ELIS_Appendix_A_Search_rows.json" ]; then
-            echo "Found ELIS results file"
-            head -n 5 json_jsonl/ELIS_Appendix_A_Search_rows.json
-          else
-            echo "No ELIS results file found"
-          fi
-      
+          rm -f json_jsonl/benchmark_search_results.json
+          echo "Cleaned old benchmark results"
+
+      - name: Run benchmark search (all databases + Google Scholar)
+        env:
+          SCOPUS_API_KEY: ${{ secrets.SCOPUS_API_KEY }}
+          SCOPUS_INST_TOKEN: ${{ secrets.SCOPUS_INST_TOKEN }}
+          WEB_OF_SCIENCE_API_KEY: ${{ secrets.WEB_OF_SCIENCE_API_KEY }}
+          IEEE_API_KEY: ${{ secrets.IEEE_EXPLORE_API_KEY }}
+          CORE_API_KEY: ${{ secrets.CORE_API_KEY }}
+          APIFY_API_TOKEN: ${{ secrets.APIFY_API_TOKEN }}
+          SEMANTIC_SCHOLAR_API_KEY: ${{ secrets.SEMANTIC_SCHOLAR_API_KEY }}
+        run: |
+          python scripts/search_benchmark.py
+         
       - name: Run benchmark validation
         run: |
           python scripts/run_benchmark.py

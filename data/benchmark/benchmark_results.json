@@ -1,0 +1,11 @@
+{
+  "gold_standard_total": 78,
+  "elis_results_total": 99,
+  "matched_studies": 7,
+  "missed_studies": 71,
+  "retrieval_rate_percent": 9.0,
+  "recall_percent": 9.0,
+  "precision_percent": 7.1,
+  "additional_studies": 92,
+  "test_date": "2026-01-26T13:35:41.159755"
+}

@@ -52,9 +52,7 @@ def semanticscholar_search(query: str, limit: int = 100, max_results: int = 100)
     results = []
     offset = 0
 
-    fields = (
-        "title,authors,year,abstract,doi,url,citationCount,publicationDate,externalIds"
-    )
+    fields = "title,authors,year,venue,abstract,citationCount,externalIds"
 
     while len(results) < max_results:
         params = {

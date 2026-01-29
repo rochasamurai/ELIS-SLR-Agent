@@ -1,0 +1,93 @@
+[
+  {
+    "id": 2,
+    "year": 2005,
+    "authors": "Schaupp and Carter",
+    "title": "E-voting: From apathy to adoption",
+    "journal": "Journal of Enterprise Information Management",
+    "country": "United States",
+    "category": "adoption_factors",
+    "priority": "high",
+    "doi": NaN,
+    "match_method": "title+year",
+    "elis_title": "E-voting: from apathy to adoption"
+  },
+  {
+    "id": 3,
+    "year": 2005,
+    "authors": "Garner and Spolaore",
+    "title": "Why chads? Determinants of voting equipment use in the United States",
+    "journal": "Public Choice",
+    "country": "United States",
+    "category": "technology_effects",
+    "priority": "medium",
+    "doi": NaN,
+    "match_method": "title+year",
+    "elis_title": "Why chads? Determinants of voting equipment use in the United States"
+  },
+  {
+    "id": 33,
+    "year": 2013,
+    "authors": "Salimonu, Osman, Shittu and Jimoh",
+    "title": "Adoption of e-voting system in Nigeria: A conceptual framework",
+    "journal": "International Journal of Applied Information Systems (IJAIS)",
+    "country": "Nigeria",
+    "category": "adoption_factors",
+    "priority": "low",
+    "doi": NaN,
+    "match_method": "title+year",
+    "elis_title": "Adoption of E-Voting System in Nigeria: A Conceptual Framework"
+  },
+  {
+    "id": 43,
+    "year": 2016,
+    "authors": "Alomari",
+    "title": "E-voting adoption in a developing country",
+    "journal": "Transforming Government: People, Process, and Policy",
+    "country": "Jordan",
+    "category": "adoption_factors",
+    "priority": "high",
+    "doi": NaN,
+    "match_method": "title+year",
+    "elis_title": "E-voting adoption in a developing country"
+  },
+  {
+    "id": 47,
+    "year": 2016,
+    "authors": "Dolatabadi",
+    "title": "Towards a comprehensive conceptualisation of e-voting adoption: A theoretical perspective",
+    "journal": "International Journal of Technology, Policy and Management",
+    "country": "Multi-country",
+    "category": "theory",
+    "priority": "medium",
+    "doi": NaN,
+    "match_method": "title+year",
+    "elis_title": "Towards a comprehensive conceptualisation of e-voting adoption: a theoretical perspective"
+  },
+  {
+    "id": 66,
+    "year": 2020,
+    "authors": "Zhu, Azizah and Hsiao",
+    "title": "Examining multi-dimensional trust of technology in citizens' adoption of e-voting in developing countries",
+    "journal": "Information Development",
+    "country": "Multi-country",
+    "category": "trust",
+    "priority": "medium",
+    "doi": NaN,
+    "match_method": "title+year",
+    "elis_title": "Examining multi-dimensional trust of technology in citizens\u2019 adoption of e-voting in developing countries"
+  },
+  {
+    "id": 74,
+    "year": 2020,
+    "authors": "Mensah",
+    "title": "Impact of performance expectancy, effort expectancy, and citizen trust on the adoption of electronic voting system in Ghana",
+    "journal": "International Journal of Electronic Government Research",
+    "country": "Ghana",
+    "category": "adoption_factors",
+    "priority": "low",
+    "doi": NaN,
+    "match_method": "title+year",
+    "elis_title": "Impact of Performance Expectancy, Effort Expectancy, and Citizen Trust on the Adoption of Electronic Voting System in Ghana"
+  }
+]

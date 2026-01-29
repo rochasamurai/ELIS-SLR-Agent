@@ -1,0 +1,65 @@
+# ELIS Benchmark Configuration - Darmawan (2021) Validation
+# Purpose: Validate ELIS retrieval against published semi-systematic review
+# Standard: Darmawan, I. (2021). E-voting adoption in many countries. 
+#           Asian Journal of Comparative Politics, 6(4), 482-504.
+
+benchmark:
+  name: "Darmawan 2021 E-voting Adoption"
+  standard_paper:
+    doi: "10.1177/20578911211040584"
+    author: "Darmawan, I."
+    year: 2021
+    title: "E-voting adoption in many countries: A literature review"
+    journal: "Asian Journal of Comparative Politics"
+    studies_count: 78
+    time_period: "2005-2020"
+    databases_original: 
+      - "Google Scholar"
+      - "ACM Digital Library"
+      - "Science Direct"
+      - "J-STOR"
+  
+research_question:
+  original: "How has research on the topic of e-voting adoption progressed over the last 15 years?"
+  adapted: "What empirical studies have examined factors associated with e-voting adoption from 2005 to 2020?"
+  
+search_parameters:
+  date_range:
+    start: "2005-01-01"
+    end: "2020-12-31"
+  
+  search_terms:
+    boolean_string: >
+      ("e-voting" OR "electronic voting" OR "internet voting" OR 
+       "online voting" OR "i-voting" OR "remote voting")
+      AND
+      ("adoption" OR "implementation" OR "deployment" OR "acceptance" 
+       OR "intention to use" OR "diffusion")
+      AND
+      ("election" OR "voting" OR "electoral" OR "ballot")
+  
+  databases:
+    - scopus
+    - web_of_science
+    - semantic_scholar
+    - openalex
+    - crossref
+    - ieee_xplore
+    - core
+  
+  filters:
+    language: "English"
+    publication_type: "journal article"
+    peer_reviewed: true
+
+validation_targets:
+  retrieval_rate_minimum: 0.70
+  precision_minimum: 0.75
+  sample_test_minimum: 0.75
+
+output:
+  results_file: "data/benchmark/benchmark_results.json"
+  report_file: "docs/BENCHMARK_VALIDATION_REPORT.md"
+  matched_studies: "data/benchmark/matched_studies.json"
+  missed_studies: "data/benchmark/missed_studies.json"
+  additional_studies: "data/benchmark/additional_studies.json"
