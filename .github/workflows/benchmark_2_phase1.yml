@@ -1,0 +1,77 @@
+name: Benchmark 2 - Phase 1 Execution (Tai & Awasthi 2025)
+
+on:
+  workflow_dispatch:
+    inputs:
+      description:
+        description: 'Description of this benchmark run'
+        required: false
+        default: 'Phase 1 - Full execution with 8 databases'
+
+jobs:
+  benchmark-phase1:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pyyaml
+      
+      - name: Run Phase 1 Benchmark
+        env:
+          SCOPUS_API_KEY: ${{ secrets.SCOPUS_API_KEY }}
+          SCOPUS_INST_TOKEN: ${{ secrets.SCOPUS_INST_TOKEN }}
+          WEB_OF_SCIENCE_API_KEY: ${{ secrets.WEB_OF_SCIENCE_API_KEY }}
+          IEEE_API_KEY: ${{ secrets.IEEE_EXPLORE_API_KEY }}
+          CORE_API_KEY: ${{ secrets.CORE_API_KEY }}
+          APIFY_API_TOKEN: ${{ secrets.APIFY_API_TOKEN }}
+          SEMANTIC_SCHOLAR_API_KEY: ${{ secrets.SEMANTIC_SCHOLAR_API_KEY }}
+          PYTHONIOENCODING: utf-8
+        run: |
+          cd docs/benchmark-2
+          python run_phase1_benchmark.py
+      
+      - name: Upload Phase 1 Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: benchmark-2-phase1-results
+          path: |
+            docs/benchmark-2/results/phase1_full_results.json
+            docs/benchmark-2/results/*.json
+      
+      - name: Display Results Summary
+        if: always()
+        run: |
+          echo "=== PHASE 1 RESULTS SUMMARY ==="
+          if [ -f docs/benchmark-2/results/phase1_full_results.json ]; then
+            cat docs/benchmark-2/results/phase1_full_results.json | python -c "import sys, json; r=json.load(sys.stdin); print(f\"Matched: {r['total_matched']}/{r['total_gold_standard']}\"); print(f\"Retrieval Rate: {r['retrieval_rate']:.1%}\"); print(f\"Execution Time: {r['execution_time_seconds']/60:.1f} min\")"
+          else
+            echo "No results file found"
+          fi
+      
+      - name: Check Success Criteria
+        if: always()
+        run: |
+          if [ -f docs/benchmark-2/results/phase1_full_results.json ]; then
+            RATE=$(cat docs/benchmark-2/results/phase1_full_results.json | python -c "import sys, json; print(json.load(sys.stdin)['retrieval_rate'])")
+            echo "Retrieval rate: $RATE"
+            if (( $(echo "$RATE >= 0.50" | bc -l) )); then
+              echo "✓ SUCCESS: Minimum threshold achieved"
+              exit 0
+            else
+              echo "✗ FAIL: Below minimum threshold (50%)"
+              exit 1
+            fi
+          fi
+          
