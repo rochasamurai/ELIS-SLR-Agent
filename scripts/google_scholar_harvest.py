@@ -52,7 +52,7 @@ def google_scholar_search(
     if older_than:
         payload["olderThan"] = older_than
 
-    print(f"\n🔍 Searching Google Scholar via Apify...")
+    print("\n🔍 Searching Google Scholar via Apify...")
     print(f"   Query: {query}")
     print(f"   Max items: {max_items}")
     if newer_than:
@@ -71,7 +71,7 @@ def google_scholar_search(
         dataset_id = run_info["data"]["defaultDatasetId"]
 
         print(f"  Run started: {run_id}")
-        print(f"  Waiting for completion...")
+        print("  Waiting for completion...")
 
         # 2. POLL FOR COMPLETION
         max_wait = 420  # 7 minutes max (Google Scholar can be slow)
@@ -103,7 +103,7 @@ def google_scholar_search(
                         time.sleep(5)  # Wait a bit longer before retry
                         continue
                     else:
-                        print(f"  ❌ Max retries reached, giving up")
+                        print("  ❌ Max retries reached, giving up")
                         return []
                 else:
                     print(f"  ❌ HTTP Error: {e}")
@@ -130,7 +130,7 @@ def google_scholar_search(
                 print(f"  ⏳ Status: {status} ({waited}s elapsed)")
 
         if status != "SUCCEEDED":
-            print(f"  ⚠️ Timeout waiting for results")
+            print("  ⚠️ Timeout waiting for results")
             return []
 
         # 3. GET RESULTS FROM DATASET
@@ -150,7 +150,7 @@ def google_scholar_search(
         return results
 
     except requests.exceptions.Timeout:
-        print(f"  ⚠️ Request timeout")
+        print("  ⚠️ Request timeout")
         return []
     except requests.exceptions.HTTPError as e:
         print(f"  ❌ HTTP Error: {e}")

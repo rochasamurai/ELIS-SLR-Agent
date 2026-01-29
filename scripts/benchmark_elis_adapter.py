@@ -13,9 +13,8 @@ import sys
 import yaml
 import json
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict
 import pandas as pd
-from datetime import datetime
 
 # Add project paths
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -103,7 +102,7 @@ class BenchmarkElisAdapter:
             print("\n⚠️  ELIS search integration pending:")
             print("   The search_mvp.py script needs to be called with:")
             print(f"   - Config: {temp_config_path}")
-            print(f"   - Output: json_jsonl/ELIS_Appendix_A_Search_rows.json")
+            print("   - Output: json_jsonl/ELIS_Appendix_A_Search_rows.json")
             print("\n   To complete integration:")
             print("   1. Modify search_mvp.py to accept config path parameter")
             print("   2. Call it from this adapter")

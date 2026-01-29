@@ -217,7 +217,7 @@ class BenchmarkValidator:
             method = m.get("match_method", "unknown")
             match_methods[method] = match_methods.get(method, 0) + 1
         if match_methods:
-            print(f"\n  Match methods:")
+            print("\n  Match methods:")
             for method, count in sorted(match_methods.items(), key=lambda x: -x[1]):
                 print(f"    {method}: {count}")
 
