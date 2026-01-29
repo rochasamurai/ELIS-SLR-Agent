@@ -1,0 +1,191 @@
+# ELIS Benchmark 2 Configuration
+# Paper: Tai & Awasthi (2025) - Agile Government Systematic Review
+# Created: 2026-01-29
+
+benchmark:
+  id: "TAI_AWASTHI_2025"
+  name: "Tai & Awasthi (2025) - Agile Government"
+  description: "Systematic review of agile practices in public sector (micro/meso/macro levels)"
+  status: "PENDING_API_ACCESS"
+  
+paper:
+  title: "An exploration of agile government in the public sector: A systematic literature review at macro, meso, and micro levels of analysis"
+  authors:
+    - "Kuang-Ting Tai"
+    - "Pallavi Awasthi"
+  journal: "Government Information Quarterly"
+  volume: 42
+  year: 2025
+  doi: "10.1016/j.giq.2025.102082"
+  total_studies: 55
+  
+search_strategy:
+  # Replicated from paper Section 2.1
+  date_range:
+    start: "2002-01-01"  # All available years
+    end: "2023-05-31"    # Last search date
+  
+  # Three keyword combinations (OR logic between groups)
+  queries:
+    - group: 1
+      terms: ["agile", "government"]
+      operator: "AND"
+    - group: 2
+      terms: ["agile", "governance"]
+      operator: "AND"
+    - group: 3
+      terms: ["agile", "public"]
+      operator: "AND"
+  
+  # Combined query string
+  query_string: |
+    ("agile" AND "government") OR 
+    ("agile" AND "governance") OR 
+    ("agile" AND "public")
+  
+  # Search fields (from paper)
+  search_fields:
+    - "title"
+    - "abstract"
+    - "keywords"  # author-identified keywords
+  
+  # Filters
+  filters:
+    language: "English"
+    peer_reviewed: true
+    document_type: "article"
+  
+databases:
+  # Paper's original databases
+  original:
+    - name: "Web of Science"
+      results: 405
+      status: "ELIS_HAS_ACCESS"
+    - name: "EBSCOhost"
+      results: 170
+      status: "PENDING_API_ACCESS"
+    - name: "ProQuest Social Science Premium"
+      results: 527
+      status: "PENDING_API_ACCESS"
+  
+  # ELIS available databases (Phase 1)
+  elis_phase1:
+    - name: "Scopus"
+      status: "AVAILABLE"
+      priority: "HIGH"
+      rationale: "High overlap with Web of Science"
+    - name: "Web of Science"
+      status: "AVAILABLE"
+      priority: "CRITICAL"
+      rationale: "Direct match with paper (1/3 databases)"
+    - name: "OpenAlex"
+      status: "AVAILABLE"
+      priority: "HIGH"
+      rationale: "Comprehensive aggregator, may contain EBSCOhost/ProQuest content"
+    - name: "CrossRef"
+      status: "AVAILABLE"
+      priority: "MEDIUM"
+      rationale: "DOI-based verification"
+    - name: "Google Scholar"
+      status: "AVAILABLE"
+      priority: "HIGH"
+      rationale: "Broadest coverage, safety net"
+    - name: "Semantic Scholar"
+      status: "AVAILABLE"
+      priority: "MEDIUM"
+      rationale: "Good for CS/digital government topics"
+    - name: "CORE"
+      status: "AVAILABLE"
+      priority: "MEDIUM"
+      rationale: "Open access aggregator"
+    - name: "IEEE Xplore"
+      status: "AVAILABLE"
+      priority: "LOW"
+      rationale: "Limited relevance to public admin focus"
+  
+  # ELIS available databases (Phase 2 - after API access)
+  elis_phase2:
+    - name: "EBSCOhost"
+      status: "PENDING"
+      priority: "CRITICAL"
+      rationale: "Direct match with paper (2/3 databases)"
+    - name: "ProQuest Social Science Premium"
+      status: "PENDING"
+      priority: "CRITICAL"
+      rationale: "Direct match with paper (3/3 databases)"
+
+matching:
+  algorithm: "fuzzy_keyword_hybrid"
+  
+  # Primary matching method
+  primary:
+    method: "title_similarity"
+    threshold: 0.85
+    algorithm: "fuzzy"
+  
+  # Fallback methods
+  fallback:
+    - method: "doi_exact"
+      threshold: 1.0
+    - method: "author_year_title"
+      threshold: 0.80
+  
+  # Manual review triggers
+  manual_review:
+    title_similarity_range: [0.70, 0.85]
+    missing_fields: ["doi", "authors"]
+
+validation:
+  gold_standard:
+    file: "data/tai_awasthi_2025_references_FINAL.json"
+    count: 55
+    format: "json"
+  
+  success_criteria:
+    minimum_retrieval_rate: 0.50  # 50%
+    target_retrieval_rate: 0.65   # 65%
+    excellent_retrieval_rate: 0.75 # 75%
+  
+  metrics:
+    - "retrieval_rate"
+    - "precision"
+    - "recall"
+    - "f1_score"
+    - "cost_per_study"
+    - "execution_time"
+
+execution:
+  phases:
+    phase1:
+      name: "Baseline Validation (Current Databases)"
+      status: "READY"
+      databases: ["Scopus", "Web of Science", "OpenAlex", "CrossRef", "Google Scholar", "Semantic Scholar", "CORE"]
+      expected_retrieval: "45-85%"
+    
+    phase2:
+      name: "Full Validation (With API Access)"
+      status: "BLOCKED_API_ACCESS"
+      databases: ["All Phase 1 + EBSCOhost + ProQuest"]
+      expected_retrieval: "70-95%"
+  
+  resource_limits:
+    max_api_calls: 10000
+    max_cost_usd: 2.00
+    timeout_minutes: 60
+
+output:
+  results_directory: "results/"
+  reports:
+    - "benchmark_results_phase1.json"
+    - "benchmark_results_phase1.md"
+    - "matched_studies.json"
+    - "missed_studies.json"
+    - "database_contribution.json"
+
+notes:
+  - "Phase 1 runs with available databases only (1/3 direct match)"
+  - "Phase 2 will rerun after EBSCOhost and ProQuest API access obtained"
+  - "Paper retrieved 1102 records initially (527 ProQuest, 405 WoS, 170 EBSCOhost)"
+  - "After deduplication: 675 unique articles"
+  - "After screening: 55 final articles"
+  - "Search not restricted to public admin journals - includes health, business, info science"
