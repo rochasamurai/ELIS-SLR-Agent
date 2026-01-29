@@ -141,15 +141,19 @@ def search_database(db_name, script_name, query, start_year, end_year):
     if OUTPUT_FILE.exists():
         OUTPUT_FILE.unlink()
     
-    # Run harvest script
+    # Run harvest script with appropriate timeout
     print(f"  Running: {script_name}")
+    
+    # Google Scholar needs longer timeout (12 min), others use 5 min
+    timeout_seconds = 720 if db_name == "Google Scholar" else 300
+    
     try:
         result = subprocess.run(
             [sys.executable, str(script_path)],
             cwd=str(REPO_ROOT),
             capture_output=True,
             text=True,
-            timeout=300  # 5 minute timeout
+            timeout=timeout_seconds
         )
         
         if result.returncode != 0:
@@ -174,7 +178,8 @@ def search_database(db_name, script_name, query, start_year, end_year):
         return results
         
     except subprocess.TimeoutExpired:
-        print(f"  ✗ TIMEOUT: Exceeded 5 minutes")
+        timeout_min = timeout_seconds / 60
+        print(f"  ✗ TIMEOUT: Exceeded {timeout_min:.0f} minutes")
         return []
     except Exception as e:
         print(f"  ✗ ERROR: {type(e).__name__}: {e}")
