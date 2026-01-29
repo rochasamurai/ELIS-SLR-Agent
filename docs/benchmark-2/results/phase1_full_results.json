@@ -1,0 +1,389 @@
+{
+  "benchmark_id": "TAI_AWASTHI_2025",
+  "phase": "PHASE_1",
+  "execution_date": "2026-01-29T16:27:25.063697",
+  "databases_used": [
+    "Scopus",
+    "Web of Science",
+    "IEEE Xplore",
+    "Semantic Scholar",
+    "OpenAlex",
+    "CrossRef",
+    "CORE",
+    "Google Scholar"
+  ],
+  "total_gold_standard": 55,
+  "total_retrieved": 2272,
+  "total_matched": 11,
+  "retrieval_rate": 0.2,
+  "precision": 0.0048415492957746475,
+  "recall": 0.2,
+  "f1_score": 0.009454232917920068,
+  "execution_time_seconds": 140.234011,
+  "database_contribution": {
+    "Scopus": 500,
+    "Web of Science": 500,
+    "IEEE Xplore": 0,
+    "Semantic Scholar": 0,
+    "OpenAlex": 500,
+    "CrossRef": 490,
+    "CORE": 482,
+    "Google Scholar": 0
+  },
+  "matched_studies": [
+    {
+      "gold_id": 6,
+      "title": "Institutional challenges in agile adoption: Evidence from a public sector IT project",
+      "authors": "Baxter, D., Dacre, N., Dong, H., & Ceylan, S",
+      "year": "2023",
+      "matched_title": "Institutional challenges in agile adoption: Evidence from a public sector IT project",
+      "source_database": "OpenAlex"
+    },
+    {
+      "gold_id": 8,
+      "title": "The utility of rapid application development in large-scale, complex projects",
+      "authors": "Berger, H., & Beynon-Davies, P",
+      "year": "2009",
+      "matched_title": "The utility of rapid application development in large-scale, complex projects",
+      "source_database": "Web of Science"
+    },
+    {
+      "gold_id": 23,
+      "title": "Introduction to the special issue \u2018towards a multilevel understanding of agile in government: Macro, meso and micro perspectives\u2019",
+      "authors": "Fischer, C., & Neumann, O",
+      "year": "2024",
+      "matched_title": "Introduction to the special issue \u2018Towards a Multi-Level Understanding of Agile in Government: Macro, Meso and Micro Perspectives\u2019",
+      "source_database": "OpenAlex"
+    },
+    {
+      "gold_id": 28,
+      "title": "Endogenous development dynamics of multisectoral network management",
+      "authors": "Herranz, J., Jr",
+      "year": "2009",
+      "matched_title": "ENDOGENOUS DEVELOPMENT DYNAMICS OF MULTISECTORAL NETWORK MANAGEMENT",
+      "source_database": "Web of Science"
+    },
+    {
+      "gold_id": 29,
+      "title": "Building an agile government: Its possibilities, challenges, and new tasks",
+      "authors": "Hong, K. P., & Kim, P. S",
+      "year": "2020",
+      "matched_title": "Building an Agile Government: Its Possibilities, Challenges, and New Tasks",
+      "source_database": "OpenAlex"
+    },
+    {
+      "gold_id": 33,
+      "title": "Transitioning to agile software development: Lessons learned from a government-contracted program",
+      "authors": "Patanakul, P., & Rufo-McCarron, R",
+      "year": "2018",
+      "matched_title": "Transitioning to agile software development: Lessons learned from a government-contracted program",
+      "source_database": "OpenAlex"
+    },
+    {
+      "gold_id": 37,
+      "title": "Acceptance of an agile methodology in the public sector",
+      "authors": "Ribeiro, A., & Domingues, L",
+      "year": "2018",
+      "matched_title": "Acceptance of an agile methodology in the public sector",
+      "source_database": "Web of Science"
+    },
+    {
+      "gold_id": 42,
+      "title": " Diffusion and usage of public e-services in Europe: An assessment of country level indicators and drivers. Telecommunications",
+      "authors": "Seri, P., Bianchi, A., & Matteucci, N",
+      "year": "2014",
+      "matched_title": "Diffusion and usage of public e-services in Europe: An assessment of country level indicators and drivers",
+      "source_database": "Web of Science"
+    },
+    {
+      "gold_id": 44,
+      "title": "Agile local governments: Experimentation before implementation",
+      "authors": "Soe, R. M., & Drechsler, W",
+      "year": "2018",
+      "matched_title": "Agile local governments: Experimentation before implementation",
+      "source_database": "OpenAlex"
+    },
+    {
+      "gold_id": 47,
+      "title": "Managing the \u201cfuzzy front end\u201d of open digital service innovation in the public sector: A methodology",
+      "authors": "Tate, M., Bongiovanni, I., Kowalkiewicz, M., & Townson, P",
+      "year": "2018",
+      "matched_title": "Managing the \u201cFuzzy front end\u201d of open digital service innovation in the public sector: A methodology",
+      "source_database": "CORE"
+    },
+    {
+      "gold_id": 55,
+      "title": "Incorporating agile practices in public sector IT management: A nudge toward adaptive governance",
+      "authors": "Ylinen, M",
+      "year": "2021",
+      "matched_title": "Incorporating agile practices in public sector IT management: A nudge toward adaptive governance",
+      "source_database": "OpenAlex"
+    }
+  ],
+  "missed_studies": [
+    {
+      "gold_id": 1,
+      "title": "Project management technologies in public administration",
+      "authors": "Aleinikova, O., Kravchenko, S., Zvonar, V., Hurochkina, V., Brechko, O., & Buryk, Z",
+      "year": "2020"
+    },
+    {
+      "gold_id": 2,
+      "title": "Generative artificial intelligence, present and perspectives in public administration",
+      "authors": "Androniceanu, A",
+      "year": "2024"
+    },
+    {
+      "gold_id": 3,
+      "title": "Systematic review of literature on agile approach",
+      "authors": "Anifa, M., Ramakrishnan, S., Kabiraj, S., & Joghee, S",
+      "year": "2024"
+    },
+    {
+      "gold_id": 4,
+      "title": "The concept and competitiveness of agile organization in the fourth industrial revolution\u2019s drift",
+      "authors": "Balog, K",
+      "year": "2020"
+    },
+    {
+      "gold_id": 5,
+      "title": "Toward a more agile government: The case for rebooting federal IT procurement",
+      "authors": "Balter, B. J",
+      "year": "2011"
+    },
+    {
+      "gold_id": 7,
+      "title": "Agile development in a bureaucratic arena\u2014A case study experience",
+      "authors": "Berger, H",
+      "year": "2007"
+    },
+    {
+      "gold_id": 9,
+      "title": " Legal knowledge and agility in public administration. Intelligent Systems in Accounting, Finance and Management, 20(2), 67\u201388.",
+      "authors": "Boer, A., & Van Engers, T",
+      "year": "2013"
+    },
+    {
+      "gold_id": 10,
+      "title": "Agile project management in public sector\u2013methodological aspects",
+      "authors": "Bogdanova, M., Parashkevova, E., & Stoyanova, M",
+      "year": "2020"
+    },
+    {
+      "gold_id": 11,
+      "title": " Adoption of Project Management methodology and challenges faced: A comparative analysis between government IT sector and IT Organisations in the corporate sector in Kerala. Technology.",
+      "authors": "Chandrachooodan, G., Radhika, R., & Palappan, R. R",
+      "year": "2021"
+    },
+    {
+      "gold_id": 12,
+      "title": "The role of policy entrepreneurs in open government data policy innovation diffusion: An analysis of Australian Federal and State Governments",
+      "authors": "Chatfield, A. T., & Reddick, C. G",
+      "year": "2018"
+    },
+    {
+      "gold_id": 13,
+      "title": " Digital government units: What are they, and what do they mean for digital era public management renewal? International Public Management Journal, 23 (3), 358\u2013379.",
+      "authors": "Clarke, A",
+      "year": "2020"
+    },
+    {
+      "gold_id": 14,
+      "title": " Agile software development, the people factor.",
+      "authors": "Cockburn, A., & Highsmith, J",
+      "year": "2001"
+    },
+    {
+      "gold_id": 15,
+      "title": " Can agile project management be adopted by industries other than software development? Project Management Journal, 45(3), 21\u201334.",
+      "authors": "Conforto, E. C., Salum, F., Amaral, D. C., Da Silva, S. L., & De Almeida, L. F. M",
+      "year": "2014"
+    },
+    {
+      "gold_id": 16,
+      "title": "Defining the process to literature searching in systematic reviews: A literature review of guidance and supporting studies",
+      "authors": "Cooper, C., Booth, A., Varley-Campbell, J., Britten, N., & Garside, R",
+      "year": "2018"
+    },
+    {
+      "gold_id": 17,
+      "title": "How to make the whole organization \u201cagile\u201d",
+      "authors": "Denning, S",
+      "year": "2016"
+    },
+    {
+      "gold_id": 18,
+      "title": "What is agile project management? Developing a new definition following a systematic literature review",
+      "authors": "Dong, H., Dacre, N., Baxter, D., & Ceylan, S",
+      "year": "2024"
+    },
+    {
+      "gold_id": 19,
+      "title": "The changing face of public administration in the Fourth industrial revolution",
+      "authors": "Edwin, I., & Anuoluwapo, D",
+      "year": "2020"
+    },
+    {
+      "gold_id": 20,
+      "title": " Modeling and visualizing smart city mobility business ecosystems: Insights from a case study.",
+      "authors": "Faber, A., Rehm, S. V., Hernandez-Mendez, A., & Matthes, F",
+      "year": "2018"
+    },
+    {
+      "gold_id": 21,
+      "title": "Design thinking: Challenges for software requirements elicitation",
+      "authors": "Kosloski, R. A., A\u0301vila Palde\u0302s, R., & Costa Oliveira, E",
+      "year": "2019"
+    },
+    {
+      "gold_id": 22,
+      "title": "Better government personnel",
+      "authors": "Finer, H",
+      "year": "1936"
+    },
+    {
+      "gold_id": 24,
+      "title": "Improving task breakdown comprehensiveness in agile projects with an interaction room",
+      "authors": "Grapenthin, S., Poggel, S., Book, M., & Gruhn, V",
+      "year": "2015"
+    },
+    {
+      "gold_id": 25,
+      "title": "Agile manufacturing: A framework for research and development",
+      "authors": "Gunasekaran, A",
+      "year": "1999"
+    },
+    {
+      "gold_id": 26,
+      "title": " The agile government: Blueprint for modern public administration. Tredition Gmbh.",
+      "authors": "Hastings, C",
+      "year": "2024"
+    },
+    {
+      "gold_id": 27,
+      "title": " Assessing network-based collaborations: Effectiveness for whom? Public Management Review, 10(6), 733\u2013749.",
+      "authors": "Head, B. W",
+      "year": "2008"
+    },
+    {
+      "gold_id": 30,
+      "title": " The \u201cnew public management\u201d in the 1980s: Variations on a theme.",
+      "authors": "Hood, C",
+      "year": "1995"
+    },
+    {
+      "gold_id": 31,
+      "title": "102082",
+      "authors": "Accounting, Organizations and Society, 20(2\u20133), 93\u2013109. 16 K.-T. Tai and P. Awasthi Government Information Quarterly 42",
+      "year": "2025"
+    },
+    {
+      "gold_id": 32,
+      "title": "The PRISMA 2020 statement: An updated guideline for reporting systematic reviews",
+      "authors": "Page, M. J., McKenzie, J. E., Bossuyt, P. M., Boutron, I., Hoffmann, T. C., Mulrow, C. D., & Moher, D",
+      "year": "2021"
+    },
+    {
+      "gold_id": 34,
+      "title": "The agility construct in the literature: Conceptualization and bibliometric assessment",
+      "authors": "Pinho, C. R., Pinho, M. L. C., Deligonul, S. Z., & Cavusgil, S. T",
+      "year": "2022"
+    },
+    {
+      "gold_id": 35,
+      "title": " The manifold meanings of \u2018post-new public management\u2019\u2013a systematic literature review. International Review of Administrative",
+      "authors": "Reiter, R., & Klenk, T",
+      "year": "2019"
+    },
+    {
+      "gold_id": 36,
+      "title": "PRISMA-S: An extension to the PRISMA statement for reporting literature searches in systematic reviews",
+      "authors": "Koffel, J. B",
+      "year": "2021"
+    },
+    {
+      "gold_id": 38,
+      "title": "Bridging levels of public administration: How macro shapes meso and micro",
+      "authors": "Roberts, A",
+      "year": "2020"
+    },
+    {
+      "gold_id": 39,
+      "title": "Researching the democratic impact of open government data: A systematic literature review",
+      "authors": "Ruijer, E. H., & Martinius, E",
+      "year": "2017"
+    },
+    {
+      "gold_id": 40,
+      "title": " Towards examining the link between workplace spirituality and workforce agility: Exploring higher educational institutions. Psychology Research and Behavior",
+      "authors": "Saeed, I., Khan, J., Zada, M., Ullah, R., Vega-Mun\u0303oz, A., & Contreras-Barraza, N",
+      "year": "2022"
+    },
+    {
+      "gold_id": 41,
+      "title": "Generative artificial intelligence (ChatGPT & Bard) in public administration research: A double-edged sword for street-level bureaucracy studies",
+      "authors": "Salah, M., Abdelfattah, F., & Al Halbusi, H",
+      "year": "2023"
+    },
+    {
+      "gold_id": 43,
+      "title": "Does agile work?\u2014A quantitative analysis of agile project success",
+      "authors": "Serrador, P., & Pinto, J. K",
+      "year": "2015"
+    },
+    {
+      "gold_id": 45,
+      "title": "Theories in agile software development: Past, present, and future introduction to the XP 2020 special section",
+      "authors": "Stray, V., Hoda, R., Paasivaara, M., Lenarduzzi, V., & Mendez, D",
+      "year": "2022"
+    },
+    {
+      "gold_id": 46,
+      "title": "Open government research over a decade: A systematic review",
+      "authors": "Tai, K. T",
+      "year": "2021"
+    },
+    {
+      "gold_id": 48,
+      "title": "The strategic performance management system in selected Philippine National Government agencies: Assessment and policy recommendations",
+      "authors": "Torneo, A. R., & Mojica, B. J",
+      "year": "2020"
+    },
+    {
+      "gold_id": 49,
+      "title": " Leadership fit for the information age. Strategic HR",
+      "authors": "Trevor, J., & Kilduff, M",
+      "year": "2012"
+    },
+    {
+      "gold_id": 50,
+      "title": "Exploring smartness in public sector innovation-creating smart public services with the internet of things",
+      "authors": "Velsberg, O., Westergren, U. H., & Jonsson, K",
+      "year": "2020"
+    },
+    {
+      "gold_id": 51,
+      "title": "\u2018The challenge now is for us to remain relevant\u2019: Australian public libraries and the COVID-19 crisis",
+      "authors": "Wakeling, S., Garner, J., Hider, P., Jamali, H., Lymn, J., Mansourian, Y., & RandellMoon, H",
+      "year": "2022"
+    },
+    {
+      "gold_id": 52,
+      "title": "Towards a typology of adaptive governance in the digital government context: The role of decision-making and accountability",
+      "authors": "Wang, C., Medaglia, R., & Zheng, L",
+      "year": "2018"
+    },
+    {
+      "gold_id": 53,
+      "title": " Agile project management for government. UK: Maitland and Strong.",
+      "authors": "Wernham, B",
+      "year": "2012"
+    },
+    {
+      "gold_id": 54,
+      "title": "Artificial intelligence and the public sector\u2014Applications and challenges",
+      "authors": "Wirtz, B. W., Weyerer, J. C., & Geyer, C",
+      "year": "2019"
+    }
+  ]
+}
