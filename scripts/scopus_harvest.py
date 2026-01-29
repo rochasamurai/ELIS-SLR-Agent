@@ -1,4 +1,4 @@
-﻿"""
+"""
 scopus_harvest.py
 Harvests metadata from the Elsevier Scopus API using institutional token and API key.
 Reads queries from config/elis_search_queries.yml (protocol-aligned).

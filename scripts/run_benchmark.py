@@ -2,10 +2,10 @@
 """
 ELIS Benchmark Validation Script - Darmawan (2021)
 
-Purpose: Validate ELIS SLR Agent retrieval capabilities against published 
+Purpose: Validate ELIS SLR Agent retrieval capabilities against published
          semi-systematic review as recommended by supervisor.
 
-Standard: Darmawan, I. (2021). E-voting adoption in many countries: 
+Standard: Darmawan, I. (2021). E-voting adoption in many countries:
           A literature review. Asian Journal of Comparative Politics, 6(4), 482-504.
 
 Author: Carlos Rocha
@@ -64,18 +64,23 @@ class BenchmarkValidator:
         """
         Run ELIS search with benchmark parameters.
         """
-        print("\n" + "="*70)
+        print("\n" + "=" * 70)
         print("ELIS SEARCH EXECUTION")
-        print("="*70)
-        
-        search_params = self.config['search_parameters']
-        print(f"Time period: {search_params['date_range']['start']} to {search_params['date_range']['end']}")
+        print("=" * 70)
+
+        search_params = self.config["search_parameters"]
+        print(
+            f"Time period: {search_params['date_range']['start']} to {search_params['date_range']['end']}"
+        )
         print(f"Databases: {', '.join(search_params['databases'])}")
-        print(f"Boolean string: {search_params['search_terms']['boolean_string'][:100]}...")
-        
+        print(
+            f"Boolean string: {search_params['search_terms']['boolean_string'][:100]}..."
+        )
+
         # Import and use the adapter
         try:
             from benchmark_elis_adapter import run_benchmark_search
+
             results = run_benchmark_search(self.config)
             return results
         except ImportError as e:
@@ -85,69 +90,90 @@ class BenchmarkValidator:
         except Exception as e:
             print(f"\n❌ Error running ELIS search: {e}")
             import traceback
+
             traceback.print_exc()
             return pd.DataFrame()
 
     def match_studies(self, elis_results: pd.DataFrame) -> Tuple[List, List, List]:
         """
         Match ELIS results against Darmawan's 78 studies.
-        
+
         Strategy: Simple substring matching with lenient rules
         """
         if elis_results.empty:
             print("\n⚠️  No ELIS results to match")
-            return [], self.gold_standard.to_dict('records'), []
-        
-        print("\n" + "="*70)
+            return [], self.gold_standard.to_dict("records"), []
+
+        print("\n" + "=" * 70)
         print("MATCHING ELIS RESULTS AGAINST GOLD STANDARD")
-        print("="*70)
+        print("=" * 70)
         print(f"ELIS results: {len(elis_results)}")
         print(f"Gold standard: {len(self.gold_standard)}")
-        
+
         matched = []
         missed = []
         matched_elis_indices = set()
-        
+
         # Normalize ELIS results
         elis_normalized = elis_results.copy()
-        if 'title' in elis_normalized.columns:
-            elis_normalized['title_norm'] = (
-                elis_normalized['title'].fillna('')
-                .str.lower().str.strip()
-                .str.replace(r'[^\w\s]', ' ', regex=True)
-                .str.replace(r'\s+', ' ', regex=True)
+        if "title" in elis_normalized.columns:
+            elis_normalized["title_norm"] = (
+                elis_normalized["title"]
+                .fillna("")
+                .str.lower()
+                .str.strip()
+                .str.replace(r"[^\w\s]", " ", regex=True)
+                .str.replace(r"\s+", " ", regex=True)
             )
-        
+
         # Match each gold standard study
         for idx, gold_study in self.gold_standard.iterrows():
-            gold_title = str(gold_study.get('title', '')).lower().strip()
-            gold_title_norm = ''.join(c if c.isalnum() or c.isspace() else ' ' for c in gold_title)
-            gold_title_norm = ' '.join(gold_title_norm.split())  # Normalize spaces
-            gold_year = gold_study.get('year')
-            
+            gold_title = str(gold_study.get("title", "")).lower().strip()
+            gold_title_norm = "".join(
+                c if c.isalnum() or c.isspace() else " " for c in gold_title
+            )
+            gold_title_norm = " ".join(gold_title_norm.split())  # Normalize spaces
+            gold_year = gold_study.get("year")
+
             # Extract key words from gold title (remove stop words)
-            stop_words = {'the', 'a', 'an', 'and', 'or', 'of', 'in', 'on', 'at', 'to', 'for', 'from', 'with'}
-            gold_words = [w for w in gold_title_norm.split() if w not in stop_words and len(w) > 2]
-            
+            stop_words = {
+                "the",
+                "a",
+                "an",
+                "and",
+                "or",
+                "of",
+                "in",
+                "on",
+                "at",
+                "to",
+                "for",
+                "from",
+                "with",
+            }
+            gold_words = [
+                w for w in gold_title_norm.split() if w not in stop_words and len(w) > 2
+            ]
+
             matched_idx = None
             match_method = None
-            
+
             for elis_idx, elis_row in elis_normalized.iterrows():
                 if elis_idx in matched_elis_indices:
                     continue
-                
-                elis_title_norm = elis_row.get('title_norm', '')
+
+                elis_title_norm = elis_row.get("title_norm", "")
                 if not elis_title_norm:
                     continue
-                
+
                 # Count matching key words
                 matches = sum(1 for word in gold_words if word in elis_title_norm)
                 match_ratio = matches / len(gold_words) if gold_words else 0
-                
+
                 # Match if >50% of key words match
                 if match_ratio >= 0.50:
-                    elis_year = elis_row.get('year')
-                    
+                    elis_year = elis_row.get("year")
+
                     # If we have years, they should match
                     if gold_year and elis_year:
                         try:
@@ -162,37 +188,39 @@ class BenchmarkValidator:
                         matched_idx = elis_idx
                         match_method = f"keywords ({match_ratio:.0%})"
                         break
-            
+
             # Record result
             if matched_idx is not None:
                 matched_elis_indices.add(matched_idx)
                 gold_dict = gold_study.to_dict()
-                gold_dict['match_method'] = match_method
-                gold_dict['elis_title'] = elis_results.loc[matched_idx, 'title']
+                gold_dict["match_method"] = match_method
+                gold_dict["elis_title"] = elis_results.loc[matched_idx, "title"]
                 matched.append(gold_dict)
             else:
                 missed.append(gold_study.to_dict())
-        
+
         # Additional studies
         additional = []
         for elis_idx in elis_normalized.index:
             if elis_idx not in matched_elis_indices:
                 additional.append(elis_normalized.loc[elis_idx].to_dict())
-        
-        print(f"\n✓ Matched: {len(matched)}/{len(self.gold_standard)} ({len(matched)/len(self.gold_standard)*100:.1f}%)")
+
+        print(
+            f"\n✓ Matched: {len(matched)}/{len(self.gold_standard)} ({len(matched)/len(self.gold_standard)*100:.1f}%)"
+        )
         print(f"  Missed: {len(missed)}")
         print(f"  Additional in ELIS: {len(additional)}")
-        
+
         # Show match methods
         match_methods = {}
         for m in matched:
-            method = m.get('match_method', 'unknown')
+            method = m.get("match_method", "unknown")
             match_methods[method] = match_methods.get(method, 0) + 1
         if match_methods:
             print(f"\n  Match methods:")
             for method, count in sorted(match_methods.items(), key=lambda x: -x[1]):
                 print(f"    {method}: {count}")
-        
+
         return matched, missed, additional
 
     def calculate_metrics(self, matched: List, missed: List, elis_total: int) -> Dict:
