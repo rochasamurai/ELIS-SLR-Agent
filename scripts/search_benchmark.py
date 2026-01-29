@@ -17,10 +17,6 @@ from pathlib import Path
 from datetime import datetime
 from typing import List, Dict
 
-PROJECT_ROOT = Path(__file__).parent.parent
-sys.path.insert(0, str(PROJECT_ROOT))
-sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
-
 # Import ELIS harvest functions
 from semanticscholar_harvest import (
     semanticscholar_search,
@@ -34,6 +30,9 @@ from wos_harvest import wos_search, transform_wos_entry
 from ieee_harvest import ieee_search, transform_ieee_entry
 from google_scholar_harvest import google_scholar_search, transform_google_scholar_entry
 
+PROJECT_ROOT = Path(__file__).parent.parent
+sys.path.insert(0, str(PROJECT_ROOT))
+sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
 
 class BenchmarkSearcher:
     """Execute benchmark searches using all ELIS database APIs."""
