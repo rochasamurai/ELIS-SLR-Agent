@@ -84,19 +84,11 @@ jobs:
           echo "RESULTS CHECK"
           echo "================================"
           if [ -f json_jsonl/ELIS_Appendix_A_Search_rows.json ]; then
-            RESULTS=$(cat json_jsonl/ELIS_Appendix_A_Search_rows.json | python -c "import sys, json; data=json.load(sys.stdin); print(len(data))")
+            RESULTS=$(cat json_jsonl/ELIS_Appendix_A_Search_rows.json | python -c "import sys, json; print(len(json.load(sys.stdin)))")
             echo "Total results retrieved: $RESULTS"
-            
-            # Count by source
-            cat json_jsonl/ELIS_Appendix_A_Search_rows.json | python -c "
-import sys, json
-from collections import Counter
-data = json.load(sys.stdin)
-sources = Counter([r.get('source', 'Unknown') for r in data])
-print('\nResults by source:')
-for source, count in sources.most_common():
-    print(f'  {source}: {count}')
-            "
+            echo ""
+            echo "Results by source:"
+            python -c "import sys, json; from collections import Counter; data=json.load(open('json_jsonl/ELIS_Appendix_A_Search_rows.json')); sources=Counter([r.get('source','Unknown') for r in data]); [print(f'  {s}: {c}') for s,c in sources.most_common()]"
           else
             echo "No results file generated"
           fi
