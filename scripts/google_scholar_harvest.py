@@ -1,10 +1,10 @@
 """
 google_scholar_harvest.py
 Harvests metadata from Google Scholar via Apify API using official Python client.
-Enhanced with proper query syntax, rate limit handling, and retry logic.
+Uses easyapi/google-scholar-scraper actor (alternative to avoid rate limits).
 
 Environment Variables:
-- APIFY_API_TOKEN: ELIS Apify API token (required)
+- APIFY_API_TOKEN: Your Apify API token (required)
 
 Outputs:
 - JSON array in json_jsonl/ELIS_Appendix_A_Search_rows.json
@@ -53,94 +53,55 @@ def check_apify_account_status(client):
 
 def prepare_google_scholar_query(original_query):
     """
-    Convert complex Boolean query to Google Scholar compatible format.
-    
-    Google Scholar rules:
-    - OR must be UPPERCASE
-    - AND is automatic (spaces)
-    - Use | for OR (alternative)
-    - Parentheses for grouping
+    Convert complex Boolean query to simple format for Google Scholar.
+    EasyAPI actor works best with simple keyword queries.
     """
-    # Strategy 1: Simplify to basic terms (Google Scholar does automatic stemming)
+    # Remove quotes and Boolean operators, keep just the keywords
     simple_query = original_query.replace('"', '').replace('(', '').replace(')', '')
     simple_query = simple_query.replace(' AND ', ' ').replace(' OR ', ' ')
+    simple_query = ' '.join(simple_query.split())  # Normalize whitespace
     
-    # Strategy 2: Use pipe operator (Google Scholar native)
-    pipe_query = original_query.replace('"', '')
-    pipe_query = pipe_query.replace('("', '').replace('")', '')
-    pipe_query = pipe_query.replace(' AND ', ' ')
-    pipe_query = pipe_query.replace(') OR (', '|')
-    pipe_query = pipe_query.replace(' OR ', '|')
-    
-    # Strategy 3: Proper Boolean with uppercase OR
-    boolean_query = original_query.replace('"', '')
-    boolean_query = boolean_query.replace(' AND ', ' ')
-    boolean_query = boolean_query.replace(' OR ', ' OR ')  # Ensure uppercase
-    
-    return {
-        'simple': simple_query.strip(),
-        'pipe': pipe_query.strip(),
-        'boolean': boolean_query.strip()
-    }
+    return simple_query.strip()
 
 
-def google_scholar_search(client, query: str, max_items: int = 200, start_year: int = None, end_year: int = None, retry_count: int = 0, max_retries: int = 2):
+def google_scholar_search(client, query: str, max_items: int = 100, start_year: int = None, end_year: int = None, retry_count: int = 0, max_retries: int = 2):
     """
-    Search Google Scholar via Apify using official Python client.
-    Includes rate limit handling and delays between retries.
+    Search Google Scholar via Apify using easyapi/google-scholar-scraper actor.
+    Note: Free tier limited to 10 results, paid tier up to 5000.
     """
     
-    # Add delay between retry attempts to avoid rate limiting
+    # Add delay between retry attempts
     if retry_count > 0:
-        delay = random.uniform(45, 90)  # Random 45-90 second delay
-        print(f"\n  ⏸️  Waiting {delay:.0f} seconds before retry to avoid rate limits...")
+        delay = random.uniform(30, 60)
+        print(f"\n  ⏸️  Waiting {delay:.0f} seconds before retry...")
         time.sleep(delay)
     
-    # Prepare query variations
-    query_variations = prepare_google_scholar_query(query)
-    
-    # Try queries in order of preference
-    query_strategies = [
-        ('simple', query_variations['simple']),      # Try simple first (most likely to work)
-        ('pipe', query_variations['pipe']),
-        ('boolean', query_variations['boolean'])
-    ]
-    
-    # Use the query based on retry count
-    strategy_index = min(retry_count, len(query_strategies) - 1)
-    strategy_name, search_query = query_strategies[strategy_index]
+    # Simplify query for better results
+    search_query = prepare_google_scholar_query(query)
     
     print(f"\n🔍 GOOGLE SCHOLAR SEARCH (Attempt {retry_count + 1}/{max_retries + 1})")
-    print(f"   Strategy: {strategy_name}")
+    print(f"   Actor: easyapi/google-scholar-scraper")
     print(f"   Original: {query}")
-    print(f"   Converted: {search_query}")
+    print(f"   Simplified: {search_query}")
     print(f"   Max items: {max_items}")
-    if start_year:
-        print(f"   Start year: {start_year}")
-    if end_year:
-        print(f"   End year: {end_year}")
     print(f"   Timestamp: {datetime.now().isoformat()}")
     
-    # Prepare input
+    # Prepare input for EasyAPI actor
+    # Note: EasyAPI requires minimum 100 for maxItems (free tier gets 10)
     run_input = {
-        "keyword": search_query,
-        "maxItems": max_items,
-        "proxyOptions": {
-            "useApifyProxy": True
-        }
+        "query": search_query,
+        "maxItems": max(100, max_items)  # Minimum 100 required
     }
     
-    # Add year filters if provided
-    if start_year:
-        run_input["newerThan"] = start_year
-    if end_year:
-        run_input["olderThan"] = end_year
+    # Note: Year filtering not available in EasyAPI actor
+    if start_year or end_year:
+        print(f"   ⚠️  Year filtering not supported by EasyAPI actor")
     
     try:
         print("\n  📤 Starting Apify run...")
         
         # Run the actor and wait for it to finish
-        run = client.actor("marco.gullo/google-scholar-scraper").call(run_input=run_input)
+        run = client.actor("easyapi/google-scholar-scraper").call(run_input=run_input)
         
         print(f"  ✓ Run completed")
         print(f"    Run ID: {run.get('id')}")
@@ -153,7 +114,7 @@ def google_scholar_search(client, query: str, max_items: int = 200, start_year: 
         print(f"    Compute units: {compute_units:.4f}")
         print(f"    Estimated cost: ${compute_units * 0.25:.4f}")
         
-        # Check if run actually succeeded with data
+        # Check if run succeeded
         status = run.get('status')
         if status != 'SUCCEEDED':
             print(f"  ⚠️  Run status: {status}")
@@ -171,32 +132,32 @@ def google_scholar_search(client, query: str, max_items: int = 200, start_year: 
         print(f"  ✅ Retrieved {len(results)} results from Google Scholar")
         
         if len(results) == 0:
-            print(f"  ⚠️  WARNING: 0 results with {strategy_name} strategy")
-            print(f"      This may indicate rate limiting (429) or query issues")
+            print(f"  ⚠️  WARNING: 0 results")
             
-            # Try next strategy if available
             if retry_count < max_retries:
-                print(f"\n  🔄 Trying next query strategy after delay...")
+                print(f"\n  🔄 Retrying...")
                 return google_scholar_search(client, query, max_items, start_year, end_year, retry_count + 1, max_retries)
             else:
-                print(f"  ❌ All query strategies exhausted")
-                print(f"      Consider waiting 1-24 hours before retrying")
+                print(f"  ❌ All retries exhausted")
+        elif len(results) == 10:
+            print(f"  ℹ️  Note: Free tier limited to 10 results")
+            print(f"      Upgrade Apify account for up to 5000 results")
         
         return results
         
     except Exception as e:
         print(f"  ❌ Error: {type(e).__name__}: {e}")
         
-        # Retry with next strategy after delay
         if retry_count < max_retries:
-            print(f"\n  🔄 Retrying with different strategy after delay...")
+            print(f"\n  🔄 Retrying...")
             return google_scholar_search(client, query, max_items, start_year, end_year, retry_count + 1, max_retries)
         
         return []
 
 
 def transform_google_scholar_entry(entry):
-    """Transform Apify Google Scholar result to standard format."""
+    """Transform EasyAPI Google Scholar result to standard format."""
+    # EasyAPI returns different field names than marco.gullo
     authors_str = entry.get("authors", "")
     
     return {
@@ -204,12 +165,12 @@ def transform_google_scholar_entry(entry):
         "title": entry.get("title", ""),
         "authors": authors_str,
         "year": str(entry.get("year", "")),
-        "doi": None,
-        "abstract": entry.get("searchMatch", ""),
+        "doi": None,  # EasyAPI doesn't provide DOI
+        "abstract": entry.get("snippet", ""),  # EasyAPI uses 'snippet'
         "url": entry.get("link", ""),
-        "pdf_url": entry.get("documentLink"),
+        "pdf_url": entry.get("pdf_link"),
         "citation_count": entry.get("citations", 0),
-        "google_scholar_id": entry.get("cidCode", ""),
+        "google_scholar_id": entry.get("result_id", ""),
         "raw_metadata": entry,
     }
 
@@ -240,9 +201,10 @@ def get_google_scholar_queries(config):
 
 if __name__ == "__main__":
     print("="*80)
-    print("GOOGLE SCHOLAR HARVEST - APIFY PYTHON CLIENT (RATE LIMIT AWARE)")
+    print("GOOGLE SCHOLAR HARVEST - EASYAPI ACTOR")
     print("="*80)
     print(f"Start time: {datetime.now().isoformat()}")
+    print(f"Actor: easyapi/google-scholar-scraper (alternative to avoid rate limits)")
     
     # Initialize Apify client
     api_token = get_credentials()
@@ -262,7 +224,7 @@ if __name__ == "__main__":
     year_to = global_config.get("year_to")
     
     print(f"   Max results per source: {max_results}")
-    print(f"   Year range: {year_from}-{year_to}")
+    print(f"   Year range: {year_from}-{year_to} (filtering not supported by EasyAPI)")
     
     # Get Google Scholar queries
     queries = get_google_scholar_queries(config)
@@ -334,7 +296,8 @@ if __name__ == "__main__":
     print(f"✅ Saved to: {output_path}")
     print(f"⏱️  End time: {datetime.now().isoformat()}")
     
-    if new_count == 0:
-        print(f"\n⚠️  RATE LIMIT ADVISORY:")
-        print(f"   If you received 0 results, Google Scholar may be rate limiting.")
-        print(f"   Wait 1-24 hours before trying again, or contact Apify support.")
+    if new_count > 0 and new_count <= 10:
+        print(f"\nℹ️  FREE TIER NOTE:")
+        print(f"   EasyAPI free tier limited to 10 results per run")
+        print(f"   For full {max_results} results, upgrade at https://apify.com/pricing")
+        
