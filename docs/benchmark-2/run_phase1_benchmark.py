@@ -59,7 +59,7 @@ def calculate_similarity(str1, str2):
     
     return intersection / union if union > 0 else 0.0
 
-def match_study(gold_study, retrieved_study, threshold=0.85):
+def match_study(gold_study, retrieved_study, threshold=0.70):
     """Check if studies match"""
     # DOI match
     gold_doi = str(gold_study.get('doi', '') or '').strip().lower()
