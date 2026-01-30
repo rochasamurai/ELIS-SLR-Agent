@@ -1,7 +1,7 @@
 """
 google_scholar_harvest.py
 Harvests metadata from Google Scholar via Apify API using official Python client.
-Enhanced with proper query syntax, comprehensive diagnostics, and retry logic.
+Enhanced with proper query syntax, rate limit handling, and retry logic.
 
 Environment Variables:
 - APIFY_API_TOKEN: ELIS Apify API token (required)
@@ -13,6 +13,8 @@ Outputs:
 import os
 import json
 import yaml
+import time
+import random
 from pathlib import Path
 from datetime import datetime
 from apify_client import ApifyClient
@@ -85,15 +87,22 @@ def prepare_google_scholar_query(original_query):
 def google_scholar_search(client, query: str, max_items: int = 200, start_year: int = None, end_year: int = None, retry_count: int = 0, max_retries: int = 2):
     """
     Search Google Scholar via Apify using official Python client.
+    Includes rate limit handling and delays between retries.
     """
+    
+    # Add delay between retry attempts to avoid rate limiting
+    if retry_count > 0:
+        delay = random.uniform(45, 90)  # Random 45-90 second delay
+        print(f"\n  ⏸️  Waiting {delay:.0f} seconds before retry to avoid rate limits...")
+        time.sleep(delay)
     
     # Prepare query variations
     query_variations = prepare_google_scholar_query(query)
     
     # Try queries in order of preference
     query_strategies = [
+        ('simple', query_variations['simple']),      # Try simple first (most likely to work)
         ('pipe', query_variations['pipe']),
-        ('simple', query_variations['simple']),
         ('boolean', query_variations['boolean'])
     ]
     
@@ -144,6 +153,14 @@ def google_scholar_search(client, query: str, max_items: int = 200, start_year: 
         print(f"    Compute units: {compute_units:.4f}")
         print(f"    Estimated cost: ${compute_units * 0.25:.4f}")
         
+        # Check if run actually succeeded with data
+        status = run.get('status')
+        if status != 'SUCCEEDED':
+            print(f"  ⚠️  Run status: {status}")
+            if retry_count < max_retries:
+                return google_scholar_search(client, query, max_items, start_year, end_year, retry_count + 1, max_retries)
+            return []
+        
         # Fetch results from dataset
         print(f"\n  📥 Retrieving results from dataset...")
         dataset_id = run.get('defaultDatasetId')
@@ -155,22 +172,24 @@ def google_scholar_search(client, query: str, max_items: int = 200, start_year: 
         
         if len(results) == 0:
             print(f"  ⚠️  WARNING: 0 results with {strategy_name} strategy")
+            print(f"      This may indicate rate limiting (429) or query issues")
             
             # Try next strategy if available
             if retry_count < max_retries:
-                print(f"\n  🔄 Trying next query strategy...")
+                print(f"\n  🔄 Trying next query strategy after delay...")
                 return google_scholar_search(client, query, max_items, start_year, end_year, retry_count + 1, max_retries)
             else:
                 print(f"  ❌ All query strategies exhausted")
+                print(f"      Consider waiting 1-24 hours before retrying")
         
         return results
         
     except Exception as e:
         print(f"  ❌ Error: {type(e).__name__}: {e}")
         
-        # Retry with next strategy
+        # Retry with next strategy after delay
         if retry_count < max_retries:
-            print(f"\n  🔄 Retrying with different strategy...")
+            print(f"\n  🔄 Retrying with different strategy after delay...")
             return google_scholar_search(client, query, max_items, start_year, end_year, retry_count + 1, max_retries)
         
         return []
@@ -221,7 +240,7 @@ def get_google_scholar_queries(config):
 
 if __name__ == "__main__":
     print("="*80)
-    print("GOOGLE SCHOLAR HARVEST - APIFY PYTHON CLIENT")
+    print("GOOGLE SCHOLAR HARVEST - APIFY PYTHON CLIENT (RATE LIMIT AWARE)")
     print("="*80)
     print(f"Start time: {datetime.now().isoformat()}")
     
@@ -314,3 +333,8 @@ if __name__ == "__main__":
     print(f"✅ Total records in dataset: {len(existing_results)}")
     print(f"✅ Saved to: {output_path}")
     print(f"⏱️  End time: {datetime.now().isoformat()}")
+    
+    if new_count == 0:
+        print(f"\n⚠️  RATE LIMIT ADVISORY:")
+        print(f"   If you received 0 results, Google Scholar may be rate limiting.")
+        print(f"   Wait 1-24 hours before trying again, or contact Apify support.")
