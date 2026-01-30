@@ -19,8 +19,7 @@ run_input = {
     "keyword": "agile",
     "maxItems": 20,
     "filter": "all",
-    "newerThan": None,
-    "olderThan": None,
+    # Don't include newerThan/olderThan if not using them
     "sortBy": "relevance",
     "articleType": "any",
     "proxyOptions": {"useApifyProxy": True},
