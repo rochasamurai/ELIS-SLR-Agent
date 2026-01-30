@@ -32,7 +32,7 @@
 The ELIS SLR Agent is a **reproducible, API-driven pipeline** for conducting systematic literature reviews in political science and electoral studies. It automates the retrieval, screening, and synthesis of academic literature across multiple databases.
 
 **Key capabilities:**
-- ✅ **Multi-source harvesting** — Queries 7 academic databases via APIs
+- ✅ **Multi-source harvesting** — Queries 8 academic databases via APIs (2 more pending)
 - ✅ **Reproducible searches** — Version-controlled queries and configurations
 - ✅ **Automated validation** — Schema-based data quality checks
 - ✅ **Open methodology** — Full transparency and audit trail via GitHub
@@ -48,8 +48,6 @@ Imperial College Business School
 🌐 [electoralintegrity.org](https://electoralintegrity.org)  
 📧 elis@electoralintegrity.org | c.rocha@imperial.ac.uk  
 🔗 [ORCID: 0009-0009-6741-2193](https://orcid.org/0009-0009-6741-2193)
-
-**Sponsor:** Instituto Voto Legal (IVL), São Paulo, Brazil
 
 ---
 
@@ -86,9 +84,9 @@ The synthesis aims to:
 
 ### Overview
 
-The review queries **7 academic databases** providing comprehensive coverage across political science, computer science, law, and governance. All sources provide documented APIs enabling reproducible automated searches.
+The review queries **8 academic databases** in production, with **2 additional sources** pending API access. All sources provide documented APIs enabling reproducible automated searches.
 
-### Implemented Sources (7 API Integrations)
+### Production Sources (8 API Integrations) ✅
 
 1. ✅ **Scopus**  
    Multidisciplinary database with comprehensive coverage across political science, governance, law, and engineering.  
@@ -118,24 +116,33 @@ The review queries **7 academic databases** providing comprehensive coverage acr
    Open access aggregator covering papers, theses, and preprints from institutional repositories worldwide.  
    *Coverage:* 300M+ documents | *API:* CORE API v3
 
-### Source Selection Rationale
+8. ✅ **Google Scholar** (via Apify)  
+   Comprehensive academic search engine providing broad coverage across all disciplines, including gray literature and non-indexed sources.  
+   *Coverage:* Largest academic database | *API:* Apify Google Scholar Scraper
 
-These sources were selected to provide:
+### Pending Sources (API Access Required) ⏳
 
-- **Disciplinary breadth:** Coverage across political science, computer science, law, and governance
-- **Methodological diversity:** Inclusion of both empirical studies and technical evaluations
-- **API accessibility:** All sources provide documented APIs enabling reproducible automated searches
-- **Complementary coverage:** Combination of subscription databases (Scopus, WoS, IEEE) and open sources (Semantic Scholar, OpenAlex, CORE) maximizes retrieval while supporting open science principles
+9. ⏳ **EBSCO Discovery Service (EDS)**  
+   Comprehensive index covering journals, magazines, newspapers, and dissertations across all disciplines.  
+   *Coverage:* 100M+ records | *Status:* Awaiting Imperial College IT API access
 
-### Unavailable Sources
+10. ⏳ **ProQuest**  
+    Multidisciplinary platform covering dissertations, theses, newspapers, and specialized databases.  
+    *Coverage:* 125M+ documents | *Status:* Awaiting Imperial College IT API access
 
-The following sources were considered but not implemented due to API limitations:
+### Coverage Rationale
 
-- ❌ **ACM Digital Library** — No public API available
-- ❌ **JSTOR** — No real-time API for systematic searches
-- ❌ **Google Scholar** — Terms of Service restrictions on automated access
+The 8 production sources provide:
+- **Disciplinary breadth:** Political science, computer science, law, public administration
+- **Publication types:** Peer-reviewed journals, conferences, preprints, dissertations, gray literature
+- **Geographic diversity:** Global coverage with regional database representation
+- **Temporal scope:** Historical records (1990+) through current publications
+- **Quality assurance:** Multiple overlapping sources enable cross-validation and completeness checking
 
-*Full methodology documented in [Protocol v1.8](docs/ELIS_2025_SLR_Protocol_v1.8.pdf), Section 3.2.*
+The 2 pending sources will add:
+- Enhanced coverage of dissertations and theses (ProQuest)
+- Additional newspapers and trade publications (EBSCO EDS)
+- Institutional repository content not indexed elsewhere
 
 ---
 
@@ -762,7 +769,6 @@ Each source has official API documentation:
 ### Institutions
 
 - **Imperial College Business School** — Host institution
-- **Instituto Voto Legal (IVL)** — Project sponsor, São Paulo, Brazil
 
 ### Data Providers
 
@@ -773,6 +779,19 @@ Each source has official API documentation:
 - **OpenAlex** — Open bibliographic data (OurResearch)
 - **CrossRef** — DOI metadata services
 - **CORE** — Open access aggregation (Open University)
+
+### Data Providers
+
+- **Elsevier** — Scopus API access
+- **Clarivate** — Web of Science API access
+- **IEEE** — IEEE Xplore API access
+- **Semantic Scholar** — Open API (Allen Institute for AI)
+- **OpenAlex** — Open bibliographic data (OurResearch)
+- **CrossRef** — DOI metadata services
+- **CORE** — Open access aggregation (Open University)
+- **Apify** — Google Scholar scraper API access
+- **EBSCO EDS** — Pending API access
+- **ProQuest** — Pending API access
 
 ### Technology
 
