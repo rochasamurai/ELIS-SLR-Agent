@@ -1,10 +1,10 @@
 """
 google_scholar_harvest.py
-Harvests metadata from Google Scholar via Apify API.
-Enhanced with comprehensive diagnostics and retry logic.
+Harvests metadata from Google Scholar via Apify API using official Python client.
+Enhanced with proper query syntax, comprehensive diagnostics, and retry logic.
 
 Environment Variables:
-- APIFY_API_TOKEN: Your Apify API token (required)
+- APIFY_API_TOKEN: ELIS Apify API token (required)
 
 Outputs:
 - JSON array in json_jsonl/ELIS_Appendix_A_Search_rows.json
@@ -12,11 +12,10 @@ Outputs:
 
 import os
 import json
-import time
 import yaml
-import requests
 from pathlib import Path
 from datetime import datetime
+from apify_client import ApifyClient
 
 
 def get_credentials():
@@ -29,22 +28,20 @@ def get_credentials():
     return api_token
 
 
-def check_apify_account_status(api_token):
+def check_apify_account_status(client):
     """Check Apify account status and credits."""
     try:
-        url = "https://api.apify.com/v2/users/me"
-        params = {"token": api_token}
-        
-        response = requests.get(url, params=params, timeout=10)
-        response.raise_for_status()
-        
-        user_data = response.json()
-        user_info = user_data.get("data", {})
+        user = client.user().get()
         
         print("📊 APIFY ACCOUNT STATUS:")
-        print(f"   User ID: {user_info.get('id', 'N/A')}")
-        print(f"   Username: {user_info.get('username', 'N/A')}")
-        print(f"   Credits: ${user_info.get('usageCredits', {}).get('remaining', 'N/A'):.2f}")
+        print(f"   User ID: {user.get('id', 'N/A')}")
+        print(f"   Username: {user.get('username', 'N/A')}")
+        
+        # Credits might be in different structure
+        usage = user.get('usageCredits', {})
+        if isinstance(usage, dict):
+            remaining = usage.get('remaining', 'N/A')
+            print(f"   Credits: ${remaining}")
         
         return True
     except Exception as e:
@@ -52,36 +49,62 @@ def check_apify_account_status(api_token):
         return False
 
 
-def google_scholar_search(query: str, max_items: int = 200, start_year: int = None, end_year: int = None, retry_count: int = 0, max_retries: int = 2):
+def prepare_google_scholar_query(original_query):
     """
-    Search Google Scholar via Apify scraper with enhanced diagnostics.
+    Convert complex Boolean query to Google Scholar compatible format.
+    
+    Google Scholar rules:
+    - OR must be UPPERCASE
+    - AND is automatic (spaces)
+    - Use | for OR (alternative)
+    - Parentheses for grouping
     """
-    api_token = get_credentials()
+    # Strategy 1: Simplify to basic terms (Google Scholar does automatic stemming)
+    simple_query = original_query.replace('"', '').replace('(', '').replace(')', '')
+    simple_query = simple_query.replace(' AND ', ' ').replace(' OR ', ' ')
     
-    # Check account status
-    if retry_count == 0:  # Only check on first attempt
-        check_apify_account_status(api_token)
+    # Strategy 2: Use pipe operator (Google Scholar native)
+    pipe_query = original_query.replace('"', '')
+    pipe_query = pipe_query.replace('("', '').replace('")', '')
+    pipe_query = pipe_query.replace(' AND ', ' ')
+    pipe_query = pipe_query.replace(') OR (', '|')
+    pipe_query = pipe_query.replace(' OR ', '|')
     
-    # 1. START THE RUN
-    start_url = "https://api.apify.com/v2/acts/marco.gullo~google-scholar-scraper/runs"
-    params = {"token": api_token}
+    # Strategy 3: Proper Boolean with uppercase OR
+    boolean_query = original_query.replace('"', '')
+    boolean_query = boolean_query.replace(' AND ', ' ')
+    boolean_query = boolean_query.replace(' OR ', ' OR ')  # Ensure uppercase
     
-    payload = {
-        "keyword": query,
-        "maxItems": max_items,
-        "filter": "all",
-        "sortBy": "relevance",
-        "articleType": "any",
-        "proxyOptions": {"useApifyProxy": True},
+    return {
+        'simple': simple_query.strip(),
+        'pipe': pipe_query.strip(),
+        'boolean': boolean_query.strip()
     }
+
+
+def google_scholar_search(client, query: str, max_items: int = 200, start_year: int = None, end_year: int = None, retry_count: int = 0, max_retries: int = 2):
+    """
+    Search Google Scholar via Apify using official Python client.
+    """
     
-    if start_year:
-        payload["newerThan"] = start_year
-    if end_year:
-        payload["olderThan"] = end_year
+    # Prepare query variations
+    query_variations = prepare_google_scholar_query(query)
+    
+    # Try queries in order of preference
+    query_strategies = [
+        ('pipe', query_variations['pipe']),
+        ('simple', query_variations['simple']),
+        ('boolean', query_variations['boolean'])
+    ]
+    
+    # Use the query based on retry count
+    strategy_index = min(retry_count, len(query_strategies) - 1)
+    strategy_name, search_query = query_strategies[strategy_index]
     
     print(f"\n🔍 GOOGLE SCHOLAR SEARCH (Attempt {retry_count + 1}/{max_retries + 1})")
-    print(f"   Query: {query}")
+    print(f"   Strategy: {strategy_name}")
+    print(f"   Original: {query}")
+    print(f"   Converted: {search_query}")
     print(f"   Max items: {max_items}")
     if start_year:
         print(f"   Start year: {start_year}")
@@ -89,171 +112,67 @@ def google_scholar_search(query: str, max_items: int = 200, start_year: int = No
         print(f"   End year: {end_year}")
     print(f"   Timestamp: {datetime.now().isoformat()}")
     
+    # Prepare input
+    run_input = {
+        "keyword": search_query,
+        "maxItems": max_items,
+        "proxyOptions": {
+            "useApifyProxy": True
+        }
+    }
+    
+    # Add year filters if provided
+    if start_year:
+        run_input["newerThan"] = start_year
+    if end_year:
+        run_input["olderThan"] = end_year
+    
     try:
-        # Start the run
         print("\n  📤 Starting Apify run...")
-        response = requests.post(start_url, params=params, json=payload, timeout=30)
-        response.raise_for_status()
         
-        run_info = response.json()
-        run_data = run_info.get("data", {})
-        run_id = run_data.get("id")
-        dataset_id = run_data.get("defaultDatasetId")
-        status = run_data.get("status")
+        # Run the actor and wait for it to finish
+        run = client.actor("marco.gullo/google-scholar-scraper").call(run_input=run_input)
         
-        print(f"  ✓ Run created successfully")
-        print(f"    Run ID: {run_id}")
-        print(f"    Dataset ID: {dataset_id}")
-        print(f"    Initial status: {status}")
-        print(f"    Run URL: https://console.apify.com/actors/runs/{run_id}")
+        print(f"  ✓ Run completed")
+        print(f"    Run ID: {run.get('id')}")
+        print(f"    Status: {run.get('status')}")
+        print(f"    Run URL: https://console.apify.com/actors/runs/{run.get('id')}")
         
-        # 2. POLL FOR COMPLETION
-        max_wait = 600  # 10 minutes max
-        check_interval = 10  # Check every 10 seconds
-        waited = 0
-        status_retry_count = 0
-        max_status_retries = 3
+        # Get build/run stats
+        stats = run.get('stats', {})
+        compute_units = stats.get('computeUnits', 0)
+        print(f"    Compute units: {compute_units:.4f}")
+        print(f"    Estimated cost: ${compute_units * 0.25:.4f}")
         
-        print("\n  ⏳ Polling for completion...")
-        
-        while waited < max_wait:
-            time.sleep(check_interval)
-            waited += check_interval
-            
-            # Check run status
-            status_url = f"https://api.apify.com/v2/acts/marco.gullo~google-scholar-scraper/runs/{run_id}"
-            
-            try:
-                status_resp = requests.get(status_url, params=params, timeout=30)
-                status_resp.raise_for_status()
-                status_retry_count = 0  # Reset on success
-                
-            except requests.exceptions.HTTPError as e:
-                status_retry_count += 1
-                print(f"  ⚠️  Status check error (attempt {status_retry_count}/{max_status_retries}): {e}")
-                
-                if status_retry_count >= max_status_retries:
-                    print(f"  ❌ Max status check retries reached")
-                    
-                    # Try to abort the run
-                    try:
-                        abort_url = f"https://api.apify.com/v2/acts/marco.gullo~google-scholar-scraper/runs/{run_id}/abort"
-                        requests.post(abort_url, params=params, timeout=10)
-                        print(f"  🛑 Run aborted")
-                    except:
-                        pass
-                    
-                    # Retry the entire search if we haven't exceeded max retries
-                    if retry_count < max_retries:
-                        print(f"\n  🔄 Retrying entire search...")
-                        time.sleep(30)  # Wait before retry
-                        return google_scholar_search(query, max_items, start_year, end_year, retry_count + 1, max_retries)
-                    else:
-                        return []
-                
-                time.sleep(5)
-                continue
-            
-            except requests.exceptions.RequestException as e:
-                print(f"  ⚠️  Network error: {e}")
-                status_retry_count += 1
-                if status_retry_count >= max_status_retries:
-                    if retry_count < max_retries:
-                        print(f"\n  🔄 Retrying entire search...")
-                        time.sleep(30)
-                        return google_scholar_search(query, max_items, start_year, end_year, retry_count + 1, max_retries)
-                    else:
-                        return []
-                time.sleep(5)
-                continue
-            
-            status_data = status_resp.json()
-            status_info = status_data.get("data", {})
-            status = status_info.get("status")
-            stats = status_info.get("stats", {})
-            
-            # Show progress
-            compute_units = stats.get("computeUnits", 0)
-            if waited % 30 == 0 or status not in ["RUNNING", "READY"]:  # Every 30s or on status change
-                print(f"    [{waited}s] Status: {status} | Compute units: {compute_units:.4f}")
-            
-            if status == "SUCCEEDED":
-                print(f"\n  ✅ Run completed successfully after {waited}s")
-                print(f"     Total compute units: {compute_units:.4f}")
-                print(f"     Estimated cost: ${compute_units * 0.25:.4f}")
-                break
-            elif status in ["FAILED", "ABORTED", "TIMED-OUT"]:
-                error_msg = status_info.get("statusMessage", "No error message")
-                print(f"\n  ❌ Run {status}")
-                print(f"     Error: {error_msg}")
-                print(f"     Compute units used: {compute_units:.4f}")
-                
-                # Retry if we haven't exceeded max retries
-                if retry_count < max_retries:
-                    print(f"\n  🔄 Retrying entire search...")
-                    time.sleep(30)
-                    return google_scholar_search(query, max_items, start_year, end_year, retry_count + 1, max_retries)
-                else:
-                    return []
-        
-        if status != "SUCCEEDED":
-            print(f"\n  ⏰ Timeout after {max_wait}s (status: {status})")
-            
-            # Try to abort the run
-            try:
-                abort_url = f"https://api.apify.com/v2/acts/marco.gullo~google-scholar-scraper/runs/{run_id}/abort"
-                requests.post(abort_url, params=params, timeout=10)
-                print(f"  🛑 Run aborted")
-            except:
-                pass
-            
-            # Retry if we haven't exceeded max retries
-            if retry_count < max_retries:
-                print(f"\n  🔄 Retrying entire search...")
-                time.sleep(30)
-                return google_scholar_search(query, max_items, start_year, end_year, retry_count + 1, max_retries)
-            else:
-                return []
-        
-        # 3. GET RESULTS FROM DATASET
+        # Fetch results from dataset
         print(f"\n  📥 Retrieving results from dataset...")
-        dataset_url = f"https://api.apify.com/v2/datasets/{dataset_id}/items"
+        dataset_id = run.get('defaultDatasetId')
         
-        dataset_resp = requests.get(dataset_url, params=params, timeout=30)
-        dataset_resp.raise_for_status()
-        
-        results = dataset_resp.json()
+        dataset_client = client.dataset(dataset_id)
+        results = list(dataset_client.iterate_items())
         
         print(f"  ✅ Retrieved {len(results)} results from Google Scholar")
         
         if len(results) == 0:
-            print(f"  ⚠️  WARNING: 0 results returned (query may be too restrictive)")
+            print(f"  ⚠️  WARNING: 0 results with {strategy_name} strategy")
+            
+            # Try next strategy if available
+            if retry_count < max_retries:
+                print(f"\n  🔄 Trying next query strategy...")
+                return google_scholar_search(client, query, max_items, start_year, end_year, retry_count + 1, max_retries)
+            else:
+                print(f"  ❌ All query strategies exhausted")
         
         return results
         
-    except requests.exceptions.Timeout:
-        print(f"  ❌ Request timeout")
-        if retry_count < max_retries:
-            print(f"\n  🔄 Retrying...")
-            time.sleep(30)
-            return google_scholar_search(query, max_items, start_year, end_year, retry_count + 1, max_retries)
-        return []
-        
-    except requests.exceptions.HTTPError as e:
-        print(f"  ❌ HTTP Error: {e}")
-        print(f"     Response: {e.response.text if e.response else 'No response'}")
-        if retry_count < max_retries:
-            print(f"\n  🔄 Retrying...")
-            time.sleep(30)
-            return google_scholar_search(query, max_items, start_year, end_year, retry_count + 1, max_retries)
-        return []
-        
     except Exception as e:
-        print(f"  ❌ Unexpected error: {type(e).__name__}: {e}")
+        print(f"  ❌ Error: {type(e).__name__}: {e}")
+        
+        # Retry with next strategy
         if retry_count < max_retries:
-            print(f"\n  🔄 Retrying...")
-            time.sleep(30)
-            return google_scholar_search(query, max_items, start_year, end_year, retry_count + 1, max_retries)
+            print(f"\n  🔄 Retrying with different strategy...")
+            return google_scholar_search(client, query, max_items, start_year, end_year, retry_count + 1, max_retries)
+        
         return []
 
 
@@ -295,17 +214,23 @@ def get_google_scholar_queries(config):
             continue
         
         topic_queries = topic.get("queries", [])
-        gs_queries = [q.replace('"', '') for q in topic_queries]
-        queries.extend(gs_queries)
+        queries.extend(topic_queries)
     
     return queries
 
 
 if __name__ == "__main__":
     print("="*80)
-    print("GOOGLE SCHOLAR HARVEST - ENHANCED DIAGNOSTICS")
+    print("GOOGLE SCHOLAR HARVEST - APIFY PYTHON CLIENT")
     print("="*80)
     print(f"Start time: {datetime.now().isoformat()}")
+    
+    # Initialize Apify client
+    api_token = get_credentials()
+    client = ApifyClient(api_token)
+    
+    # Check account status
+    check_apify_account_status(client)
     
     # Load configuration
     print("\n📋 Loading configuration...")
@@ -354,6 +279,7 @@ if __name__ == "__main__":
         
         try:
             raw_results = google_scholar_search(
+                client,
                 query, 
                 max_items=max_results,
                 start_year=year_from,
@@ -388,4 +314,3 @@ if __name__ == "__main__":
     print(f"✅ Total records in dataset: {len(existing_results)}")
     print(f"✅ Saved to: {output_path}")
     print(f"⏱️  End time: {datetime.now().isoformat()}")
-    
