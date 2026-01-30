@@ -18,7 +18,7 @@ print("-"*80)
 
 run_input = {
     "query": "agile",
-    "maxItems": 10
+    "maxItems": 100  # EasyAPI requires minimum 100
 }
 
 print(f"Actor: easyapi/google-scholar-scraper")
