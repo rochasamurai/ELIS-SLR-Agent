@@ -49,10 +49,6 @@ Imperial College Business School
 📧 elis@electoralintegrity.org | c.rocha@imperial.ac.uk  
 🔗 [ORCID: 0009-0009-6741-2193](https://orcid.org/0009-0009-6741-2193)
 
-**Sponsor:** Instituto Voto Legal (IVL), São Paulo, Brazil
-
----
-
 ## Why This Project Exists
 
 ### The Research Problem
