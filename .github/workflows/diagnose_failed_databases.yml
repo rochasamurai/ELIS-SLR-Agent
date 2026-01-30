@@ -1,0 +1,111 @@
+name: Diagnose Failed Databases (IEEE & Semantic Scholar)
+
+on:
+  workflow_dispatch:
+    inputs:
+      database:
+        description: 'Which database to test'
+        required: true
+        type: choice
+        options:
+          - 'IEEE Xplore'
+          - 'Semantic Scholar'
+          - 'Both'
+        default: 'Both'
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install pyyaml requests
+      
+      - name: Create test config
+        run: |
+          cat > config/elis_search_queries.yml << 'EOF'
+          global:
+            year_from: 2002
+            year_to: 2023
+            languages:
+              - en
+            max_results_per_source: 50
+            job_result_cap: 0
+          topics:
+            - id: diagnostic_test
+              enabled: true
+              description: 'Diagnostic test for failed databases'
+              queries:
+                - '("agile" AND "government") OR ("agile" AND "governance") OR ("agile" AND "public")'
+              include_preprints: false
+              sources:
+                - ieee_xplore
+                - semantic_scholar
+          EOF
+      
+      - name: Test IEEE Xplore
+        if: github.event.inputs.database == 'IEEE Xplore' || github.event.inputs.database == 'Both'
+        env:
+          IEEE_API_KEY: ${{ secrets.IEEE_EXPLORE_API_KEY }}
+          PYTHONIOENCODING: utf-8
+        run: |
+          echo "================================"
+          echo "TESTING IEEE XPLORE"
+          echo "================================"
+          echo "API Key present: ${{ secrets.IEEE_EXPLORE_API_KEY != '' }}"
+          python scripts/ieee_harvest.py || echo "IEEE failed with exit code $?"
+      
+      - name: Test Semantic Scholar
+        if: github.event.inputs.database == 'Semantic Scholar' || github.event.inputs.database == 'Both'
+        env:
+          SEMANTIC_SCHOLAR_API_KEY: ${{ secrets.SEMANTIC_SCHOLAR_API_KEY }}
+          PYTHONIOENCODING: utf-8
+        run: |
+          echo "================================"
+          echo "TESTING SEMANTIC SCHOLAR"
+          echo "================================"
+          echo "API Key present: ${{ secrets.SEMANTIC_SCHOLAR_API_KEY != '' }}"
+          python scripts/semanticscholar_harvest.py || echo "Semantic Scholar failed with exit code $?"
+      
+      - name: Check Results
+        run: |
+          echo "================================"
+          echo "RESULTS CHECK"
+          echo "================================"
+          if [ -f json_jsonl/ELIS_Appendix_A_Search_rows.json ]; then
+            RESULTS=$(cat json_jsonl/ELIS_Appendix_A_Search_rows.json | python -c "import sys, json; data=json.load(sys.stdin); print(len(data))")
+            echo "Total results retrieved: $RESULTS"
+            
+            # Count by source
+            cat json_jsonl/ELIS_Appendix_A_Search_rows.json | python -c "
+import sys, json
+from collections import Counter
+data = json.load(sys.stdin)
+sources = Counter([r.get('source', 'Unknown') for r in data])
+print('\nResults by source:')
+for source, count in sources.most_common():
+    print(f'  {source}: {count}')
+            "
+          else
+            echo "No results file generated"
+          fi
+      
+      - name: Upload diagnostic results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: diagnostic-results
+          path: |
+            json_jsonl/ELIS_Appendix_A_Search_rows.json
+            
