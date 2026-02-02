@@ -1,54 +1,418 @@
-# =============================================================================
-# ELIS – Appendix A (Search) Query Catalogue
-# Purpose:
-#   Central place to define search topics, terms, languages, and time window.
-#   The search script reads this file and issues API calls accordingly.
+# ==============================================================================
+# ELIS SEARCH QUERIES CONFIGURATION
+# ==============================================================================
 #
-# Grounding (ELIS Protocol v1.7.2):
-#   - Timeframe: 1990–present (Protocol §3.1 Eligibility Criteria) 
-#   - Languages: EN, FR, ES, PT (Protocol §3.1)
-#   - Phenomena: integrity, auditability, verifiability, trust (Protocol §2.2)
-#   - Sources: Scopus, Web of Science, IEEE Xplore, ACM, JSTOR, Google Scholar (Protocol §3.2)
+# IMPORTANT NOTICE (2026-01-30):
+# This file is being gradually migrated to the new search configuration system.
+# 
+# NEW APPROACH (Recommended):
+# - Each SLR project has its own dedicated search configuration file
+# - Location: config/searches/{project_name}_search.yml
+# - See: config/searches/README.md for documentation
 #
-# Notes:
-#   - `enabled: true` allows you to toggle a topic on/off without deleting it.
-#   - `max_results_per_source` is a soft cap per topic per source.
-#   - Only protocol-defined sources are used (v1.7.2).
-# =============================================================================
+# CURRENT STATUS:
+# - This file remains active for backwards compatibility
+# - Native ELIS project now references config/searches/electoral_integrity_search.yml
+# - Benchmark projects use config/searches/tai_awasthi_2025_search.yml
+# - Future projects should create dedicated search config files
+#
+# MIGRATION PLAN:
+# - Phase 1: Benchmark scripts use new search configs ✅ (In Progress)
+# - Phase 2: Harvest scripts support both formats (Backwards compatible)
+# - Phase 3: Workflows updated to use new configs
+# - Phase 4: Deprecate this file (keep for reference only)
+#
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# GLOBAL CONFIGURATION - ELIS PROTOCOL v2.0 COMPLIANCE
+# ------------------------------------------------------------------------------
+# These settings define protocol-wide standards and CANNOT be overridden
+# All ELIS SLR searches must comply with these global parameters
+# For project-specific customization, use dedicated search config files
+# ------------------------------------------------------------------------------
 
 global:
-  year_from: 1990
-  year_to: 2025
-  languages: ["en", "fr", "es", "pt"]
-  max_results_per_source: 100
-  # Optional per-run hard limit for the whole job (0 = unlimited)
-  job_result_cap: 1000
+  # Maximum results to retrieve per source
+  # NOTE: This is a legacy default for backwards compatibility
+  # New search configs should define tier-specific max_results
+  # See: config/searches/electoral_integrity_search.yml for tier system
+  max_results_per_source: 1000  # Updated from 100 (too low for SLRs)
+  
+  # Date range for searches (ELIS Protocol v2.0: "1990 to present")
+  # These values apply to ALL ELIS searches and cannot be overridden
+  year_from: 1990  # Protocol-defined: Post-Cold War electoral integrity era
+  year_to: 2026    # Protocol-defined: Current year (present)
+  
+  # Output settings
+  output_directory: "json_jsonl"
+  output_file: "ELIS_Appendix_A_Search_rows.json"
+  
+  # Deduplication
+  deduplication:
+    enabled: true
+    method: "title_normalized"
+  
+  # Protocol compliance notes
+  protocol_compliance: |
+    ELIS Protocol v2.0 Requirements:
+    - Date Range: 1990 to present (currently 2026)
+    - Database Order: Scopus, WoS, IEEE, Semantic Scholar, OpenAlex, CrossRef, CORE, Google Scholar
+    - Comprehensive Coverage: Use appropriate max_results tiers (not legacy 100 default)
+    
+    These global settings ensure all ELIS searches comply with protocol standards.
+    Individual search configs may specify tier-based max_results but cannot
+    override the date range defined by the protocol.
+
+# ------------------------------------------------------------------------------
+# SEARCH CONFIGURATIONS - LEGACY FORMAT
+# ------------------------------------------------------------------------------
+# These topics reference the new dedicated search configuration files
+# This provides backwards compatibility while migrating to new structure
+# ------------------------------------------------------------------------------
 
 topics:
-  - id: integrity_auditability_core
+  # ---------------------------------------------------------------------------
+  # ELIS NATIVE PROJECT: Electoral Integrity
+  # ---------------------------------------------------------------------------
+  # Primary ELIS research project
+  # MIGRATED to: config/searches/electoral_integrity_search.yml (v2.1.0)
+  # ---------------------------------------------------------------------------
+  - name: "Electoral Integrity and E-Voting Security"
     enabled: true
-    description: >
-      Core integrity/auditability vocabulary for voting systems.
-      Mirrors the Protocol's PRQ and analytical sub-questions.
+    
+    # Reference to new dedicated search configuration
+    search_config_file: "config/searches/electoral_integrity_search.yml"
+    
+    # Legacy query (kept for backwards compatibility)
+    # Actual query now defined in search_config_file
     queries:
-      - '"electoral integrity" AND (audit* OR verifi* OR "risk-limiting audit" OR RLA)'
-      - '("electronic voting" OR e-voting OR DRE) AND (audit* OR verifi* OR VVPAT OR "end-to-end verifiability")'
-      - '("paper ballot" OR "paper trail") AND ("risk-limiting audit" OR audit* OR verifi*)'
-      - '("public trust" OR confidence) AND ("electronic voting" OR "ballot auditability")'
-    include_preprints: false
-    sources: ["scopus", "web_of_science", "ieee_xplore", "semantic_scholar"] # Protocol sources (§3.2)
+      - |
+        (
+          ("electoral system" OR "voting system" OR "election" OR "ballot")
+          AND
+          ("integrity" OR "auditability" OR "security" OR "trust" OR "transparency" OR "verifiability" OR "fraud")
+          AND
+          (
+            ("strategy" OR "intervention" OR "reform" OR "improvement")
+            OR
+            ("empirical" OR "framework" OR "evaluation" OR "assessment" OR "experiment")
+          )
+        )
+    
+    # Databases enabled for this topic (ELIS Protocol order)
+    sources:
+      - scopus
+      - web_of_science
+      - ieee_xplore
+      - semantic_scholar
+      - openalex
+      - crossref
+      - core
+      - google_scholar
+    
+    notes: |
+      This topic now uses the dedicated search configuration file:
+      config/searches/electoral_integrity_search.yml (v2.1.0)
+      
+      PROTOCOL COMPLIANCE:
+      - Date range: 1990-2026 (defined by ELIS Protocol v2.0)
+      - Max results: Tier-based system (testing/pilot/benchmark/production/exhaustive)
+      - Database order: Follows ELIS Protocol 2025 v2.0 Section 3.2.1
+      
+      The query above is maintained for backwards compatibility with
+      harvest scripts that haven't been updated to use search configs.
+      
+      For full documentation, see the dedicated search config file.
 
-  - id: cryptographic_mechanisms
+  # ---------------------------------------------------------------------------
+  # BENCHMARK: Tai & Awasthi (2025) - Agile Government
+  # ---------------------------------------------------------------------------
+  # Benchmark validation project
+  # MIGRATED to: config/searches/tai_awasthi_2025_search.yml (v1.1.0)
+  # ---------------------------------------------------------------------------
+  - name: "Agile Government (Benchmark 2)"
+    enabled: false  # Disabled here; benchmark uses dedicated config file
+    
+    # Reference to new dedicated search configuration
+    search_config_file: "config/searches/tai_awasthi_2025_search.yml"
+    
+    # Legacy query (kept for reference)
+    queries:
+      - |
+        ("agile" AND "government") OR 
+        ("agile" AND "governance") OR 
+        ("agile" AND "public")
+    
+    # Databases enabled for this topic (ELIS Protocol order)
+    sources:
+      - scopus
+      - web_of_science
+      - ieee_xplore
+      - semantic_scholar
+      - openalex
+      - crossref
+      - core
+      - google_scholar
+    
+    notes: |
+      This topic is disabled in the legacy config because it's managed
+      through the dedicated search configuration file:
+      config/searches/tai_awasthi_2025_search.yml (v1.1.0)
+      
+      BENCHMARK-SPECIFIC SETTINGS:
+      - Date range: 2002-2023 (matches original paper, NOT protocol range)
+      - Max results: Benchmark tier (1000 per database)
+      - Purpose: Replicate published methodology for validation
+      
+      Benchmark scripts (docs/benchmark-2/run_phase1_benchmark.py) load
+      directly from the dedicated config file.
+      
+      For full documentation, see the dedicated search config file.
+
+# ------------------------------------------------------------------------------
+# DATABASE CONFIGURATIONS
+# ------------------------------------------------------------------------------
+# Database order follows ELIS Protocol 2025 v2.0 Section 3.2.1
+# Order: Scopus, WoS, IEEE Xplore, Semantic Scholar, OpenAlex, CrossRef, CORE, Google Scholar
+# ------------------------------------------------------------------------------
+
+databases:
+  # 1. Scopus
+  scopus:
+    name: "Scopus"
     enabled: true
-    description: >
-      Cryptographic approaches to end-to-end verifiability (E2E) and audits.
-    queries:
-      - '("end-to-end verifiability" OR E2E) AND ("electronic voting" OR ballot)'
-      - '(cryptograph* AND voting) AND (audit OR verifi* OR mixnet OR homomorphic)'
-    include_preprints: false
-    sources: ["scopus", "web_of_science", "ieee_xplore", "semantic_scholar"] # Protocol sources (§3.2)
+    api_type: "rest"
+    requires_auth: true
+    env_vars:
+      - SCOPUS_API_KEY
+      - SCOPUS_INST_TOKEN
+    query_syntax: "TITLE-ABS-KEY"
+    notes: "Multidisciplinary database with comprehensive coverage"
 
-# Future protocol sources (to be implemented):
-# - OpenAlex
-# - CrossRef
-# - CORE
+  # 2. Web of Science
+  web_of_science:
+    name: "Web of Science"
+    enabled: true
+    api_type: "rest"
+    requires_auth: true
+    env_vars:
+      - WOS_API_KEY
+    query_syntax: "TS"
+    notes: "High-impact journal indexing platform"
+
+  # 3. IEEE Xplore
+  ieee_xplore:
+    name: "IEEE Xplore"
+    enabled: true
+    api_type: "rest"
+    requires_auth: true
+    env_vars:
+      - IEEE_API_KEY
+    query_syntax: "generic"
+    notes: "Technical literature repository"
+
+  # 4. Semantic Scholar
+  semantic_scholar:
+    name: "Semantic Scholar"
+    enabled: true
+    api_type: "rest"
+    requires_auth: false
+    env_vars:
+      - SEMANTIC_SCHOLAR_API_KEY  # Optional
+    query_syntax: "natural_language"
+    notes: "AI-enhanced bibliographic database (200M+ papers)"
+
+  # 5. OpenAlex
+  openalex:
+    name: "OpenAlex"
+    enabled: true
+    api_type: "rest"
+    requires_auth: false
+    env_vars:
+      - ELIS_CONTACT  # For polite pool
+    query_syntax: "default.search"
+    notes: "Open bibliographic database (250M+ works)"
+
+  # 6. CrossRef
+  crossref:
+    name: "CrossRef"
+    enabled: true
+    api_type: "rest"
+    requires_auth: false
+    env_vars:
+      - ELIS_CONTACT  # For polite pool
+    query_syntax: "generic"
+    notes: "DOI registration agency (130M+ records)"
+
+  # 7. CORE
+  core:
+    name: "CORE"
+    enabled: true
+    api_type: "rest"
+    requires_auth: true
+    env_vars:
+      - CORE_API_KEY
+    query_syntax: "generic"
+    notes: "Open access aggregator (300M+ papers)"
+
+  # 8. Google Scholar
+  google_scholar:
+    name: "Google Scholar"
+    enabled: true
+    api_type: "apify"
+    requires_auth: true
+    env_vars:
+      - APIFY_API_TOKEN
+    query_syntax: "simplified"
+    notes: "Comprehensive academic search engine (via Apify)"
+
+# ------------------------------------------------------------------------------
+# MIGRATION GUIDANCE
+# ------------------------------------------------------------------------------
+
+migration:
+  status: "In Progress"
+  
+  current_phase: "Phase 1: Benchmark Migration"
+  
+  completed:
+    - "Created dedicated search configs for Electoral Integrity (v2.1.0)"
+    - "Created dedicated search configs for Tai & Awasthi 2025 (v1.1.0)"
+    - "Updated this file with migration notices and references"
+    - "Updated global date range to match ELIS Protocol v2.0 (1990-2026)"
+    - "Removed topic-specific overrides (protocol compliance)"
+    - "Increased default max_results from 100 to 1000"
+  
+  in_progress:
+    - "Update harvest scripts to support --search-config parameter"
+    - "Update benchmark script to load from dedicated config"
+  
+  pending:
+    - "Update workflows to use new search configs"
+    - "Migrate all harvest scripts to new config format"
+    - "Create migration validation tests"
+    - "Deprecate this file (keep for reference)"
+  
+  how_to_create_new_search_config: |
+    To create a new search configuration:
+    
+    1. Copy template:
+       cp config/searches/electoral_integrity_search.yml \
+          config/searches/your_project_search.yml
+    
+    2. Update metadata, query, databases, filters
+    
+    3. IMPORTANT: Maintain ELIS Protocol v2.0 compliance:
+       - Date range: 1990-2026 (unless replicating published work)
+       - Database order: Scopus → Google Scholar
+       - Use tier-based max_results system
+    
+    4. Add reference in this file (optional, for legacy compatibility):
+       - name: "Your Project Name"
+         enabled: true
+         search_config_file: "config/searches/your_project_search.yml"
+         queries: ["your query here"]
+         sources: [scopus, web_of_science, ...]
+    
+    5. Use in scripts:
+       python scripts/your_script.py --search-config config/searches/your_project_search.yml
+    
+    See config/searches/README.md for full documentation.
+
+# ------------------------------------------------------------------------------
+# BACKWARDS COMPATIBILITY NOTES
+# ------------------------------------------------------------------------------
+
+backwards_compatibility:
+  harvest_scripts: |
+    Harvest scripts will support BOTH formats during migration:
+    
+    OLD WAY (still works):
+      python scripts/scopus_harvest.py
+      # Reads from this file (config/elis_search_queries.yml)
+      # Uses global settings: year_from=1990, year_to=2026, max_results=1000
+    
+    NEW WAY (recommended):
+      python scripts/scopus_harvest.py \
+        --search-config config/searches/electoral_integrity_search.yml
+      # Reads from dedicated search config
+      # Uses tier-based max_results system
+    
+    Scripts will prefer --search-config if provided, otherwise fall back
+    to this legacy config file.
+  
+  workflows: |
+    Workflows will be updated gradually:
+    
+    Phase 1: Benchmark workflows (use new configs)
+    Phase 2: Production workflows (migrate one by one)
+    Phase 3: All workflows use new configs
+  
+  deprecation_timeline: |
+    This file will be deprecated in phases:
+    
+    2026-02: Migration begins (keep both formats working)
+    2026-03: New format becomes primary (this file for reference only)
+    2026-04: This file archived (new format required)
+
+# ------------------------------------------------------------------------------
+# CHANGELOG
+# ------------------------------------------------------------------------------
+
+changelog:
+  - version: "1.0.0"
+    date: "2025-01-XX"
+    changes:
+      - "Initial creation of unified search queries configuration"
+      - "Defined global settings and topic structure"
+  
+  - version: "2.0.0"
+    date: "2026-01-30"
+    changes:
+      - "MAJOR: Migration to dedicated search configuration files"
+      - "Added references to config/searches/ directory"
+      - "Updated Electoral Integrity to use electoral_integrity_search.yml (v2.0.0)"
+      - "Updated Tai & Awasthi benchmark to use tai_awasthi_2025_search.yml (v1.1.0)"
+      - "Added migration plan and backwards compatibility notes"
+      - "Updated database order to match ELIS Protocol 2025 v2.0"
+      - "Maintained legacy format for backwards compatibility"
+      - "Added comprehensive migration guidance"
+  
+  - version: "2.1.0"
+    date: "2026-01-30"
+    changes:
+      - "CRITICAL: Updated global date range to match ELIS Protocol v2.0"
+      - "Changed year_from from 2000 to 1990 (protocol compliance)"
+      - "Changed year_to from 2024 to 2026 (protocol: '1990 to present')"
+      - "Removed topic-specific override fields (max_results_override, year_from_override, year_to_override)"
+      - "Updated max_results_per_source from 100 to 1000 (realistic for SLRs)"
+      - "Added protocol_compliance section to global config"
+      - "Clarified that global settings cannot be overridden (protocol enforcement)"
+      - "Updated Electoral Integrity reference to v2.1.0"
+
+# ------------------------------------------------------------------------------
+# NOTES
+# ------------------------------------------------------------------------------
+
+notes: |
+  IMPORTANT: This file is in transition to the new search configuration system.
+  
+  ELIS PROTOCOL v2.0 COMPLIANCE:
+  - Global date range: 1990-2026 (cannot be overridden)
+  - Database order: Fixed per protocol
+  - Max results: Tier-based system in new configs (legacy: 1000)
+  
+  For new projects or updates:
+  - Use dedicated search config files in config/searches/
+  - See config/searches/README.md for documentation
+  - Follow examples: electoral_integrity_search.yml or tai_awasthi_2025_search.yml
+  
+  For legacy compatibility:
+  - This file continues to work with existing harvest scripts
+  - Will be gradually phased out as scripts are updated
+  - All new development should use the new config format
+  
+  Questions? See migration guidance above or config/searches/README.md
+
+  
