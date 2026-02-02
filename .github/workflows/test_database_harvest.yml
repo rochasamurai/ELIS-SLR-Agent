@@ -75,7 +75,7 @@ jobs:
               ;;
             ieee_xplore)
               echo "script=scripts/ieee_harvest.py" >> $GITHUB_OUTPUT
-              echo "api_key_var=IEEE_API_KEY" >> $GITHUB_OUTPUT
+              echo "api_key_var=IEEE_EXPLORE_API_KEY" >> $GITHUB_OUTPUT
               echo "api_token_var=" >> $GITHUB_OUTPUT
               ;;
             semantic_scholar)
@@ -112,8 +112,8 @@ jobs:
         env:
           SCOPUS_API_KEY: ${{ secrets.SCOPUS_API_KEY }}
           SCOPUS_INST_TOKEN: ${{ secrets.SCOPUS_INST_TOKEN }}
-          WOS_API_KEY: ${{ secrets.WOS_API_KEY }}
-          IEEE_API_KEY: ${{ secrets.IEEE_API_KEY }}
+          WEB_OF_SCIENCE_API_KEY: ${{ secrets.WEB_OF_SCIENCE_API_KEY }}
+          IEEE_EXPLORE_API_KEY: ${{ secrets.IEEE_EXPLORE_API_KEY }}
           SEMANTIC_SCHOLAR_API_KEY: ${{ secrets.SEMANTIC_SCHOLAR_API_KEY }}
           ELIS_CONTACT: ${{ secrets.ELIS_CONTACT }}
           CORE_API_KEY: ${{ secrets.CORE_API_KEY }}
@@ -170,8 +170,8 @@ jobs:
         env:
           SCOPUS_API_KEY: ${{ secrets.SCOPUS_API_KEY }}
           SCOPUS_INST_TOKEN: ${{ secrets.SCOPUS_INST_TOKEN }}
-          WOS_API_KEY: ${{ secrets.WOS_API_KEY }}
-          IEEE_API_KEY: ${{ secrets.IEEE_API_KEY }}
+          WEB_OF_SCIENCE_API_KEY: ${{ secrets.WEB_OF_SCIENCE_API_KEY }}
+          IEEE_EXPLORE_API_KEY: ${{ secrets.IEEE_EXPLORE_API_KEY }}
           SEMANTIC_SCHOLAR_API_KEY: ${{ secrets.SEMANTIC_SCHOLAR_API_KEY }}
           ELIS_CONTACT: ${{ secrets.ELIS_CONTACT }}
           CORE_API_KEY: ${{ secrets.CORE_API_KEY }}
