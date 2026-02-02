@@ -38,7 +38,10 @@ def openalex_search(query: str, per_page: int = 100, max_results: int = 100):
     page = 1
 
     # Get contact email for polite pool
-    mailto = os.getenv("ELIS_CONTACT", "elis@samurai.com.br")
+    mailto = os.getenv("ELIS_CONTACT")
+    if not mailto:
+      print("⚠️  Warning: ELIS_CONTACT not set. Using polite pool recommended for better rate limits.")
+      mailto = None
 
     while len(results) < max_results:
         params = {
@@ -46,9 +49,11 @@ def openalex_search(query: str, per_page: int = 100, max_results: int = 100):
             # This matches Tai & Awasthi's methodology (title, abstract, keywords)
             "filter": f"default.search:{query}",
             "per_page": min(per_page, max_results - len(results)),
-            "page": page,
-            "mailto": mailto,
+            "page": page,        
         }
+        # Only add mailto if ELIS_CONTACT is set (for polite pool access)
+        if mailto:
+            params["mailto"] = mailto
 
         r = requests.get(url, params=params, timeout=30)
 
