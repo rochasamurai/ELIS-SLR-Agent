@@ -36,6 +36,7 @@ paper_reference:
 created_date: "2026-01-30"
 last_modified: "2026-01-30"
 status: "active"
+version: "2.0.0"
 
 # ------------------------------------------------------------------------------
 # SEARCH QUERY
@@ -131,6 +132,10 @@ date_range:
     - No explicit lower bound, but earliest article was 2002
     - Some databases may not support year filtering
     - This range captures the modern era of agile government research
+    
+    NOTE: This differs from ELIS Protocol v2.0 (1990-2026) because
+    this is a BENCHMARK replication that must match the original
+    paper's methodology exactly.
 
 # ------------------------------------------------------------------------------
 # TARGET DATABASES
@@ -141,18 +146,27 @@ date_range:
 # Database order follows ELIS Protocol 2025 v2.0 Section 3.2.1
 # Order: Scopus, WoS, IEEE Xplore, Semantic Scholar, OpenAlex, CrossRef, CORE, Google Scholar
 #
-# Each database configuration includes:
-#   - enabled: Whether to include in this search
-#   - max_results: Maximum results to retrieve per database
-#   - query_syntax: How to format the Boolean query for this database
-#   - priority: CRITICAL/HIGH/MEDIUM/LOW for resource allocation
+# MAX_RESULTS TIERS (Benchmark-focused):
+#   - testing: 25 (quick validation)
+#   - pilot: 100 (initial testing)
+#   - benchmark: 500 (match scale for validation)
+#   - production: 1000 (comprehensive benchmark run)
+#   - exhaustive: 99999 (complete coverage)
+#
+# DEFAULT: benchmark (500) - appropriate scale for benchmark validation
 # ------------------------------------------------------------------------------
 
 databases:
   # 1. Scopus
   - name: "Scopus"
     enabled: true
-    max_results: 500
+    max_results:
+      testing: 25
+      pilot: 100
+      benchmark: 500
+      production: 1000
+      exhaustive: 99999
+    max_results_default: "benchmark"
     query_syntax: "TITLE-ABS-KEY"
     query_wrapper: "TITLE-ABS-KEY({query})"
     priority: "HIGH"
@@ -168,7 +182,13 @@ databases:
   # 2. Web of Science
   - name: "Web of Science"
     enabled: true
-    max_results: 500
+    max_results:
+      testing: 25
+      pilot: 100
+      benchmark: 500
+      production: 1000
+      exhaustive: 99999
+    max_results_default: "benchmark"
     query_syntax: "TS"
     query_wrapper: "TS=({query})"
     priority: "CRITICAL"
@@ -184,7 +204,13 @@ databases:
   # 3. IEEE Xplore
   - name: "IEEE Xplore"
     enabled: true
-    max_results: 200
+    max_results:
+      testing: 25
+      pilot: 100
+      benchmark: 200
+      production: 500
+      exhaustive: 99999
+    max_results_default: "benchmark"
     query_syntax: "generic"
     query_filter: "querytext={query}"
     priority: "LOW"
@@ -200,7 +226,13 @@ databases:
   # 4. Semantic Scholar
   - name: "Semantic Scholar"
     enabled: true
-    max_results: 100
+    max_results:
+      testing: 25
+      pilot: 100
+      benchmark: 200
+      production: 500
+      exhaustive: 99999
+    max_results_default: "benchmark"
     query_syntax: "natural_language"
     query_filter: "query={query}"
     priority: "MEDIUM"
@@ -216,7 +248,13 @@ databases:
   # 5. OpenAlex
   - name: "OpenAlex"
     enabled: true
-    max_results: 500
+    max_results:
+      testing: 25
+      pilot: 100
+      benchmark: 500
+      production: 1000
+      exhaustive: 99999
+    max_results_default: "benchmark"
     query_syntax: "default.search"
     query_filter: "default.search:{query}"
     priority: "HIGH"
@@ -232,7 +270,13 @@ databases:
   # 6. CrossRef
   - name: "CrossRef"
     enabled: true
-    max_results: 500
+    max_results:
+      testing: 25
+      pilot: 100
+      benchmark: 500
+      production: 1000
+      exhaustive: 99999
+    max_results_default: "benchmark"
     query_syntax: "generic"
     query_filter: "query={query}"
     priority: "MEDIUM"
@@ -248,7 +292,13 @@ databases:
   # 7. CORE
   - name: "CORE"
     enabled: true
-    max_results: 500
+    max_results:
+      testing: 25
+      pilot: 100
+      benchmark: 500
+      production: 1000
+      exhaustive: 99999
+    max_results_default: "benchmark"
     query_syntax: "generic"
     query_filter: "q={query}"
     priority: "MEDIUM"
@@ -263,7 +313,13 @@ databases:
   # 8. Google Scholar
   - name: "Google Scholar"
     enabled: true
-    max_results: 100
+    max_results:
+      testing: 25
+      pilot: 100
+      benchmark: 100
+      production: 500
+      exhaustive: 5000
+    max_results_default: "pilot"
     query_syntax: "simplified"
     query_transformation: "remove_boolean_operators"
     priority: "HIGH"
@@ -271,7 +327,9 @@ databases:
       - Comprehensive academic search engine
       - Broadest academic coverage
       - Via Apify EasyAPI actor (easyapi/google-scholar-scraper)
-      - Free tier: 10 results max
+      - FREE TIER LIMITATION: Only 10 results regardless of max_results
+      - Paid tier: Up to 5000 results ($10 per 1000)
+      - Default set to 'pilot' tier due to free tier limitation
       - Query simplification required (remove Boolean operators)
       - No year filtering support
     api_config:
@@ -279,6 +337,52 @@ databases:
       actor: "easyapi/google-scholar-scraper"
       rate_limit: "Managed by Apify"
       timeout: 120
+
+# ------------------------------------------------------------------------------
+# MAX_RESULTS TIER SYSTEM - BENCHMARK FOCUS
+# ------------------------------------------------------------------------------
+
+max_results_tiers:
+  explanation: |
+    Benchmark validation uses a focused tier system optimized for
+    replicating published methodology at appropriate scale.
+  
+  tier_definitions:
+    testing:
+      value: 25
+      purpose: "Quick syntax validation"
+      time: "~3 minutes"
+      cost: "~$0.05"
+      when_to_use: "Testing query syntax, API connections"
+    
+    pilot:
+      value: 100
+      purpose: "Initial benchmark test"
+      time: "~10 minutes"
+      cost: "~$0.30"
+      when_to_use: "First benchmark run, verify matching works"
+    
+    benchmark:
+      value: 500
+      purpose: "Standard benchmark validation"
+      time: "~20 minutes"
+      cost: "~$1.50"
+      when_to_use: "Official benchmark runs, Phase 1 validation"
+      note: "Default tier - appropriate scale for benchmark"
+    
+    production:
+      value: 1000
+      purpose: "Comprehensive benchmark validation"
+      time: "~40 minutes"
+      cost: "~$3.00"
+      when_to_use: "Final validation, publication-ready results"
+    
+    exhaustive:
+      value: 99999
+      purpose: "Complete database coverage"
+      time: "~60+ minutes"
+      cost: "~$5.00"
+      when_to_use: "Maximum possible retrieval for comparison"
 
 # ------------------------------------------------------------------------------
 # FILTERS
@@ -378,10 +482,20 @@ execution:
     delay_seconds: 30
     exponential_backoff: true
   
-  # Timeout settings
+  # Timeout settings (tier-based)
   timeout:
-    per_database_minutes: 12  # 12 min for Google Scholar, 5 min for others
-    total_search_minutes: 60
+    per_database_minutes:
+      testing: 3
+      pilot: 8
+      benchmark: 12
+      production: 20
+      exhaustive: 30
+    total_search_minutes:
+      testing: 20
+      pilot: 40
+      benchmark: 60
+      production: 90
+      exhaustive: 120
   
   # Logging
   logging:
@@ -392,8 +506,18 @@ execution:
   # Cost tracking
   cost_tracking:
     enabled: true
-    max_budget_usd: 2.00
-    warn_threshold_usd: 1.50
+    max_budget_usd:
+      testing: 0.20
+      pilot: 0.50
+      benchmark: 2.00
+      production: 4.00
+      exhaustive: 8.00
+    warn_threshold_usd:
+      testing: 0.10
+      pilot: 0.30
+      benchmark: 1.50
+      production: 3.00
+      exhaustive: 6.00
 
 # ------------------------------------------------------------------------------
 # VALIDATION RULES
@@ -402,16 +526,42 @@ execution:
 # ------------------------------------------------------------------------------
 
 validation:
-  # Minimum results per database
+  # Minimum results per database (tier-based)
   minimum_results:
-    critical_databases: 100  # WoS, Scopus, OpenAlex
-    other_databases: 10
+    testing:
+      critical_databases: 10
+      other_databases: 5
+    pilot:
+      critical_databases: 30
+      other_databases: 10
+    benchmark:
+      critical_databases: 100
+      other_databases: 10
+    production:
+      critical_databases: 200
+      other_databases: 20
+    exhaustive:
+      critical_databases: 500
+      other_databases: 50
   
   # Expected total results
   expected_range:
-    minimum: 1500
-    maximum: 3000
-    notes: "Based on Phase 1 runs: 2000-2500 typical"
+    testing:
+      minimum: 50
+      maximum: 150
+    pilot:
+      minimum: 200
+      maximum: 600
+    benchmark:
+      minimum: 1500
+      maximum: 3000
+      notes: "Based on Phase 1 runs: 2000-2500 typical"
+    production:
+      minimum: 2500
+      maximum: 5000
+    exhaustive:
+      minimum: 4000
+      maximum: 8000
   
   # Query validation
   query_checks:
@@ -469,3 +619,14 @@ changelog:
       - "Documented query design rationale and RQ alignment"
       - "Explained sensitivity vs precision approach"
       - "Added note on hypothetical expanded query for reference"
+  
+  - version: "2.0.0"
+    date: "2026-01-30"
+    changes:
+      - "MAJOR: Implemented three-tier max_results system"
+      - "Added 5 benchmark-focused tiers: testing(25), pilot(100), benchmark(500), production(1000), exhaustive(99999)"
+      - "Applied tier system to all 8 databases"
+      - "Default tier: benchmark (500) for standard validation"
+      - "Added tier-specific timeouts and budget limits"
+      - "Documented tier use cases optimized for benchmark validation"
+      - "Noted date range difference from ELIS Protocol (benchmark replication)"
