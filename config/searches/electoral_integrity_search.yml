@@ -23,7 +23,7 @@ research_team:
 created_date: "2026-01-30"
 last_modified: "2026-01-30"
 status: "active"
-version: "1.0.0"
+version: "1.0.1"
 
 # ------------------------------------------------------------------------------
 # SEARCH QUERY
@@ -38,7 +38,7 @@ query:
   boolean_string: |
     ("electronic voting" OR "e-voting" OR "digital voting" OR "internet voting" OR "online voting") 
     AND 
-    ("integrity" OR "security" OR "trust" OR "auditability" OR "transparency" OR "verifiability")
+    ("integrity" OR "security" OR "trust" OR "transparency" OR "verifiability" OR "authentication")
   
   # Alternative query variations for databases that don't support complex Boolean
   alternative_queries:
@@ -105,9 +105,9 @@ query:
 
 date_range:
   start_year: 2000
-  end_year: 2025
+  end_year: 2024
   notes: |
-    - 2000-2025: Modern e-voting systems era
+    - 2000-2024: Modern e-voting systems era
     - Captures early development through current state
     - Includes COVID-19 pandemic impact on remote voting
     - Can be adjusted based on preliminary results
@@ -116,13 +116,12 @@ date_range:
 # TARGET DATABASES
 # ------------------------------------------------------------------------------
 # All 8 ELIS databases enabled for comprehensive coverage
+# Database order follows ELIS Protocol 2025 v2.0 Section 3.2.1
+# Order: Scopus, WoS, IEEE Xplore, Semantic Scholar, OpenAlex, CrossRef, CORE, Google Scholar
 # ------------------------------------------------------------------------------
 
 databases:
-  # --------------------
-  # HIGH PRIORITY - Core Academic Databases
-  # --------------------
-  
+  # 1. Scopus
   - name: "Scopus"
     enabled: true
     max_results: 1000
@@ -130,13 +129,14 @@ databases:
     query_wrapper: "TITLE-ABS-KEY({query})"
     priority: "CRITICAL"
     notes: |
-      - Comprehensive multidisciplinary coverage
-      - Strong in computer science, political science
+      - Multidisciplinary database with comprehensive coverage
+      - Strong in computer science, political science, governance
       - TITLE-ABS-KEY required for proper field search
     api_config:
       rate_limit: "2 requests/second"
       timeout: 30
   
+  # 2. Web of Science
   - name: "Web of Science"
     enabled: true
     max_results: 1000
@@ -144,31 +144,14 @@ databases:
     query_wrapper: "TS=({query})"
     priority: "CRITICAL"
     notes: |
-      - High-quality peer-reviewed content
+      - High-impact journal indexing platform
       - Strong citation tracking
       - TS= wrapper for topic search
     api_config:
       rate_limit: "5 requests/second"
       timeout: 30
   
-  - name: "OpenAlex"
-    enabled: true
-    max_results: 1000
-    query_syntax: "default.search"
-    query_filter: "default.search:{query}"
-    priority: "HIGH"
-    notes: |
-      - Open access comprehensive aggregator
-      - Searches title, abstract, fulltext
-      - Free API, excellent coverage
-    api_config:
-      rate_limit: "10 requests/second (polite pool)"
-      timeout: 30
-  
-  # --------------------
-  # HIGH PRIORITY - Specialized Coverage
-  # --------------------
-  
+  # 3. IEEE Xplore
   - name: "IEEE Xplore"
     enabled: true
     max_results: 1000
@@ -176,6 +159,7 @@ databases:
     query_filter: "querytext={query}"
     priority: "HIGH"
     notes: |
+      - Technical literature repository
       - CRITICAL for e-voting: computer science, engineering focus
       - Strong coverage of voting technology, security systems
       - Essential for technical aspects of e-voting
@@ -183,6 +167,70 @@ databases:
       rate_limit: "200 calls/day"
       timeout: 30
   
+  # 4. Semantic Scholar
+  - name: "Semantic Scholar"
+    enabled: true
+    max_results: 500
+    query_syntax: "natural_language"
+    query_filter: "query={query}"
+    priority: "MEDIUM"
+    notes: |
+      - AI-enhanced bibliographic database (200M+ papers)
+      - AI-powered semantic search
+      - Good for computer science papers
+      - Natural language query processing
+    api_config:
+      rate_limit: "100 requests/5 minutes"
+      timeout: 30
+  
+  # 5. OpenAlex
+  - name: "OpenAlex"
+    enabled: true
+    max_results: 1000
+    query_syntax: "default.search"
+    query_filter: "default.search:{query}"
+    priority: "HIGH"
+    notes: |
+      - Open bibliographic database (250M+ works)
+      - Comprehensive metadata including institutions, citations
+      - Searches title, abstract, fulltext
+      - Free API, excellent coverage
+    api_config:
+      rate_limit: "10 requests/second (polite pool)"
+      timeout: 30
+  
+  # 6. CrossRef
+  - name: "CrossRef"
+    enabled: true
+    max_results: 1000
+    query_syntax: "generic"
+    query_filter: "query={query}"
+    priority: "MEDIUM"
+    notes: |
+      - DOI registration agency (130M+ records)
+      - Publisher-verified metadata
+      - Good for citation tracking and deduplication
+    api_config:
+      rate_limit: "Polite pool recommended"
+      timeout: 30
+  
+  # 7. CORE
+  - name: "CORE"
+    enabled: true
+    max_results: 1000
+    query_syntax: "generic"
+    query_filter: "q={query}"
+    priority: "MEDIUM"
+    notes: |
+      - Open access aggregator (300M+ papers)
+      - Covers theses, preprints, institutional repositories
+      - Good coverage of preprints and open access
+      - Accepts Boolean operators
+    api_config:
+      rate_limit: "Limited by API key tier"
+      timeout: 30
+  
+  # 8. Google Scholar
   - name: "Google Scholar"
     enabled: true
     max_results: 500
@@ -190,6 +238,7 @@ databases:
     query_transformation: "remove_boolean_operators"
     priority: "HIGH"
     notes: |
+      - Comprehensive academic search engine
       - Broadest academic coverage including grey literature
       - Via Apify EasyAPI actor
       - Free tier: 10 results, paid tier: up to 5000
@@ -199,52 +248,6 @@ databases:
       actor: "easyapi/google-scholar-scraper"
       rate_limit: "Managed by Apify"
       timeout: 120
-  
-  # --------------------
-  # MEDIUM PRIORITY - Complementary Databases
-  # --------------------
-  
-  - name: "Semantic Scholar"
-    enabled: true
-    max_results: 500
-    query_syntax: "natural_language"
-    query_filter: "query={query}"
-    priority: "MEDIUM"
-    notes: |
-      - AI-powered semantic search
-      - Good for computer science papers
-      - Natural language query processing
-    api_config:
-      rate_limit: "100 requests/5 minutes"
-      timeout: 30
-  
-  - name: "CrossRef"
-    enabled: true
-    max_results: 1000
-    query_syntax: "generic"
-    query_filter: "query={query}"
-    priority: "MEDIUM"
-    notes: |
-      - DOI registry and metadata
-      - Good for citation tracking
-      - Complements other databases
-    api_config:
-      rate_limit: "Polite pool recommended"
-      timeout: 30
-  
-  - name: "CORE"
-    enabled: true
-    max_results: 1000
-    query_syntax: "generic"
-    query_filter: "q={query}"
-    priority: "MEDIUM"
-    notes: |
-      - Open access repository aggregator
-      - Good coverage of preprints and open access
-      - Accepts Boolean operators
-    api_config:
-      rate_limit: "Limited by API key tier"
-      timeout: 30
 
 # ------------------------------------------------------------------------------
 # FILTERS
@@ -522,3 +525,9 @@ changelog:
       - "Defined comprehensive query strategy"
       - "Set validation and output rules"
       - "Documented topical inclusion/exclusion criteria"
+  
+  - version: "1.0.1"
+    date: "2026-01-30"
+    changes:
+      - "Reordered databases to match ELIS Protocol 2025 v2.0"
+      - "Order: Scopus, WoS, IEEE, Semantic Scholar, OpenAlex, CrossRef, CORE, Google Scholar"
