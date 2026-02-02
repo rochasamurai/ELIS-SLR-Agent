@@ -96,32 +96,18 @@ date_range:
 # Original paper used: Web of Science, EBSCOhost, ProQuest
 # ELIS Phase 1 uses: Available databases that don't require API access
 # 
+# Database order follows ELIS Protocol 2025 v2.0 Section 3.2.1
+# Order: Scopus, WoS, IEEE Xplore, Semantic Scholar, OpenAlex, CrossRef, CORE, Google Scholar
+#
 # Each database configuration includes:
 #   - enabled: Whether to include in this search
 #   - max_results: Maximum results to retrieve per database
 #   - query_syntax: How to format the Boolean query for this database
-#   - priority: HIGH/MEDIUM/LOW for resource allocation
+#   - priority: CRITICAL/HIGH/MEDIUM/LOW for resource allocation
 # ------------------------------------------------------------------------------
 
 databases:
-  # --------------------
-  # HIGH PRIORITY (Direct matches or high overlap with original paper)
-  # --------------------
-  
-  - name: "Web of Science"
-    enabled: true
-    max_results: 500
-    query_syntax: "TS"  # Topic Search (title, abstract, keywords)
-    query_wrapper: "TS=({query})"
-    priority: "CRITICAL"
-    notes: |
-      - Direct match with original paper (1/3 databases)
-      - Original paper retrieved 405 results from WoS
-      - Uses TS= wrapper for topic search
-    api_config:
-      rate_limit: "5 requests/second"
-      timeout: 30
-  
+  # 1. Scopus
   - name: "Scopus"
     enabled: true
     max_results: 500
@@ -129,6 +115,7 @@ databases:
     query_wrapper: "TITLE-ABS-KEY({query})"
     priority: "HIGH"
     notes: |
+      - Multidisciplinary database with comprehensive coverage
       - High overlap with Web of Science
       - Requires TITLE-ABS-KEY() wrapper for proper field search
       - Institutional access via API key + token
@@ -136,6 +123,55 @@ databases:
       rate_limit: "2 requests/second"
       timeout: 30
   
+  # 2. Web of Science
+  - name: "Web of Science"
+    enabled: true
+    max_results: 500
+    query_syntax: "TS"
+    query_wrapper: "TS=({query})"
+    priority: "CRITICAL"
+    notes: |
+      - Direct match with original paper (1/3 databases)
+      - Original paper retrieved 405 results from WoS
+      - High-impact journal indexing platform
+      - Uses TS= wrapper for topic search
+    api_config:
+      rate_limit: "5 requests/second"
+      timeout: 30
+  
+  # 3. IEEE Xplore
+  - name: "IEEE Xplore"
+    enabled: true
+    max_results: 200
+    query_syntax: "generic"
+    query_filter: "querytext={query}"
+    priority: "LOW"
+    notes: |
+      - Technical literature repository
+      - Limited relevance to public administration focus
+      - Currently returning 0 results (API configuration issue)
+      - Max 200 results per request (API limitation)
+    api_config:
+      rate_limit: "200 calls/day"
+      timeout: 30
+  
+  # 4. Semantic Scholar
+  - name: "Semantic Scholar"
+    enabled: true
+    max_results: 100
+    query_syntax: "natural_language"
+    query_filter: "query={query}"
+    priority: "MEDIUM"
+    notes: |
+      - AI-enhanced bibliographic database (200M+ papers)
+      - Good for CS/digital government topics
+      - Natural language query processing
+      - Currently experiencing rate limiting issues
+    api_config:
+      rate_limit: "100 requests/5 minutes"
+      timeout: 30
+  
+  # 5. OpenAlex
   - name: "OpenAlex"
     enabled: true
     max_results: 500
@@ -143,6 +179,7 @@ databases:
     query_filter: "default.search:{query}"
     priority: "HIGH"
     notes: |
+      - Open bibliographic database (250M+ works)
       - Comprehensive open access aggregator
       - Uses default.search to search title, abstract, fulltext
       - Free API, no authentication required
@@ -150,17 +187,46 @@ databases:
       rate_limit: "10 requests/second (polite pool)"
       timeout: 30
   
-  # --------------------
-  # MEDIUM PRIORITY (Complementary databases)
-  # --------------------
+  # 6. CrossRef
+  - name: "CrossRef"
+    enabled: true
+    max_results: 500
+    query_syntax: "generic"
+    query_filter: "query={query}"
+    priority: "MEDIUM"
+    notes: |
+      - DOI registration agency (130M+ records)
+      - DOI-based verification
+      - Generic search across all metadata fields
+      - Free API with polite pool
+    api_config:
+      rate_limit: "Polite pool recommended"
+      timeout: 30
   
+  # 7. CORE
+  - name: "CORE"
+    enabled: true
+    max_results: 500
+    query_syntax: "generic"
+    query_filter: "q={query}"
+    priority: "MEDIUM"
+    notes: |
+      - Open access aggregator (300M+ papers)
+      - Searches title, abstract, fulltext
+      - Accepts Boolean operators natively
+    api_config:
+      rate_limit: "Limited by API key tier"
+      timeout: 30
+  
+  # 8. Google Scholar
   - name: "Google Scholar"
     enabled: true
-    max_results: 100  # Limited by Apify free tier to 10 actual results
+    max_results: 100
     query_syntax: "simplified"
     query_transformation: "remove_boolean_operators"
     priority: "HIGH"
     notes: |
+      - Comprehensive academic search engine
       - Broadest academic coverage
       - Via Apify EasyAPI actor (easyapi/google-scholar-scraper)
       - Free tier: 10 results max
@@ -171,66 +237,6 @@ databases:
       actor: "easyapi/google-scholar-scraper"
       rate_limit: "Managed by Apify"
       timeout: 120
-  
-  - name: "CrossRef"
-    enabled: true
-    max_results: 500
-    query_syntax: "generic"
-    query_filter: "query={query}"
-    priority: "MEDIUM"
-    notes: |
-      - DOI-based verification
-      - Generic search across all metadata fields
-      - Free API with polite pool
-    api_config:
-      rate_limit: "Polite pool recommended"
-      timeout: 30
-  
-  - name: "CORE"
-    enabled: true
-    max_results: 500
-    query_syntax: "generic"
-    query_filter: "q={query}"
-    priority: "MEDIUM"
-    notes: |
-      - Open access aggregator
-      - Searches title, abstract, fulltext
-      - Accepts Boolean operators natively
-    api_config:
-      rate_limit: "Limited by API key tier"
-      timeout: 30
-  
-  # --------------------
-  # LOW PRIORITY (Limited relevance or technical issues)
-  # --------------------
-  
-  - name: "Semantic Scholar"
-    enabled: true
-    max_results: 100
-    query_syntax: "natural_language"
-    query_filter: "query={query}"
-    priority: "MEDIUM"
-    notes: |
-      - Good for CS/digital government topics
-      - Natural language query processing
-      - Currently experiencing rate limiting issues
-    api_config:
-      rate_limit: "100 requests/5 minutes"
-      timeout: 30
-  
-  - name: "IEEE Xplore"
-    enabled: true
-    max_results: 200
-    query_syntax: "generic"
-    query_filter: "querytext={query}"
-    priority: "LOW"
-    notes: |
-      - Limited relevance to public administration focus
-      - Currently returning 0 results (API configuration issue)
-      - Max 200 results per request (API limitation)
-    api_config:
-      rate_limit: "200 calls/day"
-      timeout: 30
 
 # ------------------------------------------------------------------------------
 # FILTERS
@@ -406,4 +412,10 @@ changelog:
       - "Documented all 8 ELIS Phase 1 databases"
       - "Added database-specific query syntax"
       - "Configured output and validation rules"
+  
+  - version: "1.0.1"
+    date: "2026-01-30"
+    changes:
+      - "Reordered databases to match ELIS Protocol 2025 v2.0"
+      - "Order: Scopus, WoS, IEEE, Semantic Scholar, OpenAlex, CrossRef, CORE, Google Scholar"
       
