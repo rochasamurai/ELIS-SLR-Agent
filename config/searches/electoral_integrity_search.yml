@@ -38,7 +38,7 @@ query:
   boolean_string: |
     ("electronic voting" OR "e-voting" OR "digital voting" OR "internet voting" OR "online voting") 
     AND 
-    ("integrity" OR "security" OR "trust" OR "transparency" OR "verifiability" OR "authentication")
+    ("integrity" OR "security" OR "trust" OR "auditability" OR "transparency" OR "verifiability")
   
   # Alternative query variations for databases that don't support complex Boolean
   alternative_queries:
