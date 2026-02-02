@@ -1,0 +1,524 @@
+# ==============================================================================
+# SEARCH CONFIGURATION: Electoral Integrity SLR
+# ==============================================================================
+# 
+# Purpose: Systematic literature review on electronic voting and electoral 
+#          integrity, security, and trust in democratic processes.
+#
+# This is the native ELIS SLR Agent project configuration for comprehensive
+# research on e-voting systems, electoral security, and democratic integrity.
+#
+# Created: 2026-01-30
+# Status: Active (ELIS Native Project)
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# SEARCH METADATA
+# ------------------------------------------------------------------------------
+search_id: "electoral_integrity_2025"
+project_name: "Electoral Integrity and E-Voting Security SLR"
+research_team:
+  - "ELIS Research Team"
+  
+created_date: "2026-01-30"
+last_modified: "2026-01-30"
+status: "active"
+version: "1.0.0"
+
+# ------------------------------------------------------------------------------
+# SEARCH QUERY
+# ------------------------------------------------------------------------------
+# Multi-faceted query covering electronic voting, electoral integrity,
+# security, trust, and democratic processes
+# ------------------------------------------------------------------------------
+
+query:
+  # Primary Boolean query string
+  # Covers e-voting AND integrity/security/trust dimensions
+  boolean_string: |
+    ("electronic voting" OR "e-voting" OR "digital voting" OR "internet voting" OR "online voting") 
+    AND 
+    ("integrity" OR "security" OR "trust" OR "transparency" OR "verifiability" OR "authentication")
+  
+  # Alternative query variations for databases that don't support complex Boolean
+  alternative_queries:
+    - simplified: |
+        electronic voting integrity security trust
+    
+    - focused_evoting: |
+        ("electronic voting" OR "e-voting") AND ("integrity" OR "security")
+    
+    - focused_trust: |
+        ("electronic voting" OR "e-voting") AND ("trust" OR "transparency")
+  
+  # Keyword groups for reference and reporting
+  keyword_groups:
+    - category: "E-Voting Systems"
+      terms:
+        - "electronic voting"
+        - "e-voting"
+        - "digital voting"
+        - "internet voting"
+        - "online voting"
+        - "remote voting"
+      
+    - category: "Electoral Integrity"
+      terms:
+        - "integrity"
+        - "security"
+        - "trust"
+        - "transparency"
+        - "verifiability"
+        - "authentication"
+        - "privacy"
+        - "anonymity"
+    
+    - category: "Democratic Process"
+      terms:
+        - "democracy"
+        - "election"
+        - "electoral"
+        - "voting"
+        - "ballot"
+  
+  # Fields to search across databases
+  search_fields:
+    - "title"
+    - "abstract"
+    - "keywords"
+  
+  # Exclusion terms (NOT queries) - if needed
+  exclusion_terms: []
+  
+  # Notes on query design
+  notes: |
+    - Balanced approach: technology + integrity/security dimensions
+    - Broad coverage: multiple e-voting synonyms
+    - Flexible for different database capabilities
+    - Can use alternative queries for databases with syntax limitations
+
+# ------------------------------------------------------------------------------
+# DATE RANGE
+# ------------------------------------------------------------------------------
+# Focus on modern e-voting era (post-2000) with recent emphasis
+# ------------------------------------------------------------------------------
+
+date_range:
+  start_year: 2000
+  end_year: 2025
+  notes: |
+    - 2000-2025: Modern e-voting systems era
+    - Captures early development through current state
+    - Includes COVID-19 pandemic impact on remote voting
+    - Can be adjusted based on preliminary results
+
+# ------------------------------------------------------------------------------
+# TARGET DATABASES
+# ------------------------------------------------------------------------------
+# All 8 ELIS databases enabled for comprehensive coverage
+# ------------------------------------------------------------------------------
+
+databases:
+  # --------------------
+  # HIGH PRIORITY - Core Academic Databases
+  # --------------------
+  
+  - name: "Scopus"
+    enabled: true
+    max_results: 1000
+    query_syntax: "TITLE-ABS-KEY"
+    query_wrapper: "TITLE-ABS-KEY({query})"
+    priority: "CRITICAL"
+    notes: |
+      - Comprehensive multidisciplinary coverage
+      - Strong in computer science, political science
+      - TITLE-ABS-KEY required for proper field search
+    api_config:
+      rate_limit: "2 requests/second"
+      timeout: 30
+  
+  - name: "Web of Science"
+    enabled: true
+    max_results: 1000
+    query_syntax: "TS"
+    query_wrapper: "TS=({query})"
+    priority: "CRITICAL"
+    notes: |
+      - High-quality peer-reviewed content
+      - Strong citation tracking
+      - TS= wrapper for topic search
+    api_config:
+      rate_limit: "5 requests/second"
+      timeout: 30
+  
+  - name: "OpenAlex"
+    enabled: true
+    max_results: 1000
+    query_syntax: "default.search"
+    query_filter: "default.search:{query}"
+    priority: "HIGH"
+    notes: |
+      - Open access comprehensive aggregator
+      - Searches title, abstract, fulltext
+      - Free API, excellent coverage
+    api_config:
+      rate_limit: "10 requests/second (polite pool)"
+      timeout: 30
+  
+  # --------------------
+  # HIGH PRIORITY - Specialized Coverage
+  # --------------------
+  
+  - name: "IEEE Xplore"
+    enabled: true
+    max_results: 1000
+    query_syntax: "generic"
+    query_filter: "querytext={query}"
+    priority: "HIGH"
+    notes: |
+      - CRITICAL for e-voting: computer science, engineering focus
+      - Strong coverage of voting technology, security systems
+      - Essential for technical aspects of e-voting
+    api_config:
+      rate_limit: "200 calls/day"
+      timeout: 30
+  
+  - name: "Google Scholar"
+    enabled: true
+    max_results: 500
+    query_syntax: "simplified"
+    query_transformation: "remove_boolean_operators"
+    priority: "HIGH"
+    notes: |
+      - Broadest academic coverage including grey literature
+      - Via Apify EasyAPI actor
+      - Free tier: 10 results, paid tier: up to 5000
+      - Query simplification required
+    api_config:
+      provider: "Apify"
+      actor: "easyapi/google-scholar-scraper"
+      rate_limit: "Managed by Apify"
+      timeout: 120
+  
+  # --------------------
+  # MEDIUM PRIORITY - Complementary Databases
+  # --------------------
+  
+  - name: "Semantic Scholar"
+    enabled: true
+    max_results: 500
+    query_syntax: "natural_language"
+    query_filter: "query={query}"
+    priority: "MEDIUM"
+    notes: |
+      - AI-powered semantic search
+      - Good for computer science papers
+      - Natural language query processing
+    api_config:
+      rate_limit: "100 requests/5 minutes"
+      timeout: 30
+  
+  - name: "CrossRef"
+    enabled: true
+    max_results: 1000
+    query_syntax: "generic"
+    query_filter: "query={query}"
+    priority: "MEDIUM"
+    notes: |
+      - DOI registry and metadata
+      - Good for citation tracking
+      - Complements other databases
+    api_config:
+      rate_limit: "Polite pool recommended"
+      timeout: 30
+  
+  - name: "CORE"
+    enabled: true
+    max_results: 1000
+    query_syntax: "generic"
+    query_filter: "q={query}"
+    priority: "MEDIUM"
+    notes: |
+      - Open access repository aggregator
+      - Good coverage of preprints and open access
+      - Accepts Boolean operators
+    api_config:
+      rate_limit: "Limited by API key tier"
+      timeout: 30
+
+# ------------------------------------------------------------------------------
+# FILTERS
+# ------------------------------------------------------------------------------
+# Inclusion and exclusion criteria for study selection
+# ------------------------------------------------------------------------------
+
+filters:
+  # Language
+  language: 
+    - "English"
+  
+  # Document types
+  # More permissive than benchmark: include conferences (important for e-voting)
+  document_types:
+    - "article"
+    - "conference paper"
+    - "review"
+  
+  # Peer review (flexible for this domain)
+  peer_reviewed: true
+  
+  # Subject areas of interest
+  subject_areas:
+    - "Computer Science"
+    - "Political Science"
+    - "Public Administration"
+    - "Information Systems"
+    - "Security"
+    - "Democracy Studies"
+  
+  # Geographic scope (optional)
+  geographic_scope: []  # Global coverage
+  
+  # Notes on filtering
+  notes: |
+    - English language for consistency
+    - Include conference papers: important for e-voting research
+    - Peer-reviewed content preferred
+    - Interdisciplinary approach: CS + Political Science + Public Admin
+    - No geographic restrictions: global e-voting phenomena
+
+# ------------------------------------------------------------------------------
+# TOPICAL INCLUSION/EXCLUSION CRITERIA
+# ------------------------------------------------------------------------------
+# Content-based criteria for study relevance
+# (These will be applied during screening phase)
+# ------------------------------------------------------------------------------
+
+topical_criteria:
+  inclusion:
+    - "Studies on electronic voting systems and technologies"
+    - "Research on electoral integrity, security, or trust"
+    - "Papers addressing e-voting authentication or verification"
+    - "Studies on voter privacy and anonymity in e-voting"
+    - "Research on e-voting adoption, implementation, or challenges"
+    - "Papers on cryptographic protocols for voting"
+    - "Studies on e-voting in democratic elections"
+    - "Research on public trust in e-voting systems"
+  
+  exclusion:
+    - "General voting behavior without e-voting focus"
+    - "Pure mathematical/cryptographic theory without voting application"
+    - "Studies exclusively on traditional paper-based voting"
+    - "Opinion pieces without empirical data or analysis"
+    - "Studies on corporate voting or non-democratic contexts only"
+    - "Purely technical reports without research contribution"
+  
+  notes: |
+    These criteria will be applied during title/abstract screening
+    and full-text review phases, not during initial search.
+
+# ------------------------------------------------------------------------------
+# OUTPUT CONFIGURATION
+# ------------------------------------------------------------------------------
+# Where and how to store search results
+# ------------------------------------------------------------------------------
+
+output:
+  # Directory for storing results
+  directory: "json_jsonl/"
+  
+  # Primary output file
+  primary_file: "ELIS_Appendix_A_Search_rows.json"
+  
+  # Project-specific results directory
+  project_directory: "results/electoral_integrity/"
+  
+  # Backup/archive settings
+  archive:
+    enabled: true
+    directory: "results/electoral_integrity/archives/"
+    timestamp_format: "%Y%m%d_%H%M%S"
+    keep_last_n: 10
+  
+  # Output format options
+  format:
+    type: "json"
+    encoding: "utf-8"
+    indent: 2
+    ensure_ascii: false
+  
+  # Deduplication settings
+  deduplication:
+    enabled: true
+    method: "title_normalized"
+    case_sensitive: false
+    remove_duplicates_by:
+      - "doi"
+      - "title_normalized"
+  
+  # Fields to include in output
+  fields:
+    required:
+      - "source"
+      - "title"
+      - "authors"
+      - "year"
+      - "doi"
+      - "abstract"
+      - "url"
+    optional:
+      - "citation_count"
+      - "keywords"
+      - "venue"
+      - "publisher"
+      - "pdf_url"
+      - "open_access"
+      - "raw_metadata"
+  
+  # Report generation
+  reports:
+    enabled: true
+    formats:
+      - "summary_statistics.json"
+      - "database_contribution.json"
+      - "search_report.md"
+
+# ------------------------------------------------------------------------------
+# EXECUTION PARAMETERS
+# ------------------------------------------------------------------------------
+# Runtime configuration for search execution
+# ------------------------------------------------------------------------------
+
+execution:
+  # Parallel execution
+  parallel_databases: false  # Sequential for stability
+  
+  # Retry configuration
+  retry:
+    max_attempts: 3
+    delay_seconds: 30
+    exponential_backoff: true
+  
+  # Timeout settings
+  timeout:
+    per_database_minutes: 15
+    total_search_minutes: 120
+  
+  # Logging
+  logging:
+    level: "INFO"
+    file: "logs/electoral_integrity_search.log"
+    console_output: true
+    verbose_mode: false
+  
+  # Cost tracking
+  cost_tracking:
+    enabled: true
+    max_budget_usd: 5.00
+    warn_threshold_usd: 3.00
+  
+  # Progress tracking
+  progress:
+    save_intermediate_results: true
+    checkpoint_interval_minutes: 10
+
+# ------------------------------------------------------------------------------
+# VALIDATION RULES
+# ------------------------------------------------------------------------------
+# Quality checks to ensure search execution meets standards
+# ------------------------------------------------------------------------------
+
+validation:
+  # Minimum results per database
+  minimum_results:
+    critical_databases: 200  # Scopus, WoS, OpenAlex, IEEE
+    high_priority: 100       # Google Scholar, Semantic Scholar
+    other_databases: 50      # CrossRef, CORE
+  
+  # Expected total results
+  expected_range:
+    minimum: 2000
+    maximum: 8000
+    notes: "E-voting is established field, expect substantial literature"
+  
+  # Query validation
+  query_checks:
+    - "Boolean operators present"
+    - "No syntax errors"
+    - "At least 2 keyword groups represented"
+    - "Field specifications valid for each database"
+  
+  # Quality checks
+  quality_checks:
+    - "No empty abstracts in >80% of results"
+    - "DOI present in >60% of results"
+    - "Year within specified range"
+    - "No duplicate titles after deduplication"
+  
+  # Warn if major deviation from expected
+  deviation_threshold: 0.40  # 40% deviation triggers warning
+
+# ------------------------------------------------------------------------------
+# SEARCH STRATEGY NOTES
+# ------------------------------------------------------------------------------
+
+search_strategy:
+  approach: "Comprehensive systematic search"
+  
+  rationale: |
+    This search targets the intersection of electronic voting technology
+    and electoral integrity/security/trust. The query is designed to:
+    
+    1. Capture all major e-voting terminology
+    2. Include security and trust dimensions
+    3. Cover both technical and social science perspectives
+    4. Enable interdisciplinary discovery
+  
+  expected_coverage:
+    - "Technical papers on e-voting systems and protocols"
+    - "Political science research on electoral integrity"
+    - "Security studies on voting system vulnerabilities"
+    - "Trust and adoption studies"
+    - "Implementation case studies"
+    - "Policy and governance research"
+  
+  pilot_search_results:
+    notes: "To be updated after pilot search execution"
+
+# ------------------------------------------------------------------------------
+# NOTES AND CHANGELOG
+# ------------------------------------------------------------------------------
+
+notes: |
+  This is the primary ELIS SLR Agent native project focusing on electoral
+  integrity and e-voting security. Key aspects:
+  
+  1. Comprehensive Coverage:
+     - All 8 ELIS databases enabled
+     - Higher max_results than benchmark (1000 vs 500)
+     - Includes IEEE Xplore (critical for e-voting technical papers)
+  
+  2. Interdisciplinary Approach:
+     - Computer Science (technology, security, cryptography)
+     - Political Science (democracy, elections, governance)
+     - Public Administration (implementation, policy)
+  
+  3. Flexible Query:
+     - Primary Boolean query for advanced databases
+     - Alternative simplified queries for limited databases
+     - Can be refined based on pilot results
+  
+  4. Quality Focus:
+     - Peer-reviewed preferred but includes conferences
+     - English language for consistency
+     - Comprehensive validation rules
+
+changelog:
+  - version: "1.0.0"
+    date: "2026-01-30"
+    changes:
+      - "Initial creation of electoral integrity search configuration"
+      - "Configured all 8 ELIS Phase 1 databases"
+      - "Defined comprehensive query strategy"
+      - "Set validation and output rules"
+      - "Documented topical inclusion/exclusion criteria"
