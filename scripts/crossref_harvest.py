@@ -38,15 +38,19 @@ def crossref_search(query: str, rows: int = 100, max_results: int = 100):
     offset = 0
 
     # Get contact email for polite pool
-    mailto = os.getenv("ELIS_CONTACT", "elis@samurai.com.br")
+    mailto = os.getenv("ELIS_CONTACT")
+    if not mailto:
+        print("⚠️  Warning: ELIS_CONTACT not set. Using polite pool recommended for better rate limits.")
 
     while len(results) < max_results:
         params = {
             "query": query,
             "rows": min(rows, max_results - len(results)),
-            "offset": offset,
-            "mailto": mailto,
+            "offset": offset,            
         }
+        # Only add mailto if ELIS_CONTACT is set (for polite pool access)
+        if mailto:
+            params["mailto"] = mailto
 
         r = requests.get(url, params=params, timeout=30)
 
