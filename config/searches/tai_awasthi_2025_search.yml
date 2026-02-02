@@ -28,6 +28,10 @@ paper_reference:
   journal: "Government Information Quarterly"
   year: 2025
   doi: "10.1016/j.giq.2025.102082"
+  research_questions:
+    - "RQ1: How has agility been conceptualized within the context of the public sector?"
+    - "RQ2: How has agile government been implemented in public sector settings, and what antecedents or challenges have been identified?"
+    - "RQ3: What impacts of agile government in the public sector have been reported in the literature?"
   
 created_date: "2026-01-30"
 last_modified: "2026-01-30"
@@ -68,11 +72,48 @@ query:
     - "abstract"
     - "keywords"  # Author-identified keywords
   
+  # Query Coverage and Research Question Alignment
+  query_coverage_notes: |
+    QUERY DESIGN RATIONALE:
+    
+    The original paper's query is intentionally broad and simple:
+    - Captures "agile" + public sector context (government/governance/public)
+    - Does NOT explicitly filter for conceptualization/implementation/impacts
+    - These dimensions were identified during SCREENING phase, not search phase
+    
+    Research Question Coverage:
+    - RQ1 (Conceptualization): Captured implicitly; papers defining/conceptualizing agile
+    - RQ2 (Implementation): Captured implicitly; papers describing adoption/application  
+    - RQ3 (Impacts): Captured implicitly; papers reporting outcomes/effects
+    
+    SYSTEMATIC REVIEW APPROACH:
+    This approach prioritizes SENSITIVITY (finding all relevant studies) over
+    PRECISION (filtering irrelevant studies). Filtering happens in screening.
+    
+    The authors used a two-phase screening process:
+    - Phase 1 (Title/Abstract): 1,102 → 564 (relevance to agile + public sector)
+    - Phase 2 (Full-text): 564 → 55 (application of detailed inclusion criteria)
+    
+    BENCHMARK REPLICATION:
+    For ELIS benchmark validation, we replicate this exact query to test if our
+    database coverage can retrieve the same 55 final studies they identified.
+    Any modifications would invalidate the benchmark comparison.
+    
+    HYPOTHETICAL EXPANDED QUERY (For Reference Only - NOT USED):
+    If this were a new SLR (not replication), we might add:
+    - Synonyms: "agility", "agile methods", "agile practices"
+    - Context: "public administration", "public sector"
+    - Focus terms: "conceptualization", "implementation", "impact", "outcome"
+    
+    However, the original simple query successfully identified 55 relevant studies
+    from diverse sources, demonstrating its effectiveness for this research domain.
+  
   # Notes on query interpretation
   notes: |
     - Original paper searched title, abstract, and keywords
     - Boolean operators must be translated to database-specific syntax
     - Some databases (e.g., Google Scholar) may require query simplification
+    - Query is intentionally broad; specificity applied during screening
 
 # ------------------------------------------------------------------------------
 # DATE RANGE
@@ -89,6 +130,7 @@ date_range:
     - Original paper: searched up to May 2023
     - No explicit lower bound, but earliest article was 2002
     - Some databases may not support year filtering
+    - This range captures the modern era of agile government research
 
 # ------------------------------------------------------------------------------
 # TARGET DATABASES
@@ -418,4 +460,12 @@ changelog:
     changes:
       - "Reordered databases to match ELIS Protocol 2025 v2.0"
       - "Order: Scopus, WoS, IEEE, Semantic Scholar, OpenAlex, CrossRef, CORE, Google Scholar"
-      
+  
+  - version: "1.1.0"
+    date: "2026-01-30"
+    changes:
+      - "Added research questions to metadata"
+      - "Added comprehensive query_coverage_notes section"
+      - "Documented query design rationale and RQ alignment"
+      - "Explained sensitivity vs precision approach"
+      - "Added note on hypothetical expanded query for reference"
