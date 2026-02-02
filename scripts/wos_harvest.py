@@ -109,54 +109,36 @@ def wos_search(query: str, limit: int = 50, max_results: int = 1000):
 
     return results
 
+
 def transform_wos_entry(entry):
     """
-    Transform raw WoS entry to match the schema used by other sources.
+    Transform raw WoS Starter API entry to match the schema used by other sources.
     """
-    static = entry.get("static_data", {})
-    summary = static.get("summary", {})
-    titles = summary.get("titles", {}).get("title", [])
+    # Extract title (directly available)
+    title = entry.get("title", "")
     
-    # Extract title
-    title = ""
-    if isinstance(titles, list):
-        for t in titles:
-            if t.get("type") == "item":
-                title = t.get("content", "")
-                break
-    elif isinstance(titles, dict):
-        title = titles.get("content", "")
+    # Extract authors from names.authors structure
+    names = entry.get("names", {})
+    authors_data = names.get("authors", [])
+    if isinstance(authors_data, list):
+        authors = ", ".join([a.get("displayName", "") or a.get("wosStandard", "") for a in authors_data])
+    else:
+        authors = ""
     
-    # Extract authors
-    authors_data = summary.get("names", {}).get("name", [])
-    if isinstance(authors_data, dict):
-        authors_data = [authors_data]
-    authors = ", ".join([a.get("full_name", "") for a in authors_data])
+    # Extract year from source.publishYear
+    source_info = entry.get("source", {})
+    year = str(source_info.get("publishYear", ""))
     
-    # Extract year
-    pub_info = summary.get("pub_info", {})
-    year = pub_info.get("pubyear", "")
+    # Extract identifiers
+    identifiers = entry.get("identifiers", {})
+    doi = identifiers.get("doi", "")
+    uid = entry.get("uid", "")
     
-    # Extract DOI
-    identifiers = static.get("fullrecord_metadata", {}).get("identifiers", {}).get("identifier", [])
-    if isinstance(identifiers, dict):
-        identifiers = [identifiers]
-    doi = ""
-    for identifier in identifiers:
-        if identifier.get("type") == "doi":
-            doi = identifier.get("value", "")
-            break
-    
-    # Extract abstract
-    abstracts = static.get("fullrecord_metadata", {}).get("abstracts", {}).get("abstract", {})
+    # Abstract not available in Starter API basic response
     abstract = ""
-    if isinstance(abstracts, list):
-        abstract = abstracts[0].get("abstract_text", {}).get("p", "") if abstracts else ""
-    elif isinstance(abstracts, dict):
-        abstract = abstracts.get("abstract_text", {}).get("p", "")
     
-    # Extract UT (unique identifier)
-    uid = entry.get("UID", "")
+    # Extract source title
+    source_title = source_info.get("sourceTitle", "")
     
     return {
         "source": "Web of Science",
@@ -167,6 +149,7 @@ def transform_wos_entry(entry):
         "abstract": abstract,
         "url": f"https://www.webofscience.com/wos/woscc/full-record/{uid}" if uid else "",
         "wos_id": uid,
+        "source_title": source_title,
         "raw_metadata": entry,
     }
 
