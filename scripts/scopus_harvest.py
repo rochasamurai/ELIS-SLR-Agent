@@ -117,8 +117,11 @@ def get_scopus_queries(config):
         if "scopus" not in sources:
             continue
 
+        # Scopus requires TITLE-ABS-KEY() wrapper for proper field searching
         topic_queries = topic.get("queries", [])
-        queries.extend(topic_queries)
+        # Wrap each query in TITLE-ABS-KEY() to search title, abstract, and keywords
+        scopus_queries = [f"TITLE-ABS-KEY({q})" for q in topic_queries]
+        queries.extend(scopus_queries)
 
     return queries
 

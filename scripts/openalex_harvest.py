@@ -42,7 +42,9 @@ def openalex_search(query: str, per_page: int = 100, max_results: int = 100):
 
     while len(results) < max_results:
         params = {
-            "filter": f"title.search:{query}",
+            # Use default.search to search across title, abstract, and fulltext
+            # This matches Tai & Awasthi's methodology (title, abstract, keywords)
+            "filter": f"default.search:{query}",
             "per_page": min(per_page, max_results - len(results)),
             "page": page,
             "mailto": mailto,
