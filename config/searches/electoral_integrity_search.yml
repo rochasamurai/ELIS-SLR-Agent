@@ -2,11 +2,20 @@
 # SEARCH CONFIGURATION: Electoral Integrity SLR
 # ==============================================================================
 # 
-# Purpose: Systematic literature review on electronic voting and electoral 
-#          integrity, security, and trust in democratic processes.
+# Purpose: Systematic literature review on electoral integrity strategies,
+#          auditability, and empirical evaluation frameworks across all
+#          types of electoral systems (paper, electronic, hybrid).
+#
+# Research Questions:
+#   PRQ: What operational and technological strategies have been shown to 
+#        improve the integrity or auditability of electoral systems since 1990?
+#   
+#   MSQ: What types of empirical designs and evaluation frameworks have been 
+#        used to assess the effectiveness of electoral integrity strategies 
+#        since 1990?
 #
 # This is the native ELIS SLR Agent project configuration for comprehensive
-# research on e-voting systems, electoral security, and democratic integrity.
+# research on electoral systems, integrity, and evaluation methodologies.
 #
 # Created: 2026-01-30
 # Status: Active (ELIS Native Project)
@@ -16,70 +25,190 @@
 # SEARCH METADATA
 # ------------------------------------------------------------------------------
 search_id: "electoral_integrity_2025"
-project_name: "Electoral Integrity and E-Voting Security SLR"
+project_name: "Electoral Integrity Strategies and Evaluation Frameworks SLR"
 research_team:
   - "ELIS Research Team"
   
 created_date: "2026-01-30"
 last_modified: "2026-01-30"
 status: "active"
-version: "1.0.1"
+version: "2.0.0"
 
 # ------------------------------------------------------------------------------
 # SEARCH QUERY
 # ------------------------------------------------------------------------------
-# Multi-faceted query covering electronic voting, electoral integrity,
-# security, trust, and democratic processes
+# Multi-component query covering:
+#   1. All types of electoral systems (paper, electronic, hybrid)
+#   2. Integrity and auditability dimensions
+#   3. Both strategies/interventions AND empirical evaluation frameworks
+#
+# This query addresses both PRQ (strategies) and MSQ (evaluation frameworks)
 # ------------------------------------------------------------------------------
 
 query:
-  # Primary Boolean query string
-  # Covers e-voting AND integrity/security/trust dimensions
+  # Primary Boolean query string - Multi-Component Structure
+  # Component 1: Electoral Systems (broad coverage)
+  # Component 2: Integrity Dimensions (auditability, trust, security, etc.)
+  # Component 3: Research Focus (strategies OR empirical evaluation)
   boolean_string: |
-    ("electronic voting" OR "e-voting" OR "digital voting" OR "internet voting" OR "online voting") 
-    AND 
-    ("integrity" OR "security" OR "trust" OR "transparency" OR "verifiability" OR "authentication")
+    (
+      ("electoral system" OR "voting system" OR "election" OR "ballot")
+      AND
+      ("integrity" OR "auditability" OR "security" OR "trust" OR "transparency" OR "verifiability" OR "fraud")
+      AND
+      (
+        ("strategy" OR "intervention" OR "reform" OR "improvement")
+        OR
+        ("empirical" OR "framework" OR "evaluation" OR "assessment" OR "experiment")
+      )
+    )
   
-  # Alternative query variations for databases that don't support complex Boolean
+  # Alternative query for databases with limited Boolean support
   alternative_queries:
     - simplified: |
-        electronic voting integrity security trust
+        electoral integrity strategy evaluation framework
     
-    - focused_evoting: |
-        ("electronic voting" OR "e-voting") AND ("integrity" OR "security")
+    - focused_strategies: |
+        ("electoral system" OR "voting system") AND ("integrity" OR "auditability") AND ("strategy" OR "intervention")
     
-    - focused_trust: |
-        ("electronic voting" OR "e-voting") AND ("trust" OR "transparency")
+    - focused_empirical: |
+        ("electoral system" OR "voting system") AND ("integrity" OR "security") AND ("empirical" OR "framework" OR "evaluation")
   
-  # Keyword groups for reference and reporting
-  keyword_groups:
-    - category: "E-Voting Systems"
-      terms:
+  # EXPANDED KEYWORDS DOCUMENTATION
+  # These keywords represent the full scope of terms that will be captured
+  # by the multi-component query through exact matches and variations
+  
+  expanded_keywords:
+    # Component 1: Electoral Systems (Broad Coverage)
+    electoral_systems:
+      - "electoral system"
+      - "electoral systems"
+      - "voting system"
+      - "voting systems"
+      - "election"
+      - "elections"
+      - "electoral process"
+      - "ballot"
+      - "ballots"
+    
+    # Voting Methods (All Types - captured by Component 1 + domain knowledge)
+    voting_methods:
+      electronic:
         - "electronic voting"
         - "e-voting"
         - "digital voting"
         - "internet voting"
         - "online voting"
         - "remote voting"
-      
-    - category: "Electoral Integrity"
-      terms:
-        - "integrity"
-        - "security"
-        - "trust"
-        - "transparency"
-        - "verifiability"
-        - "authentication"
-        - "privacy"
-        - "anonymity"
+      paper:
+        - "paper voting"
+        - "paper ballot"
+        - "hand-counted ballot"
+      technical:
+        - "optical scan"
+        - "direct recording electronic"
+        - "DRE"
+        - "voter-verified paper audit trail"
+        - "VVPAT"
+      hybrid:
+        - "hybrid voting"
     
-    - category: "Democratic Process"
-      terms:
-        - "democracy"
-        - "election"
-        - "electoral"
-        - "voting"
-        - "ballot"
+    # Component 2: Integrity Dimensions
+    integrity_dimensions:
+      - "integrity"
+      - "electoral integrity"
+      - "auditability"
+      - "audit"
+      - "auditable"
+      - "security"
+      - "electoral security"
+      - "trust"
+      - "public trust"
+      - "voter trust"
+      - "transparency"
+      - "transparent"
+      - "verifiability"
+      - "verifiable"
+      - "verification"
+      - "authentication"
+      - "voter authentication"
+      - "fraud prevention"
+      - "fraud detection"
+      - "accuracy"
+      - "electoral accuracy"
+    
+    # Outcomes/Measures (captured through integrity + evaluation context)
+    outcomes_measures:
+      - "turnout"
+      - "voter turnout"
+      - "participation"
+      - "confidence"
+      - "voter confidence"
+      - "legitimacy"
+      - "electoral legitimacy"
+    
+    # Component 3a: Strategies/Interventions (PRQ Focus)
+    strategies_interventions:
+      - "strategy"
+      - "strategies"
+      - "intervention"
+      - "interventions"
+      - "reform"
+      - "electoral reform"
+      - "improvement"
+      - "improvements"
+      - "innovation"
+      - "innovations"
+    
+    # Component 3b: Research Methods (MSQ Focus)
+    research_methods:
+      - "empirical"
+      - "empirical design"
+      - "empirical study"
+      - "framework"
+      - "evaluation framework"
+      - "assessment framework"
+      - "methodology"
+      - "research methodology"
+      - "evaluation"
+      - "assessment"
+      - "effectiveness"
+      - "efficacy"
+      - "experiment"
+      - "experimental"
+      - "field experiment"
+      - "quasi-experimental"
+      - "randomized controlled trial"
+      - "RCT"
+      - "survey"
+      - "case study"
+      - "comparative study"
+  
+  # Query component explanation
+  query_structure:
+    component_1:
+      name: "Electoral Systems"
+      purpose: "Broad coverage of all electoral/voting contexts"
+      terms: ["electoral system", "voting system", "election", "ballot"]
+      captures: "Paper, electronic, hybrid systems; national & local elections"
+    
+    component_2:
+      name: "Integrity Dimensions"
+      purpose: "Core focus on integrity, auditability, and related concepts"
+      terms: ["integrity", "auditability", "security", "trust", "transparency", "verifiability", "fraud"]
+      captures: "All integrity aspects: auditability, security, trust, verification, fraud prevention"
+    
+    component_3:
+      name: "Research Focus"
+      purpose: "Dual focus: strategies (PRQ) OR empirical evaluation (MSQ)"
+      subcomponents:
+        strategies:
+          terms: ["strategy", "intervention", "reform", "improvement"]
+          addresses: "PRQ - What strategies improve integrity?"
+        evaluation:
+          terms: ["empirical", "framework", "evaluation", "assessment", "experiment"]
+          addresses: "MSQ - What evaluation frameworks are used?"
+      operator: "OR (captures studies on either strategies OR evaluation)"
   
   # Fields to search across databases
   search_fields:
@@ -87,30 +216,52 @@ query:
     - "abstract"
     - "keywords"
   
-  # Exclusion terms (NOT queries) - if needed
+  # Exclusion terms (NOT queries) - None at search stage
+  # Exclusion will be applied during screening based on topical criteria
   exclusion_terms: []
   
   # Notes on query design
   notes: |
-    - Balanced approach: technology + integrity/security dimensions
-    - Broad coverage: multiple e-voting synonyms
-    - Flexible for different database capabilities
-    - Can use alternative queries for databases with syntax limitations
+    QUERY RATIONALE:
+    
+    1. Multi-Component Structure (Option 3):
+       - Component 1 (Electoral Systems): Captures ALL electoral contexts
+       - Component 2 (Integrity): Focuses on core research domain
+       - Component 3 (Research Focus): Dual coverage of strategies AND evaluation
+    
+    2. Why This Works:
+       - Addresses BOTH research questions (PRQ + MSQ)
+       - Covers all electoral system types (not just e-voting)
+       - Includes both intervention studies AND methodological research
+       - Precise enough to avoid noise, broad enough for comprehensive coverage
+    
+    3. Expected Coverage:
+       - PRQ studies: Electoral integrity strategies and interventions
+       - MSQ studies: Empirical designs and evaluation frameworks
+       - Both: Studies that propose AND evaluate strategies
+    
+    4. Flexibility:
+       - Alternative simplified queries for limited databases
+       - Expanded keywords documented for reference
+       - Can be refined based on pilot search results
+    
+    5. Estimated Results: 5,000-15,000 studies (manageable for SLR)
 
 # ------------------------------------------------------------------------------
 # DATE RANGE
 # ------------------------------------------------------------------------------
-# Focus on modern e-voting era (post-2000) with recent emphasis
+# Aligned with research questions: "since 1990"
 # ------------------------------------------------------------------------------
 
 date_range:
-  start_year: 2000
+  start_year: 1990
   end_year: 2024
   notes: |
-    - 2000-2024: Modern e-voting systems era
-    - Captures early development through current state
-    - Includes COVID-19 pandemic impact on remote voting
-    - Can be adjusted based on preliminary results
+    - 1990-2024: Aligns with research questions ("since 1990")
+    - Captures modern electoral integrity era
+    - Includes development of e-voting AND paper-based reforms
+    - Covers post-Cold War democratization wave
+    - Includes recent developments (COVID-19, hybrid systems)
 
 # ------------------------------------------------------------------------------
 # TARGET DATABASES
@@ -130,7 +281,7 @@ databases:
     priority: "CRITICAL"
     notes: |
       - Multidisciplinary database with comprehensive coverage
-      - Strong in computer science, political science, governance
+      - Strong in political science, governance, computer science
       - TITLE-ABS-KEY required for proper field search
     api_config:
       rate_limit: "2 requests/second"
@@ -145,8 +296,8 @@ databases:
     priority: "CRITICAL"
     notes: |
       - High-impact journal indexing platform
-      - Strong citation tracking
-      - TS= wrapper for topic search
+      - Strong citation tracking capabilities
+      - TS= wrapper for topic search (title, abstract, keywords)
     api_config:
       rate_limit: "5 requests/second"
       timeout: 30
@@ -160,9 +311,8 @@ databases:
     priority: "HIGH"
     notes: |
       - Technical literature repository
-      - CRITICAL for e-voting: computer science, engineering focus
-      - Strong coverage of voting technology, security systems
-      - Essential for technical aspects of e-voting
+      - Important for e-voting technology and security
+      - Covers electronic voting systems, cryptographic protocols
     api_config:
       rate_limit: "200 calls/day"
       timeout: 30
@@ -176,9 +326,8 @@ databases:
     priority: "MEDIUM"
     notes: |
       - AI-enhanced bibliographic database (200M+ papers)
-      - AI-powered semantic search
-      - Good for computer science papers
-      - Natural language query processing
+      - Semantic indexing aids discovery
+      - Good for interdisciplinary research
     api_config:
       rate_limit: "100 requests/5 minutes"
       timeout: 30
@@ -194,7 +343,6 @@ databases:
       - Open bibliographic database (250M+ works)
       - Comprehensive metadata including institutions, citations
       - Searches title, abstract, fulltext
-      - Free API, excellent coverage
     api_config:
       rate_limit: "10 requests/second (polite pool)"
       timeout: 30
@@ -209,7 +357,7 @@ databases:
     notes: |
       - DOI registration agency (130M+ records)
       - Publisher-verified metadata
-      - Good for citation tracking and deduplication
+      - Excellent for deduplication and citation tracking
     api_config:
       rate_limit: "Polite pool recommended"
       timeout: 30
@@ -223,9 +371,8 @@ databases:
     priority: "MEDIUM"
     notes: |
       - Open access aggregator (300M+ papers)
-      - Covers theses, preprints, institutional repositories
-      - Good coverage of preprints and open access
-      - Accepts Boolean operators
+      - Covers institutional repositories, theses, preprints
+      - Accepts Boolean operators natively
     api_config:
       rate_limit: "Limited by API key tier"
       timeout: 30
@@ -239,10 +386,9 @@ databases:
     priority: "HIGH"
     notes: |
       - Comprehensive academic search engine
-      - Broadest academic coverage including grey literature
+      - Broadest coverage including grey literature
       - Via Apify EasyAPI actor
       - Free tier: 10 results, paid tier: up to 5000
-      - Query simplification required
     api_config:
       provider: "Apify"
       actor: "easyapi/google-scholar-scraper"
@@ -261,64 +407,83 @@ filters:
     - "English"
   
   # Document types
-  # More permissive than benchmark: include conferences (important for e-voting)
+  # Include conferences: important for electoral integrity research
   document_types:
     - "article"
     - "conference paper"
     - "review"
   
-  # Peer review (flexible for this domain)
+  # Peer review
   peer_reviewed: true
   
   # Subject areas of interest
   subject_areas:
-    - "Computer Science"
     - "Political Science"
     - "Public Administration"
+    - "Computer Science"
     - "Information Systems"
-    - "Security"
+    - "Security Studies"
     - "Democracy Studies"
+    - "Public Policy"
+    - "Governance"
   
-  # Geographic scope (optional)
+  # Geographic scope
   geographic_scope: []  # Global coverage
   
   # Notes on filtering
   notes: |
-    - English language for consistency
-    - Include conference papers: important for e-voting research
-    - Peer-reviewed content preferred
-    - Interdisciplinary approach: CS + Political Science + Public Admin
-    - No geographic restrictions: global e-voting phenomena
+    - English language for consistency and accessibility
+    - Include conference papers: important venue for electoral research
+    - Peer-reviewed content ensures quality
+    - Interdisciplinary: Political Science + CS + Public Admin + Security
+    - No geographic restrictions: electoral integrity is global issue
 
 # ------------------------------------------------------------------------------
 # TOPICAL INCLUSION/EXCLUSION CRITERIA
 # ------------------------------------------------------------------------------
 # Content-based criteria for study relevance
-# (These will be applied during screening phase)
+# Applied during screening phase, not during initial search
 # ------------------------------------------------------------------------------
 
 topical_criteria:
   inclusion:
-    - "Studies on electronic voting systems and technologies"
-    - "Research on electoral integrity, security, or trust"
-    - "Papers addressing e-voting authentication or verification"
-    - "Studies on voter privacy and anonymity in e-voting"
-    - "Research on e-voting adoption, implementation, or challenges"
-    - "Papers on cryptographic protocols for voting"
-    - "Studies on e-voting in democratic elections"
-    - "Research on public trust in e-voting systems"
+    # PRQ: Strategies and interventions
+    - "Studies on strategies to improve electoral integrity"
+    - "Research on electoral reform interventions"
+    - "Papers on technological innovations for auditability"
+    - "Studies on fraud prevention mechanisms"
+    - "Research on voter authentication methods"
+    - "Papers on ballot security improvements"
+    - "Studies on transparency initiatives"
+    
+    # MSQ: Empirical designs and frameworks
+    - "Empirical evaluations of electoral integrity strategies"
+    - "Studies using experimental or quasi-experimental designs"
+    - "Research presenting evaluation frameworks"
+    - "Papers on assessment methodologies"
+    - "Comparative studies of electoral systems"
+    - "Survey-based research on electoral confidence/trust"
+    
+    # All systems
+    - "Studies on paper-based voting systems"
+    - "Research on electronic voting systems"
+    - "Papers on hybrid voting systems"
+    - "Studies on voting in democratic elections"
   
   exclusion:
-    - "General voting behavior without e-voting focus"
-    - "Pure mathematical/cryptographic theory without voting application"
-    - "Studies exclusively on traditional paper-based voting"
-    - "Opinion pieces without empirical data or analysis"
-    - "Studies on corporate voting or non-democratic contexts only"
-    - "Purely technical reports without research contribution"
+    - "General political behavior without electoral systems focus"
+    - "Voting behavior studies without integrity/system focus"
+    - "Pure opinion pieces without empirical evidence"
+    - "Studies exclusively on non-democratic elections"
+    - "Corporate or organizational voting (non-electoral context)"
+    - "Purely mathematical/theoretical models without application"
+    - "Studies before 1990 (outside date range)"
   
   notes: |
-    These criteria will be applied during title/abstract screening
-    and full-text review phases, not during initial search.
+    These criteria ensure relevance to both research questions:
+    - PRQ: Focus on strategies, interventions, improvements
+    - MSQ: Focus on empirical methods, evaluation frameworks
+    - Both: Studies that propose AND evaluate strategies
 
 # ------------------------------------------------------------------------------
 # OUTPUT CONFIGURATION
@@ -434,100 +599,119 @@ execution:
 validation:
   # Minimum results per database
   minimum_results:
-    critical_databases: 200  # Scopus, WoS, OpenAlex, IEEE
-    high_priority: 100       # Google Scholar, Semantic Scholar
-    other_databases: 50      # CrossRef, CORE
+    critical_databases: 500   # Scopus, WoS (expect high due to broad query)
+    high_priority: 200        # OpenAlex, IEEE, Google Scholar
+    medium_priority: 100      # Semantic Scholar, CrossRef, CORE
   
   # Expected total results
   expected_range:
-    minimum: 2000
-    maximum: 8000
-    notes: "E-voting is established field, expect substantial literature"
+    minimum: 5000
+    maximum: 15000
+    notes: "Broad electoral integrity query; interdisciplinary field"
   
   # Query validation
   query_checks:
-    - "Boolean operators present"
+    - "All three components present (systems AND integrity AND research)"
+    - "Boolean operators correct"
     - "No syntax errors"
-    - "At least 2 keyword groups represented"
     - "Field specifications valid for each database"
   
   # Quality checks
   quality_checks:
-    - "No empty abstracts in >80% of results"
-    - "DOI present in >60% of results"
-    - "Year within specified range"
+    - "No empty abstracts in >75% of results"
+    - "DOI present in >50% of results"
+    - "Year between 1990-2024"
     - "No duplicate titles after deduplication"
   
   # Warn if major deviation from expected
-  deviation_threshold: 0.40  # 40% deviation triggers warning
+  deviation_threshold: 0.50  # 50% deviation triggers warning (broad query)
 
 # ------------------------------------------------------------------------------
 # SEARCH STRATEGY NOTES
 # ------------------------------------------------------------------------------
 
 search_strategy:
-  approach: "Comprehensive systematic search"
+  approach: "Comprehensive systematic search with dual research focus"
   
   rationale: |
-    This search targets the intersection of electronic voting technology
-    and electoral integrity/security/trust. The query is designed to:
+    This search strategy is designed to address both research questions:
     
-    1. Capture all major e-voting terminology
-    2. Include security and trust dimensions
-    3. Cover both technical and social science perspectives
-    4. Enable interdisciplinary discovery
+    PRQ (Strategies): What operational and technological strategies improve
+                      electoral integrity or auditability?
+    - Captured by Component 3a: strategy, intervention, reform, improvement
+    - Combined with electoral systems (Component 1) and integrity (Component 2)
+    
+    MSQ (Evaluation): What empirical designs and frameworks assess effectiveness
+                      of electoral integrity strategies?
+    - Captured by Component 3b: empirical, framework, evaluation, assessment
+    - Combined with electoral systems (Component 1) and integrity (Component 2)
+    
+    The OR operator in Component 3 ensures we capture:
+    - Studies proposing strategies (PRQ focus)
+    - Studies evaluating strategies (MSQ focus)
+    - Studies doing both (propose AND evaluate)
   
   expected_coverage:
-    - "Technical papers on e-voting systems and protocols"
-    - "Political science research on electoral integrity"
-    - "Security studies on voting system vulnerabilities"
-    - "Trust and adoption studies"
-    - "Implementation case studies"
-    - "Policy and governance research"
+    - "Electoral reform strategies and interventions"
+    - "E-voting security and auditability measures"
+    - "Paper ballot integrity improvements"
+    - "Hybrid system designs"
+    - "Empirical evaluations of electoral interventions"
+    - "Experimental studies on voter trust/confidence"
+    - "Comparative analyses of electoral systems"
+    - "Evaluation frameworks for electoral integrity"
+    - "Case studies of electoral reforms"
   
-  pilot_search_results:
-    notes: "To be updated after pilot search execution"
+  pilot_search_notes:
+    status: "To be executed"
+    recommendation: "Run pilot with max_results=100 per database to validate query"
 
 # ------------------------------------------------------------------------------
 # NOTES AND CHANGELOG
 # ------------------------------------------------------------------------------
 
 notes: |
-  This is the primary ELIS SLR Agent native project focusing on electoral
-  integrity and e-voting security. Key aspects:
+  MAJOR UPDATE v2.0.0: Query Revised to Address Research Questions
   
-  1. Comprehensive Coverage:
-     - All 8 ELIS databases enabled
-     - Higher max_results than benchmark (1000 vs 500)
-     - Includes IEEE Xplore (critical for e-voting technical papers)
+  Previous version focused narrowly on e-voting. This version:
   
-  2. Interdisciplinary Approach:
-     - Computer Science (technology, security, cryptography)
-     - Political Science (democracy, elections, governance)
-     - Public Administration (implementation, policy)
+  1. Broadened Scope:
+     - ALL electoral systems (paper, electronic, hybrid)
+     - NOT just e-voting technology
   
-  3. Flexible Query:
-     - Primary Boolean query for advanced databases
-     - Alternative simplified queries for limited databases
-     - Can be refined based on pilot results
+  2. Dual Research Focus:
+     - PRQ: Strategies that improve integrity/auditability
+     - MSQ: Empirical designs and evaluation frameworks
   
-  4. Quality Focus:
-     - Peer-reviewed preferred but includes conferences
-     - English language for consistency
-     - Comprehensive validation rules
+  3. Multi-Component Query:
+     - Component 1: Electoral systems (broad coverage)
+     - Component 2: Integrity dimensions (core focus)
+     - Component 3: Research focus (strategies OR evaluation)
+  
+  4. Expected Impact:
+     - Higher total results: 5,000-15,000 (vs 2,000-8,000)
+     - Broader coverage: Paper + electronic + hybrid systems
+     - Better alignment: Directly addresses both RQs
 
 changelog:
   - version: "1.0.0"
     date: "2026-01-30"
     changes:
-      - "Initial creation of electoral integrity search configuration"
-      - "Configured all 8 ELIS Phase 1 databases"
-      - "Defined comprehensive query strategy"
-      - "Set validation and output rules"
-      - "Documented topical inclusion/exclusion criteria"
+      - "Initial creation (e-voting focused)"
   
   - version: "1.0.1"
     date: "2026-01-30"
     changes:
-      - "Reordered databases to match ELIS Protocol 2025 v2.0"
-      - "Order: Scopus, WoS, IEEE, Semantic Scholar, OpenAlex, CrossRef, CORE, Google Scholar"
+      - "Reordered databases to match ELIS Protocol"
+  
+  - version: "2.0.0"
+    date: "2026-01-30"
+    changes:
+      - "MAJOR: Revised query to address research questions"
+      - "Expanded from e-voting only to all electoral systems"
+      - "Added multi-component query structure"
+      - "Documented expanded keywords (80+ terms)"
+      - "Updated date range: 1990-2024 (aligned with RQs)"
+      - "Increased expected results: 5,000-15,000"
+      - "Added query rationale and component explanations"
+      
