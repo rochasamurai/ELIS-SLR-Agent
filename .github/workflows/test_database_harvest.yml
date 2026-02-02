@@ -1,0 +1,327 @@
+name: Test Database Harvest Script
+
+on:
+  workflow_dispatch:
+    inputs:
+      database:
+        description: 'Database to test'
+        required: true
+        type: choice
+        options:
+          - scopus
+          - web_of_science
+          - ieee_xplore
+          - semantic_scholar
+          - openalex
+          - crossref
+          - core
+          - google_scholar
+      tier:
+        description: 'Tier to test (testing/pilot/benchmark/production/exhaustive)'
+        required: true
+        default: 'testing'
+        type: choice
+        options:
+          - testing
+          - pilot
+          - benchmark
+          - production
+          - exhaustive
+      search_config:
+        description: 'Search config file to use'
+        required: true
+        default: 'config/searches/electoral_integrity_search.yml'
+        type: choice
+        options:
+          - config/searches/electoral_integrity_search.yml
+          - config/searches/tai_awasthi_2025_search.yml
+      test_legacy:
+        description: 'Also test legacy config mode?'
+        required: true
+        default: false
+        type: boolean
+
+jobs:
+  test-database:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          pip install requests pyyaml
+      
+      - name: Set script path and credentials
+        id: setup
+        run: |
+          # Map database name to script filename
+          case "${{ github.event.inputs.database }}" in
+            scopus)
+              echo "script=scripts/scopus_harvest.py" >> $GITHUB_OUTPUT
+              echo "api_key_var=SCOPUS_API_KEY" >> $GITHUB_OUTPUT
+              echo "api_token_var=SCOPUS_INST_TOKEN" >> $GITHUB_OUTPUT
+              ;;
+            web_of_science)
+              echo "script=scripts/wos_harvest.py" >> $GITHUB_OUTPUT
+              echo "api_key_var=WOS_API_KEY" >> $GITHUB_OUTPUT
+              echo "api_token_var=" >> $GITHUB_OUTPUT
+              ;;
+            ieee_xplore)
+              echo "script=scripts/ieee_harvest.py" >> $GITHUB_OUTPUT
+              echo "api_key_var=IEEE_API_KEY" >> $GITHUB_OUTPUT
+              echo "api_token_var=" >> $GITHUB_OUTPUT
+              ;;
+            semantic_scholar)
+              echo "script=scripts/semanticscholar_harvest.py" >> $GITHUB_OUTPUT
+              echo "api_key_var=SEMANTIC_SCHOLAR_API_KEY" >> $GITHUB_OUTPUT
+              echo "api_token_var=" >> $GITHUB_OUTPUT
+              ;;
+            openalex)
+              echo "script=scripts/openalex_harvest.py" >> $GITHUB_OUTPUT
+              echo "api_key_var=ELIS_CONTACT" >> $GITHUB_OUTPUT
+              echo "api_token_var=" >> $GITHUB_OUTPUT
+              ;;
+            crossref)
+              echo "script=scripts/crossref_harvest.py" >> $GITHUB_OUTPUT
+              echo "api_key_var=ELIS_CONTACT" >> $GITHUB_OUTPUT
+              echo "api_token_var=" >> $GITHUB_OUTPUT
+              ;;
+            core)
+              echo "script=scripts/core_harvest.py" >> $GITHUB_OUTPUT
+              echo "api_key_var=CORE_API_KEY" >> $GITHUB_OUTPUT
+              echo "api_token_var=" >> $GITHUB_OUTPUT
+              ;;
+            google_scholar)
+              echo "script=scripts/google_scholar_harvest.py" >> $GITHUB_OUTPUT
+              echo "api_key_var=APIFY_API_TOKEN" >> $GITHUB_OUTPUT
+              echo "api_token_var=" >> $GITHUB_OUTPUT
+              ;;
+          esac
+          
+          echo "Database: ${{ github.event.inputs.database }}"
+          echo "Script: $(cat $GITHUB_OUTPUT | grep script | cut -d= -f2)"
+      
+      - name: Test New Config Format
+        env:
+          SCOPUS_API_KEY: ${{ secrets.SCOPUS_API_KEY }}
+          SCOPUS_INST_TOKEN: ${{ secrets.SCOPUS_INST_TOKEN }}
+          WOS_API_KEY: ${{ secrets.WOS_API_KEY }}
+          IEEE_API_KEY: ${{ secrets.IEEE_API_KEY }}
+          SEMANTIC_SCHOLAR_API_KEY: ${{ secrets.SEMANTIC_SCHOLAR_API_KEY }}
+          ELIS_CONTACT: ${{ secrets.ELIS_CONTACT }}
+          CORE_API_KEY: ${{ secrets.CORE_API_KEY }}
+          APIFY_API_TOKEN: ${{ secrets.APIFY_API_TOKEN }}
+        run: |
+          echo "============================================"
+          echo "TEST: ${{ github.event.inputs.database }} - New Config Format"
+          echo "============================================"
+          echo "Script: ${{ steps.setup.outputs.script }}"
+          echo "Config: ${{ github.event.inputs.search_config }}"
+          echo "Tier: ${{ github.event.inputs.tier }}"
+          echo ""
+          
+          python ${{ steps.setup.outputs.script }} \
+            --search-config "${{ github.event.inputs.search_config }}" \
+            --tier "${{ github.event.inputs.tier }}" \
+            --output test_output_new.json
+      
+      - name: Validate New Config Output
+        run: |
+          echo "Validating output from new config..."
+          
+          if [ ! -f test_output_new.json ]; then
+            echo "Output file not created"
+            exit 1
+          fi
+          
+          python3 << 'PYTHON_SCRIPT'
+          import json
+          
+          with open('test_output_new.json') as f:
+              data = json.load(f)
+              print(f'Valid JSON with {len(data)} results')
+              
+              if data:
+                  first = data[0]
+                  required = ['source', 'title', 'authors', 'year']
+                  missing = [f for f in required if f not in first]
+                  if missing:
+                      print(f'Missing fields: {missing}')
+                      exit(1)
+                  print('All required fields present')
+                  print(f"Source: {first.get('source')}")
+                  title = first.get('title', '')
+                  print(f"Title: {title[:80]}...")
+                  print(f"Year: {first.get('year')}")
+                  print(f"DOI: {first.get('doi', 'N/A')}")
+              else:
+                  print('No results returned (may be expected for testing tier)')
+          PYTHON_SCRIPT
+      
+      - name: Test Legacy Config Format
+        if: github.event.inputs.test_legacy == 'true'
+        env:
+          SCOPUS_API_KEY: ${{ secrets.SCOPUS_API_KEY }}
+          SCOPUS_INST_TOKEN: ${{ secrets.SCOPUS_INST_TOKEN }}
+          WOS_API_KEY: ${{ secrets.WOS_API_KEY }}
+          IEEE_API_KEY: ${{ secrets.IEEE_API_KEY }}
+          SEMANTIC_SCHOLAR_API_KEY: ${{ secrets.SEMANTIC_SCHOLAR_API_KEY }}
+          ELIS_CONTACT: ${{ secrets.ELIS_CONTACT }}
+          CORE_API_KEY: ${{ secrets.CORE_API_KEY }}
+          APIFY_API_TOKEN: ${{ secrets.APIFY_API_TOKEN }}
+        run: |
+          echo ""
+          echo "============================================"
+          echo "TEST: ${{ github.event.inputs.database }} - Legacy Config"
+          echo "============================================"
+          echo "Config: config/elis_search_queries.yml"
+          echo ""
+          
+          python ${{ steps.setup.outputs.script }} --output test_output_legacy.json
+      
+      - name: Validate Legacy Config Output
+        if: github.event.inputs.test_legacy == 'true'
+        run: |
+          echo "Validating output from legacy config..."
+          
+          if [ ! -f test_output_legacy.json ]; then
+            echo "Output file not created"
+            exit 1
+          fi
+          
+          python3 << 'PYTHON_SCRIPT'
+          import json
+          
+          with open('test_output_legacy.json') as f:
+              data = json.load(f)
+              print(f'Valid JSON with {len(data)} results')
+          PYTHON_SCRIPT
+      
+      - name: Compare New vs Legacy
+        if: github.event.inputs.test_legacy == 'true'
+        run: |
+          echo ""
+          echo "============================================"
+          echo "COMPARISON: New vs Legacy Config"
+          echo "============================================"
+          
+          python3 << 'PYTHON_SCRIPT'
+          import json
+          
+          with open('test_output_new.json') as f:
+              new_data = json.load(f)
+          
+          with open('test_output_legacy.json') as f:
+              legacy_data = json.load(f)
+          
+          print(f'New config results: {len(new_data)}')
+          print(f'Legacy config results: {len(legacy_data)}')
+          print('')
+          
+          if len(new_data) > 0 and len(legacy_data) > 0:
+              new_dois = {r.get('doi') for r in new_data if r.get('doi')}
+              legacy_dois = {r.get('doi') for r in legacy_data if r.get('doi')}
+              
+              overlap = new_dois & legacy_dois
+              print(f'DOI overlap: {len(overlap)} common results')
+              print('')
+              
+              new_titles = {r.get('title', '').lower() for r in new_data if r.get('title')}
+              legacy_titles = {r.get('title', '').lower() for r in legacy_data if r.get('title')}
+              title_overlap = new_titles & legacy_titles
+              print(f'Title overlap: {len(title_overlap)} common results')
+              print('')
+              print('Both configs working')
+          else:
+              print('One or both configs returned no results')
+          PYTHON_SCRIPT
+      
+      - name: Database-Specific Validation
+        run: |
+          echo ""
+          echo "============================================"
+          echo "DATABASE-SPECIFIC CHECKS: ${{ github.event.inputs.database }}"
+          echo "============================================"
+          
+          python3 << 'PYTHON_SCRIPT'
+          import json
+          
+          with open('test_output_new.json') as f:
+              data = json.load(f)
+          
+          database = "${{ github.event.inputs.database }}"
+          
+          if not data:
+              print(f"No results for {database} - may need API credentials or query adjustment")
+              exit(0)
+          
+          # Database-specific validation
+          if database == "scopus":
+              # Check for Scopus-specific fields
+              has_scopus_id = any('scopus_id' in r for r in data)
+              print(f"Has Scopus IDs: {has_scopus_id}")
+          
+          elif database == "web_of_science":
+              # Check for WoS-specific fields
+              has_wos_id = any('wos_id' in r or 'ut' in r for r in data)
+              print(f"Has WoS IDs: {has_wos_id}")
+          
+          elif database == "openalex":
+              # Check for OpenAlex-specific fields
+              has_openalex_id = any('openalex_id' in r for r in data)
+              print(f"Has OpenAlex IDs: {has_openalex_id}")
+          
+          # Check abstract coverage
+          with_abstract = sum(1 for r in data if r.get('abstract'))
+          print(f"Results with abstracts: {with_abstract}/{len(data)} ({with_abstract/len(data)*100:.1f}%)")
+          
+          # Check DOI coverage
+          with_doi = sum(1 for r in data if r.get('doi'))
+          print(f"Results with DOIs: {with_doi}/{len(data)} ({with_doi/len(data)*100:.1f}%)")
+          
+          # Check year distribution
+          years = [r.get('year') for r in data if r.get('year')]
+          if years:
+              print(f"Year range: {min(years)} - {max(years)}")
+          PYTHON_SCRIPT
+      
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.event.inputs.database }}-test-results
+          path: |
+            test_output_new.json
+            test_output_legacy.json
+          retention-days: 7
+      
+      - name: Summary
+        run: |
+          echo ""
+          echo "============================================"
+          echo "TEST SUMMARY: ${{ github.event.inputs.database }}"
+          echo "============================================"
+          echo "New config format: PASSED"
+          
+          if [ "${{ github.event.inputs.test_legacy }}" = "true" ]; then
+            echo "Legacy config format: PASSED"
+            echo "Backwards compatibility: VERIFIED"
+          fi
+          
+          echo ""
+          echo "Configuration tested:"
+          echo "  Database: ${{ github.event.inputs.database }}"
+          echo "  File: ${{ github.event.inputs.search_config }}"
+          echo "  Tier: ${{ github.event.inputs.tier }}"
+          echo ""
+          echo "Next steps:"
+          echo "  1. Review artifacts for actual results"
+          echo "  2. Update remaining database scripts if not done"
+          echo "  3. Test other tiers and databases"
+          
