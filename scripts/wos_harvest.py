@@ -1,7 +1,16 @@
 """
 wos_harvest.py
 Harvests metadata from the Clarivate Web of Science Starter API.
-Reads queries from config/elis_search_queries.yml (protocol-aligned).
+
+CONFIGURATION MODES:
+1. NEW (Recommended): --search-config config/searches/electoral_integrity_search.yml
+   - Uses dedicated search configuration files
+   - Supports tier-based max_results (testing/pilot/benchmark/production/exhaustive)
+   - Project-specific settings
+
+2. LEGACY (Backwards Compatible): Reads from config/elis_search_queries.yml
+   - Maintains compatibility with existing workflows
+   - Uses global max_results_per_source setting
 
 Environment Variables:
 - WEB_OF_SCIENCE_API_KEY: Your Clarivate API key
@@ -9,24 +18,33 @@ Environment Variables:
 Outputs:
 - JSON array in json_jsonl/ELIS_Appendix_A_Search_rows.json
 
-Usage:
-- Called by CI/CD workflow to retrieve search results for configured queries
+Usage Examples:
+  # New config format with tier
+  python scripts/wos_harvest.py --search-config config/searches/electoral_integrity_search.yml --tier production
+
+  # New config format (uses default tier)
+  python scripts/wos_harvest.py --search-config config/searches/tai_awasthi_2025_search.yml
+
+  # Legacy format (backwards compatible)
+  python scripts/wos_harvest.py
+
+  # Override max_results regardless of config
+  python scripts/wos_harvest.py --max-results 500
 """
 
 import requests
 import json
 import os
 import yaml
+import argparse
 from pathlib import Path
 
 
 def get_credentials():
     """Get and validate Web of Science API credentials."""
     api_key = os.getenv("WEB_OF_SCIENCE_API_KEY")
-
     if not api_key:
         raise EnvironmentError("Missing WEB_OF_SCIENCE_API_KEY environment variable")
-
     return api_key
 
 
@@ -42,26 +60,27 @@ def get_headers():
 def wos_search(query: str, limit: int = 50, max_results: int = 100):
     """
     Send a query to Web of Science API and retrieve up to max_results.
-
+    
     Args:
-        query (str): WoS query string (e.g., "TS=(electronic voting)")
+        query (str): WoS query string (should include TS= wrapper for topic search)
         limit (int): Number of records per request (max 50 for Starter API)
         max_results (int): Total number of results to retrieve
-
+        
     Returns:
-        list: List of metadata entries returned by WoS
+        list: List of metadata entries returned by Web of Science
     """
-    url = "https://api.clarivate.com/apis/wos-starter/v1/documents"
+    url = "https://api.clarivate.com/api/wos"
     results = []
     page = 1
 
     while len(results) < max_results:
         params = {
-            "q": query,
-            "limit": min(limit, max_results - len(results)),
-            "page": page,
+            "databaseId": "WOS",
+            "usrQuery": query,
+            "count": min(limit, max_results - len(results)),
+            "firstRecord": (page - 1) * limit + 1,
         }
-
+        
         r = requests.get(url, headers=get_headers(), params=params, timeout=30)
 
         if r.status_code != 200:
@@ -69,19 +88,26 @@ def wos_search(query: str, limit: int = 50, max_results: int = 100):
             break
 
         data = r.json()
-        hits = data.get("hits", [])
+        records = data.get("Data", {}).get("Records", {}).get("records", {}).get("REC", [])
 
-        if not hits:
+        if not records:
             break
 
-        results.extend(hits)
+        # Handle single record vs list
+        if isinstance(records, dict):
+            records = [records]
+
+        results.extend(records)
+        
+        # Check if there are more results
+        query_result = data.get("QueryResult", {})
+        records_found = int(query_result.get("RecordsFound", 0))
+        
+        if len(results) >= records_found:
+            print(f"  Retrieved all {records_found} available results")
+            break
+        
         page += 1
-
-        # Check if we've reached the last page
-        metadata = data.get("metadata", {})
-        total = metadata.get("total", 0)
-        if len(results) >= total:
-            break
 
     return results
 
@@ -90,37 +116,80 @@ def transform_wos_entry(entry):
     """
     Transform raw WoS entry to match the schema used by other sources.
     """
-    # Extract authors from author field
-    authors_list = entry.get("author", [])
-    authors = ", ".join(
-        [a.get("display_name", "") for a in authors_list if a.get("display_name")]
-    )
-
-    # Extract publication year
-    pub_info = entry.get("source", {})
-    year = str(pub_info.get("published_biblio_year", ""))
-
+    static = entry.get("static_data", {})
+    summary = static.get("summary", {})
+    titles = summary.get("titles", {}).get("title", [])
+    
+    # Extract title
+    title = ""
+    if isinstance(titles, list):
+        for t in titles:
+            if t.get("type") == "item":
+                title = t.get("content", "")
+                break
+    elif isinstance(titles, dict):
+        title = titles.get("content", "")
+    
+    # Extract authors
+    authors_data = summary.get("names", {}).get("name", [])
+    if isinstance(authors_data, dict):
+        authors_data = [authors_data]
+    authors = ", ".join([a.get("full_name", "") for a in authors_data])
+    
+    # Extract year
+    pub_info = summary.get("pub_info", {})
+    year = pub_info.get("pubyear", "")
+    
+    # Extract DOI
+    identifiers = static.get("fullrecord_metadata", {}).get("identifiers", {}).get("identifier", [])
+    if isinstance(identifiers, dict):
+        identifiers = [identifiers]
+    doi = ""
+    for identifier in identifiers:
+        if identifier.get("type") == "doi":
+            doi = identifier.get("value", "")
+            break
+    
+    # Extract abstract
+    abstracts = static.get("fullrecord_metadata", {}).get("abstracts", {}).get("abstract", {})
+    abstract = ""
+    if isinstance(abstracts, list):
+        abstract = abstracts[0].get("abstract_text", {}).get("p", "") if abstracts else ""
+    elif isinstance(abstracts, dict):
+        abstract = abstracts.get("abstract_text", {}).get("p", "")
+    
+    # Extract UT (unique identifier)
+    uid = entry.get("UID", "")
+    
     return {
         "source": "Web of Science",
-        "title": entry.get("title", ""),
+        "title": title,
         "authors": authors,
         "year": year,
-        "doi": entry.get("doi", ""),
-        "abstract": entry.get("abstract", {}).get("text", ""),
-        "url": f"https://doi.org/{entry.get('doi', '')}" if entry.get("doi") else "",
-        "wos_id": entry.get("uid", ""),
+        "doi": doi,
+        "abstract": abstract,
+        "url": f"https://www.webofscience.com/wos/woscc/full-record/{uid}" if uid else "",
+        "wos_id": uid,
         "raw_metadata": entry,
     }
 
 
-def load_config(config_path: str = "config/elis_search_queries.yml"):
+def load_config(config_path: str):
     """Load search configuration from YAML file."""
     with open(config_path, "r", encoding="utf-8") as f:
         return yaml.safe_load(f)
 
 
-def get_wos_queries(config):
-    """Extract enabled queries for Web of Science from config."""
+def get_wos_queries_legacy(config):
+    """
+    Extract enabled queries for Web of Science from legacy config format.
+    
+    Args:
+        config: Legacy config dict from config/elis_search_queries.yml
+        
+    Returns:
+        list: List of WoS queries wrapped in TS=()
+    """
     queries = []
 
     for topic in config.get("topics", []):
@@ -131,37 +200,164 @@ def get_wos_queries(config):
         if "web_of_science" not in sources:
             continue
 
-        # WoS uses different query syntax - wrap in TS=(...)
+        # WoS requires TS=() wrapper for topic search
         topic_queries = topic.get("queries", [])
-        # Convert queries to WoS syntax
+        # Wrap each query in TS=() to search title, abstract, and keywords
         wos_queries = [f"TS=({q})" for q in topic_queries]
         queries.extend(wos_queries)
 
     return queries
 
 
+def get_wos_config_new(config, tier=None):
+    """
+    Extract Web of Science configuration from new search config format.
+    
+    Args:
+        config: New search config dict from config/searches/*.yml
+        tier: Optional tier override (testing/pilot/benchmark/production/exhaustive)
+        
+    Returns:
+        tuple: (queries, max_results)
+    """
+    # Find Web of Science database configuration
+    databases = config.get("databases", [])
+    wos_config = None
+    
+    for db in databases:
+        if db.get("name") == "Web of Science" and db.get("enabled", False):
+            wos_config = db
+            break
+    
+    if not wos_config:
+        print("⚠️  Web of Science not enabled in search configuration")
+        return [], 0
+    
+    # Get query and wrap in TS=()
+    query_string = config.get("query", {}).get("boolean_string", "")
+    if not query_string:
+        print("⚠️  No query found in search configuration")
+        return [], 0
+    
+    # Apply WoS-specific wrapper
+    query_wrapper = wos_config.get("query_wrapper", "TS=({query})")
+    wos_query = query_wrapper.replace("{query}", query_string)
+    
+    # Determine max_results based on tier
+    max_results_config = wos_config.get("max_results")
+    
+    if isinstance(max_results_config, dict):
+        # Tier-based system
+        if tier:
+            max_results = max_results_config.get(tier)
+            if max_results is None:
+                print(f"⚠️  Unknown tier '{tier}', available tiers: {list(max_results_config.keys())}")
+                tier = wos_config.get("max_results_default", "production")
+                max_results = max_results_config.get(tier, 1000)
+                print(f"   Using default tier: {tier}")
+        else:
+            # Use default tier
+            tier = wos_config.get("max_results_default", "production")
+            max_results = max_results_config.get(tier, 1000)
+            print(f"Using default tier: {tier} (max_results: {max_results})")
+    else:
+        # Single value (backwards compatible)
+        max_results = max_results_config or 1000
+    
+    return [wos_query], max_results
+
+
+def parse_args():
+    """Parse command-line arguments."""
+    parser = argparse.ArgumentParser(
+        description="Harvest metadata from Web of Science API",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Use new search config with production tier
+  python scripts/wos_harvest.py --search-config config/searches/electoral_integrity_search.yml --tier production
+
+  # Use new search config with default tier
+  python scripts/wos_harvest.py --search-config config/searches/tai_awasthi_2025_search.yml
+
+  # Use legacy config (backwards compatible)
+  python scripts/wos_harvest.py
+
+  # Override max_results
+  python scripts/wos_harvest.py --search-config config/searches/electoral_integrity_search.yml --max-results 500
+        """
+    )
+    
+    parser.add_argument(
+        "--search-config",
+        type=str,
+        help="Path to search configuration file (e.g., config/searches/electoral_integrity_search.yml)"
+    )
+    
+    parser.add_argument(
+        "--tier",
+        type=str,
+        choices=["testing", "pilot", "benchmark", "production", "exhaustive"],
+        help="Max results tier to use (testing/pilot/benchmark/production/exhaustive)"
+    )
+    
+    parser.add_argument(
+        "--max-results",
+        type=int,
+        help="Override max_results regardless of config or tier"
+    )
+    
+    parser.add_argument(
+        "--output",
+        type=str,
+        default="json_jsonl/ELIS_Appendix_A_Search_rows.json",
+        help="Output file path (default: json_jsonl/ELIS_Appendix_A_Search_rows.json)"
+    )
+    
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
-    # Load configuration
-    print("Loading configuration from config/elis_search_queries.yml")
-    config = load_config()
-
-    # Extract global settings
-    global_config = config.get("global", {})
-    max_results = global_config.get("max_results_per_source", 100)
-
-    # Get WoS queries
-    queries = get_wos_queries(config)
-
+    # Parse command-line arguments
+    args = parse_args()
+    
+    # Determine configuration mode
+    if args.search_config:
+        # NEW CONFIG FORMAT
+        print(f"Loading search configuration from {args.search_config}")
+        config = load_config(args.search_config)
+        queries, max_results = get_wos_config_new(config, tier=args.tier)
+        config_mode = "NEW"
+    else:
+        # LEGACY CONFIG FORMAT
+        print("Loading configuration from config/elis_search_queries.yml (legacy mode)")
+        config = load_config("config/elis_search_queries.yml")
+        queries = get_wos_queries_legacy(config)
+        max_results = config.get("global", {}).get("max_results_per_source", 100)
+        config_mode = "LEGACY"
+        print(f"⚠️  Using legacy config format. Consider using --search-config for new projects.")
+    
+    # Apply max_results override if provided
+    if args.max_results:
+        print(f"Overriding max_results: {max_results} → {args.max_results}")
+        max_results = args.max_results
+    
+    # Validate queries
     if not queries:
-        print(
-            "⚠️  No Web of Science queries found in config (check sources and enabled flags)"
-        )
+        print("⚠️  No Web of Science queries found in config")
+        print("   Check that Web of Science is enabled and queries are defined")
         exit(0)
-
-    print(f"Found {len(queries)} queries for Web of Science")
+    
+    print(f"\n{'='*80}")
+    print(f"WEB OF SCIENCE HARVEST - {config_mode} CONFIG")
+    print(f"{'='*80}")
+    print(f"Queries: {len(queries)}")
+    print(f"Max results per query: {max_results}")
+    print(f"Output: {args.output}")
+    print(f"{'='*80}\n")
 
     # Define output path
-    output_path = Path("json_jsonl/ELIS_Appendix_A_Search_rows.json")
+    output_path = Path(args.output)
 
     # Load existing results if file exists
     existing_results = []
@@ -170,13 +366,15 @@ if __name__ == "__main__":
             existing_results = json.load(f)
         print(f"Loaded {len(existing_results)} existing results")
 
-    # Track existing DOIs to avoid duplicates
+    # Track existing DOIs and WoS IDs to avoid duplicates
     existing_dois = {r.get("doi") for r in existing_results if r.get("doi")}
+    existing_wos_ids = {r.get("wos_id") for r in existing_results if r.get("wos_id")}
     new_count = 0
 
     # Execute each query
     for i, query in enumerate(queries, 1):
-        print(f"\n[{i}/{len(queries)}] Querying Web of Science: {query}")
+        print(f"\n[{i}/{len(queries)}] Querying Web of Science:")
+        print(f"  Query: {query[:100]}{'...' if len(query) > 100 else ''}")
 
         try:
             raw_results = wos_search(query, max_results=max_results)
@@ -186,15 +384,27 @@ if __name__ == "__main__":
             for entry in raw_results:
                 transformed = transform_wos_entry(entry)
                 doi = transformed.get("doi")
+                wos_id = transformed.get("wos_id")
 
-                if not doi or doi not in existing_dois:
+                # Add if unique (check both DOI and WoS ID)
+                is_duplicate = False
+                if doi and doi in existing_dois:
+                    is_duplicate = True
+                if wos_id and wos_id in existing_wos_ids:
+                    is_duplicate = True
+                
+                if not is_duplicate:
                     existing_results.append(transformed)
                     if doi:
                         existing_dois.add(doi)
+                    if wos_id:
+                        existing_wos_ids.add(wos_id)
                     new_count += 1
 
         except Exception as e:
             print(f"  ❌ Error processing query: {e}")
+            import traceback
+            traceback.print_exc()
             continue
 
     # Save combined results
@@ -202,7 +412,11 @@ if __name__ == "__main__":
     with output_path.open("w", encoding="utf-8") as f:
         json.dump(existing_results, f, indent=2, ensure_ascii=False)
 
-    print("\n✅ Web of Science harvest complete")
-    print(f"✅ New results added: {new_count}")
-    print(f"✅ Total records in dataset: {len(existing_results)}")
-    print(f"✅ Saved to {output_path}")
+    print(f"\n{'='*80}")
+    print("✅ Web of Science harvest complete")
+    print(f"{'='*80}")
+    print(f"New results added: {new_count}")
+    print(f"Total records in dataset: {len(existing_results)}")
+    print(f"Saved to: {output_path}")
+    print(f"{'='*80}\n")
+    
