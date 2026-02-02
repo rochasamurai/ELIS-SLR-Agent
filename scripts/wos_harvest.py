@@ -56,10 +56,9 @@ def get_headers():
         "Accept": "application/json",
     }
 
-
-def wos_search(query: str, limit: int = 50, max_results: int = 100):
+def wos_search(query: str, limit: int = 50, max_results: int = 1000):
     """
-    Send a query to Web of Science API and retrieve up to max_results.
+    Send a query to Web of Science Starter API and retrieve up to max_results.
     
     Args:
         query (str): WoS query string (should include TS= wrapper for topic search)
@@ -69,16 +68,17 @@ def wos_search(query: str, limit: int = 50, max_results: int = 100):
     Returns:
         list: List of metadata entries returned by Web of Science
     """
-    url = "https://api.clarivate.com/api/wos"
+    # Web of Science Starter API endpoint
+    url = "https://api.clarivate.com/apis/wos-starter/v1/documents"
     results = []
     page = 1
 
     while len(results) < max_results:
         params = {
-            "databaseId": "WOS",
-            "usrQuery": query,
-            "count": min(limit, max_results - len(results)),
-            "firstRecord": (page - 1) * limit + 1,
+            "db": "WOS",
+            "q": query,
+            "limit": min(limit, max_results - len(results)),
+            "page": page,
         }
         
         r = requests.get(url, headers=get_headers(), params=params, timeout=30)
@@ -88,29 +88,26 @@ def wos_search(query: str, limit: int = 50, max_results: int = 100):
             break
 
         data = r.json()
-        records = data.get("Data", {}).get("Records", {}).get("records", {}).get("REC", [])
+        
+        # Starter API returns hits in different structure
+        hits = data.get("hits", [])
 
-        if not records:
+        if not hits:
             break
 
-        # Handle single record vs list
-        if isinstance(records, dict):
-            records = [records]
-
-        results.extend(records)
+        results.extend(hits)
         
         # Check if there are more results
-        query_result = data.get("QueryResult", {})
-        records_found = int(query_result.get("RecordsFound", 0))
+        metadata = data.get("metadata", {})
+        total = metadata.get("total", 0)
         
-        if len(results) >= records_found:
-            print(f"  Retrieved all {records_found} available results")
+        if len(results) >= total:
+            print(f"  Retrieved all {total} available results")
             break
         
         page += 1
 
     return results
-
 
 def transform_wos_entry(entry):
     """
