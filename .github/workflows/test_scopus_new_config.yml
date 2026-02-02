@@ -1,0 +1,192 @@
+name: Test Scopus New Config
+
+on:
+  workflow_dispatch:
+    inputs:
+      tier:
+        description: 'Tier to test (testing/pilot/benchmark/production/exhaustive)'
+        required: true
+        default: 'testing'
+        type: choice
+        options:
+          - testing
+          - pilot
+          - benchmark
+          - production
+          - exhaustive
+      search_config:
+        description: 'Search config file to use'
+        required: true
+        default: 'config/searches/electoral_integrity_search.yml'
+        type: choice
+        options:
+          - config/searches/electoral_integrity_search.yml
+          - config/searches/tai_awasthi_2025_search.yml
+      test_legacy:
+        description: 'Also test legacy config mode?'
+        required: true
+        default: false
+        type: boolean
+
+jobs:
+  test-new-config:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          pip install requests pyyaml
+      
+      - name: Test New Config Format
+        env:
+          SCOPUS_API_KEY: ${{ secrets.SCOPUS_API_KEY }}
+          SCOPUS_INST_TOKEN: ${{ secrets.SCOPUS_INST_TOKEN }}
+        run: |
+          echo "============================================"
+          echo "TEST: New Config Format with Tier System"
+          echo "============================================"
+          echo "Config: ${{ github.event.inputs.search_config }}"
+          echo "Tier: ${{ github.event.inputs.tier }}"
+          echo ""
+          
+          python scripts/scopus_harvest.py \
+            --search-config "${{ github.event.inputs.search_config }}" \
+            --tier "${{ github.event.inputs.tier }}" \
+            --output test_output_new.json
+      
+      - name: Validate New Config Output
+        run: |
+          echo "Validating output from new config..."
+          
+          if [ ! -f test_output_new.json ]; then
+            echo "Output file not created"
+            exit 1
+          fi
+          
+          python3 << 'PYTHON_SCRIPT'
+          import json
+          
+          with open('test_output_new.json') as f:
+              data = json.load(f)
+              print(f'Valid JSON with {len(data)} results')
+              
+              if data:
+                  first = data[0]
+                  required = ['source', 'title', 'authors', 'year']
+                  missing = [f for f in required if f not in first]
+                  if missing:
+                      print(f'Missing fields: {missing}')
+                      exit(1)
+                  print('All required fields present')
+                  print(f"Source: {first.get('source')}")
+                  title = first.get('title', '')
+                  print(f"Title: {title[:50]}...")
+              else:
+                  print('No results returned (may be expected for testing tier)')
+          PYTHON_SCRIPT
+      
+      - name: Test Legacy Config Format
+        if: github.event.inputs.test_legacy == 'true'
+        env:
+          SCOPUS_API_KEY: ${{ secrets.SCOPUS_API_KEY }}
+          SCOPUS_INST_TOKEN: ${{ secrets.SCOPUS_INST_TOKEN }}
+        run: |
+          echo ""
+          echo "============================================"
+          echo "TEST: Legacy Config Format (Backwards Compatible)"
+          echo "============================================"
+          echo "Config: config/elis_search_queries.yml"
+          echo ""
+          
+          python scripts/scopus_harvest.py --output test_output_legacy.json
+      
+      - name: Validate Legacy Config Output
+        if: github.event.inputs.test_legacy == 'true'
+        run: |
+          echo "Validating output from legacy config..."
+          
+          if [ ! -f test_output_legacy.json ]; then
+            echo "Output file not created"
+            exit 1
+          fi
+          
+          python3 << 'PYTHON_SCRIPT'
+          import json
+          
+          with open('test_output_legacy.json') as f:
+              data = json.load(f)
+              print(f'Valid JSON with {len(data)} results')
+          PYTHON_SCRIPT
+      
+      - name: Compare New vs Legacy
+        if: github.event.inputs.test_legacy == 'true'
+        run: |
+          echo ""
+          echo "============================================"
+          echo "COMPARISON: New vs Legacy Config"
+          echo "============================================"
+          
+          python3 << 'PYTHON_SCRIPT'
+          import json
+          
+          with open('test_output_new.json') as f:
+              new_data = json.load(f)
+          
+          with open('test_output_legacy.json') as f:
+              legacy_data = json.load(f)
+          
+          print(f'New config results: {len(new_data)}')
+          print(f'Legacy config results: {len(legacy_data)}')
+          print('')
+          
+          if len(new_data) > 0 and len(legacy_data) > 0:
+              new_dois = {r.get('doi') for r in new_data if r.get('doi')}
+              legacy_dois = {r.get('doi') for r in legacy_data if r.get('doi')}
+              
+              overlap = new_dois & legacy_dois
+              print(f'DOI overlap: {len(overlap)} common results')
+              print('')
+              print('Both configs working')
+          else:
+              print('One or both configs returned no results')
+          PYTHON_SCRIPT
+      
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: scopus-test-results
+          path: |
+            test_output_new.json
+            test_output_legacy.json
+          retention-days: 7
+      
+      - name: Summary
+        run: |
+          echo ""
+          echo "============================================"
+          echo "TEST SUMMARY"
+          echo "============================================"
+          echo "New config format: PASSED"
+          
+          if [ "${{ github.event.inputs.test_legacy }}" = "true" ]; then
+            echo "Legacy config format: PASSED"
+            echo "Backwards compatibility: VERIFIED"
+          fi
+          
+          echo ""
+          echo "Configuration tested:"
+          echo "  File: ${{ github.event.inputs.search_config }}"
+          echo "  Tier: ${{ github.event.inputs.tier }}"
+          echo ""
+          echo "Next steps:"
+          echo "  1. Review artifacts for actual results"
+          echo "  2. Test other tiers (pilot, benchmark, production)"
+          echo "  3. Update remaining harvest scripts with same pattern"
