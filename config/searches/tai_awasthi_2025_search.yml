@@ -1,0 +1,409 @@
+# ==============================================================================
+# SEARCH CONFIGURATION: Tai & Awasthi (2025) - Agile Government SLR
+# ==============================================================================
+# 
+# Purpose: Replicate the systematic literature review methodology from:
+#   "An exploration of agile government in the public sector: A systematic 
+#    literature review at macro, meso, and micro levels of analysis"
+#   by Kuang-Ting Tai & Pallavi Awasthi (2025)
+#   DOI: 10.1016/j.giq.2025.102082
+#
+# This configuration file contains all parameters needed to execute database
+# searches matching the original paper's methodology for benchmark validation.
+#
+# Created: 2026-01-30
+# Status: Active (Benchmark 2 - Phase 1)
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# SEARCH METADATA
+# ------------------------------------------------------------------------------
+search_id: "tai_awasthi_2025"
+project_name: "Agile Government Systematic Review (Benchmark 2)"
+paper_reference:
+  title: "An exploration of agile government in the public sector"
+  authors:
+    - "Kuang-Ting Tai"
+    - "Pallavi Awasthi"
+  journal: "Government Information Quarterly"
+  year: 2025
+  doi: "10.1016/j.giq.2025.102082"
+  
+created_date: "2026-01-30"
+last_modified: "2026-01-30"
+status: "active"
+
+# ------------------------------------------------------------------------------
+# SEARCH QUERY
+# ------------------------------------------------------------------------------
+# The original paper used three keyword combinations applied to titles, 
+# abstracts, and author-identified keywords across all databases.
+# ------------------------------------------------------------------------------
+
+query:
+  # Boolean query string (standard format)
+  # This will be translated to database-specific syntax by harvest scripts
+  boolean_string: |
+    ("agile" AND "government") OR 
+    ("agile" AND "governance") OR 
+    ("agile" AND "public")
+  
+  # Individual keyword groups for reference
+  keyword_groups:
+    - group: 1
+      terms: ["agile", "government"]
+      operator: "AND"
+      
+    - group: 2
+      terms: ["agile", "governance"]
+      operator: "AND"
+      
+    - group: 3
+      terms: ["agile", "public"]
+      operator: "AND"
+  
+  # Fields to search (applied where database allows field-specific search)
+  search_fields:
+    - "title"
+    - "abstract"
+    - "keywords"  # Author-identified keywords
+  
+  # Notes on query interpretation
+  notes: |
+    - Original paper searched title, abstract, and keywords
+    - Boolean operators must be translated to database-specific syntax
+    - Some databases (e.g., Google Scholar) may require query simplification
+
+# ------------------------------------------------------------------------------
+# DATE RANGE
+# ------------------------------------------------------------------------------
+# Original paper: "all available years up to the date of the last search in May 2023"
+# Earliest article found: 2002
+# We use a conservative range to match their actual coverage
+# ------------------------------------------------------------------------------
+
+date_range:
+  start_year: 2002
+  end_year: 2023
+  notes: |
+    - Original paper: searched up to May 2023
+    - No explicit lower bound, but earliest article was 2002
+    - Some databases may not support year filtering
+
+# ------------------------------------------------------------------------------
+# TARGET DATABASES
+# ------------------------------------------------------------------------------
+# Original paper used: Web of Science, EBSCOhost, ProQuest
+# ELIS Phase 1 uses: Available databases that don't require API access
+# 
+# Each database configuration includes:
+#   - enabled: Whether to include in this search
+#   - max_results: Maximum results to retrieve per database
+#   - query_syntax: How to format the Boolean query for this database
+#   - priority: HIGH/MEDIUM/LOW for resource allocation
+# ------------------------------------------------------------------------------
+
+databases:
+  # --------------------
+  # HIGH PRIORITY (Direct matches or high overlap with original paper)
+  # --------------------
+  
+  - name: "Web of Science"
+    enabled: true
+    max_results: 500
+    query_syntax: "TS"  # Topic Search (title, abstract, keywords)
+    query_wrapper: "TS=({query})"
+    priority: "CRITICAL"
+    notes: |
+      - Direct match with original paper (1/3 databases)
+      - Original paper retrieved 405 results from WoS
+      - Uses TS= wrapper for topic search
+    api_config:
+      rate_limit: "5 requests/second"
+      timeout: 30
+  
+  - name: "Scopus"
+    enabled: true
+    max_results: 500
+    query_syntax: "TITLE-ABS-KEY"
+    query_wrapper: "TITLE-ABS-KEY({query})"
+    priority: "HIGH"
+    notes: |
+      - High overlap with Web of Science
+      - Requires TITLE-ABS-KEY() wrapper for proper field search
+      - Institutional access via API key + token
+    api_config:
+      rate_limit: "2 requests/second"
+      timeout: 30
+  
+  - name: "OpenAlex"
+    enabled: true
+    max_results: 500
+    query_syntax: "default.search"
+    query_filter: "default.search:{query}"
+    priority: "HIGH"
+    notes: |
+      - Comprehensive open access aggregator
+      - Uses default.search to search title, abstract, fulltext
+      - Free API, no authentication required
+    api_config:
+      rate_limit: "10 requests/second (polite pool)"
+      timeout: 30
+  
+  # --------------------
+  # MEDIUM PRIORITY (Complementary databases)
+  # --------------------
+  
+  - name: "Google Scholar"
+    enabled: true
+    max_results: 100  # Limited by Apify free tier to 10 actual results
+    query_syntax: "simplified"
+    query_transformation: "remove_boolean_operators"
+    priority: "HIGH"
+    notes: |
+      - Broadest academic coverage
+      - Via Apify EasyAPI actor (easyapi/google-scholar-scraper)
+      - Free tier: 10 results max
+      - Query simplification required (remove Boolean operators)
+      - No year filtering support
+    api_config:
+      provider: "Apify"
+      actor: "easyapi/google-scholar-scraper"
+      rate_limit: "Managed by Apify"
+      timeout: 120
+  
+  - name: "CrossRef"
+    enabled: true
+    max_results: 500
+    query_syntax: "generic"
+    query_filter: "query={query}"
+    priority: "MEDIUM"
+    notes: |
+      - DOI-based verification
+      - Generic search across all metadata fields
+      - Free API with polite pool
+    api_config:
+      rate_limit: "Polite pool recommended"
+      timeout: 30
+  
+  - name: "CORE"
+    enabled: true
+    max_results: 500
+    query_syntax: "generic"
+    query_filter: "q={query}"
+    priority: "MEDIUM"
+    notes: |
+      - Open access aggregator
+      - Searches title, abstract, fulltext
+      - Accepts Boolean operators natively
+    api_config:
+      rate_limit: "Limited by API key tier"
+      timeout: 30
+  
+  # --------------------
+  # LOW PRIORITY (Limited relevance or technical issues)
+  # --------------------
+  
+  - name: "Semantic Scholar"
+    enabled: true
+    max_results: 100
+    query_syntax: "natural_language"
+    query_filter: "query={query}"
+    priority: "MEDIUM"
+    notes: |
+      - Good for CS/digital government topics
+      - Natural language query processing
+      - Currently experiencing rate limiting issues
+    api_config:
+      rate_limit: "100 requests/5 minutes"
+      timeout: 30
+  
+  - name: "IEEE Xplore"
+    enabled: true
+    max_results: 200
+    query_syntax: "generic"
+    query_filter: "querytext={query}"
+    priority: "LOW"
+    notes: |
+      - Limited relevance to public administration focus
+      - Currently returning 0 results (API configuration issue)
+      - Max 200 results per request (API limitation)
+    api_config:
+      rate_limit: "200 calls/day"
+      timeout: 30
+
+# ------------------------------------------------------------------------------
+# FILTERS
+# ------------------------------------------------------------------------------
+# Criteria to narrow down search results to relevant studies
+# Based on original paper's inclusion/exclusion criteria
+# ------------------------------------------------------------------------------
+
+filters:
+  # Language filter
+  # Original paper: English-language only
+  language: 
+    - "English"
+  
+  # Document types
+  # Original paper: Peer-reviewed journal articles only
+  # (Excluded: conference papers, book chapters, dissertations, grey literature)
+  document_types:
+    - "article"
+  
+  # Peer review requirement
+  # Original paper: Only peer-reviewed journals included
+  peer_reviewed: true
+  
+  # Subject areas (optional, not specified in original paper)
+  subject_areas: []
+  
+  # Notes on filtering
+  notes: |
+    - Original paper excluded non-English publications
+    - Only peer-reviewed journal articles were included
+    - Conference papers, books, dissertations were excluded
+    - No restrictions on subject area (interdisciplinary approach)
+
+# ------------------------------------------------------------------------------
+# OUTPUT CONFIGURATION
+# ------------------------------------------------------------------------------
+# Where and how to store search results
+# ------------------------------------------------------------------------------
+
+output:
+  # Directory for storing results
+  directory: "json_jsonl/"
+  
+  # Primary output file (combined results from all databases)
+  primary_file: "ELIS_Appendix_A_Search_rows.json"
+  
+  # Backup/archive settings
+  archive:
+    enabled: true
+    directory: "results/tai_awasthi_2025/archives/"
+    timestamp_format: "%Y%m%d_%H%M%S"
+  
+  # Output format options
+  format:
+    type: "json"
+    encoding: "utf-8"
+    indent: 2
+    ensure_ascii: false
+  
+  # Deduplication settings
+  deduplication:
+    enabled: true
+    method: "title_normalized"
+    case_sensitive: false
+    
+  # Fields to include in output
+  fields:
+    required:
+      - "source"
+      - "title"
+      - "authors"
+      - "year"
+      - "doi"
+      - "abstract"
+      - "url"
+    optional:
+      - "citation_count"
+      - "keywords"
+      - "venue"
+      - "pdf_url"
+      - "raw_metadata"
+
+# ------------------------------------------------------------------------------
+# EXECUTION PARAMETERS
+# ------------------------------------------------------------------------------
+# Runtime configuration for search execution
+# ------------------------------------------------------------------------------
+
+execution:
+  # Parallel execution
+  parallel_databases: false  # Execute databases sequentially for stability
+  
+  # Retry configuration
+  retry:
+    max_attempts: 3
+    delay_seconds: 30
+    exponential_backoff: true
+  
+  # Timeout settings
+  timeout:
+    per_database_minutes: 12  # 12 min for Google Scholar, 5 min for others
+    total_search_minutes: 60
+  
+  # Logging
+  logging:
+    level: "INFO"
+    file: "logs/tai_awasthi_2025_search.log"
+    console_output: true
+  
+  # Cost tracking
+  cost_tracking:
+    enabled: true
+    max_budget_usd: 2.00
+    warn_threshold_usd: 1.50
+
+# ------------------------------------------------------------------------------
+# VALIDATION RULES
+# ------------------------------------------------------------------------------
+# Quality checks to ensure search execution meets standards
+# ------------------------------------------------------------------------------
+
+validation:
+  # Minimum results per database
+  minimum_results:
+    critical_databases: 100  # WoS, Scopus, OpenAlex
+    other_databases: 10
+  
+  # Expected total results
+  expected_range:
+    minimum: 1500
+    maximum: 3000
+    notes: "Based on Phase 1 runs: 2000-2500 typical"
+  
+  # Query validation
+  query_checks:
+    - "Boolean operators present"
+    - "No syntax errors"
+    - "Field specifications valid"
+  
+  # Warn if major deviation from expected
+  deviation_threshold: 0.30  # 30% deviation triggers warning
+
+# ------------------------------------------------------------------------------
+# NOTES AND CHANGELOG
+# ------------------------------------------------------------------------------
+
+notes: |
+  This configuration represents our best effort to replicate the Tai & Awasthi
+  (2025) search methodology using available ELIS databases. Key differences:
+  
+  1. Database Coverage:
+     - Original: WoS + EBSCOhost + ProQuest (1,102 results)
+     - ELIS Phase 1: WoS + 7 other databases (~2,000-2,500 results)
+  
+  2. Search Fields:
+     - Both search: title, abstract, keywords
+     - Database-specific syntax properly implemented
+  
+  3. Limitations:
+     - Google Scholar: Free tier limited to 10 results
+     - IEEE Xplore: Currently returning 0 results (API issue)
+     - Semantic Scholar: Experiencing rate limiting
+  
+  For benchmark validation, we expect 45-65% retrieval rate (25-35 of 55 studies)
+  given that we only have direct access to 1 of 3 original databases.
+
+changelog:
+  - version: "1.0.0"
+    date: "2026-01-30"
+    changes:
+      - "Initial creation of search configuration"
+      - "Documented all 8 ELIS Phase 1 databases"
+      - "Added database-specific query syntax"
+      - "Configured output and validation rules"
+      
