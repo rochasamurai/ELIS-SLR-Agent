@@ -59,6 +59,89 @@ jobs:
           pip install requests pyyaml pycurl certifi
 
       # ---------------------------------------------------------------------------
+      # IEEE connectivity diagnostic — mirrors test_ieee_diag.py exactly.
+      # Runs all five methods (public IP, SDK debug URL, curl, requests, pycurl)
+      # against the same URL so CI vs local output can be compared directly.
+      # Only fires when ieee_xplore is selected; safe to remove once the
+      # IP-blocking question is resolved.
+      # ---------------------------------------------------------------------------
+      - name: Diagnose IEEE API connectivity
+        if: github.event.inputs.database == 'ieee_xplore'
+        env:
+          IEEE_EXPLORE_API_KEY: ${{ secrets.IEEE_EXPLORE_API_KEY }}
+        run: |
+          python3 << 'PYTHON_SCRIPT'
+          import os, sys, subprocess
+          sys.path.insert(0, os.path.abspath('.'))
+          from xploreapi.xploreapi import XPLORE
+          import requests
+
+          key = os.environ.get('IEEE_EXPLORE_API_KEY', '')
+          if not key:
+              print('ERROR: IEEE_EXPLORE_API_KEY not set')
+              sys.exit(1)
+
+          print(f'Key: {key[:8]}...{key[-4:]}')
+          print()
+
+          # ---------- 1. PUBLIC IP ----------
+          print('=' * 60)
+          print('1. PUBLIC IP')
+          print('=' * 60)
+          print(f'IP: {requests.get("https://api.ipify.org", timeout=5).text}')
+
+          # ---------- 2. SDK DEBUG URL ----------
+          print()
+          print('=' * 60)
+          print('2. SDK DEBUG URL (what pycurl will actually call)')
+          print('=' * 60)
+          xplore = XPLORE(key)
+          xplore.booleanText('electoral integrity')
+          xplore.maximumResults(1)
+          sdk_url = xplore.callAPI(debugModeOff=False)
+          print(f'URL: {sdk_url}')
+
+          # ---------- 3. CURL (exact SDK URL) ----------
+          print()
+          print('=' * 60)
+          print('3. CURL (exact SDK URL)')
+          print('=' * 60)
+          result = subprocess.run(
+              ['curl', '-s', '-w', '\nHTTP_CODE:%{http_code}\nBODY_SIZE:%{size_download}', '-m', '15', sdk_url],
+              capture_output=True, text=True
+          )
+          print(result.stdout if result.stdout else 'No output')
+
+          # ---------- 4. REQUESTS (exact SDK URL) ----------
+          print()
+          print('=' * 60)
+          print('4. REQUESTS (exact SDK URL)')
+          print('=' * 60)
+          r = requests.get(sdk_url, timeout=15)
+          print(f'Status:      {r.status_code}')
+          print(f'Body length: {len(r.text)}')
+          print(f'Preview:     {r.text[:300]}')
+
+          # ---------- 5. SDK PYCURL (actual callAPI) ----------
+          print()
+          print('=' * 60)
+          print('5. SDK PYCURL (actual callAPI)')
+          print('=' * 60)
+          xplore2 = XPLORE(key)
+          xplore2.booleanText('electoral integrity')
+          xplore2.maximumResults(1)
+          xplore2.dataFormat('object')
+          try:
+              data = xplore2.callAPI()
+              articles = data.get('articles', [])
+              print(f'Articles:    {len(articles)}')
+              if articles:
+                  print(f'First title: {articles[0].get("title", "N/A")}')
+          except Exception as e:
+              print(f'SDK error:   {e}')
+          PYTHON_SCRIPT
+
+      # ---------------------------------------------------------------------------
       # Map the database choice to the script filename.
       # api_key_var / api_token_var removed — they were never referenced
       # downstream; all credentials are injected via the env: block instead.
