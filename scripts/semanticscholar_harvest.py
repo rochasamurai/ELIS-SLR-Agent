@@ -38,7 +38,48 @@ import os
 import yaml
 import argparse
 import time
+import re
 from pathlib import Path
+
+
+# ---------------------------------------------------------------------------
+# QUERY SIMPLIFICATION
+# ---------------------------------------------------------------------------
+
+def simplify_boolean_query(boolean_query: str) -> str:
+    """
+    Convert boolean query syntax to keyword-based query for Semantic Scholar.
+    
+    Semantic Scholar API does NOT support boolean operators (AND/OR/NOT).
+    It uses keyword-based search, ranking papers by relevance.
+    
+    This function:
+    - Removes boolean operators (AND, OR, NOT)
+    - Removes quotes and parentheses
+    - Extracts meaningful keywords
+    - Limits query length to 500 chars
+    
+    Args:
+        boolean_query: Query with boolean syntax like:
+                      '("electoral system" OR "voting system") AND ("integrity" OR "security")'
+    
+    Returns:
+        Simplified keyword query: 'electoral system voting system integrity security'
+    """
+    # Remove boolean operators
+    query = re.sub(r'\bAND\b|\bOR\b|\bNOT\b', ' ', boolean_query, flags=re.IGNORECASE)
+    
+    # Remove quotes and parentheses
+    query = re.sub(r'[()\"]+', ' ', query)
+    
+    # Clean up whitespace and newlines
+    query = ' '.join(query.split())
+    
+    # Limit length (Semantic Scholar has query length limits)
+    if len(query) > 500:
+        query = query[:500]
+    
+    return query.strip()
 
 
 # ---------------------------------------------------------------------------
@@ -76,7 +117,7 @@ def semanticscholar_search(query: str, limit: int = 100, max_results: int = 1000
     - Rate limit: 1 req/s (unauthenticated), 100 req/s (with API key)
 
     Args:
-        query (str): Search query string
+        query (str): Search query string (keywords, not boolean syntax)
         limit (int): Number of records per request (max 100)
         max_results (int): Total number of results to retrieve
 
@@ -247,6 +288,13 @@ def get_semanticscholar_config_new(config, tier=None):
     query_wrapper = s2_config.get("query_wrapper", "{query}")
     s2_query = query_wrapper.replace("{query}", query_string)
 
+    # Simplify boolean query to keywords — Semantic Scholar doesn't support boolean syntax
+    s2_query_simplified = simplify_boolean_query(s2_query)
+    
+    print(f"Query simplified for Semantic Scholar:")
+    print(f"  Original: {s2_query[:100]}{'...' if len(s2_query) > 100 else ''}")
+    print(f"  Simplified: {s2_query_simplified[:100]}{'...' if len(s2_query_simplified) > 100 else ''}")
+
     # Determine max_results based on tier
     max_results_config = s2_config.get("max_results")
 
@@ -268,7 +316,7 @@ def get_semanticscholar_config_new(config, tier=None):
         # Single value (backwards compatible)
         max_results = max_results_config or 1000
 
-    return [s2_query], max_results
+    return [s2_query_simplified], max_results
 
 
 # ---------------------------------------------------------------------------
