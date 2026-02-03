@@ -66,6 +66,7 @@ def ieee_search(query: str, max_results: int = 1000):
     IEEE API constraints:
     - max_records per call: 200
     - Pagination via start_record (1-based)
+    - Response field for total available: "total" (not "total_results")
 
     Args:
         query (str): IEEE query string
@@ -79,6 +80,11 @@ def ieee_search(query: str, max_results: int = 1000):
 
     results = []
     start_record = 1  # IEEE is 1-based
+
+    # Debug: confirm what query is actually being sent
+    print(f"  API URL:  {url}")
+    print(f"  Query:    {query}")
+    print(f"  Max:      {max_results}")
 
     while len(results) < max_results:
         params = {
@@ -99,14 +105,16 @@ def ieee_search(query: str, max_results: int = 1000):
             articles = data.get("articles", [])
 
             if not articles:
+                print(f"  No articles in response. Keys returned: {list(data.keys())}")
                 break
 
             results.extend(articles)
+            print(f"  Page {start_record}: {len(articles)} articles (running total: {len(results)})")
 
-            # Check total available from API response
-            total_results = data.get("total_results", 0)
-            if len(results) >= total_results:
-                print(f"  Retrieved all {total_results} available results")
+            # FIX: IEEE returns "total" not "total_results"
+            total_available = data.get("total", 0)
+            if len(results) >= total_available:
+                print(f"  Retrieved all {total_available} available results")
                 break
 
             # Advance start_record for next page
@@ -225,6 +233,11 @@ def get_ieee_config_new(config, tier=None):
     # Apply wrapper if one is defined in config, otherwise use raw query
     query_wrapper = ieee_config.get("query_wrapper", "{query}")
     ieee_query = query_wrapper.replace("{query}", query_string)
+
+    # Debug: show what the config produced
+    print(f"  Config query_string:  {query_string}")
+    print(f"  Config query_wrapper: {query_wrapper}")
+    print(f"  Resolved IEEE query:  {ieee_query}")
 
     # Determine max_results based on tier
     max_results_config = ieee_config.get("max_results")
@@ -369,6 +382,7 @@ if __name__ == "__main__":
 
         try:
             raw_results = ieee_search(query, max_results=max_results)
+            # FIX: count actual articles returned, not API "total" field
             print(f"  Retrieved {len(raw_results)} results")
 
             # Transform and add results
@@ -410,3 +424,4 @@ if __name__ == "__main__":
     print(f"Total records in dataset: {len(existing_results)}")
     print(f"Saved to: {args.output}")
     print(f"{'='*80}\n")
+    
