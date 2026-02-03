@@ -95,7 +95,9 @@ def ieee_search(query: str, max_results: int = 1000):
         }
 
         try:
-            r = requests.get(url, params=params, timeout=30)
+            r = requests.get(url, params=params, headers={
+                'User-Agent': 'Mozilla/5.0 (compatible; ELIS-SLR-Agent/1.0)'
+            }, timeout=30)
 
             if r.status_code != 200:
                 print(f"  Error {r.status_code}: {r.text[:200]}")
@@ -110,12 +112,6 @@ def ieee_search(query: str, max_results: int = 1000):
 
             results.extend(articles)
             print(f"  Page {start_record}: {len(articles)} articles (running total: {len(results)})")
-
-            # FIX: IEEE returns "total" not "total_results"
-            total_available = data.get("total", 0)
-            if len(results) >= total_available:
-                print(f"  Retrieved all {total_available} available results")
-                break
 
             # Advance start_record for next page
             start_record += len(articles)
