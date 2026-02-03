@@ -56,7 +56,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install requests pyyaml
+          pip install requests pyyaml pycurl certifi
 
       # ---------------------------------------------------------------------------
       # Map the database choice to the script filename.

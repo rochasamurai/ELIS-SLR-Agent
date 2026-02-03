@@ -1,6 +1,6 @@
 """
 ieee_harvest.py
-Harvests metadata from the IEEE Xplore API.
+Harvests metadata from the IEEE Xplore API using the official Python 3 SDK.
 
 CONFIGURATION MODES:
 1. NEW (Recommended): --search-config config/searches/electoral_integrity_search.yml
@@ -14,6 +14,10 @@ CONFIGURATION MODES:
 
 Environment Variables:
 - IEEE_EXPLORE_API_KEY: Your IEEE Xplore API key (required)
+
+Dependencies:
+- xploreapi/xploreapi.py  (IEEE official SDK — must be in repo)
+- pycurl, certifi          (SDK requirements; added to workflow pip install)
 
 Outputs:
 - JSON array in json_jsonl/ELIS_Appendix_A_Search_rows.json
@@ -32,13 +36,21 @@ Usage Examples:
   python scripts/ieee_harvest.py --max-results 500
 """
 
-import requests
 import json
 import os
+import sys
 import yaml
 import argparse
 import time
 from pathlib import Path
+
+# ---------------------------------------------------------------------------
+# SDK IMPORT  — works whether script is run from repo root or scripts/
+# ---------------------------------------------------------------------------
+# Add repo root to path so that xploreapi/ is importable regardless of cwd
+_repo_root = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(_repo_root))
+from xploreapi.xploreapi import XPLORE
 
 
 # ---------------------------------------------------------------------------
@@ -56,58 +68,60 @@ def get_credentials():
 
 
 # ---------------------------------------------------------------------------
-# SEARCH (with pagination loop)
+# SEARCH (with pagination loop using official SDK)
 # ---------------------------------------------------------------------------
 
 def ieee_search(query: str, max_results: int = 1000):
     """
-    Send a query to IEEE Xplore API and paginate up to max_results.
+    Send a query to IEEE Xplore via the official SDK and paginate up to max_results.
+
+    The SDK uses pycurl + urllib.parse.quote_plus internally, which is the
+    encoding that IEEE's API expects.  Using requests.get(params=…) encodes
+    differently and triggers 403 "Developer Inactive" on CI runners.
 
     IEEE API constraints:
     - max_records per call: 200
     - Pagination via start_record (1-based)
-    - Response field for total available: "total" (not "total_results")
+    - Response JSON: articles array; empty array = no more results
 
     Args:
-        query (str): IEEE query string
+        query (str): IEEE query string (boolean syntax)
         max_results (int): Total number of results to retrieve
 
     Returns:
-        list: List of article entries returned by IEEE
+        list: List of article dicts returned by IEEE
     """
     api_key = get_credentials()
-    url = "https://ieeexploreapi.ieee.org/api/v1/search/articles"
-
     results = []
     start_record = 1  # IEEE is 1-based
 
-    # Debug: confirm what query is actually being sent
-    print(f"  API URL:  {url}")
-    print(f"  Query:    {query}")
-    print(f"  Max:      {max_results}")
+    print(f"  SDK endpoint: {XPLORE.endPoint}")
+    print(f"  Query:        {query[:120]}{'...' if len(query) > 120 else ''}")
+    print(f"  Max:          {max_results}")
 
     while len(results) < max_results:
-        params = {
-            "apikey": api_key,
-            "querytext": query,
-            "max_records": min(200, max_results - len(results)),  # IEEE max per call is 200
-            "start_record": start_record,
-        }
+        page_size = min(200, max_results - len(results))
+
+        # Instantiate a fresh SDK object per page (it accumulates state)
+        xplore = XPLORE(api_key)
+        xplore.queryText(query)
+        xplore.maximumResults(page_size)
+        xplore.startingResult(start_record)
+        xplore.dataFormat("object")   # return parsed JSON dict, not raw string
 
         try:
-            r = requests.get(url, params=params, headers={
-                'User-Agent': 'Mozilla/5.0 (compatible; ELIS-SLR-Agent/1.0)'
-            }, timeout=30)
+            data = xplore.callAPI()
 
-            if r.status_code != 200:
-                print(f"  Error {r.status_code}: {r.text[:200]}")
+            # SDK returns parsed dict when dataFormat is "object"
+            if not isinstance(data, dict):
+                print(f"  Unexpected response type: {type(data)}")
+                print(f"  Raw (first 300 chars): {str(data)[:300]}")
                 break
 
-            data = r.json()
             articles = data.get("articles", [])
 
             if not articles:
-                print(f"  No articles in response. Keys returned: {list(data.keys())}")
+                print(f"  No articles in response. Keys: {list(data.keys())}")
                 break
 
             results.extend(articles)
@@ -116,11 +130,13 @@ def ieee_search(query: str, max_results: int = 1000):
             # Advance start_record for next page
             start_record += len(articles)
 
-            # Rate limiting — be polite to IEEE
+            # Rate limiting — 10 calls/sec allowed, but be polite
             time.sleep(0.5)
 
-        except requests.exceptions.RequestException as e:
-            print(f"  Request failed: {e}")
+        except Exception as e:
+            print(f"  SDK call failed: {e}")
+            import traceback
+            traceback.print_exc()
             break
 
     return results
@@ -229,11 +245,6 @@ def get_ieee_config_new(config, tier=None):
     # Apply wrapper if one is defined in config, otherwise use raw query
     query_wrapper = ieee_config.get("query_wrapper", "{query}")
     ieee_query = query_wrapper.replace("{query}", query_string)
-
-    # Debug: show what the config produced
-    print(f"  Config query_string:  {query_string}")
-    print(f"  Config query_wrapper: {query_wrapper}")
-    print(f"  Resolved IEEE query:  {ieee_query}")
 
     # Determine max_results based on tier
     max_results_config = ieee_config.get("max_results")
@@ -378,7 +389,6 @@ if __name__ == "__main__":
 
         try:
             raw_results = ieee_search(query, max_results=max_results)
-            # FIX: count actual articles returned, not API "total" field
             print(f"  Retrieved {len(raw_results)} results")
 
             # Transform and add results
@@ -420,4 +430,3 @@ if __name__ == "__main__":
     print(f"Total records in dataset: {len(existing_results)}")
     print(f"Saved to: {args.output}")
     print(f"{'='*80}\n")
-    
