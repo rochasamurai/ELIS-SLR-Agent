@@ -104,7 +104,7 @@ def ieee_search(query: str, max_results: int = 1000):
 
         # Instantiate a fresh SDK object per page (it accumulates state)
         xplore = XPLORE(api_key)
-        xplore.queryText(query)
+        xplore.booleanText(query)
         xplore.maximumResults(page_size)
         xplore.startingResult(start_record)
         xplore.dataFormat("object")   # return parsed JSON dict, not raw string
