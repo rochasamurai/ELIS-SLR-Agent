@@ -1,7 +1,16 @@
 """
 core_harvest.py
 Harvests metadata from the CORE API (v3).
-Reads queries from config/elis_search_queries.yml (protocol-aligned).
+
+CONFIGURATION MODES:
+1. NEW (Recommended): --search-config config/searches/electoral_integrity_search.yml
+   - Uses dedicated search configuration files
+   - Supports tier-based max_results (testing/pilot/benchmark/production/exhaustive)
+   - Project-specific settings
+
+2. LEGACY (Backwards Compatible): Reads from config/elis_search_queries.yml
+   - Maintains compatibility with existing workflows
+   - Uses global max_results_per_source setting
 
 Environment Variables:
 - CORE_API_KEY: Your CORE API key (required)
@@ -9,17 +18,32 @@ Environment Variables:
 Outputs:
 - JSON array in json_jsonl/ELIS_Appendix_A_Search_rows.json
 
-Usage:
-- Called by CI/CD workflow to retrieve search results for configured queries
+Usage Examples:
+  # New config format with tier
+  python scripts/core_harvest.py --search-config config/searches/electoral_integrity_search.yml --tier production
+
+  # New config format (uses default tier)
+  python scripts/core_harvest.py --search-config config/searches/tai_awasthi_2025_search.yml
+
+  # Legacy format (backwards compatible)
+  python scripts/core_harvest.py
+
+  # Override max_results regardless of config
+  python scripts/core_harvest.py --max-results 500
 """
 
 import requests
 import json
 import os
 import yaml
+import argparse
 import time
 from pathlib import Path
 
+
+# ---------------------------------------------------------------------------
+# CREDENTIALS
+# ---------------------------------------------------------------------------
 
 def get_credentials():
     """Get and validate CORE API credentials."""
@@ -32,16 +56,27 @@ def get_credentials():
 
 
 def get_headers():
-    """Build CORE API headers with credentials."""
+    """Build CORE API headers with Bearer token."""
     api_key = get_credentials()
     return {
         "Authorization": f"Bearer {api_key}",
     }
 
 
-def core_search(query: str, limit: int = 100, max_results: int = 100):
+# ---------------------------------------------------------------------------
+# SEARCH (pagination via offset)
+# ---------------------------------------------------------------------------
+
+def core_search(query: str, limit: int = 100, max_results: int = 1000):
     """
-    Send a query to CORE API and retrieve up to max_results.
+    Send a query to CORE API v3 and paginate up to max_results.
+
+    CORE API notes:
+    - Auth: Bearer token in Authorization header
+    - Results in data.results, total available in data.totalHits
+    - limit per call: max 100
+    - Pagination via offset
+    - CORE can be slow / intermittently unavailable — retry on 429 and 503
 
     Args:
         query (str): Search query string
@@ -65,8 +100,14 @@ def core_search(query: str, limit: int = 100, max_results: int = 100):
         try:
             r = requests.get(url, headers=get_headers(), params=params, timeout=30)
 
+            if r.status_code == 429 or r.status_code == 503:
+                # Rate limited or service unavailable — back off and retry
+                print(f"  ⚠️  HTTP {r.status_code}. Waiting 5s before retry...")
+                time.sleep(5)
+                continue
+
             if r.status_code != 200:
-                print(f"Error {r.status_code}: {r.text[:200]}")
+                print(f"  Error {r.status_code}: {r.text[:200]}")
                 break
 
             data = r.json()
@@ -81,23 +122,33 @@ def core_search(query: str, limit: int = 100, max_results: int = 100):
             # Check if we've reached the end
             total_hits = data.get("totalHits", 0)
             if offset >= total_hits:
+                print(f"  Retrieved all {total_hits} available results")
                 break
 
-            # Rate limiting - be polite
+            # Rate limiting — be polite
             time.sleep(1)
 
         except requests.exceptions.RequestException as e:
-            print(f"Request failed: {e}")
+            print(f"  Request failed: {e}")
             break
 
     return results
 
 
+# ---------------------------------------------------------------------------
+# TRANSFORM
+# ---------------------------------------------------------------------------
+
 def transform_core_entry(entry):
     """
-    Transform raw CORE entry to match the schema used by other sources.
+    Transform raw CORE v3 entry to match the schema used by other sources.
+
+    CORE-specific handling:
+    - authors is a list of dicts with 'name' key (can also be non-list — guard)
+    - year in yearPublished
+    - URL: downloadUrl preferred, links[0].url as fallback
     """
-    # Extract authors
+    # Extract authors — guard against non-list values
     authors_list = entry.get("authors", [])
     if isinstance(authors_list, list):
         authors = ", ".join(
@@ -113,6 +164,12 @@ def transform_core_entry(entry):
     # Extract year
     year = str(entry.get("yearPublished", ""))
 
+    # URL: downloadUrl preferred, links[0].url as fallback
+    url = entry.get("downloadUrl", "")
+    if not url:
+        links = entry.get("links", [{}])
+        url = links[0].get("url", "") if links else ""
+
     return {
         "source": "CORE",
         "title": entry.get("title", ""),
@@ -120,21 +177,32 @@ def transform_core_entry(entry):
         "year": year,
         "doi": entry.get("doi", ""),
         "abstract": entry.get("abstract", ""),
-        "url": entry.get("downloadUrl", "")
-        or entry.get("links", [{}])[0].get("url", ""),
+        "url": url,
         "core_id": entry.get("id", ""),
         "raw_metadata": entry,
     }
 
 
-def load_config(config_path: str = "config/elis_search_queries.yml"):
+# ---------------------------------------------------------------------------
+# CONFIG LOADING — LEGACY
+# ---------------------------------------------------------------------------
+
+def load_config(config_path: str):
     """Load search configuration from YAML file."""
     with open(config_path, "r", encoding="utf-8") as f:
         return yaml.safe_load(f)
 
 
-def get_core_queries(config):
-    """Extract enabled queries for CORE from config."""
+def get_core_queries_legacy(config):
+    """
+    Extract enabled queries for CORE from legacy config format.
+
+    Args:
+        config: Legacy config dict from config/elis_search_queries.yml
+
+    Returns:
+        list: List of CORE queries (quotes stripped)
+    """
     queries = []
 
     for topic in config.get("topics", []):
@@ -146,33 +214,174 @@ def get_core_queries(config):
             continue
 
         topic_queries = topic.get("queries", [])
-        # Remove quotes for CORE search
+        # Remove quotes — CORE search does not support them
         core_queries = [q.replace('"', "") for q in topic_queries]
         queries.extend(core_queries)
 
     return queries
 
 
+# ---------------------------------------------------------------------------
+# CONFIG LOADING — NEW (tier-based)
+# ---------------------------------------------------------------------------
+
+def get_core_config_new(config, tier=None):
+    """
+    Extract CORE configuration from new search config format.
+
+    Args:
+        config: New search config dict from config/searches/*.yml
+        tier: Optional tier override (testing/pilot/benchmark/production/exhaustive)
+
+    Returns:
+        tuple: (queries, max_results)
+    """
+    # Find CORE database configuration
+    databases = config.get("databases", [])
+    core_config = None
+
+    for db in databases:
+        if db.get("name") == "CORE" and db.get("enabled", False):
+            core_config = db
+            break
+
+    if not core_config:
+        print("⚠️  CORE not enabled in search configuration")
+        return [], 0
+
+    # Get query — strip quotes (not supported by CORE search)
+    query_string = config.get("query", {}).get("boolean_string", "")
+    if not query_string:
+        print("⚠️  No query found in search configuration")
+        return [], 0
+
+    # Apply wrapper if defined, otherwise use raw query (quotes stripped)
+    query_wrapper = core_config.get("query_wrapper", "{query}")
+    core_query = query_wrapper.replace("{query}", query_string).replace('"', "")
+
+    # Determine max_results based on tier
+    max_results_config = core_config.get("max_results")
+
+    if isinstance(max_results_config, dict):
+        # Tier-based system
+        if tier:
+            max_results = max_results_config.get(tier)
+            if max_results is None:
+                print(f"⚠️  Unknown tier '{tier}', available tiers: {list(max_results_config.keys())}")
+                tier = core_config.get("max_results_default", "production")
+                max_results = max_results_config.get(tier, 1000)
+                print(f"   Using default tier: {tier}")
+        else:
+            # Use default tier
+            tier = core_config.get("max_results_default", "production")
+            max_results = max_results_config.get(tier, 1000)
+            print(f"Using default tier: {tier} (max_results: {max_results})")
+    else:
+        # Single value (backwards compatible)
+        max_results = max_results_config or 1000
+
+    return [core_query], max_results
+
+
+# ---------------------------------------------------------------------------
+# CLI
+# ---------------------------------------------------------------------------
+
+def parse_args():
+    """Parse command-line arguments."""
+    parser = argparse.ArgumentParser(
+        description="Harvest metadata from CORE API v3",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Use new search config with production tier
+  python scripts/core_harvest.py --search-config config/searches/electoral_integrity_search.yml --tier production
+
+  # Use new search config with default tier
+  python scripts/core_harvest.py --search-config config/searches/tai_awasthi_2025_search.yml
+
+  # Use legacy config (backwards compatible)
+  python scripts/core_harvest.py
+
+  # Override max_results
+  python scripts/core_harvest.py --search-config config/searches/electoral_integrity_search.yml --max-results 500
+        """
+    )
+
+    parser.add_argument(
+        "--search-config",
+        type=str,
+        help="Path to search configuration file (e.g., config/searches/electoral_integrity_search.yml)"
+    )
+
+    parser.add_argument(
+        "--tier",
+        type=str,
+        choices=["testing", "pilot", "benchmark", "production", "exhaustive"],
+        help="Max results tier to use (testing/pilot/benchmark/production/exhaustive)"
+    )
+
+    parser.add_argument(
+        "--max-results",
+        type=int,
+        help="Override max_results regardless of config or tier"
+    )
+
+    parser.add_argument(
+        "--output",
+        type=str,
+        default="json_jsonl/ELIS_Appendix_A_Search_rows.json",
+        help="Output file path (default: json_jsonl/ELIS_Appendix_A_Search_rows.json)"
+    )
+
+    return parser.parse_args()
+
+
+# ---------------------------------------------------------------------------
+# MAIN
+# ---------------------------------------------------------------------------
+
 if __name__ == "__main__":
-    # Load configuration
-    print("Loading configuration from config/elis_search_queries.yml")
-    config = load_config()
+    # Parse command-line arguments
+    args = parse_args()
 
-    # Extract global settings
-    global_config = config.get("global", {})
-    max_results = global_config.get("max_results_per_source", 100)
+    # Determine configuration mode
+    if args.search_config:
+        # NEW CONFIG FORMAT
+        print(f"Loading search configuration from {args.search_config}")
+        config = load_config(args.search_config)
+        queries, max_results = get_core_config_new(config, tier=args.tier)
+        config_mode = "NEW"
+    else:
+        # LEGACY CONFIG FORMAT
+        print("Loading configuration from config/elis_search_queries.yml (legacy mode)")
+        config = load_config("config/elis_search_queries.yml")
+        queries = get_core_queries_legacy(config)
+        max_results = config.get("global", {}).get("max_results_per_source", 1000)
+        config_mode = "LEGACY"
+        print("⚠️  Using legacy config format. Consider using --search-config for new projects.")
 
-    # Get CORE queries
-    queries = get_core_queries(config)
+    # Apply max_results override if provided
+    if args.max_results:
+        print(f"Overriding max_results: {max_results} → {args.max_results}")
+        max_results = args.max_results
 
+    # Validate queries
     if not queries:
-        print("⚠️  No CORE queries found in config (check sources and enabled flags)")
+        print("⚠️  No CORE queries found in config")
+        print("   Check that CORE is enabled and queries are defined")
         exit(0)
 
-    print(f"Found {len(queries)} queries for CORE")
+    print(f"\n{'='*80}")
+    print(f"CORE HARVEST - {config_mode} CONFIG")
+    print(f"{'='*80}")
+    print(f"Queries: {len(queries)}")
+    print(f"Max results per query: {max_results}")
+    print(f"Output: {args.output}")
+    print(f"{'='*80}\n")
 
     # Define output path
-    output_path = Path("json_jsonl/ELIS_Appendix_A_Search_rows.json")
+    output_path = Path(args.output)
 
     # Load existing results if file exists
     existing_results = []
@@ -181,13 +390,15 @@ if __name__ == "__main__":
             existing_results = json.load(f)
         print(f"Loaded {len(existing_results)} existing results")
 
-    # Track existing DOIs to avoid duplicates
+    # Track existing DOIs and CORE IDs to avoid duplicates
     existing_dois = {r.get("doi") for r in existing_results if r.get("doi")}
+    existing_core_ids = {r.get("core_id") for r in existing_results if r.get("core_id")}
     new_count = 0
 
     # Execute each query
     for i, query in enumerate(queries, 1):
-        print(f"\n[{i}/{len(queries)}] Querying CORE: {query}")
+        print(f"\n[{i}/{len(queries)}] Querying CORE:")
+        print(f"  Query: {query[:100]}{'...' if len(query) > 100 else ''}")
 
         try:
             raw_results = core_search(query, max_results=max_results)
@@ -197,15 +408,27 @@ if __name__ == "__main__":
             for entry in raw_results:
                 transformed = transform_core_entry(entry)
                 doi = transformed.get("doi")
+                core_id = transformed.get("core_id")
 
-                if not doi or doi not in existing_dois:
+                # Add if unique (check both DOI and CORE ID)
+                is_duplicate = False
+                if doi and doi in existing_dois:
+                    is_duplicate = True
+                if core_id and core_id in existing_core_ids:
+                    is_duplicate = True
+
+                if not is_duplicate:
                     existing_results.append(transformed)
                     if doi:
                         existing_dois.add(doi)
+                    if core_id:
+                        existing_core_ids.add(core_id)
                     new_count += 1
 
         except Exception as e:
             print(f"  ❌ Error processing query: {e}")
+            import traceback
+            traceback.print_exc()
             continue
 
     # Save combined results
@@ -213,7 +436,10 @@ if __name__ == "__main__":
     with output_path.open("w", encoding="utf-8") as f:
         json.dump(existing_results, f, indent=2, ensure_ascii=False)
 
-    print("\n✅ CORE harvest complete")
-    print(f"✅ New results added: {new_count}")
-    print(f"✅ Total records in dataset: {len(existing_results)}")
-    print(f"✅ Saved to {output_path}")
+    print(f"\n{'='*80}")
+    print("✅ CORE harvest complete")
+    print(f"{'='*80}")
+    print(f"New results added: {new_count}")
+    print(f"Total records in dataset: {len(existing_results)}")
+    print(f"Saved to: {args.output}")
+    print(f"{'='*80}\n")
