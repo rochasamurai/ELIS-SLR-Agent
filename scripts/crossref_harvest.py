@@ -38,6 +38,7 @@ import os
 import yaml
 import argparse
 import time
+import traceback
 from pathlib import Path
 
 
@@ -66,6 +67,8 @@ def crossref_search(query: str, rows: int = 100, max_results: int = 1000):
     url = "https://api.crossref.org/works"
     results = []
     offset = 0
+    retry_count = 0
+    max_retries = 5
 
     # Get contact email for polite pool — optional, no fallback
     mailto = os.getenv("ELIS_CONTACT")
@@ -86,14 +89,22 @@ def crossref_search(query: str, rows: int = 100, max_results: int = 1000):
             r = requests.get(url, params=params, timeout=30)
 
             if r.status_code == 429:
-                # Rate limited — back off and retry
-                print("  ⚠️  Rate limited (429). Waiting 5s before retry...")
-                time.sleep(5)
+                retry_count += 1
+                if retry_count > max_retries:
+                    print(f"  ❌ Max retries ({max_retries}) exceeded due to rate limiting. Stopping.")
+                    break
+                # Rate limited — back off and retry with exponential backoff
+                wait_time = 5 * retry_count
+                print(f"  ⚠️  Rate limited (429). Waiting {wait_time}s before retry ({retry_count}/{max_retries})...")
+                time.sleep(wait_time)
                 continue
 
             if r.status_code != 200:
                 print(f"  Error {r.status_code}: {r.text[:200]}")
                 break
+
+            # Reset retry count after successful request
+            retry_count = 0
 
             data = r.json()
             message = data.get("message", {})
@@ -157,18 +168,18 @@ def transform_crossref_entry(entry):
             year = str(date_parts[0][0])
 
     # Extract abstract
-    abstract = entry.get("abstract", "")
+    abstract = entry.get("abstract", "") or ""
 
     return {
         "source": "CrossRef",
-        "title": title,
+        "title": title or "",
         "authors": authors,
         "year": year,
-        "doi": entry.get("DOI", ""),          # CrossRef uses uppercase DOI
+        "doi": entry.get("DOI", "") or "",          # CrossRef uses uppercase DOI
         "abstract": abstract,
-        "url": entry.get("URL", ""),
-        "crossref_type": entry.get("type", ""),
-        "publisher": entry.get("publisher", ""),
+        "url": entry.get("URL", "") or "",
+        "crossref_type": entry.get("type", "") or "",
+        "publisher": entry.get("publisher", "") or "",
         "raw_metadata": entry,
     }
 
@@ -239,15 +250,34 @@ def get_crossref_config_new(config, tier=None):
         print("⚠️  CrossRef not enabled in search configuration")
         return [], 0
 
-    # Get query — strip quotes (not supported by CrossRef query param)
-    query_string = config.get("query", {}).get("boolean_string", "")
-    if not query_string:
-        print("⚠️  No query found in search configuration")
-        return [], 0
+    # Get query — prefer simplified alternative if available (works better with CrossRef)
+    query_config = config.get("query", {})
+    alternative_queries = query_config.get("alternative_queries", [])
 
-    # Apply wrapper if defined, otherwise use raw query (quotes stripped)
-    query_wrapper = cr_config.get("query_wrapper", "{query}")
-    cr_query = query_wrapper.replace("{query}", query_string).replace('"', "")
+    # Look for simplified query in alternatives
+    simplified_query = None
+    for alt in alternative_queries:
+        if isinstance(alt, dict) and "simplified" in alt:
+            simplified_query = alt["simplified"].strip()
+            break
+
+    if simplified_query:
+        # Use the curated simplified query directly
+        cr_query = simplified_query
+        print(f"Using simplified alternative query for CrossRef:")
+        print(f"  Query: {cr_query}")
+    else:
+        # Fall back to using boolean_string with quotes stripped
+        query_string = query_config.get("boolean_string", "")
+        if not query_string:
+            print("⚠️  No query found in search configuration")
+            return [], 0
+
+        # Apply wrapper if defined, otherwise use raw query (quotes stripped)
+        query_wrapper = cr_config.get("query_wrapper", "{query}")
+        cr_query = query_wrapper.replace("{query}", query_string).replace('"', "")
+        print(f"Query for CrossRef (quotes stripped):")
+        print(f"  Query: {cr_query[:100]}{'...' if len(cr_query) > 100 else ''}")
 
     # Determine max_results based on tier
     max_results_config = cr_config.get("max_results")
@@ -353,14 +383,14 @@ if __name__ == "__main__":
 
     # Apply max_results override if provided
     if args.max_results:
-        print(f"Overriding max_results: {max_results} → {args.max_results}")
+        print(f"Overriding max_results: {max_results} -> {args.max_results}")
         max_results = args.max_results
 
     # Validate queries
     if not queries:
         print("⚠️  No CrossRef queries found in config")
         print("   Check that CrossRef is enabled and queries are defined")
-        exit(0)
+        exit(1)  # Exit with error code - missing queries indicates misconfiguration
 
     print(f"\n{'='*80}")
     print(f"CROSSREF HARVEST - {config_mode} CONFIG")
@@ -419,7 +449,6 @@ if __name__ == "__main__":
 
         except Exception as e:
             print(f"  ❌ Error processing query: {e}")
-            import traceback
             traceback.print_exc()
             continue
 

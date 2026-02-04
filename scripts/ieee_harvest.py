@@ -42,6 +42,7 @@ import sys
 import yaml
 import argparse
 import time
+import traceback
 from pathlib import Path
 
 # ---------------------------------------------------------------------------
@@ -76,7 +77,7 @@ def ieee_search(query: str, max_results: int = 1000):
     Send a query to IEEE Xplore via the official SDK and paginate up to max_results.
 
     The SDK uses pycurl + urllib.parse.quote_plus internally, which is the
-    encoding that IEEE's API expects.  Using requests.get(params=…) encodes
+    encoding that IEEE's API expects.  Using requests.get(params=...) encodes
     differently and triggers 403 "Developer Inactive" on CI runners.
 
     IEEE API constraints:
@@ -94,6 +95,8 @@ def ieee_search(query: str, max_results: int = 1000):
     api_key = get_credentials()
     results = []
     start_record = 1  # IEEE is 1-based
+    retry_count = 0
+    max_retries = 5
 
     print(f"  SDK endpoint: {XPLORE.endPoint}")
     print(f"  Query:        {query[:120]}{'...' if len(query) > 120 else ''}")
@@ -118,6 +121,22 @@ def ieee_search(query: str, max_results: int = 1000):
                 print(f"  Raw (first 300 chars): {str(data)[:300]}")
                 break
 
+            # Check for error response
+            if "error" in data:
+                error_msg = data.get("error", {})
+                print(f"  API error: {error_msg}")
+                retry_count += 1
+                if retry_count > max_retries:
+                    print(f"  Max retries ({max_retries}) exceeded. Stopping.")
+                    break
+                wait_time = 5 * retry_count
+                print(f"  Waiting {wait_time}s before retry ({retry_count}/{max_retries})...")
+                time.sleep(wait_time)
+                continue
+
+            # Reset retry count after successful request
+            retry_count = 0
+
             articles = data.get("articles", [])
 
             if not articles:
@@ -130,14 +149,20 @@ def ieee_search(query: str, max_results: int = 1000):
             # Advance start_record for next page
             start_record += len(articles)
 
-            # Rate limiting — 10 calls/sec allowed, but be polite
+            # Rate limiting - 10 calls/sec allowed, but be polite
             time.sleep(0.5)
 
         except Exception as e:
             print(f"  SDK call failed: {e}")
-            import traceback
             traceback.print_exc()
-            break
+            retry_count += 1
+            if retry_count > max_retries:
+                print(f"  Max retries ({max_retries}) exceeded. Stopping.")
+                break
+            wait_time = 5 * retry_count
+            print(f"  Waiting {wait_time}s before retry ({retry_count}/{max_retries})...")
+            time.sleep(wait_time)
+            continue
 
     return results
 
@@ -151,23 +176,24 @@ def transform_ieee_entry(entry):
     Transform raw IEEE Xplore entry to match the schema used by other sources.
     """
     # Extract authors
-    authors_list = entry.get("authors", {}).get("authors", [])
+    authors_data = entry.get("authors", {}) or {}
+    authors_list = authors_data.get("authors", []) or []
     authors = ", ".join(
-        [a.get("full_name", "") for a in authors_list if a.get("full_name")]
+        [a.get("full_name", "") or "" for a in authors_list if a.get("full_name")]
     )
 
     # Extract publication year
-    year = str(entry.get("publication_year", ""))
+    year = str(entry.get("publication_year", "") or "")
 
     return {
         "source": "IEEE Xplore",
-        "title": entry.get("title", ""),
+        "title": entry.get("title", "") or "",
         "authors": authors,
         "year": year,
-        "doi": entry.get("doi", ""),
-        "abstract": entry.get("abstract", ""),
-        "url": entry.get("pdf_url", "") or entry.get("html_url", ""),
-        "ieee_id": entry.get("article_number", ""),
+        "doi": entry.get("doi", "") or "",
+        "abstract": entry.get("abstract", "") or "",
+        "url": entry.get("pdf_url", "") or entry.get("html_url", "") or "",
+        "ieee_id": entry.get("article_number", "") or "",
         "raw_metadata": entry,
     }
 
@@ -350,14 +376,14 @@ if __name__ == "__main__":
 
     # Apply max_results override if provided
     if args.max_results:
-        print(f"Overriding max_results: {max_results} → {args.max_results}")
+        print(f"Overriding max_results: {max_results} -> {args.max_results}")
         max_results = args.max_results
 
     # Validate queries
     if not queries:
         print("⚠️  No IEEE Xplore queries found in config")
         print("   Check that IEEE Xplore is enabled and queries are defined")
-        exit(0)
+        exit(1)  # Exit with error code - missing queries indicates misconfiguration
 
     print(f"\n{'='*80}")
     print(f"IEEE XPLORE HARVEST - {config_mode} CONFIG")
@@ -414,7 +440,6 @@ if __name__ == "__main__":
 
         except Exception as e:
             print(f"  ❌ Error processing query: {e}")
-            import traceback
             traceback.print_exc()
             continue
 

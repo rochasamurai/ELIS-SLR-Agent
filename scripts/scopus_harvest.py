@@ -38,6 +38,8 @@ import json
 import os
 import yaml
 import argparse
+import time
+import traceback
 from pathlib import Path
 
 
@@ -79,28 +81,56 @@ def scopus_search(query: str, count: int = 25, max_results: int = 100):
     url = "https://api.elsevier.com/content/search/scopus"
     results = []
     start = 0
+    retry_count = 0
+    max_retries = 5
+
+    # Cache headers once before the loop (avoids repeated get_credentials calls)
+    headers = get_headers()
 
     while start < max_results:
         params = {"query": query, "count": count, "start": start}
-        r = requests.get(url, headers=get_headers(), params=params, timeout=30)
 
-        if r.status_code != 200:
-            print(f"Error {r.status_code}: {r.text}")
-            break
+        try:
+            r = requests.get(url, headers=headers, params=params, timeout=30)
 
-        data = r.json()
-        entries = data.get("search-results", {}).get("entry", [])
+            if r.status_code == 429:
+                retry_count += 1
+                if retry_count > max_retries:
+                    print(f"  Max retries ({max_retries}) exceeded due to rate limiting. Stopping.")
+                    break
+                # Rate limited - back off and retry with exponential backoff
+                wait_time = 5 * retry_count
+                print(f"  Rate limited (429). Waiting {wait_time}s before retry ({retry_count}/{max_retries})...")
+                time.sleep(wait_time)
+                continue
 
-        if not entries:
-            break
+            if r.status_code != 200:
+                print(f"  Error {r.status_code}: {r.text[:200]}")
+                break
 
-        results.extend(entries)
-        start += count
+            # Reset retry count after successful request
+            retry_count = 0
 
-        # Stop if we've retrieved all available results
-        total_results = int(data.get("search-results", {}).get("opensearch:totalResults", 0))
-        if len(results) >= total_results:
-            print(f"  Retrieved all {total_results} available results")
+            data = r.json()
+            entries = data.get("search-results", {}).get("entry", [])
+
+            if not entries:
+                break
+
+            results.extend(entries)
+            start += count
+
+            # Stop if we've retrieved all available results
+            total_results = int(data.get("search-results", {}).get("opensearch:totalResults", 0))
+            if len(results) >= total_results:
+                print(f"  Retrieved all {total_results} available results")
+                break
+
+            # Rate limiting - be polite
+            time.sleep(0.5)
+
+        except requests.exceptions.RequestException as e:
+            print(f"  Request failed: {e}")
             break
 
     return results
@@ -110,17 +140,21 @@ def transform_scopus_entry(entry):
     """
     Transform raw Scopus entry to match the schema used by other sources.
     """
+    # Extract scopus_id safely
+    dc_identifier = entry.get("dc:identifier", "") or ""
+    scopus_id = dc_identifier.replace("SCOPUS_ID:", "") if dc_identifier else ""
+
     return {
         "source": "Scopus",
-        "title": entry.get("dc:title", ""),
-        "authors": entry.get("dc:creator", ""),
+        "title": entry.get("dc:title", "") or "",
+        "authors": entry.get("dc:creator", "") or "",
         "year": (
             entry.get("prism:coverDate", "")[:4] if entry.get("prism:coverDate") else ""
         ),
-        "doi": entry.get("prism:doi", ""),
-        "abstract": entry.get("dc:description", ""),
-        "url": entry.get("prism:url", ""),
-        "scopus_id": entry.get("dc:identifier", "").replace("SCOPUS_ID:", ""),
+        "doi": entry.get("prism:doi", "") or "",
+        "abstract": entry.get("dc:description", "") or "",
+        "url": entry.get("prism:url", "") or "",
+        "scopus_id": scopus_id,
         "raw_metadata": entry,
     }
 
@@ -183,16 +217,19 @@ def get_scopus_config_new(config, tier=None):
     if not scopus_config:
         print("⚠️  Scopus not enabled in search configuration")
         return [], 0
-    
-    # Get query and wrap in TITLE-ABS-KEY()
-    query_string = config.get("query", {}).get("boolean_string", "")
+
+    # Get query - Scopus supports boolean syntax, so use boolean_string directly
+    query_config = config.get("query", {})
+    query_string = query_config.get("boolean_string", "")
     if not query_string:
         print("⚠️  No query found in search configuration")
         return [], 0
-    
-    # Apply Scopus-specific wrapper
+
+    # Apply Scopus-specific wrapper (TITLE-ABS-KEY for searching title, abstract, keywords)
     query_wrapper = scopus_config.get("query_wrapper", "TITLE-ABS-KEY({query})")
     scopus_query = query_wrapper.replace("{query}", query_string)
+    print(f"Query for Scopus:")
+    print(f"  Query: {scopus_query[:100]}{'...' if len(scopus_query) > 100 else ''}")
     
     # Determine max_results based on tier
     max_results_config = scopus_config.get("max_results")
@@ -290,14 +327,14 @@ if __name__ == "__main__":
     
     # Apply max_results override if provided
     if args.max_results:
-        print(f"Overriding max_results: {max_results} → {args.max_results}")
+        print(f"Overriding max_results: {max_results} -> {args.max_results}")
         max_results = args.max_results
-    
+
     # Validate queries
     if not queries:
         print("⚠️  No Scopus queries found in config")
         print("   Check that Scopus is enabled and queries are defined")
-        exit(0)
+        exit(1)  # Exit with error code - missing queries indicates misconfiguration
     
     print(f"\n{'='*80}")
     print(f"SCOPUS HARVEST - {config_mode} CONFIG")
@@ -317,8 +354,9 @@ if __name__ == "__main__":
             existing_results = json.load(f)
         print(f"Loaded {len(existing_results)} existing results")
 
-    # Track existing DOIs to avoid duplicates
+    # Track existing DOIs and Scopus IDs to avoid duplicates
     existing_dois = {r.get("doi") for r in existing_results if r.get("doi")}
+    existing_scopus_ids = {r.get("scopus_id") for r in existing_results if r.get("scopus_id")}
     new_count = 0
 
     # Execute each query
@@ -334,17 +372,25 @@ if __name__ == "__main__":
             for entry in raw_results:
                 transformed = transform_scopus_entry(entry)
                 doi = transformed.get("doi")
+                scopus_id = transformed.get("scopus_id")
 
-                # Add if no DOI or DOI not already in dataset
-                if not doi or doi not in existing_dois:
+                # Add if unique (check both DOI and Scopus ID)
+                is_duplicate = False
+                if doi and doi in existing_dois:
+                    is_duplicate = True
+                if scopus_id and scopus_id in existing_scopus_ids:
+                    is_duplicate = True
+
+                if not is_duplicate:
                     existing_results.append(transformed)
                     if doi:
                         existing_dois.add(doi)
+                    if scopus_id:
+                        existing_scopus_ids.add(scopus_id)
                     new_count += 1
 
         except Exception as e:
-            print(f"  ❌ Error processing query: {e}")
-            import traceback
+            print(f"  Error processing query: {e}")
             traceback.print_exc()
             continue
 

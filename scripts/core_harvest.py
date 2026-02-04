@@ -38,6 +38,7 @@ import os
 import yaml
 import argparse
 import time
+import traceback
 from pathlib import Path
 
 
@@ -89,6 +90,11 @@ def core_search(query: str, limit: int = 100, max_results: int = 1000):
     url = "https://api.core.ac.uk/v3/search/works"
     results = []
     offset = 0
+    retry_count = 0
+    max_retries = 5
+
+    # Cache headers once before the loop (avoids repeated get_credentials calls)
+    headers = get_headers()
 
     while len(results) < max_results:
         params = {
@@ -98,17 +104,25 @@ def core_search(query: str, limit: int = 100, max_results: int = 1000):
         }
 
         try:
-            r = requests.get(url, headers=get_headers(), params=params, timeout=30)
+            r = requests.get(url, headers=headers, params=params, timeout=30)
 
             if r.status_code == 429 or r.status_code == 503:
-                # Rate limited or service unavailable — back off and retry
-                print(f"  ⚠️  HTTP {r.status_code}. Waiting 5s before retry...")
-                time.sleep(5)
+                retry_count += 1
+                if retry_count > max_retries:
+                    print(f"  Max retries ({max_retries}) exceeded due to rate limiting. Stopping.")
+                    break
+                # Rate limited or service unavailable - back off and retry with exponential backoff
+                wait_time = 5 * retry_count
+                print(f"  HTTP {r.status_code}. Waiting {wait_time}s before retry ({retry_count}/{max_retries})...")
+                time.sleep(wait_time)
                 continue
 
             if r.status_code != 200:
                 print(f"  Error {r.status_code}: {r.text[:200]}")
                 break
+
+            # Reset retry count after successful request
+            retry_count = 0
 
             data = r.json()
             works = data.get("results", [])
@@ -172,13 +186,13 @@ def transform_core_entry(entry):
 
     return {
         "source": "CORE",
-        "title": entry.get("title", ""),
+        "title": entry.get("title", "") or "",
         "authors": authors,
         "year": year,
-        "doi": entry.get("doi", ""),
-        "abstract": entry.get("abstract", ""),
-        "url": url,
-        "core_id": entry.get("id", ""),
+        "doi": entry.get("doi", "") or "",
+        "abstract": entry.get("abstract", "") or "",
+        "url": url or "",
+        "core_id": entry.get("id", "") or "",
         "raw_metadata": entry,
     }
 
@@ -249,15 +263,34 @@ def get_core_config_new(config, tier=None):
         print("⚠️  CORE not enabled in search configuration")
         return [], 0
 
-    # Get query — strip quotes (not supported by CORE search)
-    query_string = config.get("query", {}).get("boolean_string", "")
-    if not query_string:
-        print("⚠️  No query found in search configuration")
-        return [], 0
+    # Get query - prefer simplified alternative if available (works better with CORE)
+    query_config = config.get("query", {})
+    alternative_queries = query_config.get("alternative_queries", [])
 
-    # Apply wrapper if defined, otherwise use raw query (quotes stripped)
-    query_wrapper = core_config.get("query_wrapper", "{query}")
-    core_query = query_wrapper.replace("{query}", query_string).replace('"', "")
+    # Look for simplified query in alternatives
+    simplified_query = None
+    for alt in alternative_queries:
+        if isinstance(alt, dict) and "simplified" in alt:
+            simplified_query = alt["simplified"].strip()
+            break
+
+    if simplified_query:
+        # Use the curated simplified query directly
+        core_query = simplified_query
+        print(f"Using simplified alternative query for CORE:")
+        print(f"  Query: {core_query}")
+    else:
+        # Fall back to using boolean_string with quotes stripped
+        query_string = query_config.get("boolean_string", "")
+        if not query_string:
+            print("⚠️  No query found in search configuration")
+            return [], 0
+
+        # Apply wrapper if defined, otherwise use raw query (quotes stripped)
+        query_wrapper = core_config.get("query_wrapper", "{query}")
+        core_query = query_wrapper.replace("{query}", query_string).replace('"', "")
+        print(f"Query for CORE (quotes stripped):")
+        print(f"  Query: {core_query[:100]}{'...' if len(core_query) > 100 else ''}")
 
     # Determine max_results based on tier
     max_results_config = core_config.get("max_results")
@@ -363,14 +396,14 @@ if __name__ == "__main__":
 
     # Apply max_results override if provided
     if args.max_results:
-        print(f"Overriding max_results: {max_results} → {args.max_results}")
+        print(f"Overriding max_results: {max_results} -> {args.max_results}")
         max_results = args.max_results
 
     # Validate queries
     if not queries:
         print("⚠️  No CORE queries found in config")
         print("   Check that CORE is enabled and queries are defined")
-        exit(0)
+        exit(1)  # Exit with error code - missing queries indicates misconfiguration
 
     print(f"\n{'='*80}")
     print(f"CORE HARVEST - {config_mode} CONFIG")
@@ -426,8 +459,7 @@ if __name__ == "__main__":
                     new_count += 1
 
         except Exception as e:
-            print(f"  ❌ Error processing query: {e}")
-            import traceback
+            print(f"  Error processing query: {e}")
             traceback.print_exc()
             continue
 

@@ -37,6 +37,8 @@ import json
 import os
 import yaml
 import argparse
+import time
+import traceback
 from pathlib import Path
 
 
@@ -59,12 +61,12 @@ def get_headers():
 def wos_search(query: str, limit: int = 50, max_results: int = 1000):
     """
     Send a query to Web of Science Starter API and retrieve up to max_results.
-    
+
     Args:
         query (str): WoS query string (should include TS= wrapper for topic search)
         limit (int): Number of records per request (max 50 for Starter API)
         max_results (int): Total number of results to retrieve
-        
+
     Returns:
         list: List of metadata entries returned by Web of Science
     """
@@ -72,6 +74,11 @@ def wos_search(query: str, limit: int = 50, max_results: int = 1000):
     url = "https://api.clarivate.com/apis/wos-starter/v1/documents"
     results = []
     page = 1
+    retry_count = 0
+    max_retries = 5
+
+    # Cache headers once before the loop (avoids repeated get_credentials calls)
+    headers = get_headers()
 
     while len(results) < max_results:
         params = {
@@ -80,32 +87,54 @@ def wos_search(query: str, limit: int = 50, max_results: int = 1000):
             "limit": min(limit, max_results - len(results)),
             "page": page,
         }
-        
-        r = requests.get(url, headers=get_headers(), params=params, timeout=30)
 
-        if r.status_code != 200:
-            print(f"Error {r.status_code}: {r.text}")
+        try:
+            r = requests.get(url, headers=headers, params=params, timeout=30)
+
+            if r.status_code == 429:
+                retry_count += 1
+                if retry_count > max_retries:
+                    print(f"  Max retries ({max_retries}) exceeded due to rate limiting. Stopping.")
+                    break
+                # Rate limited - back off and retry with exponential backoff
+                wait_time = 5 * retry_count
+                print(f"  Rate limited (429). Waiting {wait_time}s before retry ({retry_count}/{max_retries})...")
+                time.sleep(wait_time)
+                continue
+
+            if r.status_code != 200:
+                print(f"  Error {r.status_code}: {r.text[:200]}")
+                break
+
+            # Reset retry count after successful request
+            retry_count = 0
+
+            data = r.json()
+
+            # Starter API returns hits in different structure
+            hits = data.get("hits", [])
+
+            if not hits:
+                break
+
+            results.extend(hits)
+
+            # Check if there are more results
+            metadata = data.get("metadata", {})
+            total = metadata.get("total", 0)
+
+            if len(results) >= total:
+                print(f"  Retrieved all {total} available results")
+                break
+
+            page += 1
+
+            # Rate limiting - be polite
+            time.sleep(0.5)
+
+        except requests.exceptions.RequestException as e:
+            print(f"  Request failed: {e}")
             break
-
-        data = r.json()
-        
-        # Starter API returns hits in different structure
-        hits = data.get("hits", [])
-
-        if not hits:
-            break
-
-        results.extend(hits)
-        
-        # Check if there are more results
-        metadata = data.get("metadata", {})
-        total = metadata.get("total", 0)
-        
-        if len(results) >= total:
-            print(f"  Retrieved all {total} available results")
-            break
-        
-        page += 1
 
     return results
 
@@ -115,31 +144,31 @@ def transform_wos_entry(entry):
     Transform raw WoS Starter API entry to match the schema used by other sources.
     """
     # Extract title (directly available)
-    title = entry.get("title", "")
-    
+    title = entry.get("title", "") or ""
+
     # Extract authors from names.authors structure
-    names = entry.get("names", {})
+    names = entry.get("names", {}) or {}
     authors_data = names.get("authors", [])
     if isinstance(authors_data, list):
-        authors = ", ".join([a.get("displayName", "") or a.get("wosStandard", "") for a in authors_data])
+        authors = ", ".join([a.get("displayName", "") or a.get("wosStandard", "") or "" for a in authors_data])
     else:
         authors = ""
-    
+
     # Extract year from source.publishYear
-    source_info = entry.get("source", {})
-    year = str(source_info.get("publishYear", ""))
-    
+    source_info = entry.get("source", {}) or {}
+    year = str(source_info.get("publishYear", "") or "")
+
     # Extract identifiers
-    identifiers = entry.get("identifiers", {})
-    doi = identifiers.get("doi", "")
-    uid = entry.get("uid", "")
-    
+    identifiers = entry.get("identifiers", {}) or {}
+    doi = identifiers.get("doi", "") or ""
+    uid = entry.get("uid", "") or ""
+
     # Abstract not available in Starter API basic response
     abstract = ""
-    
+
     # Extract source title
-    source_title = source_info.get("sourceTitle", "")
-    
+    source_title = source_info.get("sourceTitle", "") or ""
+
     return {
         "source": "Web of Science",
         "title": title,
@@ -319,14 +348,14 @@ if __name__ == "__main__":
     
     # Apply max_results override if provided
     if args.max_results:
-        print(f"Overriding max_results: {max_results} → {args.max_results}")
+        print(f"Overriding max_results: {max_results} -> {args.max_results}")
         max_results = args.max_results
-    
+
     # Validate queries
     if not queries:
         print("⚠️  No Web of Science queries found in config")
         print("   Check that Web of Science is enabled and queries are defined")
-        exit(0)
+        exit(1)  # Exit with error code - missing queries indicates misconfiguration
     
     print(f"\n{'='*80}")
     print(f"WEB OF SCIENCE HARVEST - {config_mode} CONFIG")
@@ -383,7 +412,6 @@ if __name__ == "__main__":
 
         except Exception as e:
             print(f"  ❌ Error processing query: {e}")
-            import traceback
             traceback.print_exc()
             continue
 

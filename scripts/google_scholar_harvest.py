@@ -45,6 +45,7 @@ import yaml
 import argparse
 import time
 import random
+import traceback
 from pathlib import Path
 from datetime import datetime
 from apify_client import ApifyClient
@@ -227,23 +228,27 @@ def transform_google_scholar_entry(entry):
     Transform EasyAPI Google Scholar result to standard format.
 
     EasyAPI-specific field mapping:
-    - snippet → abstract (EasyAPI uses 'snippet' not 'abstract')
-    - link → url
-    - pdf_link → pdf_url
-    - result_id → google_scholar_id
-    - DOI: not provided by EasyAPI — set to None
+    - snippet -> abstract (EasyAPI uses 'snippet' not 'abstract')
+    - link -> url
+    - pdf_link -> pdf_url
+    - result_id -> google_scholar_id
+    - DOI: not provided by EasyAPI - set to None
     """
+    # Ensure citation_count is always an integer (API may return None)
+    citation_count = entry.get("citations")
+    citation_count = citation_count if citation_count is not None else 0
+
     return {
         "source": "Google Scholar",
-        "title": entry.get("title", ""),
-        "authors": entry.get("authors", ""),
-        "year": str(entry.get("year", "")),
+        "title": entry.get("title", "") or "",
+        "authors": entry.get("authors", "") or "",
+        "year": str(entry.get("year", "") or ""),
         "doi": None,  # EasyAPI does not provide DOI
-        "abstract": entry.get("snippet", ""),  # EasyAPI uses 'snippet'
-        "url": entry.get("link", ""),
-        "pdf_url": entry.get("pdf_link"),
-        "citation_count": entry.get("citations", 0),
-        "google_scholar_id": entry.get("result_id", ""),
+        "abstract": entry.get("snippet", "") or "",  # EasyAPI uses 'snippet'
+        "url": entry.get("link", "") or "",
+        "pdf_url": entry.get("pdf_link") or "",
+        "citation_count": citation_count,
+        "google_scholar_id": entry.get("result_id", "") or "",
         "raw_metadata": entry,
     }
 
@@ -450,14 +455,14 @@ if __name__ == "__main__":
 
     # Apply max_results override if provided
     if args.max_results:
-        print(f"Overriding max_results: {max_results} → {args.max_results}")
+        print(f"Overriding max_results: {max_results} -> {args.max_results}")
         max_results = args.max_results
 
     # Validate queries
     if not queries:
         print("\n⚠️  No Google Scholar queries found in config")
         print("   Check that Google Scholar is enabled and queries are defined")
-        exit(0)
+        exit(1)  # Exit with error code - missing queries indicates misconfiguration
 
     print(f"\n{'=' * 80}")
     print(f"GOOGLE SCHOLAR HARVEST - {config_mode} CONFIG")
@@ -525,7 +530,6 @@ if __name__ == "__main__":
 
         except Exception as e:
             print(f"\n❌ Fatal error processing query: {e}")
-            import traceback
             traceback.print_exc()
             continue
 
