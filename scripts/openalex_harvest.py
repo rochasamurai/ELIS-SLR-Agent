@@ -146,18 +146,22 @@ def transform_openalex_entry(entry):
     - DOI arrives as full URL (https://doi.org/...) — strip prefix
     - Abstract stored as inverted index — reconstruct word order
     """
-    # Extract authors
+    # Extract authors (as array for schema compliance)
     authorships = entry.get("authorships", [])
-    authors = ", ".join(
-        [
-            a.get("author", {}).get("display_name", "")
-            for a in authorships
-            if a.get("author", {}).get("display_name")
-        ]
-    )
+    authors = [
+        a.get("author", {}).get("display_name", "")
+        for a in authorships
+        if a.get("author", {}).get("display_name")
+    ]
 
-    # Extract year
-    year = str(entry.get("publication_year", ""))
+    # Extract year (as integer for schema compliance)
+    year_raw = entry.get("publication_year")
+    year = None
+    if year_raw:
+        try:
+            year = int(year_raw)
+        except (ValueError, TypeError):
+            year = None
 
     # Extract DOI — strip URL prefix if present
     doi = entry.get("doi", "") or ""

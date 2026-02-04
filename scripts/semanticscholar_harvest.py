@@ -204,12 +204,18 @@ def transform_semanticscholar_entry(entry):
     """
     Transform raw Semantic Scholar entry to match the schema used by other sources.
     """
-    # Extract authors
+    # Extract authors (as array for schema compliance)
     authors_list = entry.get("authors", [])
-    authors = ", ".join([a.get("name", "") for a in authors_list if a.get("name")])
+    authors = [a.get("name", "") for a in authors_list if a.get("name")]
 
-    # Extract year
-    year = str(entry.get("year", ""))
+    # Extract year (as integer for schema compliance)
+    year_raw = entry.get("year")
+    year = None
+    if year_raw:
+        try:
+            year = int(year_raw)
+        except (ValueError, TypeError):
+            year = None
 
     # Get DOI from externalIds (preferred) or top level
     external_ids = entry.get("externalIds", {}) or {}

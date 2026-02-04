@@ -175,15 +175,19 @@ def transform_ieee_entry(entry):
     """
     Transform raw IEEE Xplore entry to match the schema used by other sources.
     """
-    # Extract authors
+    # Extract authors (as array for schema compliance)
     authors_data = entry.get("authors", {}) or {}
     authors_list = authors_data.get("authors", []) or []
-    authors = ", ".join(
-        [a.get("full_name", "") or "" for a in authors_list if a.get("full_name")]
-    )
+    authors = [a.get("full_name", "") for a in authors_list if a.get("full_name")]
 
-    # Extract publication year
-    year = str(entry.get("publication_year", "") or "")
+    # Extract publication year (as integer for schema compliance)
+    year_raw = entry.get("publication_year")
+    year = None
+    if year_raw:
+        try:
+            year = int(year_raw)
+        except (ValueError, TypeError):
+            year = None
 
     return {
         "source": "IEEE Xplore",

@@ -144,13 +144,25 @@ def transform_scopus_entry(entry):
     dc_identifier = entry.get("dc:identifier", "") or ""
     scopus_id = dc_identifier.replace("SCOPUS_ID:", "") if dc_identifier else ""
 
+    # Authors: Scopus search API returns dc:creator as string (first author only)
+    # Convert to array for schema compliance
+    creator = entry.get("dc:creator", "") or ""
+    authors = [creator] if creator else []
+
+    # Year: Extract from prism:coverDate (e.g., "2026-01-01") and convert to integer
+    year = None
+    cover_date = entry.get("prism:coverDate", "")
+    if cover_date and len(cover_date) >= 4:
+        try:
+            year = int(cover_date[:4])
+        except (ValueError, TypeError):
+            year = None
+
     return {
         "source": "Scopus",
         "title": entry.get("dc:title", "") or "",
-        "authors": entry.get("dc:creator", "") or "",
-        "year": (
-            entry.get("prism:coverDate", "")[:4] if entry.get("prism:coverDate") else ""
-        ),
+        "authors": authors,
+        "year": year,
         "doi": entry.get("prism:doi", "") or "",
         "abstract": entry.get("dc:description", "") or "",
         "url": entry.get("prism:url", "") or "",

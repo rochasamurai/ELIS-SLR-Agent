@@ -162,21 +162,25 @@ def transform_core_entry(entry):
     - year in yearPublished
     - URL: downloadUrl preferred, links[0].url as fallback
     """
-    # Extract authors — guard against non-list values
+    # Extract authors (as array for schema compliance) — guard against non-list values
     authors_list = entry.get("authors", [])
     if isinstance(authors_list, list):
-        authors = ", ".join(
-            [
-                a.get("name", "")
-                for a in authors_list
-                if isinstance(a, dict) and a.get("name")
-            ]
-        )
+        authors = [
+            a.get("name", "")
+            for a in authors_list
+            if isinstance(a, dict) and a.get("name")
+        ]
     else:
-        authors = ""
+        authors = []
 
-    # Extract year
-    year = str(entry.get("yearPublished", ""))
+    # Extract year (as integer for schema compliance)
+    year_raw = entry.get("yearPublished")
+    year = None
+    if year_raw:
+        try:
+            year = int(year_raw)
+        except (ValueError, TypeError):
+            year = None
 
     # URL: downloadUrl preferred, links[0].url as fallback
     url = entry.get("downloadUrl", "")

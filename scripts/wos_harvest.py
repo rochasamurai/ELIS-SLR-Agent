@@ -146,17 +146,24 @@ def transform_wos_entry(entry):
     # Extract title (directly available)
     title = entry.get("title", "") or ""
 
-    # Extract authors from names.authors structure
+    # Extract authors from names.authors structure (as array for schema compliance)
     names = entry.get("names", {}) or {}
     authors_data = names.get("authors", [])
     if isinstance(authors_data, list):
-        authors = ", ".join([a.get("displayName", "") or a.get("wosStandard", "") or "" for a in authors_data])
+        authors = [a.get("displayName", "") or a.get("wosStandard", "") or "" for a in authors_data]
+        authors = [a for a in authors if a]  # Remove empty strings
     else:
-        authors = ""
+        authors = []
 
-    # Extract year from source.publishYear
+    # Extract year from source.publishYear (as integer for schema compliance)
     source_info = entry.get("source", {}) or {}
-    year = str(source_info.get("publishYear", "") or "")
+    year_raw = source_info.get("publishYear")
+    year = None
+    if year_raw:
+        try:
+            year = int(year_raw)
+        except (ValueError, TypeError):
+            year = None
 
     # Extract identifiers
     identifiers = entry.get("identifiers", {}) or {}

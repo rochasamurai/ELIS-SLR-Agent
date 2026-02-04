@@ -149,23 +149,24 @@ def transform_crossref_entry(entry):
     title_list = entry.get("title", [])
     title = title_list[0] if title_list else ""
 
-    # Extract authors (given + family name)
+    # Extract authors (as array for schema compliance)
     authors_list = entry.get("author", [])
-    authors = ", ".join(
-        [
-            f"{a.get('given', '')} {a.get('family', '')}".strip()
-            for a in authors_list
-            if a.get("family")
-        ]
-    )
+    authors = [
+        f"{a.get('given', '')} {a.get('family', '')}".strip()
+        for a in authors_list
+        if a.get("family")
+    ]
 
-    # Extract year from published-print (preferred) or published-online
-    year = ""
+    # Extract year from published-print (preferred) or published-online (as integer)
+    year = None
     published = entry.get("published-print") or entry.get("published-online")
     if published:
         date_parts = published.get("date-parts", [[]])
         if date_parts and date_parts[0]:
-            year = str(date_parts[0][0])
+            try:
+                year = int(date_parts[0][0])
+            except (ValueError, TypeError):
+                year = None
 
     # Extract abstract
     abstract = entry.get("abstract", "") or ""

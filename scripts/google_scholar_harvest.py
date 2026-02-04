@@ -238,11 +238,25 @@ def transform_google_scholar_entry(entry):
     citation_count = entry.get("citations")
     citation_count = citation_count if citation_count is not None else 0
 
+    # Extract authors (as array for schema compliance)
+    # EasyAPI returns authors as comma-separated string
+    authors_str = entry.get("authors", "") or ""
+    authors = [a.strip() for a in authors_str.split(",") if a.strip()] if authors_str else []
+
+    # Extract year (as integer for schema compliance)
+    year_raw = entry.get("year")
+    year = None
+    if year_raw:
+        try:
+            year = int(year_raw)
+        except (ValueError, TypeError):
+            year = None
+
     return {
         "source": "Google Scholar",
         "title": entry.get("title", "") or "",
-        "authors": entry.get("authors", "") or "",
-        "year": str(entry.get("year", "") or ""),
+        "authors": authors,
+        "year": year,
         "doi": None,  # EasyAPI does not provide DOI
         "abstract": entry.get("snippet", "") or "",  # EasyAPI uses 'snippet'
         "url": entry.get("link", "") or "",
