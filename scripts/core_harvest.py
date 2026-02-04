@@ -264,7 +264,7 @@ def get_core_config_new(config, tier=None):
             break
 
     if not core_config:
-        print("⚠️  CORE not enabled in search configuration")
+        print("[WARNING] CORE not enabled in search configuration")
         return [], 0
 
     # Get query - prefer simplified alternative if available (works better with CORE)
@@ -287,7 +287,7 @@ def get_core_config_new(config, tier=None):
         # Fall back to using boolean_string with quotes stripped
         query_string = query_config.get("boolean_string", "")
         if not query_string:
-            print("⚠️  No query found in search configuration")
+            print("[WARNING] No query found in search configuration")
             return [], 0
 
         # Apply wrapper if defined, otherwise use raw query (quotes stripped)
@@ -304,7 +304,7 @@ def get_core_config_new(config, tier=None):
         if tier:
             max_results = max_results_config.get(tier)
             if max_results is None:
-                print(f"⚠️  Unknown tier '{tier}', available tiers: {list(max_results_config.keys())}")
+                print(f"[WARNING] Unknown tier '{tier}', available tiers: {list(max_results_config.keys())}")
                 tier = core_config.get("max_results_default", "production")
                 max_results = max_results_config.get(tier, 1000)
                 print(f"   Using default tier: {tier}")
@@ -396,7 +396,7 @@ if __name__ == "__main__":
         queries = get_core_queries_legacy(config)
         max_results = config.get("global", {}).get("max_results_per_source", 1000)
         config_mode = "LEGACY"
-        print("⚠️  Using legacy config format. Consider using --search-config for new projects.")
+        print("[WARNING] Using legacy config format. Consider using --search-config for new projects.")
 
     # Apply max_results override if provided
     if args.max_results:
@@ -405,7 +405,7 @@ if __name__ == "__main__":
 
     # Validate queries
     if not queries:
-        print("⚠️  No CORE queries found in config")
+        print("[WARNING] No CORE queries found in config")
         print("   Check that CORE is enabled and queries are defined")
         exit(1)  # Exit with error code - missing queries indicates misconfiguration
 
@@ -473,7 +473,7 @@ if __name__ == "__main__":
         json.dump(existing_results, f, indent=2, ensure_ascii=False)
 
     print(f"\n{'='*80}")
-    print("✅ CORE harvest complete")
+    print("[OK] CORE harvest complete")
     print(f"{'='*80}")
     print(f"New results added: {new_count}")
     print(f"Total records in dataset: {len(existing_results)}")

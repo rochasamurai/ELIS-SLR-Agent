@@ -227,14 +227,14 @@ def get_scopus_config_new(config, tier=None):
             break
     
     if not scopus_config:
-        print("⚠️  Scopus not enabled in search configuration")
+        print("[WARNING] Scopus not enabled in search configuration")
         return [], 0
 
     # Get query - Scopus supports boolean syntax, so use boolean_string directly
     query_config = config.get("query", {})
     query_string = query_config.get("boolean_string", "")
     if not query_string:
-        print("⚠️  No query found in search configuration")
+        print("[WARNING] No query found in search configuration")
         return [], 0
 
     # Apply Scopus-specific wrapper (TITLE-ABS-KEY for searching title, abstract, keywords)
@@ -251,7 +251,7 @@ def get_scopus_config_new(config, tier=None):
         if tier:
             max_results = max_results_config.get(tier)
             if max_results is None:
-                print(f"⚠️  Unknown tier '{tier}', available tiers: {list(max_results_config.keys())}")
+                print(f"[WARNING] Unknown tier '{tier}', available tiers: {list(max_results_config.keys())}")
                 tier = scopus_config.get("max_results_default", "production")
                 max_results = max_results_config.get(tier, 1000)
                 print(f"   Using default tier: {tier}")
@@ -335,7 +335,7 @@ if __name__ == "__main__":
         queries = get_scopus_queries_legacy(config)
         max_results = config.get("global", {}).get("max_results_per_source", 100)
         config_mode = "LEGACY"
-        print(f"⚠️  Using legacy config format. Consider using --search-config for new projects.")
+        print(f"[WARNING] Using legacy config format. Consider using --search-config for new projects.")
     
     # Apply max_results override if provided
     if args.max_results:
@@ -344,7 +344,7 @@ if __name__ == "__main__":
 
     # Validate queries
     if not queries:
-        print("⚠️  No Scopus queries found in config")
+        print("[WARNING] No Scopus queries found in config")
         print("   Check that Scopus is enabled and queries are defined")
         exit(1)  # Exit with error code - missing queries indicates misconfiguration
     
@@ -412,7 +412,7 @@ if __name__ == "__main__":
         json.dump(existing_results, f, indent=2, ensure_ascii=False)
 
     print(f"\n{'='*80}")
-    print("✅ Scopus harvest complete")
+    print("[OK] Scopus harvest complete")
     print(f"{'='*80}")
     print(f"New results added: {new_count}")
     print(f"Total records in dataset: {len(existing_results)}")

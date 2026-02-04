@@ -263,13 +263,13 @@ def get_ieee_config_new(config, tier=None):
             break
 
     if not ieee_config:
-        print("⚠️  IEEE Xplore not enabled in search configuration")
+        print("[WARNING] IEEE Xplore not enabled in search configuration")
         return [], 0
 
     # Get query — IEEE uses generic syntax, no wrapper required
     query_string = config.get("query", {}).get("boolean_string", "")
     if not query_string:
-        print("⚠️  No query found in search configuration")
+        print("[WARNING] No query found in search configuration")
         return [], 0
 
     # Apply wrapper if one is defined in config, otherwise use raw query
@@ -284,7 +284,7 @@ def get_ieee_config_new(config, tier=None):
         if tier:
             max_results = max_results_config.get(tier)
             if max_results is None:
-                print(f"⚠️  Unknown tier '{tier}', available tiers: {list(max_results_config.keys())}")
+                print(f"[WARNING] Unknown tier '{tier}', available tiers: {list(max_results_config.keys())}")
                 tier = ieee_config.get("max_results_default", "production")
                 max_results = max_results_config.get(tier, 1000)
                 print(f"   Using default tier: {tier}")
@@ -376,7 +376,7 @@ if __name__ == "__main__":
         queries = get_ieee_queries_legacy(config)
         max_results = config.get("global", {}).get("max_results_per_source", 1000)
         config_mode = "LEGACY"
-        print("⚠️  Using legacy config format. Consider using --search-config for new projects.")
+        print("[WARNING] Using legacy config format. Consider using --search-config for new projects.")
 
     # Apply max_results override if provided
     if args.max_results:
@@ -385,7 +385,7 @@ if __name__ == "__main__":
 
     # Validate queries
     if not queries:
-        print("⚠️  No IEEE Xplore queries found in config")
+        print("[WARNING] No IEEE Xplore queries found in config")
         print("   Check that IEEE Xplore is enabled and queries are defined")
         exit(1)  # Exit with error code - missing queries indicates misconfiguration
 
@@ -443,7 +443,7 @@ if __name__ == "__main__":
                     new_count += 1
 
         except Exception as e:
-            print(f"  ❌ Error processing query: {e}")
+            print(f"  [ERROR] Error processing query: {e}")
             traceback.print_exc()
             continue
 
@@ -453,7 +453,7 @@ if __name__ == "__main__":
         json.dump(existing_results, f, indent=2, ensure_ascii=False)
 
     print(f"\n{'='*80}")
-    print("✅ IEEE Xplore harvest complete")
+    print("[OK] IEEE Xplore harvest complete")
     print(f"{'='*80}")
     print(f"New results added: {new_count}")
     print(f"Total records in dataset: {len(existing_results)}")

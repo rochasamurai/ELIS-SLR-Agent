@@ -73,7 +73,7 @@ def crossref_search(query: str, rows: int = 100, max_results: int = 1000):
     # Get contact email for polite pool — optional, no fallback
     mailto = os.getenv("ELIS_CONTACT")
     if not mailto:
-        print("⚠️  ELIS_CONTACT not set. Polite pool recommended for better rate limits.")
+        print("[WARNING] ELIS_CONTACT not set. Polite pool recommended for better rate limits.")
 
     while len(results) < max_results:
         params = {
@@ -91,11 +91,11 @@ def crossref_search(query: str, rows: int = 100, max_results: int = 1000):
             if r.status_code == 429:
                 retry_count += 1
                 if retry_count > max_retries:
-                    print(f"  ❌ Max retries ({max_retries}) exceeded due to rate limiting. Stopping.")
+                    print(f"  [ERROR] Max retries ({max_retries}) exceeded due to rate limiting. Stopping.")
                     break
                 # Rate limited — back off and retry with exponential backoff
                 wait_time = 5 * retry_count
-                print(f"  ⚠️  Rate limited (429). Waiting {wait_time}s before retry ({retry_count}/{max_retries})...")
+                print(f"  [WARNING] Rate limited (429). Waiting {wait_time}s before retry ({retry_count}/{max_retries})...")
                 time.sleep(wait_time)
                 continue
 
@@ -248,7 +248,7 @@ def get_crossref_config_new(config, tier=None):
             break
 
     if not cr_config:
-        print("⚠️  CrossRef not enabled in search configuration")
+        print("[WARNING] CrossRef not enabled in search configuration")
         return [], 0
 
     # Get query — prefer simplified alternative if available (works better with CrossRef)
@@ -271,7 +271,7 @@ def get_crossref_config_new(config, tier=None):
         # Fall back to using boolean_string with quotes stripped
         query_string = query_config.get("boolean_string", "")
         if not query_string:
-            print("⚠️  No query found in search configuration")
+            print("[WARNING] No query found in search configuration")
             return [], 0
 
         # Apply wrapper if defined, otherwise use raw query (quotes stripped)
@@ -288,7 +288,7 @@ def get_crossref_config_new(config, tier=None):
         if tier:
             max_results = max_results_config.get(tier)
             if max_results is None:
-                print(f"⚠️  Unknown tier '{tier}', available tiers: {list(max_results_config.keys())}")
+                print(f"[WARNING] Unknown tier '{tier}', available tiers: {list(max_results_config.keys())}")
                 tier = cr_config.get("max_results_default", "production")
                 max_results = max_results_config.get(tier, 1000)
                 print(f"   Using default tier: {tier}")
@@ -380,7 +380,7 @@ if __name__ == "__main__":
         queries = get_crossref_queries_legacy(config)
         max_results = config.get("global", {}).get("max_results_per_source", 1000)
         config_mode = "LEGACY"
-        print("⚠️  Using legacy config format. Consider using --search-config for new projects.")
+        print("[WARNING] Using legacy config format. Consider using --search-config for new projects.")
 
     # Apply max_results override if provided
     if args.max_results:
@@ -389,7 +389,7 @@ if __name__ == "__main__":
 
     # Validate queries
     if not queries:
-        print("⚠️  No CrossRef queries found in config")
+        print("[WARNING] No CrossRef queries found in config")
         print("   Check that CrossRef is enabled and queries are defined")
         exit(1)  # Exit with error code - missing queries indicates misconfiguration
 
@@ -449,7 +449,7 @@ if __name__ == "__main__":
                     new_count += 1
 
         except Exception as e:
-            print(f"  ❌ Error processing query: {e}")
+            print(f"  [ERROR] Error processing query: {e}")
             traceback.print_exc()
             continue
 
@@ -459,7 +459,7 @@ if __name__ == "__main__":
         json.dump(existing_results, f, indent=2, ensure_ascii=False)
 
     print(f"\n{'='*80}")
-    print("✅ CrossRef harvest complete")
+    print("[OK] CrossRef harvest complete")
     print(f"{'='*80}")
     print(f"New results added: {new_count}")
     print(f"Total records in dataset: {len(existing_results)}")
