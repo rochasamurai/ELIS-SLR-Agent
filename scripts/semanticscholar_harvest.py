@@ -39,6 +39,7 @@ import yaml
 import argparse
 import time
 import re
+import traceback
 from pathlib import Path
 
 
@@ -76,9 +77,10 @@ def simplify_boolean_query(boolean_query: str) -> str:
     query = ' '.join(query.split())
     
     # Limit length (Semantic Scholar has query length limits)
+    # Truncate at word boundary to avoid cutting words mid-way
     if len(query) > 500:
-        query = query[:500]
-    
+        query = query[:500].rsplit(' ', 1)[0]
+
     return query.strip()
 
 
@@ -127,9 +129,14 @@ def semanticscholar_search(query: str, limit: int = 100, max_results: int = 1000
     url = "https://api.semanticscholar.org/graph/v1/paper/search"
     results = []
     offset = 0
+    retry_count = 0
+    max_retries = 5
 
     # Request all useful fields in one call
     fields = "title,authors,year,venue,abstract,citationCount,externalIds"
+
+    # Cache headers once before the loop (avoids repeated get_credentials calls)
+    headers = get_headers()
 
     # Adjust sleep based on whether we have an API key
     has_key = bool(os.getenv("SEMANTIC_SCHOLAR_API_KEY"))
@@ -144,17 +151,25 @@ def semanticscholar_search(query: str, limit: int = 100, max_results: int = 1000
         }
 
         try:
-            r = requests.get(url, headers=get_headers(), params=params, timeout=30)
+            r = requests.get(url, headers=headers, params=params, timeout=30)
 
             if r.status_code == 429:
-                # Rate limited — back off and retry
-                print("  ⚠️  Rate limited (429). Waiting 5s before retry...")
-                time.sleep(5)
+                retry_count += 1
+                if retry_count > max_retries:
+                    print(f"  ❌ Max retries ({max_retries}) exceeded due to rate limiting. Stopping.")
+                    break
+                # Rate limited — back off and retry with exponential backoff
+                wait_time = 5 * retry_count
+                print(f"  ⚠️  Rate limited (429). Waiting {wait_time}s before retry ({retry_count}/{max_retries})...")
+                time.sleep(wait_time)
                 continue
 
             if r.status_code != 200:
                 print(f"  Error {r.status_code}: {r.text[:200]}")
                 break
+
+            # Reset retry count after successful request
+            retry_count = 0
 
             data = r.json()
             papers = data.get("data", [])
@@ -200,16 +215,20 @@ def transform_semanticscholar_entry(entry):
     external_ids = entry.get("externalIds", {}) or {}
     doi = external_ids.get("DOI", "") or entry.get("doi", "") or ""
 
+    # Ensure citation_count is always an integer (API may return None)
+    citation_count = entry.get("citationCount")
+    citation_count = citation_count if citation_count is not None else 0
+
     return {
         "source": "Semantic Scholar",
-        "title": entry.get("title", ""),
+        "title": entry.get("title", "") or "",
         "authors": authors,
         "year": year,
         "doi": doi,
-        "abstract": entry.get("abstract", ""),
-        "url": entry.get("url", ""),
-        "s2_id": entry.get("paperId", ""),
-        "citation_count": entry.get("citationCount", 0),
+        "abstract": entry.get("abstract", "") or "",
+        "url": entry.get("url", "") or "",
+        "s2_id": entry.get("paperId", "") or "",
+        "citation_count": citation_count,
         "raw_metadata": entry,
     }
 
@@ -278,22 +297,39 @@ def get_semanticscholar_config_new(config, tier=None):
         print("⚠️  Semantic Scholar not enabled in search configuration")
         return [], 0
 
-    # Get query — S2 uses natural language, no wrapper required
-    query_string = config.get("query", {}).get("boolean_string", "")
-    if not query_string:
-        print("⚠️  No query found in search configuration")
-        return [], 0
+    # Get query — prefer simplified alternative if available (works better with S2 API)
+    query_config = config.get("query", {})
+    alternative_queries = query_config.get("alternative_queries", [])
 
-    # Apply wrapper if one is defined in config, otherwise use raw query
-    query_wrapper = s2_config.get("query_wrapper", "{query}")
-    s2_query = query_wrapper.replace("{query}", query_string)
+    # Look for simplified query in alternatives
+    simplified_query = None
+    for alt in alternative_queries:
+        if isinstance(alt, dict) and "simplified" in alt:
+            simplified_query = alt["simplified"].strip()
+            break
 
-    # Simplify boolean query to keywords — Semantic Scholar doesn't support boolean syntax
-    s2_query_simplified = simplify_boolean_query(s2_query)
-    
-    print(f"Query simplified for Semantic Scholar:")
-    print(f"  Original: {s2_query[:100]}{'...' if len(s2_query) > 100 else ''}")
-    print(f"  Simplified: {s2_query_simplified[:100]}{'...' if len(s2_query_simplified) > 100 else ''}")
+    if simplified_query:
+        # Use the curated simplified query directly
+        s2_query_simplified = simplified_query
+        print(f"Using simplified alternative query for Semantic Scholar:")
+        print(f"  Query: {s2_query_simplified}")
+    else:
+        # Fall back to simplifying the boolean query
+        query_string = query_config.get("boolean_string", "")
+        if not query_string:
+            print("⚠️  No query found in search configuration")
+            return [], 0
+
+        # Apply wrapper if one is defined in config, otherwise use raw query
+        query_wrapper = s2_config.get("query_wrapper", "{query}")
+        s2_query = query_wrapper.replace("{query}", query_string)
+
+        # Simplify boolean query to keywords — Semantic Scholar doesn't support boolean syntax
+        s2_query_simplified = simplify_boolean_query(s2_query)
+
+        print(f"Query simplified for Semantic Scholar:")
+        print(f"  Original: {s2_query[:100]}{'...' if len(s2_query) > 100 else ''}")
+        print(f"  Simplified: {s2_query_simplified[:100]}{'...' if len(s2_query_simplified) > 100 else ''}")
 
     # Determine max_results based on tier
     max_results_config = s2_config.get("max_results")
@@ -399,14 +435,14 @@ if __name__ == "__main__":
 
     # Apply max_results override if provided
     if args.max_results:
-        print(f"Overriding max_results: {max_results} → {args.max_results}")
+        print(f"Overriding max_results: {max_results} -> {args.max_results}")
         max_results = args.max_results
 
     # Validate queries
     if not queries:
         print("⚠️  No Semantic Scholar queries found in config")
         print("   Check that Semantic Scholar is enabled and queries are defined")
-        exit(0)
+        exit(1)  # Exit with error code - missing queries indicates misconfiguration
 
     print(f"\n{'='*80}")
     print(f"SEMANTIC SCHOLAR HARVEST - {config_mode} CONFIG")
@@ -463,7 +499,6 @@ if __name__ == "__main__":
 
         except Exception as e:
             print(f"  ❌ Error processing query: {e}")
-            import traceback
             traceback.print_exc()
             continue
 
