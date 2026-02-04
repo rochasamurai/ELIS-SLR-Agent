@@ -275,7 +275,13 @@ databases:
   # 1. Scopus
   - name: "Scopus"
     enabled: true
-    max_results: 1000
+    max_results:
+      testing: 25
+      pilot: 100
+      benchmark: 500
+      production: 1000
+      exhaustive: 99999
+    max_results_default: production
     query_syntax: "TITLE-ABS-KEY"
     query_wrapper: "TITLE-ABS-KEY({query})"
     priority: "CRITICAL"
@@ -290,7 +296,13 @@ databases:
   # 2. Web of Science
   - name: "Web of Science"
     enabled: true
-    max_results: 1000
+    max_results:
+      testing: 25
+      pilot: 100
+      benchmark: 500
+      production: 1000
+      exhaustive: 99999
+    max_results_default: production
     query_syntax: "TS"
     query_wrapper: "TS=({query})"
     priority: "CRITICAL"
@@ -305,7 +317,13 @@ databases:
   # 3. IEEE Xplore
   - name: "IEEE Xplore"
     enabled: true
-    max_results: 1000
+    max_results:
+      testing: 25
+      pilot: 100
+      benchmark: 500
+      production: 1000
+      exhaustive: 99999
+    max_results_default: production
     query_syntax: "generic"
     query_filter: "querytext={query}"
     priority: "HIGH"
@@ -320,7 +338,13 @@ databases:
   # 4. Semantic Scholar
   - name: "Semantic Scholar"
     enabled: true
-    max_results: 500
+    max_results:
+      testing: 25
+      pilot: 100
+      benchmark: 500
+      production: 500
+      exhaustive: 99999
+    max_results_default: production
     query_syntax: "natural_language"
     query_filter: "query={query}"
     priority: "MEDIUM"
@@ -335,7 +359,13 @@ databases:
   # 5. OpenAlex
   - name: "OpenAlex"
     enabled: true
-    max_results: 1000
+    max_results:
+      testing: 25
+      pilot: 100
+      benchmark: 500
+      production: 1000
+      exhaustive: 99999
+    max_results_default: production
     query_syntax: "default.search"
     query_filter: "default.search:{query}"
     priority: "HIGH"
@@ -350,7 +380,13 @@ databases:
   # 6. CrossRef
   - name: "CrossRef"
     enabled: true
-    max_results: 1000
+    max_results:
+      testing: 25
+      pilot: 100
+      benchmark: 500
+      production: 1000
+      exhaustive: 99999
+    max_results_default: production
     query_syntax: "generic"
     query_filter: "query={query}"
     priority: "MEDIUM"
@@ -365,7 +401,13 @@ databases:
   # 7. CORE
   - name: "CORE"
     enabled: true
-    max_results: 1000
+    max_results:
+      testing: 25
+      pilot: 100
+      benchmark: 500
+      production: 1000
+      exhaustive: 99999
+    max_results_default: production
     query_syntax: "generic"
     query_filter: "q={query}"
     priority: "MEDIUM"
@@ -380,7 +422,13 @@ databases:
   # 8. Google Scholar
   - name: "Google Scholar"
     enabled: true
-    max_results: 500
+    max_results:
+      testing: 25
+      pilot: 100
+      benchmark: 500
+      production: 500
+      exhaustive: 5000
+    max_results_default: production
     query_syntax: "simplified"
     query_transformation: "remove_boolean_operators"
     priority: "HIGH"
