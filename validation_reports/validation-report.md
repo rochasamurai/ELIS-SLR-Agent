@@ -2,8 +2,8 @@
 
 ## Appendix A (Search) — ❌ Errors
 
-- Row count: **70**
-- Error count: **300**
+- Row count: **1918**
+- Error count: **11388**
 - Errors:
   - row 20: 'id' is a required property
   - row 20: 'retrieved_at' is a required property
@@ -15,7 +15,7 @@
   - row 21: 'retrieved_at' is a required property
   - row 21: 'query_topic' is a required property
   - row 21: 'query_string' is a required property
-  - ... and 290 more errors
+  - ... and 11378 more errors
 
 ## Appendix B (Screening) — ✅ Valid
 

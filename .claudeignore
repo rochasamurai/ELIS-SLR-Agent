@@ -1,0 +1,14 @@
+# Output and data
+json_jsonl/
+data/
+
+# Environment
+.env
+*.env
+
+# Node and cache
+node_modules/
+
+# OS files
+Thumbs.db
+desktop.ini
