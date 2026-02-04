@@ -38,6 +38,7 @@ import os
 import yaml
 import argparse
 import time
+import traceback
 from pathlib import Path
 
 
@@ -67,6 +68,8 @@ def openalex_search(query: str, per_page: int = 100, max_results: int = 1000):
     url = "https://api.openalex.org/works"
     results = []
     page = 1
+    retry_count = 0
+    max_retries = 5
 
     # Get contact email for polite pool — optional, no fallback
     mailto = os.getenv("ELIS_CONTACT")
@@ -88,14 +91,22 @@ def openalex_search(query: str, per_page: int = 100, max_results: int = 1000):
             r = requests.get(url, params=params, timeout=30)
 
             if r.status_code == 429:
-                # Rate limited — back off and retry
-                print("  ⚠️  Rate limited (429). Waiting 5s before retry...")
-                time.sleep(5)
+                retry_count += 1
+                if retry_count > max_retries:
+                    print(f"  ❌ Max retries ({max_retries}) exceeded due to rate limiting. Stopping.")
+                    break
+                # Rate limited — back off and retry with exponential backoff
+                wait_time = 5 * retry_count
+                print(f"  ⚠️  Rate limited (429). Waiting {wait_time}s before retry ({retry_count}/{max_retries})...")
+                time.sleep(wait_time)
                 continue
 
             if r.status_code != 200:
                 print(f"  Error {r.status_code}: {r.text[:200]}")
                 break
+
+            # Reset retry count after successful request
+            retry_count = 0
 
             data = r.json()
             works = data.get("results", [])
@@ -163,16 +174,20 @@ def transform_openalex_entry(entry):
                 words[pos] = word
         abstract = " ".join([words[i] for i in sorted(words.keys())])
 
+    # Ensure citation_count is always an integer (API may return None)
+    citation_count = entry.get("cited_by_count")
+    citation_count = citation_count if citation_count is not None else 0
+
     return {
         "source": "OpenAlex",
-        "title": entry.get("title", ""),
+        "title": entry.get("title", "") or "",
         "authors": authors,
         "year": year,
         "doi": doi,
         "abstract": abstract,
-        "url": entry.get("doi", "") or entry.get("id", ""),
-        "openalex_id": entry.get("id", ""),
-        "citation_count": entry.get("cited_by_count", 0),
+        "url": entry.get("doi", "") or entry.get("id", "") or "",
+        "openalex_id": entry.get("id", "") or "",
+        "citation_count": citation_count,
         "raw_metadata": entry,
     }
 
@@ -243,15 +258,34 @@ def get_openalex_config_new(config, tier=None):
         print("⚠️  OpenAlex not enabled in search configuration")
         return [], 0
 
-    # Get query — strip quotes (not supported by default.search)
-    query_string = config.get("query", {}).get("boolean_string", "")
-    if not query_string:
-        print("⚠️  No query found in search configuration")
-        return [], 0
+    # Get query — prefer simplified alternative if available (works better with default.search)
+    query_config = config.get("query", {})
+    alternative_queries = query_config.get("alternative_queries", [])
 
-    # Apply wrapper if defined, otherwise use raw query (quotes stripped)
-    query_wrapper = oa_config.get("query_wrapper", "{query}")
-    oa_query = query_wrapper.replace("{query}", query_string).replace('"', "")
+    # Look for simplified query in alternatives
+    simplified_query = None
+    for alt in alternative_queries:
+        if isinstance(alt, dict) and "simplified" in alt:
+            simplified_query = alt["simplified"].strip()
+            break
+
+    if simplified_query:
+        # Use the curated simplified query directly
+        oa_query = simplified_query
+        print(f"Using simplified alternative query for OpenAlex:")
+        print(f"  Query: {oa_query}")
+    else:
+        # Fall back to using boolean_string with quotes stripped
+        query_string = query_config.get("boolean_string", "")
+        if not query_string:
+            print("⚠️  No query found in search configuration")
+            return [], 0
+
+        # Apply wrapper if defined, otherwise use raw query (quotes stripped)
+        query_wrapper = oa_config.get("query_wrapper", "{query}")
+        oa_query = query_wrapper.replace("{query}", query_string).replace('"', "")
+        print(f"Query for OpenAlex (quotes stripped):")
+        print(f"  Query: {oa_query[:100]}{'...' if len(oa_query) > 100 else ''}")
 
     # Determine max_results based on tier
     max_results_config = oa_config.get("max_results")
@@ -357,14 +391,14 @@ if __name__ == "__main__":
 
     # Apply max_results override if provided
     if args.max_results:
-        print(f"Overriding max_results: {max_results} → {args.max_results}")
+        print(f"Overriding max_results: {max_results} -> {args.max_results}")
         max_results = args.max_results
 
     # Validate queries
     if not queries:
         print("⚠️  No OpenAlex queries found in config")
         print("   Check that OpenAlex is enabled and queries are defined")
-        exit(0)
+        exit(1)  # Exit with error code - missing queries indicates misconfiguration
 
     print(f"\n{'='*80}")
     print(f"OPENALEX HARVEST - {config_mode} CONFIG")
@@ -421,7 +455,6 @@ if __name__ == "__main__":
 
         except Exception as e:
             print(f"  ❌ Error processing query: {e}")
-            import traceback
             traceback.print_exc()
             continue
 
