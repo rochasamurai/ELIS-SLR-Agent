@@ -390,6 +390,8 @@ Acceptance criteria:
 ## 12) Harvest + JSON contract verification (aligns with this sprint)
 Goal: confirm each harvester/preflight generates correct JSON output per schema.
 
+**Note (Elsevier VPN/IP restrictions):** Scopus and ScienceDirect access can return HTTP 403 when run from a VPN or non‑institutional IP. If you see 403s with valid keys/tokens, retry from an approved network or adjust VPN settings.
+
 ### 12.1 Source list (all 9 production harvesters)
 | # | Script | Preflight | ID Field | API Key Env Var |
 |---|---|---|---|---|
