@@ -433,15 +433,15 @@ At $0.086 per comprehensive search (Google Scholar via Apify) plus free APIs, th
 **Commit:** `67a0692` (January 27, 2026)
 
 **Key Scripts:**
-- `scripts/search_benchmark.py`: Multi-database search orchestration
-- `scripts/run_benchmark.py`: Matching and validation logic
+- `benchmarks/scripts/search_benchmark.py`: Multi-database search orchestration
+- `benchmarks/scripts/run_benchmark.py`: Matching and validation logic
 - `scripts/google_scholar_harvest.py`: Google Scholar API integration
-- `configs/benchmark_config.yaml`: Configuration parameters
+- `benchmarks/config/benchmark_config.yaml`: Configuration parameters
 
 ### 11.2 Data Availability
 
 **Gold Standard:** `data/benchmark/darmawan_2021_references.json` (78 studies)  
-**Search Results:** `json_jsonl/benchmark_search_results.json` (950 studies)  
+**Search Results:** `benchmarks/outputs/benchmark_search_results.json` (950 studies)  
 **Matched Studies:** `data/benchmark/matched_studies.json` (33 studies)  
 **Missed Studies:** `data/benchmark/missed_studies.json` (45 studies)
 
@@ -469,10 +469,10 @@ export APIFY_API_TOKEN="your_token"
 # ... etc
 
 # Run benchmark search
-python scripts/search_benchmark.py
+python benchmarks/scripts/search_benchmark.py
 
 # Run validation
-python scripts/run_benchmark.py
+python benchmarks/scripts/run_benchmark.py
 
 # Expected output: 42.3% ± 5% retrieval rate
 ```

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:elis:appendix-a-harvester-schema:v1",
+  "$comment": "Subset schema for standalone harvester outputs (no meta header; no orchestrator fields).",
+
+  "title": "ELIS Appendix A (Search) Harvester Output",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["source", "title", "authors", "year"],
+    "properties": {
+      "source": { "type": "string" },
+      "title": { "type": ["string", "null"] },
+      "authors": { "type": "array", "items": { "type": "string" } },
+      "year": { "type": ["integer", "null"] },
+      "doi": { "type": ["string", "null"] },
+      "abstract": { "type": ["string", "null"] },
+      "url": { "type": ["string", "null"] }
+    },
+    "additionalProperties": true
+  }
+}

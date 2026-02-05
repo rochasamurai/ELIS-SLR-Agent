@@ -31,7 +31,7 @@ https://doi.org/10.1177/20578911211040584
 
 ## Configuration
 
-See `configs/benchmark_config.yaml` for complete parameters.
+See `benchmarks/config/benchmark_config.yaml` for complete parameters.
 
 **Search Terms:**
 ```
@@ -50,7 +50,7 @@ AND
 
 ## Running the Test
 ```bash
-python scripts/run_benchmark.py
+python benchmarks/scripts/run_benchmark.py
 ```
 
 ## Expected Outcomes

@@ -14,7 +14,7 @@ from pathlib import Path
 # Configuration
 CONFIG = "config/searches/electoral_integrity_search.yml"
 TIER = "testing"
-OUTPUT_DIR = Path("test_outputs")
+OUTPUT_DIR = Path("tests/outputs")
 
 SCRIPTS = [
     ("scopus", "scripts/scopus_harvest.py", "scopus_id"),

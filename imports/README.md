@@ -13,6 +13,13 @@ These files are **inputs** to the ELIS SLR Agent. They are not part of
 the canonical Appendix artefacts (A/B/C), but can be converted into
 Appendix A JSON via the `ELIS - Imports Convert` workflow.
 
+## JSON-only policy
+- Vendor exports (CSV/TSV/XLSX) are **local-only** and should live under:
+  - `imports/raw/` (ignored)
+- Converted JSON should live under:
+  - `imports/staging/` (ignored)
+- Only **canonical JSON/JSONL** belongs in `json_jsonl/`.
+
 ## Current scope (MVP)
 
 At this stage, the converter supports:
@@ -38,21 +45,33 @@ Expected format for Scopus CSV:
 The converter will map and normalise these into the canonical ELIS
 Appendix A schema, writing:
 
-- `json_jsonl/ELIS_Appendix_A_Search_rows.json`
+- `imports/staging/scopus_export_YYYY-MM-DD.json`
+
+## Converter (local)
+Use the local converter script:
+
+```powershell
+python scripts/convert_scopus_csv_to_json.py `
+  --in  imports/raw/scopus_export.csv `
+  --out imports/staging/scopus_export_2026-02-05.json `
+  --query-topic "<topic_id>" `
+  --query-string "<original query string>"
+```
+
+Then validate:
+
+```powershell
+python scripts/validate_json.py --schema schemas/appendix_a.schema.json --input imports/staging/scopus_export_2026-02-05.json
+```
 
 ## Intended workflow
 
 1. Export results from the provider UI (for example, Scopus) as
    **UTF-8 CSV**, with the fields listed above.
-2. Save the file into `imports/` in this repository.
-3. Run the **“ELIS - Imports Convert”** workflow from the Actions tab,
-   selecting:
-   - Provider: `scopus_csv`
-   - Input path: the CSV you placed under `imports/`
-   - Topic / query details for provenance
-4. The workflow converts the CSV into canonical Appendix A JSON and
-   uploads it as an artefact. You can then review and optionally commit
-   the JSON into `json_jsonl/`.
+2. Save the file into `imports/raw/` (local only).
+3. Convert to JSON with `scripts/convert_scopus_csv_to_json.py`.
+4. Validate with `scripts/validate_json.py`.
+5. If approved, move the JSON into `json_jsonl/` as a canonical artefact.
 
 Future work will extend the converter to additional providers
 (IEEE Xplore, Web of Science, JSTOR, …) and formats as needed.

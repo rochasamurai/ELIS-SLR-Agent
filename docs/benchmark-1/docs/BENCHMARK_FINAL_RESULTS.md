@@ -515,13 +515,13 @@ time.sleep(2)  # Semantic Scholar (1 req/sec limit)
 
 **Priority 1 (Critical):**
 1. `scripts/google_scholar_harvest.py` - Adds Google Scholar via Apify
-2. `scripts/run_benchmark.py` - Contains optimized matching algorithm
+2. `benchmarks/scripts/run_benchmark.py` - Contains optimized matching algorithm
 3. Enhanced error handling patterns from all harvest scripts
 
 **Priority 2 (Beneficial):**
-4. `scripts/search_benchmark.py` - Multi-database orchestration
-5. `configs/benchmark_config.yaml` - Configuration template
-6. `scripts/benchmark_elis_adapter.py` - Data normalization patterns
+4. `benchmarks/scripts/search_benchmark.py` - Multi-database orchestration
+5. `benchmarks/config/benchmark_config.yaml` - Configuration template
+6. `benchmarks/scripts/benchmark_elis_adapter.py` - Data normalization patterns
 
 **Priority 3 (Optional):**
 7. Benchmark validation framework (for future testing)

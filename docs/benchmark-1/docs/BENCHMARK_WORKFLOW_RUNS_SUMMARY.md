@@ -762,11 +762,11 @@ jobs:
           APIFY_API_TOKEN: ${{ secrets.APIFY_API_TOKEN }}
           SEMANTIC_SCHOLAR_API_KEY: ${{ secrets.SEMANTIC_SCHOLAR_API_KEY }}
         run: |
-          python scripts/search_benchmark.py
+          python benchmarks/scripts/search_benchmark.py
       
       - name: Run benchmark validation
         run: |
-          python scripts/run_benchmark.py
+          python benchmarks/scripts/run_benchmark.py
       
       - name: Upload results
         uses: actions/upload-artifact@v4

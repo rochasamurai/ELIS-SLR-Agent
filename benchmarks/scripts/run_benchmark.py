@@ -28,7 +28,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 class BenchmarkValidator:
     """Validates ELIS retrieval against Darmawan 2021 benchmark."""
 
-    def __init__(self, config_path: str = "configs/benchmark_config.yaml"):
+    def __init__(self, config_path: str = "benchmarks/config/benchmark_config.yaml"):
         """Initialize validator with configuration."""
         self.config = self._load_config(config_path)
         self.gold_standard = self._load_gold_standard()
@@ -384,8 +384,8 @@ ELIS retrieved only **{metrics['retrieval_rate_percent']}%** of Darmawan's studi
 ---
 
 **Report Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}  
-**Script:** `scripts/run_benchmark.py`  
-**Configuration:** `configs/benchmark_config.yaml`  
+**Script:** `benchmarks/scripts/run_benchmark.py`  
+**Configuration:** `benchmarks/config/benchmark_config.yaml`  
 **Gold Standard:** `data/benchmark/darmawan_2021_references.json`
 """
 

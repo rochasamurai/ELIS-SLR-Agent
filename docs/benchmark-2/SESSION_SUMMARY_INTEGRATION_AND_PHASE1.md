@@ -38,10 +38,10 @@
 - ✅ Result: PR #202 merged successfully
 
 **Files Modified:**
-- `scripts/benchmark_elis_adapter.py`
+- `benchmarks/scripts/benchmark_elis_adapter.py`
 - `scripts/google_scholar_harvest.py`
-- `scripts/run_benchmark.py`
-- `scripts/search_benchmark.py`
+- `benchmarks/scripts/run_benchmark.py`
+- `benchmarks/scripts/search_benchmark.py`
 
 ---
 
@@ -200,10 +200,10 @@ benchmark-2/
 
 ### Files Modified (5)
 1. `configs/benchmark_2_config.yaml` (encoding fix)
-2. `scripts/benchmark_elis_adapter.py` (linting fixes)
+2. `benchmarks/scripts/benchmark_elis_adapter.py` (linting fixes)
 3. `scripts/google_scholar_harvest.py` (linting fixes)
-4. `scripts/run_benchmark.py` (linting fixes)
-5. `scripts/search_benchmark.py` (import order fix)
+4. `benchmarks/scripts/run_benchmark.py` (linting fixes)
+5. `benchmarks/scripts/search_benchmark.py` (import order fix)
 
 ---
 

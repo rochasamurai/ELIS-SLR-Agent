@@ -528,15 +528,15 @@ class SearchOrchestrator:
 **Purpose:** Validate future changes don't regress performance
 
 **Keep:** 
-- `configs/benchmark_config.yaml`
+- `benchmarks/config/benchmark_config.yaml`
 - `data/benchmark/darmawan_2021_references.json`
-- `scripts/run_benchmark.py`
-- `scripts/benchmark_elis_adapter.py`
+- `benchmarks/scripts/run_benchmark.py`
+- `benchmarks/scripts/benchmark_elis_adapter.py`
 
 **Usage:**
 ```bash
 # Run validation against Darmawan benchmark
-python scripts/run_benchmark.py
+python benchmarks/scripts/run_benchmark.py
 
 # Expected: 40-45% retrieval rate
 # If <35%: Regression detected
@@ -729,7 +729,7 @@ def test_benchmark_performance():
     """Ensure changes don't regress benchmark performance"""
     from scripts.run_benchmark import BenchmarkValidator
     
-    validator = BenchmarkValidator('configs/benchmark_config.yaml')
+    validator = BenchmarkValidator('benchmarks/config/benchmark_config.yaml')
     metrics = validator.run()
     
     # Minimum acceptable performance
@@ -764,7 +764,7 @@ git checkout -b integration/benchmark-improvements
 
 # 2. Copy files from benchmark branch
 git checkout benchmark/darmawan-2021 -- scripts/google_scholar_harvest.py
-git checkout benchmark/darmawan-2021 -- scripts/run_benchmark.py
+git checkout benchmark/darmawan-2021 -- benchmarks/scripts/run_benchmark.py
 # ... other files ...
 
 # 3. Update imports and configurations

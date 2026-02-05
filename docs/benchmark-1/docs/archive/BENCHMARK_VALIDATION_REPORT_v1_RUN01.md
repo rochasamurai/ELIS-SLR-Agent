@@ -109,6 +109,6 @@ ELIS retrieved only **9.0%** of Darmawan's studies, below the minimum threshold 
 ---
 
 **Report Generated:** 2026-01-26 13:35:41  
-**Script:** `scripts/run_benchmark.py`  
-**Configuration:** `configs/benchmark_config.yaml`  
+**Script:** `benchmarks/scripts/run_benchmark.py`  
+**Configuration:** `benchmarks/config/benchmark_config.yaml`  
 **Gold Standard:** `data/benchmark/darmawan_2021_references.json`
