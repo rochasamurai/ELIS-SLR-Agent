@@ -1,6 +1,6 @@
 """
 test_all_harvests.py
-Runs all 8 harvest scripts with testing tier and validates JSON output.
+Runs all 9 harvest scripts with testing tier and validates JSON output.
 
 Usage:
   python scripts/test_all_harvests.py
@@ -148,6 +148,8 @@ def main():
 
     passed = 0
     failed = 0
+    total = len(SCRIPTS)
+    failure_statuses = {"FAILED", "ERROR", "TIMEOUT", "INVALID_JSON", "TYPE_ISSUES", "MISSING_ID"}
 
     for r in results:
         id_ok = "Yes" if r["has_id_field"] else "No"
@@ -157,11 +159,11 @@ def main():
 
         if r["status"] == "PASSED":
             passed += 1
-        elif r["status"] in ("FAILED", "ERROR", "TIMEOUT", "INVALID_JSON"):
+        elif r["status"] in failure_statuses:
             failed += 1
 
     print("-"*60)
-    print(f"Passed: {passed}/8  |  Failed: {failed}/8  |  Type Issues: {8 - passed - failed}/8")
+    print(f"Passed: {passed}/{total}  |  Failed: {failed}/{total}  |  Issues: {total - passed - failed}/{total}")
     print("="*60)
 
     # Cleanup hint
