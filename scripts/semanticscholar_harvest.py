@@ -47,39 +47,40 @@ from pathlib import Path
 # QUERY SIMPLIFICATION
 # ---------------------------------------------------------------------------
 
+
 def simplify_boolean_query(boolean_query: str) -> str:
     """
     Convert boolean query syntax to keyword-based query for Semantic Scholar.
-    
+
     Semantic Scholar API does NOT support boolean operators (AND/OR/NOT).
     It uses keyword-based search, ranking papers by relevance.
-    
+
     This function:
     - Removes boolean operators (AND, OR, NOT)
     - Removes quotes and parentheses
     - Extracts meaningful keywords
     - Limits query length to 500 chars
-    
+
     Args:
         boolean_query: Query with boolean syntax like:
                       '("electoral system" OR "voting system") AND ("integrity" OR "security")'
-    
+
     Returns:
         Simplified keyword query: 'electoral system voting system integrity security'
     """
     # Remove boolean operators
-    query = re.sub(r'\bAND\b|\bOR\b|\bNOT\b', ' ', boolean_query, flags=re.IGNORECASE)
-    
+    query = re.sub(r"\bAND\b|\bOR\b|\bNOT\b", " ", boolean_query, flags=re.IGNORECASE)
+
     # Remove quotes and parentheses
-    query = re.sub(r'[()\"]+', ' ', query)
-    
+    query = re.sub(r"[()\"]+", " ", query)
+
     # Clean up whitespace and newlines
-    query = ' '.join(query.split())
-    
+    query = " ".join(query.split())
+
     # Limit length (Semantic Scholar has query length limits)
     # Truncate at word boundary to avoid cutting words mid-way
     if len(query) > 500:
-        query = query[:500].rsplit(' ', 1)[0]
+        query = query[:500].rsplit(" ", 1)[0]
 
     return query.strip()
 
@@ -88,11 +89,14 @@ def simplify_boolean_query(boolean_query: str) -> str:
 # CREDENTIALS (API key is optional — increases rate limit if present)
 # ---------------------------------------------------------------------------
 
+
 def get_credentials():
     """Get Semantic Scholar API key (optional)."""
     api_key = os.getenv("SEMANTIC_SCHOLAR_API_KEY")
     if not api_key:
-        print("[WARNING] SEMANTIC_SCHOLAR_API_KEY not set. Rate limited to 1 req/s (100 req/s with key).")
+        print(
+            "[WARNING] SEMANTIC_SCHOLAR_API_KEY not set. Rate limited to 1 req/s (100 req/s with key)."
+        )
     return api_key
 
 
@@ -108,6 +112,7 @@ def get_headers():
 # ---------------------------------------------------------------------------
 # SEARCH (pagination via offset — already looped, kept as-is)
 # ---------------------------------------------------------------------------
+
 
 def semanticscholar_search(query: str, limit: int = 100, max_results: int = 1000):
     """
@@ -156,11 +161,15 @@ def semanticscholar_search(query: str, limit: int = 100, max_results: int = 1000
             if r.status_code == 429:
                 retry_count += 1
                 if retry_count > max_retries:
-                    print(f"  [ERROR] Max retries ({max_retries}) exceeded due to rate limiting. Stopping.")
+                    print(
+                        f"  [ERROR] Max retries ({max_retries}) exceeded due to rate limiting. Stopping."
+                    )
                     break
                 # Rate limited — back off and retry with exponential backoff
                 wait_time = 5 * retry_count
-                print(f"  [WARNING] Rate limited (429). Waiting {wait_time}s before retry ({retry_count}/{max_retries})...")
+                print(
+                    f"  [WARNING] Rate limited (429). Waiting {wait_time}s before retry ({retry_count}/{max_retries})..."
+                )
                 time.sleep(wait_time)
                 continue
 
@@ -199,6 +208,7 @@ def semanticscholar_search(query: str, limit: int = 100, max_results: int = 1000
 # ---------------------------------------------------------------------------
 # TRANSFORM
 # ---------------------------------------------------------------------------
+
 
 def transform_semanticscholar_entry(entry):
     """
@@ -243,6 +253,7 @@ def transform_semanticscholar_entry(entry):
 # CONFIG LOADING — LEGACY
 # ---------------------------------------------------------------------------
 
+
 def load_config(config_path: str):
     """Load search configuration from YAML file."""
     with open(config_path, "r", encoding="utf-8") as f:
@@ -278,6 +289,7 @@ def get_semanticscholar_queries_legacy(config):
 # ---------------------------------------------------------------------------
 # CONFIG LOADING — NEW (tier-based)
 # ---------------------------------------------------------------------------
+
 
 def get_semanticscholar_config_new(config, tier=None):
     """
@@ -317,7 +329,7 @@ def get_semanticscholar_config_new(config, tier=None):
     if simplified_query:
         # Use the curated simplified query directly
         s2_query_simplified = simplified_query
-        print(f"Using simplified alternative query for Semantic Scholar:")
+        print("Using simplified alternative query for Semantic Scholar:")
         print(f"  Query: {s2_query_simplified}")
     else:
         # Fall back to simplifying the boolean query
@@ -333,9 +345,11 @@ def get_semanticscholar_config_new(config, tier=None):
         # Simplify boolean query to keywords — Semantic Scholar doesn't support boolean syntax
         s2_query_simplified = simplify_boolean_query(s2_query)
 
-        print(f"Query simplified for Semantic Scholar:")
+        print("Query simplified for Semantic Scholar:")
         print(f"  Original: {s2_query[:100]}{'...' if len(s2_query) > 100 else ''}")
-        print(f"  Simplified: {s2_query_simplified[:100]}{'...' if len(s2_query_simplified) > 100 else ''}")
+        print(
+            f"  Simplified: {s2_query_simplified[:100]}{'...' if len(s2_query_simplified) > 100 else ''}"
+        )
 
     # Determine max_results based on tier
     max_results_config = s2_config.get("max_results")
@@ -345,7 +359,9 @@ def get_semanticscholar_config_new(config, tier=None):
         if tier:
             max_results = max_results_config.get(tier)
             if max_results is None:
-                print(f"[WARNING] Unknown tier '{tier}', available tiers: {list(max_results_config.keys())}")
+                print(
+                    f"[WARNING] Unknown tier '{tier}', available tiers: {list(max_results_config.keys())}"
+                )
                 tier = s2_config.get("max_results_default", "production")
                 max_results = max_results_config.get(tier, 1000)
                 print(f"   Using default tier: {tier}")
@@ -365,6 +381,7 @@ def get_semanticscholar_config_new(config, tier=None):
 # CLI
 # ---------------------------------------------------------------------------
 
+
 def parse_args():
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(
@@ -383,33 +400,33 @@ Examples:
 
   # Override max_results
   python scripts/semanticscholar_harvest.py --search-config config/searches/electoral_integrity_search.yml --max-results 500
-        """
+        """,
     )
 
     parser.add_argument(
         "--search-config",
         type=str,
-        help="Path to search configuration file (e.g., config/searches/electoral_integrity_search.yml)"
+        help="Path to search configuration file (e.g., config/searches/electoral_integrity_search.yml)",
     )
 
     parser.add_argument(
         "--tier",
         type=str,
         choices=["testing", "pilot", "benchmark", "production", "exhaustive"],
-        help="Max results tier to use (testing/pilot/benchmark/production/exhaustive)"
+        help="Max results tier to use (testing/pilot/benchmark/production/exhaustive)",
     )
 
     parser.add_argument(
         "--max-results",
         type=int,
-        help="Override max_results regardless of config or tier"
+        help="Override max_results regardless of config or tier",
     )
 
     parser.add_argument(
         "--output",
         type=str,
         default="json_jsonl/ELIS_Appendix_A_Search_rows.json",
-        help="Output file path (default: json_jsonl/ELIS_Appendix_A_Search_rows.json)"
+        help="Output file path (default: json_jsonl/ELIS_Appendix_A_Search_rows.json)",
     )
 
     return parser.parse_args()
@@ -437,7 +454,9 @@ if __name__ == "__main__":
         queries = get_semanticscholar_queries_legacy(config)
         max_results = config.get("global", {}).get("max_results_per_source", 1000)
         config_mode = "LEGACY"
-        print("[WARNING] Using legacy config format. Consider using --search-config for new projects.")
+        print(
+            "[WARNING] Using legacy config format. Consider using --search-config for new projects."
+        )
 
     # Apply max_results override if provided
     if args.max_results:

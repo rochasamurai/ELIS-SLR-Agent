@@ -56,6 +56,7 @@ from apify_client import ApifyClient
 # CREDENTIALS
 # ---------------------------------------------------------------------------
 
+
 def get_credentials():
     """Get and validate Apify API credentials."""
     api_token = os.getenv("APIFY_API_TOKEN")
@@ -76,9 +77,9 @@ def check_apify_account_status(client):
         print(f"   Username: {user.get('username', 'N/A')}")
 
         # Credits might be in different structure
-        usage = user.get('usageCredits', {})
+        usage = user.get("usageCredits", {})
         if isinstance(usage, dict):
-            remaining = usage.get('remaining', 'N/A')
+            remaining = usage.get("remaining", "N/A")
             print(f"   Credits: ${remaining}")
 
         return True
@@ -91,15 +92,16 @@ def check_apify_account_status(client):
 # QUERY PREPARATION
 # ---------------------------------------------------------------------------
 
+
 def prepare_google_scholar_query(original_query):
     """
     Convert complex Boolean query to simple format for Google Scholar.
     EasyAPI actor works best with simple keyword queries — Boolean operators
     and parentheses are stripped.
     """
-    simple_query = original_query.replace('"', '').replace('(', '').replace(')', '')
-    simple_query = simple_query.replace(' AND ', ' ').replace(' OR ', ' ')
-    simple_query = ' '.join(simple_query.split())  # Normalize whitespace
+    simple_query = original_query.replace('"', "").replace("(", "").replace(")", "")
+    simple_query = simple_query.replace(" AND ", " ").replace(" OR ", " ")
+    simple_query = " ".join(simple_query.split())  # Normalize whitespace
 
     return simple_query.strip()
 
@@ -108,9 +110,16 @@ def prepare_google_scholar_query(original_query):
 # SEARCH (Apify actor — no direct pagination, recursive retry)
 # ---------------------------------------------------------------------------
 
-def google_scholar_search(client, query: str, max_items: int = 1000,
-                          start_year: int = None, end_year: int = None,
-                          retry_count: int = 0, max_retries: int = 2):
+
+def google_scholar_search(
+    client,
+    query: str,
+    max_items: int = 1000,
+    start_year: int = None,
+    end_year: int = None,
+    retry_count: int = 0,
+    max_retries: int = 2,
+):
     """
     Search Google Scholar via Apify using easyapi/google-scholar-scraper actor.
 
@@ -143,10 +152,14 @@ def google_scholar_search(client, query: str, max_items: int = 1000,
     # Simplify query for EasyAPI
     search_query = prepare_google_scholar_query(query)
 
-    print(f"\n[SEARCH] GOOGLE SCHOLAR SEARCH (Attempt {retry_count + 1}/{max_retries + 1})")
-    print(f"   Actor: easyapi/google-scholar-scraper")
+    print(
+        f"\n[SEARCH] GOOGLE SCHOLAR SEARCH (Attempt {retry_count + 1}/{max_retries + 1})"
+    )
+    print("   Actor: easyapi/google-scholar-scraper")
     print(f"   Original: {query[:100]}{'...' if len(query) > 100 else ''}")
-    print(f"   Simplified: {search_query[:100]}{'...' if len(search_query) > 100 else ''}")
+    print(
+        f"   Simplified: {search_query[:100]}{'...' if len(search_query) > 100 else ''}"
+    )
     print(f"   Max items: {max_items}")
     print(f"   Timestamp: {datetime.now().isoformat()}")
 
@@ -158,7 +171,7 @@ def google_scholar_search(client, query: str, max_items: int = 1000,
 
     # Year filtering not available in EasyAPI actor
     if start_year or end_year:
-        print(f"   [WARNING] Year filtering not supported by EasyAPI actor")
+        print("   [WARNING] Year filtering not supported by EasyAPI actor")
 
     try:
         print("\n  Starting Apify run...")
@@ -166,29 +179,36 @@ def google_scholar_search(client, query: str, max_items: int = 1000,
         # Run the actor and wait for it to finish
         run = client.actor("easyapi/google-scholar-scraper").call(run_input=run_input)
 
-        print(f"  [OK] Run completed")
+        print("  [OK] Run completed")
         print(f"    Run ID: {run.get('id')}")
         print(f"    Status: {run.get('status')}")
         print(f"    Run URL: https://console.apify.com/actors/runs/{run.get('id')}")
 
         # Get build/run stats
-        stats = run.get('stats', {})
-        compute_units = stats.get('computeUnits', 0)
+        stats = run.get("stats", {})
+        compute_units = stats.get("computeUnits", 0)
         print(f"    Compute units: {compute_units:.4f}")
         print(f"    Estimated cost: ${compute_units * 0.25:.4f}")
 
         # Check if run succeeded
-        status = run.get('status')
-        if status != 'SUCCEEDED':
+        status = run.get("status")
+        if status != "SUCCEEDED":
             print(f"  [WARNING] Run status: {status}")
             if retry_count < max_retries:
-                return google_scholar_search(client, query, max_items, start_year, end_year,
-                                             retry_count + 1, max_retries)
+                return google_scholar_search(
+                    client,
+                    query,
+                    max_items,
+                    start_year,
+                    end_year,
+                    retry_count + 1,
+                    max_retries,
+                )
             return []
 
         # Fetch results from dataset
-        print(f"\n  Retrieving results from dataset...")
-        dataset_id = run.get('defaultDatasetId')
+        print("\n  Retrieving results from dataset...")
+        dataset_id = run.get("defaultDatasetId")
 
         dataset_client = client.dataset(dataset_id)
         results = list(dataset_client.iterate_items())
@@ -196,16 +216,23 @@ def google_scholar_search(client, query: str, max_items: int = 1000,
         print(f"  [OK] Retrieved {len(results)} results from Google Scholar")
 
         if len(results) == 0:
-            print(f"  [WARNING] WARNING: 0 results")
+            print("  [WARNING] WARNING: 0 results")
             if retry_count < max_retries:
-                print(f"\n  Retrying...")
-                return google_scholar_search(client, query, max_items, start_year, end_year,
-                                             retry_count + 1, max_retries)
+                print("\n  Retrying...")
+                return google_scholar_search(
+                    client,
+                    query,
+                    max_items,
+                    start_year,
+                    end_year,
+                    retry_count + 1,
+                    max_retries,
+                )
             else:
-                print(f"  [ERROR] All retries exhausted")
+                print("  [ERROR] All retries exhausted")
         elif len(results) == 10:
-            print(f"  [NOTE] Note: Free tier limited to 10 results")
-            print(f"      Upgrade Apify account for up to 5000 results")
+            print("  [NOTE] Note: Free tier limited to 10 results")
+            print("      Upgrade Apify account for up to 5000 results")
 
         return results
 
@@ -213,9 +240,16 @@ def google_scholar_search(client, query: str, max_items: int = 1000,
         print(f"  [ERROR] Error: {type(e).__name__}: {e}")
 
         if retry_count < max_retries:
-            print(f"\n  Retrying...")
-            return google_scholar_search(client, query, max_items, start_year, end_year,
-                                         retry_count + 1, max_retries)
+            print("\n  Retrying...")
+            return google_scholar_search(
+                client,
+                query,
+                max_items,
+                start_year,
+                end_year,
+                retry_count + 1,
+                max_retries,
+            )
 
         return []
 
@@ -223,6 +257,7 @@ def google_scholar_search(client, query: str, max_items: int = 1000,
 # ---------------------------------------------------------------------------
 # TRANSFORM
 # ---------------------------------------------------------------------------
+
 
 def transform_google_scholar_entry(entry):
     """
@@ -242,7 +277,9 @@ def transform_google_scholar_entry(entry):
     # Extract authors (as array for schema compliance)
     # EasyAPI returns authors as comma-separated string
     authors_str = entry.get("authors", "") or ""
-    authors = [a.strip() for a in authors_str.split(",") if a.strip()] if authors_str else []
+    authors = (
+        [a.strip() for a in authors_str.split(",") if a.strip()] if authors_str else []
+    )
 
     # Extract year (as integer for schema compliance)
     year_raw = entry.get("year")
@@ -280,6 +317,7 @@ def transform_google_scholar_entry(entry):
 # ---------------------------------------------------------------------------
 # CONFIG LOADING — LEGACY
 # ---------------------------------------------------------------------------
+
 
 def load_config(config_path: str):
     """Load search configuration from YAML file."""
@@ -320,6 +358,7 @@ def get_google_scholar_queries_legacy(config):
 # CONFIG LOADING — NEW (tier-based)
 # ---------------------------------------------------------------------------
 
+
 def get_google_scholar_config_new(config, tier=None):
     """
     Extract Google Scholar configuration from new search config format.
@@ -336,7 +375,9 @@ def get_google_scholar_config_new(config, tier=None):
     gs_config = None
 
     for db in databases:
-        if db.get("name") in ("Google Scholar", "GoogleScholar") and db.get("enabled", False):
+        if db.get("name") in ("Google Scholar", "GoogleScholar") and db.get(
+            "enabled", False
+        ):
             gs_config = db
             break
 
@@ -363,7 +404,9 @@ def get_google_scholar_config_new(config, tier=None):
         if tier:
             max_results = max_results_config.get(tier)
             if max_results is None:
-                print(f"[WARNING] Unknown tier '{tier}', available tiers: {list(max_results_config.keys())}")
+                print(
+                    f"[WARNING] Unknown tier '{tier}', available tiers: {list(max_results_config.keys())}"
+                )
                 tier = gs_config.get("max_results_default", "production")
                 max_results = max_results_config.get(tier, 1000)
                 print(f"   Using default tier: {tier}")
@@ -382,6 +425,7 @@ def get_google_scholar_config_new(config, tier=None):
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
+
 
 def parse_args():
     """Parse command-line arguments."""
@@ -403,33 +447,33 @@ Examples:
   python scripts/google_scholar_harvest.py --search-config config/searches/electoral_integrity_search.yml --max-results 500
 
 NOTE: EasyAPI free tier hard-caps at 10 results regardless of max_results.
-        """
+        """,
     )
 
     parser.add_argument(
         "--search-config",
         type=str,
-        help="Path to search configuration file (e.g., config/searches/electoral_integrity_search.yml)"
+        help="Path to search configuration file (e.g., config/searches/electoral_integrity_search.yml)",
     )
 
     parser.add_argument(
         "--tier",
         type=str,
         choices=["testing", "pilot", "benchmark", "production", "exhaustive"],
-        help="Max results tier to use (testing/pilot/benchmark/production/exhaustive)"
+        help="Max results tier to use (testing/pilot/benchmark/production/exhaustive)",
     )
 
     parser.add_argument(
         "--max-results",
         type=int,
-        help="Override max_results regardless of config or tier"
+        help="Override max_results regardless of config or tier",
     )
 
     parser.add_argument(
         "--output",
         type=str,
         default="json_jsonl/ELIS_Appendix_A_Search_rows.json",
-        help="Output file path (default: json_jsonl/ELIS_Appendix_A_Search_rows.json)"
+        help="Output file path (default: json_jsonl/ELIS_Appendix_A_Search_rows.json)",
     )
 
     return parser.parse_args()
@@ -447,7 +491,7 @@ if __name__ == "__main__":
     print("GOOGLE SCHOLAR HARVEST - EASYAPI ACTOR")
     print("=" * 80)
     print(f"Start time: {datetime.now().isoformat()}")
-    print(f"Actor: easyapi/google-scholar-scraper")
+    print("Actor: easyapi/google-scholar-scraper")
 
     # Initialize Apify client
     api_token = get_credentials()
@@ -465,12 +509,16 @@ if __name__ == "__main__":
         config_mode = "NEW"
     else:
         # LEGACY CONFIG FORMAT
-        print("\nLoading configuration from config/elis_search_queries.yml (legacy mode)")
+        print(
+            "\nLoading configuration from config/elis_search_queries.yml (legacy mode)"
+        )
         config = load_config("config/elis_search_queries.yml")
         queries = get_google_scholar_queries_legacy(config)
         max_results = config.get("global", {}).get("max_results_per_source", 1000)
         config_mode = "LEGACY"
-        print("[WARNING] Using legacy config format. Consider using --search-config for new projects.")
+        print(
+            "[WARNING] Using legacy config format. Consider using --search-config for new projects."
+        )
 
     # Extract year range from config (logged only — not supported by EasyAPI)
     global_config = config.get("global", {})
@@ -510,8 +558,14 @@ if __name__ == "__main__":
     # Track existing titles and Google Scholar IDs to avoid duplicates.
     # DOI is not available from EasyAPI — dual dedup uses normalised title
     # (primary) + google_scholar_id / result_id (secondary).
-    existing_titles = {r.get("title", "").lower().strip() for r in existing_results if r.get("title")}
-    existing_gs_ids = {r.get("google_scholar_id") for r in existing_results if r.get("google_scholar_id")}
+    existing_titles = {
+        r.get("title", "").lower().strip() for r in existing_results if r.get("title")
+    }
+    existing_gs_ids = {
+        r.get("google_scholar_id")
+        for r in existing_results
+        if r.get("google_scholar_id")
+    }
     new_count = 0
 
     # Execute each query
@@ -572,6 +626,8 @@ if __name__ == "__main__":
     print(f"{'=' * 80}\n")
 
     if new_count > 0 and new_count <= 10:
-        print(f"[NOTE] FREE TIER NOTE:")
-        print(f"   EasyAPI free tier limited to 10 results per run")
-        print(f"   For full {max_results} results, upgrade at https://apify.com/pricing")
+        print("[NOTE] FREE TIER NOTE:")
+        print("   EasyAPI free tier limited to 10 results per run")
+        print(
+            f"   For full {max_results} results, upgrade at https://apify.com/pricing"
+        )

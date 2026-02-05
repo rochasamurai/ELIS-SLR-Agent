@@ -268,7 +268,7 @@ date_range:
 # ------------------------------------------------------------------------------
 # All 8 ELIS databases enabled for comprehensive coverage
 # Database order follows ELIS Protocol 2025 v2.0 Section 3.2.1
-# Order: Scopus, WoS, IEEE Xplore, Semantic Scholar, OpenAlex, CrossRef, CORE, Google Scholar
+# Order: Scopus, ScienceDirect, WoS, IEEE Xplore, Semantic Scholar, OpenAlex, CrossRef, CORE, Google Scholar
 # ------------------------------------------------------------------------------
 
 databases:
@@ -293,7 +293,28 @@ databases:
       rate_limit: "2 requests/second"
       timeout: 30
   
-  # 2. Web of Science
+  # 2. ScienceDirect
+  - name: "ScienceDirect"
+    enabled: true
+    max_results:
+      testing: 25
+      pilot: 100
+      benchmark: 500
+      production: 1000
+      exhaustive: 99999
+    max_results_default: production
+    query_syntax: "generic"
+    query_wrapper: "{query}"
+    priority: "CRITICAL"
+    notes: |
+      - Full-text scientific database (Elsevier)
+      - Complements Scopus with full-text coverage
+      - Supports Boolean queries natively
+    api_config:
+      rate_limit: "2 requests/second"
+      timeout: 30
+
+  # 3. Web of Science
   - name: "Web of Science"
     enabled: true
     max_results:
@@ -314,7 +335,7 @@ databases:
       rate_limit: "5 requests/second"
       timeout: 30
   
-  # 3. IEEE Xplore
+  # 4. IEEE Xplore
   - name: "IEEE Xplore"
     enabled: true
     max_results:
@@ -335,7 +356,7 @@ databases:
       rate_limit: "200 calls/day"
       timeout: 30
   
-  # 4. Semantic Scholar
+  # 5. Semantic Scholar
   - name: "Semantic Scholar"
     enabled: true
     max_results:
@@ -356,7 +377,7 @@ databases:
       rate_limit: "100 requests/5 minutes"
       timeout: 30
   
-  # 5. OpenAlex
+  # 6. OpenAlex
   - name: "OpenAlex"
     enabled: true
     max_results:

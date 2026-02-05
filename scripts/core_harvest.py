@@ -46,6 +46,7 @@ from pathlib import Path
 # CREDENTIALS
 # ---------------------------------------------------------------------------
 
+
 def get_credentials():
     """Get and validate CORE API credentials."""
     api_key = os.getenv("CORE_API_KEY")
@@ -67,6 +68,7 @@ def get_headers():
 # ---------------------------------------------------------------------------
 # SEARCH (pagination via offset)
 # ---------------------------------------------------------------------------
+
 
 def core_search(query: str, limit: int = 100, max_results: int = 1000):
     """
@@ -92,6 +94,7 @@ def core_search(query: str, limit: int = 100, max_results: int = 1000):
     offset = 0
     retry_count = 0
     max_retries = 5
+    printed_rate_limits = False
 
     # Cache headers once before the loop (avoids repeated get_credentials calls)
     headers = get_headers()
@@ -106,14 +109,54 @@ def core_search(query: str, limit: int = 100, max_results: int = 1000):
         try:
             r = requests.get(url, headers=headers, params=params, timeout=30)
 
-            if r.status_code == 429 or r.status_code == 503:
+            # Log CORE rate limit headers when available (print once per run)
+            rl_remaining = r.headers.get("X-RateLimitRemaining")
+            rl_retry_after = r.headers.get("X-RateLimit-Retry-After")
+            rl_limit = r.headers.get("X-RateLimit-Limit")
+            if (rl_remaining or rl_retry_after or rl_limit) and not printed_rate_limits:
+                print(
+                    "  Rate limits:",
+                    (
+                        f"remaining={rl_remaining}"
+                        if rl_remaining is not None
+                        else "remaining=?"
+                    ),
+                    (
+                        f"retry_after={rl_retry_after}"
+                        if rl_retry_after is not None
+                        else "retry_after=?"
+                    ),
+                    f"limit={rl_limit}" if rl_limit is not None else "limit=?",
+                )
+                printed_rate_limits = True
+
+            # Warn if remaining quota is low
+            if rl_remaining is not None:
+                try:
+                    remaining_int = int(rl_remaining)
+                    if remaining_int <= 5:
+                        print(f"  WARNING: Low rate limit remaining ({remaining_int})")
+                except (ValueError, TypeError):
+                    pass
+
+            if r.status_code in (429, 500, 503):
                 retry_count += 1
                 if retry_count > max_retries:
-                    print(f"  Max retries ({max_retries}) exceeded due to rate limiting. Stopping.")
+                    print(
+                        f"  Max retries ({max_retries}) exceeded due to transient server errors. Stopping."
+                    )
                     break
                 # Rate limited or service unavailable - back off and retry with exponential backoff
                 wait_time = 5 * retry_count
-                print(f"  HTTP {r.status_code}. Waiting {wait_time}s before retry ({retry_count}/{max_retries})...")
+                # If we hit a rate limit, honor Retry-After when provided
+                if r.status_code == 429 and rl_retry_after:
+                    try:
+                        wait_time = max(wait_time, int(rl_retry_after))
+                    except (ValueError, TypeError):
+                        pass
+                print(
+                    f"  HTTP {r.status_code}. Waiting {wait_time}s before retry ({retry_count}/{max_retries})..."
+                )
                 time.sleep(wait_time)
                 continue
 
@@ -124,7 +167,13 @@ def core_search(query: str, limit: int = 100, max_results: int = 1000):
             # Reset retry count after successful request
             retry_count = 0
 
-            data = r.json()
+            payload = r.json()
+            # CORE responses can be either top-level or nested under "data"
+            if isinstance(payload, dict) and isinstance(payload.get("data"), dict):
+                data = payload.get("data")
+            else:
+                data = payload if isinstance(payload, dict) else {}
+
             works = data.get("results", [])
 
             if not works:
@@ -134,7 +183,7 @@ def core_search(query: str, limit: int = 100, max_results: int = 1000):
             offset += len(works)
 
             # Check if we've reached the end
-            total_hits = data.get("totalHits", 0)
+            total_hits = data.get("totalHits", data.get("total", 0))
             if offset >= total_hits:
                 print(f"  Retrieved all {total_hits} available results")
                 break
@@ -152,6 +201,7 @@ def core_search(query: str, limit: int = 100, max_results: int = 1000):
 # ---------------------------------------------------------------------------
 # TRANSFORM
 # ---------------------------------------------------------------------------
+
 
 def transform_core_entry(entry):
     """
@@ -205,6 +255,7 @@ def transform_core_entry(entry):
 # CONFIG LOADING — LEGACY
 # ---------------------------------------------------------------------------
 
+
 def load_config(config_path: str):
     """Load search configuration from YAML file."""
     with open(config_path, "r", encoding="utf-8") as f:
@@ -242,6 +293,7 @@ def get_core_queries_legacy(config):
 # ---------------------------------------------------------------------------
 # CONFIG LOADING — NEW (tier-based)
 # ---------------------------------------------------------------------------
+
 
 def get_core_config_new(config, tier=None):
     """
@@ -281,7 +333,7 @@ def get_core_config_new(config, tier=None):
     if simplified_query:
         # Use the curated simplified query directly
         core_query = simplified_query
-        print(f"Using simplified alternative query for CORE:")
+        print("Using simplified alternative query for CORE:")
         print(f"  Query: {core_query}")
     else:
         # Fall back to using boolean_string with quotes stripped
@@ -293,7 +345,7 @@ def get_core_config_new(config, tier=None):
         # Apply wrapper if defined, otherwise use raw query (quotes stripped)
         query_wrapper = core_config.get("query_wrapper", "{query}")
         core_query = query_wrapper.replace("{query}", query_string).replace('"', "")
-        print(f"Query for CORE (quotes stripped):")
+        print("Query for CORE (quotes stripped):")
         print(f"  Query: {core_query[:100]}{'...' if len(core_query) > 100 else ''}")
 
     # Determine max_results based on tier
@@ -304,7 +356,9 @@ def get_core_config_new(config, tier=None):
         if tier:
             max_results = max_results_config.get(tier)
             if max_results is None:
-                print(f"[WARNING] Unknown tier '{tier}', available tiers: {list(max_results_config.keys())}")
+                print(
+                    f"[WARNING] Unknown tier '{tier}', available tiers: {list(max_results_config.keys())}"
+                )
                 tier = core_config.get("max_results_default", "production")
                 max_results = max_results_config.get(tier, 1000)
                 print(f"   Using default tier: {tier}")
@@ -324,6 +378,7 @@ def get_core_config_new(config, tier=None):
 # CLI
 # ---------------------------------------------------------------------------
 
+
 def parse_args():
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(
@@ -342,33 +397,33 @@ Examples:
 
   # Override max_results
   python scripts/core_harvest.py --search-config config/searches/electoral_integrity_search.yml --max-results 500
-        """
+        """,
     )
 
     parser.add_argument(
         "--search-config",
         type=str,
-        help="Path to search configuration file (e.g., config/searches/electoral_integrity_search.yml)"
+        help="Path to search configuration file (e.g., config/searches/electoral_integrity_search.yml)",
     )
 
     parser.add_argument(
         "--tier",
         type=str,
         choices=["testing", "pilot", "benchmark", "production", "exhaustive"],
-        help="Max results tier to use (testing/pilot/benchmark/production/exhaustive)"
+        help="Max results tier to use (testing/pilot/benchmark/production/exhaustive)",
     )
 
     parser.add_argument(
         "--max-results",
         type=int,
-        help="Override max_results regardless of config or tier"
+        help="Override max_results regardless of config or tier",
     )
 
     parser.add_argument(
         "--output",
         type=str,
         default="json_jsonl/ELIS_Appendix_A_Search_rows.json",
-        help="Output file path (default: json_jsonl/ELIS_Appendix_A_Search_rows.json)"
+        help="Output file path (default: json_jsonl/ELIS_Appendix_A_Search_rows.json)",
     )
 
     return parser.parse_args()
@@ -396,7 +451,9 @@ if __name__ == "__main__":
         queries = get_core_queries_legacy(config)
         max_results = config.get("global", {}).get("max_results_per_source", 1000)
         config_mode = "LEGACY"
-        print("[WARNING] Using legacy config format. Consider using --search-config for new projects.")
+        print(
+            "[WARNING] Using legacy config format. Consider using --search-config for new projects."
+        )
 
     # Apply max_results override if provided
     if args.max_results:
