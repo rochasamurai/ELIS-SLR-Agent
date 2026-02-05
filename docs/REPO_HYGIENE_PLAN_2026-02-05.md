@@ -238,13 +238,13 @@ Apply these moves:
 
 | Current | Target |
 |---|---|
-| `configs/benchmark_config.yaml` | `benchmarks/config/benchmark_config.yaml` |
-| `config/benchmark_temp_queries.yml` | `benchmarks/queries/benchmark_temp_queries.yml` |
+| `benchmarks/config/benchmark_config.yaml` | `benchmarks/config/benchmark_config.yaml` |
+| `benchmarks/queries/benchmark_temp_queries.yml` | `benchmarks/queries/benchmark_temp_queries.yml` |
 | *(if benchmark queries exist/added)* | `benchmarks/queries/benchmark_queries.yml` |
-| `scripts/run_benchmark.py` | `benchmarks/scripts/run_benchmark.py` |
-| `scripts/search_benchmark.py` | `benchmarks/scripts/search_benchmark.py` |
-| `scripts/benchmark_elis_adapter.py` | `benchmarks/scripts/benchmark_elis_adapter.py` |
-| `json_jsonl/benchmark_search_results.json` | `benchmarks/outputs/benchmark_search_results.json` (generated; ignore) |
+| `benchmarks/scripts/run_benchmark.py` | `benchmarks/scripts/run_benchmark.py` |
+| `benchmarks/scripts/search_benchmark.py` | `benchmarks/scripts/search_benchmark.py` |
+| `benchmarks/scripts/benchmark_elis_adapter.py` | `benchmarks/scripts/benchmark_elis_adapter.py` |
+| `benchmarks/outputs/benchmark_search_results.json` | `benchmarks/outputs/benchmark_search_results.json` (generated; ignore) |
 
 > **Note:** `docs/HARVEST_TEST_PLAN.md` stays in `docs/` — it is a production harvest test plan, not benchmark-specific.
 
@@ -367,7 +367,7 @@ Best practice:
 - Benchmarks live under `benchmarks/config/`.
 
 Actions:
-- Move `configs/benchmark_config.yaml` → `benchmarks/config/benchmark_config.yaml`
+- Move `benchmarks/config/benchmark_config.yaml` → `benchmarks/config/benchmark_config.yaml`
 - Delete `configs/` if empty.
 
 Acceptance criteria:

@@ -31,12 +31,12 @@
 .gitignore
 CHANGELOG.md
 README.md
-config/benchmark_temp_queries.yml
+benchmarks/queries/benchmark_temp_queries.yml
 config/elis_search_queries.yml
 config/searches/README.md
 config/searches/electoral_integrity_search.yml
 config/searches/tai_awasthi_2025_search.yml
-configs/benchmark_config.yaml
+benchmarks/config/benchmark_config.yaml
 data/benchmark/benchmark_results.json
 data/benchmark/darmawan_2021_references.json
 data/benchmark/matched_studies.json
@@ -83,7 +83,7 @@ json_jsonl/ELIS_Appendix_B_Screening_rows.json
 json_jsonl/ELIS_Appendix_C_DataExtraction_rows.json
 json_jsonl/ELIS_Appendix_C_Extraction_rows.json
 json_jsonl/README-old.md
-json_jsonl/benchmark_search_results.json
+benchmarks/outputs/benchmark_search_results.json
 json_jsonl/config/ELIS_Agent_LogRotationPolicy.json
 json_jsonl/config/ELIS_Appendix_A_Search_config.json
 json_jsonl/config/ELIS_Appendix_B_InclusionExclusion_config.json
@@ -114,7 +114,7 @@ schemas/appendix_a.schema.json
 schemas/appendix_b.schema.json
 schemas/appendix_c.schema.json
 scripts/agent.py
-scripts/benchmark_elis_adapter.py
+benchmarks/scripts/benchmark_elis_adapter.py
 scripts/core_harvest.py
 scripts/core_preflight.py
 scripts/crossref_harvest.py
@@ -128,10 +128,10 @@ scripts/ieee_harvest.py
 scripts/ieee_preflight.py
 scripts/openalex_harvest.py
 scripts/openalex_preflight.py
-scripts/run_benchmark.py
+benchmarks/scripts/run_benchmark.py
 scripts/scopus_harvest.py
 scripts/scopus_preflight.py
-scripts/search_benchmark.py
+benchmarks/scripts/search_benchmark.py
 scripts/semanticscholar_harvest.py
 scripts/semanticscholar_preflight.py
 scripts/test_google_scholar.py

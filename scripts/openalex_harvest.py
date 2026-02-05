@@ -312,12 +312,12 @@ def get_openalex_config_new(config, tier=None):
                 print(
                     f"[WARNING] Unknown tier '{tier}', available tiers: {list(max_results_config.keys())}"
                 )
-                tier = oa_config.get("max_results_default", "production")
+                tier = oa_config.get("max_results_default", "testing")
                 max_results = max_results_config.get(tier, 1000)
                 print(f"   Using default tier: {tier}")
         else:
             # Use default tier
-            tier = oa_config.get("max_results_default", "production")
+            tier = oa_config.get("max_results_default", "testing")
             max_results = max_results_config.get(tier, 1000)
             print(f"Using default tier: {tier} (max_results: {max_results})")
     else:
