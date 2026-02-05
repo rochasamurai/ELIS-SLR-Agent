@@ -58,6 +58,7 @@ def get_headers():
         "Accept": "application/json",
     }
 
+
 def wos_search(query: str, limit: int = 50, max_results: int = 1000):
     """
     Send a query to Web of Science Starter API and retrieve up to max_results.
@@ -94,11 +95,15 @@ def wos_search(query: str, limit: int = 50, max_results: int = 1000):
             if r.status_code == 429:
                 retry_count += 1
                 if retry_count > max_retries:
-                    print(f"  Max retries ({max_retries}) exceeded due to rate limiting. Stopping.")
+                    print(
+                        f"  Max retries ({max_retries}) exceeded due to rate limiting. Stopping."
+                    )
                     break
                 # Rate limited - back off and retry with exponential backoff
                 wait_time = 5 * retry_count
-                print(f"  Rate limited (429). Waiting {wait_time}s before retry ({retry_count}/{max_retries})...")
+                print(
+                    f"  Rate limited (429). Waiting {wait_time}s before retry ({retry_count}/{max_retries})..."
+                )
                 time.sleep(wait_time)
                 continue
 
@@ -150,7 +155,10 @@ def transform_wos_entry(entry):
     names = entry.get("names", {}) or {}
     authors_data = names.get("authors", [])
     if isinstance(authors_data, list):
-        authors = [a.get("displayName", "") or a.get("wosStandard", "") or "" for a in authors_data]
+        authors = [
+            a.get("displayName", "") or a.get("wosStandard", "") or ""
+            for a in authors_data
+        ]
         authors = [a for a in authors if a]  # Remove empty strings
     else:
         authors = []
@@ -183,7 +191,9 @@ def transform_wos_entry(entry):
         "year": year,
         "doi": doi,
         "abstract": abstract,
-        "url": f"https://www.webofscience.com/wos/woscc/full-record/{uid}" if uid else "",
+        "url": (
+            f"https://www.webofscience.com/wos/woscc/full-record/{uid}" if uid else ""
+        ),
         "wos_id": uid,
         "source_title": source_title,
         "raw_metadata": entry,
@@ -199,10 +209,10 @@ def load_config(config_path: str):
 def get_wos_queries_legacy(config):
     """
     Extract enabled queries for Web of Science from legacy config format.
-    
+
     Args:
         config: Legacy config dict from config/elis_search_queries.yml
-        
+
     Returns:
         list: List of WoS queries wrapped in TS=()
     """
@@ -228,46 +238,48 @@ def get_wos_queries_legacy(config):
 def get_wos_config_new(config, tier=None):
     """
     Extract Web of Science configuration from new search config format.
-    
+
     Args:
         config: New search config dict from config/searches/*.yml
         tier: Optional tier override (testing/pilot/benchmark/production/exhaustive)
-        
+
     Returns:
         tuple: (queries, max_results)
     """
     # Find Web of Science database configuration
     databases = config.get("databases", [])
     wos_config = None
-    
+
     for db in databases:
         if db.get("name") == "Web of Science" and db.get("enabled", False):
             wos_config = db
             break
-    
+
     if not wos_config:
         print("[WARNING] Web of Science not enabled in search configuration")
         return [], 0
-    
+
     # Get query and wrap in TS=()
     query_string = config.get("query", {}).get("boolean_string", "")
     if not query_string:
         print("[WARNING] No query found in search configuration")
         return [], 0
-    
+
     # Apply WoS-specific wrapper
     query_wrapper = wos_config.get("query_wrapper", "TS=({query})")
     wos_query = query_wrapper.replace("{query}", query_string)
-    
+
     # Determine max_results based on tier
     max_results_config = wos_config.get("max_results")
-    
+
     if isinstance(max_results_config, dict):
         # Tier-based system
         if tier:
             max_results = max_results_config.get(tier)
             if max_results is None:
-                print(f"[WARNING] Unknown tier '{tier}', available tiers: {list(max_results_config.keys())}")
+                print(
+                    f"[WARNING] Unknown tier '{tier}', available tiers: {list(max_results_config.keys())}"
+                )
                 tier = wos_config.get("max_results_default", "production")
                 max_results = max_results_config.get(tier, 1000)
                 print(f"   Using default tier: {tier}")
@@ -279,7 +291,7 @@ def get_wos_config_new(config, tier=None):
     else:
         # Single value (backwards compatible)
         max_results = max_results_config or 1000
-    
+
     return [wos_query], max_results
 
 
@@ -301,42 +313,42 @@ Examples:
 
   # Override max_results
   python scripts/wos_harvest.py --search-config config/searches/electoral_integrity_search.yml --max-results 500
-        """
+        """,
     )
-    
+
     parser.add_argument(
         "--search-config",
         type=str,
-        help="Path to search configuration file (e.g., config/searches/electoral_integrity_search.yml)"
+        help="Path to search configuration file (e.g., config/searches/electoral_integrity_search.yml)",
     )
-    
+
     parser.add_argument(
         "--tier",
         type=str,
         choices=["testing", "pilot", "benchmark", "production", "exhaustive"],
-        help="Max results tier to use (testing/pilot/benchmark/production/exhaustive)"
+        help="Max results tier to use (testing/pilot/benchmark/production/exhaustive)",
     )
-    
+
     parser.add_argument(
         "--max-results",
         type=int,
-        help="Override max_results regardless of config or tier"
+        help="Override max_results regardless of config or tier",
     )
-    
+
     parser.add_argument(
         "--output",
         type=str,
         default="json_jsonl/ELIS_Appendix_A_Search_rows.json",
-        help="Output file path (default: json_jsonl/ELIS_Appendix_A_Search_rows.json)"
+        help="Output file path (default: json_jsonl/ELIS_Appendix_A_Search_rows.json)",
     )
-    
+
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     # Parse command-line arguments
     args = parse_args()
-    
+
     # Determine configuration mode
     if args.search_config:
         # NEW CONFIG FORMAT
@@ -351,8 +363,10 @@ if __name__ == "__main__":
         queries = get_wos_queries_legacy(config)
         max_results = config.get("global", {}).get("max_results_per_source", 100)
         config_mode = "LEGACY"
-        print("[WARNING] Using legacy config format. Consider using --search-config for new projects.")
-    
+        print(
+            "[WARNING] Using legacy config format. Consider using --search-config for new projects."
+        )
+
     # Apply max_results override if provided
     if args.max_results:
         print(f"Overriding max_results: {max_results} -> {args.max_results}")
@@ -363,7 +377,7 @@ if __name__ == "__main__":
         print("[WARNING] No Web of Science queries found in config")
         print("   Check that Web of Science is enabled and queries are defined")
         exit(1)  # Exit with error code - missing queries indicates misconfiguration
-    
+
     print(f"\n{'='*80}")
     print(f"WEB OF SCIENCE HARVEST - {config_mode} CONFIG")
     print(f"{'='*80}")
@@ -408,7 +422,7 @@ if __name__ == "__main__":
                     is_duplicate = True
                 if wos_id and wos_id in existing_wos_ids:
                     is_duplicate = True
-                
+
                 if not is_duplicate:
                     existing_results.append(transformed)
                     if doi:
@@ -434,4 +448,3 @@ if __name__ == "__main__":
     print(f"Total records in dataset: {len(existing_results)}")
     print(f"Saved to: {output_path}")
     print(f"{'='*80}\n")
-    

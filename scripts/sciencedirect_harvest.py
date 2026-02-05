@@ -76,10 +76,14 @@ def sciencedirect_search(query: str, count: int = 25, max_results: int = 100):
             if r.status_code == 429:
                 retry_count += 1
                 if retry_count > max_retries:
-                    print(f"  Max retries ({max_retries}) exceeded due to rate limiting. Stopping.")
+                    print(
+                        f"  Max retries ({max_retries}) exceeded due to rate limiting. Stopping."
+                    )
                     break
                 wait_time = 5 * retry_count
-                print(f"  Rate limited (429). Waiting {wait_time}s before retry ({retry_count}/{max_retries})...")
+                print(
+                    f"  Rate limited (429). Waiting {wait_time}s before retry ({retry_count}/{max_retries})..."
+                )
                 time.sleep(wait_time)
                 continue
 
@@ -98,7 +102,9 @@ def sciencedirect_search(query: str, count: int = 25, max_results: int = 100):
             results.extend(entries)
             start += count
 
-            total_results = int(data.get("search-results", {}).get("opensearch:totalResults", 0))
+            total_results = int(
+                data.get("search-results", {}).get("opensearch:totalResults", 0)
+            )
             if len(results) >= total_results:
                 print(f"  Retrieved all {total_results} available results")
                 break
@@ -202,7 +208,9 @@ def get_sciencedirect_config_new(config, tier=None):
         if tier:
             max_results = max_results_config.get(tier)
             if max_results is None:
-                print(f"[WARNING] Unknown tier '{tier}', available tiers: {list(max_results_config.keys())}")
+                print(
+                    f"[WARNING] Unknown tier '{tier}', available tiers: {list(max_results_config.keys())}"
+                )
                 tier = sd_config.get("max_results_default", "production")
                 max_results = max_results_config.get(tier, 1000)
                 print(f"   Using default tier: {tier}")
@@ -222,9 +230,15 @@ def parse_args():
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument("--search-config", type=str)
-    parser.add_argument("--tier", type=str, choices=["testing", "pilot", "benchmark", "production", "exhaustive"])
+    parser.add_argument(
+        "--tier",
+        type=str,
+        choices=["testing", "pilot", "benchmark", "production", "exhaustive"],
+    )
     parser.add_argument("--max-results", type=int)
-    parser.add_argument("--output", type=str, default="json_jsonl/ELIS_Appendix_A_Search_rows.json")
+    parser.add_argument(
+        "--output", type=str, default="json_jsonl/ELIS_Appendix_A_Search_rows.json"
+    )
     return parser.parse_args()
 
 
@@ -242,7 +256,9 @@ if __name__ == "__main__":
         queries = get_sciencedirect_queries_legacy(config)
         max_results = config.get("global", {}).get("max_results_per_source", 100)
         config_mode = "LEGACY"
-        print("[WARNING] Using legacy config format. Consider using --search-config for new projects.")
+        print(
+            "[WARNING] Using legacy config format. Consider using --search-config for new projects."
+        )
 
     if args.max_results:
         print(f"Overriding max_results: {max_results} -> {args.max_results}")
@@ -270,7 +286,9 @@ if __name__ == "__main__":
         print(f"Loaded {len(existing_results)} existing results")
 
     existing_dois = {r.get("doi") for r in existing_results if r.get("doi")}
-    existing_sd_ids = {r.get("sciencedirect_id") for r in existing_results if r.get("sciencedirect_id")}
+    existing_sd_ids = {
+        r.get("sciencedirect_id") for r in existing_results if r.get("sciencedirect_id")
+    }
     new_count = 0
 
     for i, query in enumerate(queries, 1):

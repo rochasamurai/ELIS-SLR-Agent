@@ -7,11 +7,12 @@ import time
 import pycurl
 import certifi
 from io import BytesIO
-import os   # ✅ Added for image saving
+import os  # ✅ Added for image saving
 import requests  # ✅ Added for image token & image downloads
 
+
 class XPLORE:
- 
+
     # default API endpoint (used for most queries)
     endPoint = "https://ieeexploreapi.ieee.org/api/v1/search/articles"
 
@@ -31,7 +32,7 @@ class XPLORE:
     imageEndPoint = "https://ieeexploreapi.ieee.org/api/v1/search/images/"
     # ✅ Fields mapping for Image API JSON & XML parsing
     imageFields = {
-        "total_records": "total_records",       # JSON path
+        "total_records": "total_records",  # JSON path
         "total_searched": "total_searched",
         "doi": "metadata[i].doi",
         "title": "metadata[i].title",
@@ -48,27 +49,27 @@ class XPLORE:
         "publication_title": "metadata[i].publication_title",
         "publication_number": "metadata[i].publication_number",
         "publication_year": "metadata[i].publication_year",
-        "image_type": "metadata[i].imageType",         # NEW
-        "figure_id": "metadata[i].figure.id",          # NEW
-        "figure_label": "metadata[i].figure.label",    # NEW
+        "image_type": "metadata[i].imageType",  # NEW
+        "figure_id": "metadata[i].figure.id",  # NEW
+        "figure_label": "metadata[i].figure.label",  # NEW
         "figure_url": "metadata[i].figure.graphic.large",  # NEW
-        "figure_caption": "metadata[i].figure.caption",     # NEW
-        "figure_image_id": "metadata[i].figure.imageId",    # NEW
-        "keywords": "metadata[i].keywords[*].keyword"       # NEW
+        "figure_caption": "metadata[i].figure.caption",  # NEW
+        "figure_image_id": "metadata[i].figure.imageId",  # NEW
+        "keywords": "metadata[i].keywords[*].keyword",  # NEW
     }
 
     def __init__(self, apiKey):
 
-    	# API key
+        # API key
         self.apiKey = apiKey
 
         # auth token
-        self.authToken = ''
+        self.authToken = ""
 
         # ✅ cltoken for Images & Full Text
-        self.cltoken = ''
+        self.cltoken = ""
 
-    	# flag that some search criteria has been provided
+        # flag that some search criteria has been provided
         self.queryProvided = False
 
         # flag that chargeable Full Text request is occurring
@@ -99,10 +100,10 @@ class XPLORE:
         self.citationLookup = False
 
         # data type for results; default is json (other option is xml)
-        self.outputType = 'json'
+        self.outputType = "json"
 
         # data format for results; default is raw (returned string); other option is object
-        self.outputDataFormat = 'raw'
+        self.outputDataFormat = "raw"
 
         # default of 25 results returned
         self.resultSetMax = 25
@@ -114,20 +115,49 @@ class XPLORE:
         self.startRecord = 1
 
         # default sort order is ascending; could also be 'desc' for descending
-        self.sortOrder = 'asc'
+        self.sortOrder = "asc"
 
         # field name that is being used for sorting
-        self.sortField = 'article_title'
+        self.sortField = "article_title"
 
         # array of permitted search fields for searchField() method
-        self.allowedSearchFields = ['abstract', 'affiliation', 'article_number', 'article_title', 'author', 'boolean_text', 'content_type', 'd-au', 'd-pubtype', 'd-publisher', 'd-year', 'doi', 'end_year', 'facet', 'index_terms', 'isbn', 'issn', 'is_number', 'meta_data', 'open_access', 'publication_number', 'publication_title', 'publication_year', 'publisher', 'querytext', 'start_year', 'thesaurus_terms', 'start_date', 'end_date']
+        self.allowedSearchFields = [
+            "abstract",
+            "affiliation",
+            "article_number",
+            "article_title",
+            "author",
+            "boolean_text",
+            "content_type",
+            "d-au",
+            "d-pubtype",
+            "d-publisher",
+            "d-year",
+            "doi",
+            "end_year",
+            "facet",
+            "index_terms",
+            "isbn",
+            "issn",
+            "is_number",
+            "meta_data",
+            "open_access",
+            "publication_number",
+            "publication_title",
+            "publication_year",
+            "publisher",
+            "querytext",
+            "start_year",
+            "thesaurus_terms",
+            "start_date",
+            "end_date",
+        ]
 
         # dictionary of all search parameters in use and their values
         self.parameters = {}
 
         # dictionary of all filters in use and their values
         self.filters = {}
-
 
     # ensuring == can be used reliably
     def __eq__(self, other):
@@ -136,11 +166,9 @@ class XPLORE:
         else:
             return False
 
-
     # ensuring != can be used reliably
     def __ne__(self, other):
         return not self.__eq__(other)
-
 
     # set the data type for the API output
     # string outputType   Format for the returned result (JSON, XML)
@@ -150,7 +178,6 @@ class XPLORE:
         outputType = outputType.strip().lower()
         self.outputType = outputType
 
-
     # set the data format for the API output
     # string outputDataFormat   Data structure for the returned result (raw string or object)
     # return void
@@ -159,14 +186,12 @@ class XPLORE:
         outputDataFormat = outputDataFormat.strip().lower()
         self.outputDataFormat = outputDataFormat
 
-
     # set the start position in the returned data
     # string start   Start position in the returned data
     # return void
     def startingResult(self, start):
 
         self.startRecord = math.ceil(start) if (start > 0) else 1
-
 
     # set the maximum number of results
     # string maximum   Max number of results to return
@@ -176,7 +201,6 @@ class XPLORE:
         self.resultSetMax = math.ceil(maximum) if (maximum > 0) else 25
         if self.resultSetMax > self.resultSetMaxCap:
             self.resultSetMax = self.resultSetMaxCap
-
 
     # setting a filter on results
     # string filterParam   Field used for filtering
@@ -192,9 +216,8 @@ class XPLORE:
             self.queryProvided = True
 
             # Standards do not have article titles, so switch to sorting by article number
-            if (filterParam == 'content_type' and value == 'Standards'):
-                self.resultsSorting('publication_year', 'asc')
-
+            if filterParam == "content_type" and value == "Standards":
+                self.resultsSorting("publication_year", "asc")
 
     # setting sort order for results
     # string field   Data field used for sorting
@@ -206,7 +229,6 @@ class XPLORE:
         order = order.strip()
         self.sortField = field
         self.sortOrder = order
-
 
     # shortcut method for assigning search parameters and values
     # string field   Field used for searching
@@ -220,242 +242,218 @@ class XPLORE:
         else:
             print("Searches against field " + field + " are not supported")
 
-
     # string value   Abstract text to query
     # return void
     def abstractText(self, value):
 
-        self.addParameter('abstract', value)
-
+        self.addParameter("abstract", value)
 
     # string value   Affiliation text to query
     # return void
     def affiliationText(self, value):
 
-        self.addParameter('affiliation', value)
-
+        self.addParameter("affiliation", value)
 
     # string value   Article number to query
     # return void
     def articleNumber(self, value):
 
-        self.addParameter('article_number', value)
-
+        self.addParameter("article_number", value)
 
     # string value   Article title to query
     # return void
     def articleTitle(self, value):
 
-        self.addParameter('article_title', value)
-
+        self.addParameter("article_title", value)
 
     # string value   Author to query
     # return void
     def authorText(self, value):
 
-        self.addParameter('author', value)
-
+        self.addParameter("author", value)
 
     # string value   Author Facet text to query
     # return void
     def authorFacetText(self, value):
 
-        self.addParameter('d-au', value)
-
+        self.addParameter("d-au", value)
 
     # string value   Value(s) to use in the boolean query
     # return void
     def booleanText(self, value):
 
-        self.addParameter('boolean_text', value)
-
+        self.addParameter("boolean_text", value)
 
     # string value   Content Type Facet text to query
     # return void
     def citationType(self, value):
 
         value = value.strip()
-        value = value.replace(' ', '')
-        value = value.replace('-', '_')
+        value = value.replace(" ", "")
+        value = value.replace("-", "_")
 
-        self.addParameter('citation_type', value)
-
+        self.addParameter("citation_type", value)
 
     # string value   Content Type Facet text to query
     # return void
     def contentTypeFacetText(self, value):
 
-        self.addParameter('d-pubtype', value)
-
+        self.addParameter("d-pubtype", value)
 
     # string value   Customer ID for usage query
     # return void
     def customerID(self, value):
 
-        self.addParameter('customer_id', value)
-
+        self.addParameter("customer_id", value)
 
     # string value   DOI (Digital Object Identifier) to query
     # return void
     def doi(self, value):
 
-        self.addParameter('doi', value)
-
+        self.addParameter("doi", value)
 
     # string value   Facet text to query
     # return void
     def facetText(self, value):
 
-        self.addParameter('facet', value)
-
+        self.addParameter("facet", value)
 
     # string value   Author Keywords, IEEE Terms, and Mesh Terms to query
     # return void
     def indexTerms(self, value):
 
-        self.addParameter('index_terms', value)
-
+        self.addParameter("index_terms", value)
 
     # string value   Start date (YYYYMMDD format) of publication insertion
     # return void
     def insertionStartDate(self, value):
 
-        self.addParameter('start_date', value)
-
+        self.addParameter("start_date", value)
 
     # string value   End date (YYYYMMDD format) of publication insertion
     # return void
     def insertionEndDate(self, value):
 
-        self.addParameter('end_date', value)
-
+        self.addParameter("end_date", value)
 
     # string value   ISBN (International Standard Book Number) to query
     # return void
     def isbn(self, value):
 
-        self.addParameter('isbn', value)
-
+        self.addParameter("isbn", value)
 
     # string value   ISSN (International Standard Serial number) to query
     # return void
     def issn(self, value):
 
-        self.addParameter('issn', value)
-
+        self.addParameter("issn", value)
 
     # string value   Issue number to query
     # return void
     def issueNumber(self, value):
 
-        self.addParameter('is_number', value)
-
+        self.addParameter("is_number", value)
 
     # string value   Text to query across metadata fields and the abstract
     # return void
     def metaDataText(self, value):
 
-        self.addParameter('meta_data', value)
-
+        self.addParameter("meta_data", value)
 
     # string value   Publication Facet text to query
     # return void
     def publicationFacetText(self, value):
 
-        self.addParameter('d-year', value)
-
+        self.addParameter("d-year", value)
 
     # string value   Publisher Facet text to query
     # return void
     def publisherFacetText(self, value):
 
-        self.addParameter('d-publisher', value)
-
+        self.addParameter("d-publisher", value)
 
     # string value   Publication title to query
     # return void
     def publicationNumber(self, value):
 
-        self.addParameter('publication_number', value)
-
+        self.addParameter("publication_number", value)
 
     # string value   Publication title to query
     # return void
     def publicationTitle(self, value):
 
-        self.addParameter('publication_title', value)
-
+        self.addParameter("publication_title", value)
 
     # string or number value   Publication year to query
     # return void
     def publicationYear(self, value):
 
-        self.addParameter('publication_year', value)
-
+        self.addParameter("publication_year", value)
 
     # string value   Text to query across metadata fields, abstract and document text
     # return void
     def queryText(self, value):
 
-        self.addParameter('querytext', value)
-
+        self.addParameter("querytext", value)
 
     # string value   Thesaurus terms (IEEE Terms) to query
     # return void
     def thesaurusTerms(self, value):
 
-        self.addParameter('thesaurus_terms', value)
-
+        self.addParameter("thesaurus_terms", value)
 
     # add query parameter
     # string parameter   Data field to query
     # string value       Text to use in query
     # return void
     def addParameter(self, parameter, value):
-      
+
         value = value.strip()
 
-        if (len(value) > 0):
+        if len(value) > 0:
 
-            self.parameters[parameter]= value
-        
+            self.parameters[parameter] = value
+
             # viable query criteria provided
             self.queryProvided = True
 
             # set flags based on parameter
-            if (parameter == 'article_number'):
+            if parameter == "article_number":
 
                 self.usingArticleNumber = True
 
-            if (parameter == 'boolean_text'):
+            if parameter == "boolean_text":
 
                 self.usingBoolean = True
 
-            if (parameter == 'facet' or parameter == 'd-au' or parameter == 'd-year' or parameter == 'd-pubtype' or parameter == 'd-publisher'):
+            if (
+                parameter == "facet"
+                or parameter == "d-au"
+                or parameter == "d-year"
+                or parameter == "d-pubtype"
+                or parameter == "d-publisher"
+            ):
 
                 self.usingFacet = True
 
-    
     # Open Access document
     # string article   Article number to query
     # return void
     def openAccess(self, article):
-      
+
         self.usingOpenAccess = True
         self.queryProvided = True
         self.articleNumber(article)
-
 
     # Citations query
     # string article    Article number to query
     # string citeType   Citation type
     # return void
-    def citations(self, article='0', citeType='ieee'):
-      
+    def citations(self, article="0", citeType="ieee"):
+
         self.citationLookup = True
         self.articleNumber(article)
         self.citationType(citeType)
-
 
     # Full Text token request
     # string token   Authorization token for Full Text request
@@ -464,38 +462,34 @@ class XPLORE:
 
         self.authToken = token.strip()
 
-
     # Full Text article request
     # string article   Article number to query
     # return void
     def fullTextRequest(self, article):
-      
+
         self.requestingFullText = True
         self.queryProvided = True
         self.articleNumber(article)
-
 
     # Paper Cites / Author Bio request
     # string author   Author ID to query
     # return void
     def authorBio(self, author):
-      
+
         self.requestingBio = True
         self.queryProvided = True
-        self.addParameter('author_number', author)
-
+        self.addParameter("author_number", author)
 
     # Usage request
     # string startingDate   Usage start date in M-D-YYYY format
     # string endingDate     Usage end date in M-D-YYYY format
     # return void
-    def usageRequest(self, startingDate='', endingDate=''):
-      
-        self.addParameter('usage_start_date', startingDate)
-        self.addParameter('usage_end_date', endingDate)
+    def usageRequest(self, startingDate="", endingDate=""):
+
+        self.addParameter("usage_start_date", startingDate)
+        self.addParameter("usage_end_date", endingDate)
         self.requestingUsage = True
         self.queryProvided = True
-
 
     # Checking for token expiration response
     # string response             Response from API
@@ -503,13 +497,12 @@ class XPLORE:
     def checkForTokenExpiration(self, response):
 
         tokenValid = True
-        errorXML = '<ApiResponse><error>Token Expired</error></ApiResponse>'
+        errorXML = "<ApiResponse><error>Token Expired</error></ApiResponse>"
         errorJSON = '{"error":"Token Expired"}'
-        if response == errorXML or response == errorJSON: 
+        if response == errorXML or response == errorJSON:
             tokenValid = False
 
         return tokenValid
-
 
     # calls the API
     # string debugMode  If this mode is on (True) then output query and not data
@@ -527,7 +520,7 @@ class XPLORE:
         elif self.requestingUsage is True:
 
             apiQry = self.buildUsageRequestQuery()
-        
+
         elif self.usingOpenAccess is True:
 
             apiQry = self.buildOpenAccessQuery()
@@ -541,63 +534,60 @@ class XPLORE:
             apiQry = self.buildQuery()
 
         if debugModeOff is False:
-        
+
             return apiQry
-        
+
         else:
-        
+
             if self.queryProvided is False:
                 print("No search criteria provided")
-        
+
             data = self.queryAPI(apiQry)
 
         # does API response indicate an expired token?
         if self.requestingFullText is True or self.requestingUsage is True:
-                
+
             tokenValid = self.checkForTokenExpiration(data)
-                
+
             # request new auth token
             if tokenValid is False:
                 if self.requestingFullText is True:
                     apiQry = self.buildFullTextRequestQuery(True)
                 elif self.requestingUsage is True:
-                   apiQry = self.buildUsageRequestQuery(True)
+                    apiQry = self.buildUsageRequestQuery(True)
                 data = self.queryAPI(apiQry)
-            
+
             formattedData = self.formatData(data)
 
         else:
-            formattedData = self.formatData(data)            
-            
-        return formattedData
+            formattedData = self.formatData(data)
 
+        return formattedData
 
     # creates the URL for the Open Access Document API call
     # return string: full URL for querying the API
     def buildOpenAccessQuery(self):
 
-        url = self.openAccessEndPoint;
-        url += str(self.parameters['article_number']) + '/fulltext'
-        url += '?apikey=' + str(self.apiKey)
-        url += '&format=' + str(self.outputType)
+        url = self.openAccessEndPoint
+        url += str(self.parameters["article_number"]) + "/fulltext"
+        url += "?apikey=" + str(self.apiKey)
+        url += "&format=" + str(self.outputType)
 
         return url
-
 
     # creates the URL for the Citations API call
     # return string: full URL for querying the API
     def buildCitationsQuery(self):
 
-        url = self.openAccessEndPoint;
-        url += str(self.parameters['article_number']) + '/citation'
-        url += '?apikey=' + str(self.apiKey)
-        url += '&format=' + str(self.outputType)
-        url += '&type=' + str(self.parameters['citation_type'])
-        url += '&max_records=' + str(self.resultSetMax)
-        url += '&start_record=' + str(self.startRecord)
+        url = self.openAccessEndPoint
+        url += str(self.parameters["article_number"]) + "/citation"
+        url += "?apikey=" + str(self.apiKey)
+        url += "&format=" + str(self.outputType)
+        url += "&type=" + str(self.parameters["citation_type"])
+        url += "&max_records=" + str(self.resultSetMax)
+        url += "&start_record=" + str(self.startRecord)
 
         return url
-
 
     # boolean refresh            Whether to force a new token retrieval
     # return string tokenValue   Token for requesting full text article or usage
@@ -606,10 +596,10 @@ class XPLORE:
         # authentication token from user must be provided
         if not self.authToken:
             print("Authorization token not provided")
-        
+
         else:
             # file name for persistence
-            fileName = str(self.apiKey) + '_token.txt'
+            fileName = str(self.apiKey) + "_token.txt"
 
             # whether a new full text token needs to be requested
             requestNewToken = False
@@ -626,73 +616,85 @@ class XPLORE:
 
             else:
                 storedValue = file.read_text()
-                storedValuesArr = storedValue.split('--////--')
+                storedValuesArr = storedValue.split("--////--")
                 tokenValue = storedValuesArr[0]
                 expiresAt = storedValuesArr[1]
 
-                if storedValue is False or not tokenValue or float(expiresAt) <= float(currentTime):
+                if (
+                    storedValue is False
+                    or not tokenValue
+                    or float(expiresAt) <= float(currentTime)
+                ):
                     requestNewToken = True
 
             # request a new full text token
             if requestNewToken is True or refresh is True:
                 data = self.getAuthTokenFromEndpoint()
                 obj = json.loads(data)
-                if 'token' not in obj:
+                if "token" not in obj:
                     print("Token cannot be retrieved")
                 else:
-                    tokenValue = obj['token']
+                    tokenValue = obj["token"]
                     expiresAt = currentTime + 600
-                    valueToSave = str(tokenValue) + '--////--' + str(expiresAt)
+                    valueToSave = str(tokenValue) + "--////--" + str(expiresAt)
                     file.write_text(valueToSave)
-        
-            return tokenValue
 
+            return tokenValue
 
     # creates the URL for the non-Open Access Document API call
     # return string: full URL for querying the API
     def buildQuery(self):
 
-        url = self.endPoint;
+        url = self.endPoint
 
-        url += '?apikey=' + str(self.apiKey)
-        url += '&format=' + str(self.outputType)
-        url += '&max_records=' + str(self.resultSetMax)
-        url += '&start_record=' + str(self.startRecord)
-        url += '&sort_order=' + str(self.sortOrder)
-        url += '&sort_field=' + str(self.sortField)
+        url += "?apikey=" + str(self.apiKey)
+        url += "&format=" + str(self.outputType)
+        url += "&max_records=" + str(self.resultSetMax)
+        url += "&start_record=" + str(self.startRecord)
+        url += "&sort_order=" + str(self.sortOrder)
+        url += "&sort_field=" + str(self.sortField)
 
         # add in search criteria
         # article number query takes priority over all others
-        if (self.usingArticleNumber):
+        if self.usingArticleNumber:
 
-            url += '&article_number=' + str(self.parameters['article_number'])
+            url += "&article_number=" + str(self.parameters["article_number"])
 
         # boolean query
-        elif (self.usingBoolean):
+        elif self.usingBoolean:
 
-             url += '&querytext=(' + urllib.parse.quote_plus(self.parameters['boolean_text']) + ')'
+            url += (
+                "&querytext=("
+                + urllib.parse.quote_plus(self.parameters["boolean_text"])
+                + ")"
+            )
 
         else:
 
             for key in self.parameters:
 
-                if (self.usingFacet and self.facetApplied is False):
+                if self.usingFacet and self.facetApplied is False:
 
-                    url += '&querytext=' + urllib.parse.quote_plus(self.parameters[key]) + '&facet=' + key
+                    url += (
+                        "&querytext="
+                        + urllib.parse.quote_plus(self.parameters[key])
+                        + "&facet="
+                        + key
+                    )
                     self.facetApplied = True
 
                 else:
 
-                    url += '&' + key + '=' + urllib.parse.quote_plus(self.parameters[key])
-
+                    url += (
+                        "&" + key + "=" + urllib.parse.quote_plus(self.parameters[key])
+                    )
 
         # add in filters
         for key in self.filters:
 
-            url += '&' + key + '=' + str(self.filters[key])
- 
-        return url
+            url += "&" + key + "=" + str(self.filters[key])
 
+        return url
 
     # creates the URL for the API call
     # string url  Full URL to pass to API
@@ -707,15 +709,14 @@ class XPLORE:
         qry_obj.perform()
         qry_obj.close()
         response = buffer_obj.getvalue()
-        return response.decode('utf-8')
-
+        return response.decode("utf-8")
 
     # request chargeable full text token
     # return string: Full text token from API
     def getAuthTokenFromEndpoint(self):
 
         url = str(self.authTokenEndPoint)
-        post = { 'auth-token': self.authToken, 'apikey': self.apiKey }
+        post = {"auth-token": self.authToken, "apikey": self.apiKey}
         post = urllib.parse.urlencode(post)
 
         buffer_obj = BytesIO()
@@ -728,8 +729,7 @@ class XPLORE:
         qry_obj.perform()
         qry_obj.close()
         response = buffer_obj.getvalue()
-        return response.decode('utf-8')
-
+        return response.decode("utf-8")
 
     # creates the URL for the chargeable full text API call
     # boolean refresh  Whether to force a new token retrieval
@@ -738,26 +738,24 @@ class XPLORE:
 
         clToken = self.retrieveAuthToken(refresh)
 
-        url = self.openAccessEndPoint;
-        url += self.parameters['article_number'] + '/fulltext'
-        url += '?apikey=' + str(self.apiKey)
-        url += '&format=' + str(self.outputType)
-        url += '&cltoken=' + str(clToken);
+        url = self.openAccessEndPoint
+        url += self.parameters["article_number"] + "/fulltext"
+        url += "?apikey=" + str(self.apiKey)
+        url += "&format=" + str(self.outputType)
+        url += "&cltoken=" + str(clToken)
 
         return url
-
 
     # creates the URL for the chargeable paper cites / author Bio API call
     # return url: Full URL for querying the API
     def buildBioRequestQuery(self):
 
-        url = self.bioEndPoint;
-        url += self.parameters['author_number']
-        url += '?apikey=' + str(self.apiKey)
-        url += '&format=' + str(self.outputType)
+        url = self.bioEndPoint
+        url += self.parameters["author_number"]
+        url += "?apikey=" + str(self.apiKey)
+        url += "&format=" + str(self.outputType)
 
         return url
-    
 
     # creates the URL for the usage API call
     # boolean refresh  Whether to force a new token retrieval
@@ -766,40 +764,40 @@ class XPLORE:
 
         clToken = self.retrieveAuthToken(refresh)
 
-        url = self.usageEndPoint;
-        url += self.parameters['customer_id']
-        url += '/samlreport'
-        url += '?apikey=' + str(self.apiKey)
-        url += '&includeTerms=true'
-        url += '&startDate=' + self.parameters['usage_start_date']
-        url += '&endDate=' + self.parameters['usage_end_date']
-        url += '&cltoken=' + str(clToken);
+        url = self.usageEndPoint
+        url += self.parameters["customer_id"]
+        url += "/samlreport"
+        url += "?apikey=" + str(self.apiKey)
+        url += "&includeTerms=true"
+        url += "&startDate=" + self.parameters["usage_start_date"]
+        url += "&endDate=" + self.parameters["usage_end_date"]
+        url += "&cltoken=" + str(clToken)
 
         return url
-    
 
     # formats the data returned by the API
     # string data    Result string from API
     def formatData(self, data):
 
-        if self.outputDataFormat == 'raw':
+        if self.outputDataFormat == "raw":
             return data
 
-        elif self.outputDataFormat == 'object':
-            
-            if self.outputType == 'xml':
+        elif self.outputDataFormat == "object":
+
+            if self.outputType == "xml":
                 obj = ET.ElementTree(ET.fromstring(data))
                 return obj
 
             else:
-                obj = json.loads(data) 
+                obj = json.loads(data)
                 return obj
 
         else:
             return data
-  # ✅ New Image API Implementation Starts Here
 
-  # Fetch cltoken (for Images & Fulltext)
+    # ✅ New Image API Implementation Starts Here
+
+    # Fetch cltoken (for Images & Fulltext)
     def getImageToken(self, auth_token: str) -> str:
         """
         Get cltoken required for Image API requests (expires in 15 minutes).
@@ -812,7 +810,9 @@ class XPLORE:
         )
 
         if response.status_code != 200:
-            raise Exception(f"Image token request failed: {response.status_code} {response.text}")
+            raise Exception(
+                f"Image token request failed: {response.status_code} {response.text}"
+            )
 
         token = response.json().get("token")
         self.cltoken = token
@@ -853,7 +853,9 @@ class XPLORE:
 
         response = requests.get(self.imageEndPoint, params=params)
         if response.status_code != 200:
-            raise Exception(f"Image search failed: {response.status_code} {response.text}")
+            raise Exception(
+                f"Image search failed: {response.status_code} {response.text}"
+            )
 
         data = response.json()
 
@@ -864,13 +866,17 @@ class XPLORE:
                 img_type = img.get("imageType", "N/A")
                 figure_id = img.get("figure", {}).get("id", "N/A")
                 figure_label = img.get("figure", {}).get("label", "N/A")
-                figure_url = img.get("figure", {}).get("graphic", {}).get("large", "N/A")
+                figure_url = (
+                    img.get("figure", {}).get("graphic", {}).get("large", "N/A")
+                )
                 figure_caption = img.get("figure", {}).get("caption", "N/A")
                 figure_image_id = img.get("figure", {}).get("imageId", "N/A")
                 keywords = [k.get("keyword") for k in img.get("keywords", [])]
 
                 print(f"   Image {i}: URL={figure_url}")
-                print(f"      Type: {img_type}, Figure ID: {figure_id}, Label: {figure_label}, Image ID: {figure_image_id}")
+                print(
+                    f"      Type: {img_type}, Figure ID: {figure_id}, Label: {figure_label}, Image ID: {figure_image_id}"
+                )
                 print(f"      Caption: {figure_caption}, Keywords: {keywords}")
 
         return data
@@ -890,7 +896,9 @@ class XPLORE:
         response = requests.get(url)
 
         if response.status_code != 200:
-            raise Exception(f"Failed to fetch image metadata: {response.status_code} {response.text}")
+            raise Exception(
+                f"Failed to fetch image metadata: {response.status_code} {response.text}"
+            )
 
         data = response.json()
         if "images" not in data:
@@ -912,7 +920,9 @@ class XPLORE:
                 continue
 
             print(f"   Downloading Image {i}: {img_url}")
-            print(f"      Type: {img_type}, Figure ID: {figure_id}, Label: {figure_label}, Image ID: {figure_image_id}")
+            print(
+                f"      Type: {img_type}, Figure ID: {figure_id}, Label: {figure_label}, Image ID: {figure_image_id}"
+            )
             print(f"      Caption: {figure_caption}, Keywords: {keywords}")
 
             file_path = os.path.join(save_folder, f"{article_number}_img{i}.jpg")

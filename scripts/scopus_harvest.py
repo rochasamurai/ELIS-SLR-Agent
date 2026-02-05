@@ -96,11 +96,15 @@ def scopus_search(query: str, count: int = 25, max_results: int = 100):
             if r.status_code == 429:
                 retry_count += 1
                 if retry_count > max_retries:
-                    print(f"  Max retries ({max_retries}) exceeded due to rate limiting. Stopping.")
+                    print(
+                        f"  Max retries ({max_retries}) exceeded due to rate limiting. Stopping."
+                    )
                     break
                 # Rate limited - back off and retry with exponential backoff
                 wait_time = 5 * retry_count
-                print(f"  Rate limited (429). Waiting {wait_time}s before retry ({retry_count}/{max_retries})...")
+                print(
+                    f"  Rate limited (429). Waiting {wait_time}s before retry ({retry_count}/{max_retries})..."
+                )
                 time.sleep(wait_time)
                 continue
 
@@ -121,7 +125,9 @@ def scopus_search(query: str, count: int = 25, max_results: int = 100):
             start += count
 
             # Stop if we've retrieved all available results
-            total_results = int(data.get("search-results", {}).get("opensearch:totalResults", 0))
+            total_results = int(
+                data.get("search-results", {}).get("opensearch:totalResults", 0)
+            )
             if len(results) >= total_results:
                 print(f"  Retrieved all {total_results} available results")
                 break
@@ -180,10 +186,10 @@ def load_config(config_path: str):
 def get_scopus_queries_legacy(config):
     """
     Extract enabled queries for Scopus from legacy config format.
-    
+
     Args:
         config: Legacy config dict from config/elis_search_queries.yml
-        
+
     Returns:
         list: List of Scopus queries wrapped in TITLE-ABS-KEY()
     """
@@ -209,23 +215,23 @@ def get_scopus_queries_legacy(config):
 def get_scopus_config_new(config, tier=None):
     """
     Extract Scopus configuration from new search config format.
-    
+
     Args:
         config: New search config dict from config/searches/*.yml
         tier: Optional tier override (testing/pilot/benchmark/production/exhaustive)
-        
+
     Returns:
         tuple: (queries, max_results)
     """
     # Find Scopus database configuration
     databases = config.get("databases", [])
     scopus_config = None
-    
+
     for db in databases:
         if db.get("name") == "Scopus" and db.get("enabled", False):
             scopus_config = db
             break
-    
+
     if not scopus_config:
         print("[WARNING] Scopus not enabled in search configuration")
         return [], 0
@@ -242,16 +248,18 @@ def get_scopus_config_new(config, tier=None):
     scopus_query = query_wrapper.replace("{query}", query_string)
     print("Query for Scopus:")
     print(f"  Query: {scopus_query[:100]}{'...' if len(scopus_query) > 100 else ''}")
-    
+
     # Determine max_results based on tier
     max_results_config = scopus_config.get("max_results")
-    
+
     if isinstance(max_results_config, dict):
         # Tier-based system
         if tier:
             max_results = max_results_config.get(tier)
             if max_results is None:
-                print(f"[WARNING] Unknown tier '{tier}', available tiers: {list(max_results_config.keys())}")
+                print(
+                    f"[WARNING] Unknown tier '{tier}', available tiers: {list(max_results_config.keys())}"
+                )
                 tier = scopus_config.get("max_results_default", "production")
                 max_results = max_results_config.get(tier, 1000)
                 print(f"   Using default tier: {tier}")
@@ -263,7 +271,7 @@ def get_scopus_config_new(config, tier=None):
     else:
         # Single value (backwards compatible)
         max_results = max_results_config or 1000
-    
+
     return [scopus_query], max_results
 
 
@@ -285,42 +293,42 @@ Examples:
 
   # Override max_results
   python scripts/scopus_harvest.py --search-config config/searches/electoral_integrity_search.yml --max-results 500
-        """
+        """,
     )
-    
+
     parser.add_argument(
         "--search-config",
         type=str,
-        help="Path to search configuration file (e.g., config/searches/electoral_integrity_search.yml)"
+        help="Path to search configuration file (e.g., config/searches/electoral_integrity_search.yml)",
     )
-    
+
     parser.add_argument(
         "--tier",
         type=str,
         choices=["testing", "pilot", "benchmark", "production", "exhaustive"],
-        help="Max results tier to use (testing/pilot/benchmark/production/exhaustive)"
+        help="Max results tier to use (testing/pilot/benchmark/production/exhaustive)",
     )
-    
+
     parser.add_argument(
         "--max-results",
         type=int,
-        help="Override max_results regardless of config or tier"
+        help="Override max_results regardless of config or tier",
     )
-    
+
     parser.add_argument(
         "--output",
         type=str,
         default="json_jsonl/ELIS_Appendix_A_Search_rows.json",
-        help="Output file path (default: json_jsonl/ELIS_Appendix_A_Search_rows.json)"
+        help="Output file path (default: json_jsonl/ELIS_Appendix_A_Search_rows.json)",
     )
-    
+
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     # Parse command-line arguments
     args = parse_args()
-    
+
     # Determine configuration mode
     if args.search_config:
         # NEW CONFIG FORMAT
@@ -335,8 +343,10 @@ if __name__ == "__main__":
         queries = get_scopus_queries_legacy(config)
         max_results = config.get("global", {}).get("max_results_per_source", 100)
         config_mode = "LEGACY"
-        print("[WARNING] Using legacy config format. Consider using --search-config for new projects.")
-    
+        print(
+            "[WARNING] Using legacy config format. Consider using --search-config for new projects."
+        )
+
     # Apply max_results override if provided
     if args.max_results:
         print(f"Overriding max_results: {max_results} -> {args.max_results}")
@@ -347,7 +357,7 @@ if __name__ == "__main__":
         print("[WARNING] No Scopus queries found in config")
         print("   Check that Scopus is enabled and queries are defined")
         exit(1)  # Exit with error code - missing queries indicates misconfiguration
-    
+
     print(f"\n{'='*80}")
     print(f"SCOPUS HARVEST - {config_mode} CONFIG")
     print(f"{'='*80}")
@@ -368,7 +378,9 @@ if __name__ == "__main__":
 
     # Track existing DOIs and Scopus IDs to avoid duplicates
     existing_dois = {r.get("doi") for r in existing_results if r.get("doi")}
-    existing_scopus_ids = {r.get("scopus_id") for r in existing_results if r.get("scopus_id")}
+    existing_scopus_ids = {
+        r.get("scopus_id") for r in existing_results if r.get("scopus_id")
+    }
     new_count = 0
 
     # Execute each query
@@ -418,4 +430,3 @@ if __name__ == "__main__":
     print(f"Total records in dataset: {len(existing_results)}")
     print(f"Saved to: {output_path}")
     print(f"{'='*80}\n")
-    
