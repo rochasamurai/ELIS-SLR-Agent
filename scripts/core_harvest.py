@@ -46,6 +46,7 @@ from pathlib import Path
 # CREDENTIALS
 # ---------------------------------------------------------------------------
 
+
 def get_credentials():
     """Get and validate CORE API credentials."""
     api_key = os.getenv("CORE_API_KEY")
@@ -67,6 +68,7 @@ def get_headers():
 # ---------------------------------------------------------------------------
 # SEARCH (pagination via offset)
 # ---------------------------------------------------------------------------
+
 
 def core_search(query: str, limit: int = 100, max_results: int = 1000):
     """
@@ -109,11 +111,15 @@ def core_search(query: str, limit: int = 100, max_results: int = 1000):
             if r.status_code == 429 or r.status_code == 503:
                 retry_count += 1
                 if retry_count > max_retries:
-                    print(f"  Max retries ({max_retries}) exceeded due to rate limiting. Stopping.")
+                    print(
+                        f"  Max retries ({max_retries}) exceeded due to rate limiting. Stopping."
+                    )
                     break
                 # Rate limited or service unavailable - back off and retry with exponential backoff
                 wait_time = 5 * retry_count
-                print(f"  HTTP {r.status_code}. Waiting {wait_time}s before retry ({retry_count}/{max_retries})...")
+                print(
+                    f"  HTTP {r.status_code}. Waiting {wait_time}s before retry ({retry_count}/{max_retries})..."
+                )
                 time.sleep(wait_time)
                 continue
 
@@ -152,6 +158,7 @@ def core_search(query: str, limit: int = 100, max_results: int = 1000):
 # ---------------------------------------------------------------------------
 # TRANSFORM
 # ---------------------------------------------------------------------------
+
 
 def transform_core_entry(entry):
     """
@@ -205,6 +212,7 @@ def transform_core_entry(entry):
 # CONFIG LOADING — LEGACY
 # ---------------------------------------------------------------------------
 
+
 def load_config(config_path: str):
     """Load search configuration from YAML file."""
     with open(config_path, "r", encoding="utf-8") as f:
@@ -242,6 +250,7 @@ def get_core_queries_legacy(config):
 # ---------------------------------------------------------------------------
 # CONFIG LOADING — NEW (tier-based)
 # ---------------------------------------------------------------------------
+
 
 def get_core_config_new(config, tier=None):
     """
@@ -304,7 +313,9 @@ def get_core_config_new(config, tier=None):
         if tier:
             max_results = max_results_config.get(tier)
             if max_results is None:
-                print(f"[WARNING] Unknown tier '{tier}', available tiers: {list(max_results_config.keys())}")
+                print(
+                    f"[WARNING] Unknown tier '{tier}', available tiers: {list(max_results_config.keys())}"
+                )
                 tier = core_config.get("max_results_default", "production")
                 max_results = max_results_config.get(tier, 1000)
                 print(f"   Using default tier: {tier}")
@@ -324,6 +335,7 @@ def get_core_config_new(config, tier=None):
 # CLI
 # ---------------------------------------------------------------------------
 
+
 def parse_args():
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(
@@ -342,33 +354,33 @@ Examples:
 
   # Override max_results
   python scripts/core_harvest.py --search-config config/searches/electoral_integrity_search.yml --max-results 500
-        """
+        """,
     )
 
     parser.add_argument(
         "--search-config",
         type=str,
-        help="Path to search configuration file (e.g., config/searches/electoral_integrity_search.yml)"
+        help="Path to search configuration file (e.g., config/searches/electoral_integrity_search.yml)",
     )
 
     parser.add_argument(
         "--tier",
         type=str,
         choices=["testing", "pilot", "benchmark", "production", "exhaustive"],
-        help="Max results tier to use (testing/pilot/benchmark/production/exhaustive)"
+        help="Max results tier to use (testing/pilot/benchmark/production/exhaustive)",
     )
 
     parser.add_argument(
         "--max-results",
         type=int,
-        help="Override max_results regardless of config or tier"
+        help="Override max_results regardless of config or tier",
     )
 
     parser.add_argument(
         "--output",
         type=str,
         default="json_jsonl/ELIS_Appendix_A_Search_rows.json",
-        help="Output file path (default: json_jsonl/ELIS_Appendix_A_Search_rows.json)"
+        help="Output file path (default: json_jsonl/ELIS_Appendix_A_Search_rows.json)",
     )
 
     return parser.parse_args()
@@ -396,7 +408,9 @@ if __name__ == "__main__":
         queries = get_core_queries_legacy(config)
         max_results = config.get("global", {}).get("max_results_per_source", 1000)
         config_mode = "LEGACY"
-        print("[WARNING] Using legacy config format. Consider using --search-config for new projects.")
+        print(
+            "[WARNING] Using legacy config format. Consider using --search-config for new projects."
+        )
 
     # Apply max_results override if provided
     if args.max_results:

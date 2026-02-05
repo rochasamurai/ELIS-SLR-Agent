@@ -1,4 +1,5 @@
 """Minimal working integration - Test with OpenAlex"""
+
 import yaml
 import json
 import subprocess
@@ -12,47 +13,49 @@ CONFIG_DIR = REPO_ROOT / "config"
 SCRIPTS_DIR = REPO_ROOT / "scripts"
 OUTPUT_FILE = REPO_ROOT / "json_jsonl" / "ELIS_Appendix_A_Search_rows.json"
 
-print("="*80)
+print("=" * 80)
 print("MINIMAL BENCHMARK INTEGRATION TEST")
-print("="*80)
+print("=" * 80)
 print(f"\nRepo root: {REPO_ROOT}")
 print(f"Config dir: {CONFIG_DIR}")
 print(f"Scripts dir: {SCRIPTS_DIR}")
 
 # Load benchmark config
 print("\n1. Loading benchmark config...")
-with open('configs/benchmark_2_config.yaml', 'r', encoding='utf-8') as f:
+with open("configs/benchmark_2_config.yaml", "r", encoding="utf-8") as f:
     bench_config = yaml.safe_load(f)
 print(f"   ✓ Loaded: {bench_config['benchmark']['id']}")
 
 # Create simple ELIS config for OpenAlex
 print("\n2. Creating ELIS config for OpenAlex...")
-query = bench_config['search_strategy']['query_string'].strip()
-start_year = int(bench_config['search_strategy']['date_range']['start'].split('-')[0])
-end_year = int(bench_config['search_strategy']['date_range']['end'].split('-')[0])
+query = bench_config["search_strategy"]["query_string"].strip()
+start_year = int(bench_config["search_strategy"]["date_range"]["start"].split("-")[0])
+end_year = int(bench_config["search_strategy"]["date_range"]["end"].split("-")[0])
 
 elis_config = {
-    'global': {
-        'year_from': start_year,
-        'year_to': end_year,
-        'languages': ['en'],
-        'max_results_per_source': 100,
-        'job_result_cap': 0
+    "global": {
+        "year_from": start_year,
+        "year_to": end_year,
+        "languages": ["en"],
+        "max_results_per_source": 100,
+        "job_result_cap": 0,
     },
-    'topics': [{
-        'id': 'benchmark_test',
-        'enabled': True,
-        'description': 'Benchmark test query',
-        'queries': [query],
-        'include_preprints': False,
-        'sources': ['openalex']
-    }]
+    "topics": [
+        {
+            "id": "benchmark_test",
+            "enabled": True,
+            "description": "Benchmark test query",
+            "queries": [query],
+            "include_preprints": False,
+            "sources": ["openalex"],
+        }
+    ],
 }
 
 # Write ELIS config
 elis_config_file = CONFIG_DIR / "elis_search_queries.yml"
 print(f"   Writing to: {elis_config_file}")
-with open(elis_config_file, 'w', encoding='utf-8') as f:
+with open(elis_config_file, "w", encoding="utf-8") as f:
     yaml.dump(elis_config, f, default_flow_style=False)
 print("   ✓ Config written")
 
@@ -72,16 +75,16 @@ try:
         cwd=str(REPO_ROOT),
         capture_output=True,
         text=True,
-        timeout=120
+        timeout=120,
     )
-    
+
     if result.returncode != 0:
         print(f"   ✗ ERROR: Return code {result.returncode}")
         print(f"   STDERR: {result.stderr}")
         sys.exit(1)
-    
+
     print("   ✓ Script completed")
-    
+
 except subprocess.TimeoutExpired:
     print("   ✗ TIMEOUT")
     sys.exit(1)
@@ -92,7 +95,7 @@ if not OUTPUT_FILE.exists():
     print("   ✗ No output file generated")
     sys.exit(1)
 
-with open(OUTPUT_FILE, 'r', encoding='utf-8') as f:
+with open(OUTPUT_FILE, "r", encoding="utf-8") as f:
     results = json.load(f)
 
 print(f"   ✓ Retrieved: {len(results)} results")
@@ -105,6 +108,6 @@ if results:
     print(f"   Authors: {sample.get('authors', 'N/A')[:50]}...")
     print(f"   Year: {sample.get('year', 'N/A')}")
 
-print("\n" + "="*80)
+print("\n" + "=" * 80)
 print("✓ MINIMAL INTEGRATION TEST SUCCESSFUL")
-print("="*80)
+print("=" * 80)

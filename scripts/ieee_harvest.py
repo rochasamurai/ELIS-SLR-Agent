@@ -58,6 +58,7 @@ from xploreapi.xploreapi import XPLORE
 # CREDENTIALS
 # ---------------------------------------------------------------------------
 
+
 def get_credentials():
     """Get and validate IEEE Xplore API credentials."""
     api_key = os.getenv("IEEE_EXPLORE_API_KEY")
@@ -71,6 +72,7 @@ def get_credentials():
 # ---------------------------------------------------------------------------
 # SEARCH (with pagination loop using official SDK)
 # ---------------------------------------------------------------------------
+
 
 def ieee_search(query: str, max_results: int = 1000):
     """
@@ -110,7 +112,7 @@ def ieee_search(query: str, max_results: int = 1000):
         xplore.booleanText(query)
         xplore.maximumResults(page_size)
         xplore.startingResult(start_record)
-        xplore.dataFormat("object")   # return parsed JSON dict, not raw string
+        xplore.dataFormat("object")  # return parsed JSON dict, not raw string
 
         try:
             data = xplore.callAPI()
@@ -130,7 +132,9 @@ def ieee_search(query: str, max_results: int = 1000):
                     print(f"  Max retries ({max_retries}) exceeded. Stopping.")
                     break
                 wait_time = 5 * retry_count
-                print(f"  Waiting {wait_time}s before retry ({retry_count}/{max_retries})...")
+                print(
+                    f"  Waiting {wait_time}s before retry ({retry_count}/{max_retries})..."
+                )
                 time.sleep(wait_time)
                 continue
 
@@ -144,7 +148,9 @@ def ieee_search(query: str, max_results: int = 1000):
                 break
 
             results.extend(articles)
-            print(f"  Page {start_record}: {len(articles)} articles (running total: {len(results)})")
+            print(
+                f"  Page {start_record}: {len(articles)} articles (running total: {len(results)})"
+            )
 
             # Advance start_record for next page
             start_record += len(articles)
@@ -160,7 +166,9 @@ def ieee_search(query: str, max_results: int = 1000):
                 print(f"  Max retries ({max_retries}) exceeded. Stopping.")
                 break
             wait_time = 5 * retry_count
-            print(f"  Waiting {wait_time}s before retry ({retry_count}/{max_retries})...")
+            print(
+                f"  Waiting {wait_time}s before retry ({retry_count}/{max_retries})..."
+            )
             time.sleep(wait_time)
             continue
 
@@ -170,6 +178,7 @@ def ieee_search(query: str, max_results: int = 1000):
 # ---------------------------------------------------------------------------
 # TRANSFORM
 # ---------------------------------------------------------------------------
+
 
 def transform_ieee_entry(entry):
     """
@@ -206,6 +215,7 @@ def transform_ieee_entry(entry):
 # CONFIG LOADING — LEGACY
 # ---------------------------------------------------------------------------
 
+
 def load_config(config_path: str):
     """Load search configuration from YAML file."""
     with open(config_path, "r", encoding="utf-8") as f:
@@ -241,6 +251,7 @@ def get_ieee_queries_legacy(config):
 # ---------------------------------------------------------------------------
 # CONFIG LOADING — NEW (tier-based)
 # ---------------------------------------------------------------------------
+
 
 def get_ieee_config_new(config, tier=None):
     """
@@ -284,7 +295,9 @@ def get_ieee_config_new(config, tier=None):
         if tier:
             max_results = max_results_config.get(tier)
             if max_results is None:
-                print(f"[WARNING] Unknown tier '{tier}', available tiers: {list(max_results_config.keys())}")
+                print(
+                    f"[WARNING] Unknown tier '{tier}', available tiers: {list(max_results_config.keys())}"
+                )
                 tier = ieee_config.get("max_results_default", "production")
                 max_results = max_results_config.get(tier, 1000)
                 print(f"   Using default tier: {tier}")
@@ -304,6 +317,7 @@ def get_ieee_config_new(config, tier=None):
 # CLI
 # ---------------------------------------------------------------------------
 
+
 def parse_args():
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(
@@ -322,33 +336,33 @@ Examples:
 
   # Override max_results
   python scripts/ieee_harvest.py --search-config config/searches/electoral_integrity_search.yml --max-results 500
-        """
+        """,
     )
 
     parser.add_argument(
         "--search-config",
         type=str,
-        help="Path to search configuration file (e.g., config/searches/electoral_integrity_search.yml)"
+        help="Path to search configuration file (e.g., config/searches/electoral_integrity_search.yml)",
     )
 
     parser.add_argument(
         "--tier",
         type=str,
         choices=["testing", "pilot", "benchmark", "production", "exhaustive"],
-        help="Max results tier to use (testing/pilot/benchmark/production/exhaustive)"
+        help="Max results tier to use (testing/pilot/benchmark/production/exhaustive)",
     )
 
     parser.add_argument(
         "--max-results",
         type=int,
-        help="Override max_results regardless of config or tier"
+        help="Override max_results regardless of config or tier",
     )
 
     parser.add_argument(
         "--output",
         type=str,
         default="json_jsonl/ELIS_Appendix_A_Search_rows.json",
-        help="Output file path (default: json_jsonl/ELIS_Appendix_A_Search_rows.json)"
+        help="Output file path (default: json_jsonl/ELIS_Appendix_A_Search_rows.json)",
     )
 
     return parser.parse_args()
@@ -376,7 +390,9 @@ if __name__ == "__main__":
         queries = get_ieee_queries_legacy(config)
         max_results = config.get("global", {}).get("max_results_per_source", 1000)
         config_mode = "LEGACY"
-        print("[WARNING] Using legacy config format. Consider using --search-config for new projects.")
+        print(
+            "[WARNING] Using legacy config format. Consider using --search-config for new projects."
+        )
 
     # Apply max_results override if provided
     if args.max_results:

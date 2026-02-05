@@ -1,4 +1,5 @@
 """Test integration with OpenAlex only"""
+
 from benchmark_2_integration import ELISBenchmark2Bridge
 
 # Initialize bridge
