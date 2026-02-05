@@ -171,7 +171,7 @@ def google_scholar_search(
 
     # Year filtering not available in EasyAPI actor
     if start_year or end_year:
-        print(f"   [WARNING] Year filtering not supported by EasyAPI actor")
+        print("   [WARNING] Year filtering not supported by EasyAPI actor")
 
     try:
         print("\n  Starting Apify run...")
@@ -179,7 +179,7 @@ def google_scholar_search(
         # Run the actor and wait for it to finish
         run = client.actor("easyapi/google-scholar-scraper").call(run_input=run_input)
 
-        print(f"  [OK] Run completed")
+        print("  [OK] Run completed")
         print(f"    Run ID: {run.get('id')}")
         print(f"    Status: {run.get('status')}")
         print(f"    Run URL: https://console.apify.com/actors/runs/{run.get('id')}")
@@ -216,7 +216,7 @@ def google_scholar_search(
         print(f"  [OK] Retrieved {len(results)} results from Google Scholar")
 
         if len(results) == 0:
-            print(f"  [WARNING] WARNING: 0 results")
+            print("  [WARNING] WARNING: 0 results")
             if retry_count < max_retries:
                 print(f"\n  Retrying...")
                 return google_scholar_search(
@@ -229,10 +229,10 @@ def google_scholar_search(
                     max_retries,
                 )
             else:
-                print(f"  [ERROR] All retries exhausted")
+                print("  [ERROR] All retries exhausted")
         elif len(results) == 10:
-            print(f"  [NOTE] Note: Free tier limited to 10 results")
-            print(f"      Upgrade Apify account for up to 5000 results")
+            print("  [NOTE] Note: Free tier limited to 10 results")
+            print("      Upgrade Apify account for up to 5000 results")
 
         return results
 
@@ -491,7 +491,7 @@ if __name__ == "__main__":
     print("GOOGLE SCHOLAR HARVEST - EASYAPI ACTOR")
     print("=" * 80)
     print(f"Start time: {datetime.now().isoformat()}")
-    print(f"Actor: easyapi/google-scholar-scraper")
+    print("Actor: easyapi/google-scholar-scraper")
 
     # Initialize Apify client
     api_token = get_credentials()

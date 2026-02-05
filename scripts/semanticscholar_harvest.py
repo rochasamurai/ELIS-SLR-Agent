@@ -329,7 +329,7 @@ def get_semanticscholar_config_new(config, tier=None):
     if simplified_query:
         # Use the curated simplified query directly
         s2_query_simplified = simplified_query
-        print(f"Using simplified alternative query for Semantic Scholar:")
+        print("Using simplified alternative query for Semantic Scholar:")
         print(f"  Query: {s2_query_simplified}")
     else:
         # Fall back to simplifying the boolean query
@@ -345,7 +345,7 @@ def get_semanticscholar_config_new(config, tier=None):
         # Simplify boolean query to keywords — Semantic Scholar doesn't support boolean syntax
         s2_query_simplified = simplify_boolean_query(s2_query)
 
-        print(f"Query simplified for Semantic Scholar:")
+        print("Query simplified for Semantic Scholar:")
         print(f"  Original: {s2_query[:100]}{'...' if len(s2_query) > 100 else ''}")
         print(
             f"  Simplified: {s2_query_simplified[:100]}{'...' if len(s2_query_simplified) > 100 else ''}"

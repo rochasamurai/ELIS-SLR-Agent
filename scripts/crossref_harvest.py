@@ -275,7 +275,7 @@ def get_crossref_config_new(config, tier=None):
     if simplified_query:
         # Use the curated simplified query directly
         cr_query = simplified_query
-        print(f"Using simplified alternative query for CrossRef:")
+        print("Using simplified alternative query for CrossRef:")
         print(f"  Query: {cr_query}")
     else:
         # Fall back to using boolean_string with quotes stripped
@@ -287,7 +287,7 @@ def get_crossref_config_new(config, tier=None):
         # Apply wrapper if defined, otherwise use raw query (quotes stripped)
         query_wrapper = cr_config.get("query_wrapper", "{query}")
         cr_query = query_wrapper.replace("{query}", query_string).replace('"', "")
-        print(f"Query for CrossRef (quotes stripped):")
+        print("Query for CrossRef (quotes stripped):")
         print(f"  Query: {cr_query[:100]}{'...' if len(cr_query) > 100 else ''}")
 
     # Determine max_results based on tier

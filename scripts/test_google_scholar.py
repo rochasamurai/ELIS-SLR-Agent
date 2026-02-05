@@ -55,7 +55,6 @@ print("   This will take 5-10 minutes...")
 print("-" * 80)
 
 import subprocess
-
 result = subprocess.run(
     [sys.executable, "google_scholar_harvest.py"],
     cwd=str(Path(__file__).parent),
