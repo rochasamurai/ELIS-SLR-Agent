@@ -1,8 +1,22 @@
 # ELIS Harvest Scripts — Test Plan
 
 **Date:** 2026-02-03
+**Updated:** 2026-02-04
 **Scope:** All 8 harvest scripts upgraded this session
 **Env:** PowerShell, `.venv` activated, repo root as working directory
+
+---
+
+## 0. Progress Tracker
+
+| Phase | Status | Notes |
+|-------|--------|-------|
+| Script review & updates | ✅ Done | 2026-02-03 session |
+| API access confirmation | ✅ Done | All 8 databases accessible |
+| GitHub workflow test | 🔲 Pending | Use `test_database_harvest.yml` |
+| Query & output review | 🔲 Pending | See Section 12 |
+| Schema alignment | 🔲 Pending | See Section 13 |
+| Full integration test | 🔲 Pending | Section 10 |
 
 ---
 
@@ -473,3 +487,148 @@ Expected: all 8 sources represented, zero missing titles, valid JSON.
 | CrossRef and OpenAlex polite pool requires `ELIS_CONTACT` | Tests without it will work but hit lower rate limits |
 | `exhaustive` tier sets 99999 | Never use exhaustive in test runs — API cost |
 | Dedup is intra-script only | Cross-source duplicate DOIs are expected in combined output |
+
+---
+
+## 12. Query & Output Review
+
+Purpose: Confirm each script constructs queries correctly from config and outputs records in consistent format.
+
+**12.1 Query Construction Check**
+
+For each database, verify the query wrapper and boolean string are combined correctly:
+
+| Database | Query Wrapper Location | Expected Format |
+|----------|----------------------|-----------------|
+| IEEE Xplore | `databases.ieee_xplore.query_wrapper` | `("Full Text Only":({query}))` |
+| Semantic Scholar | `databases.semantic_scholar.query_wrapper` | Natural language keywords |
+| OpenAlex | `databases.openalex.query_wrapper` | `{query}` with quotes removed |
+| CrossRef | `databases.crossref.query_wrapper` | `{query}` with quotes removed |
+| CORE | `databases.core.query_wrapper` | `{query}` with quotes removed |
+| Google Scholar | `databases.google_scholar.query_wrapper` | Simplified (no boolean operators) |
+| Scopus | `databases.scopus.query_wrapper` | `TITLE-ABS-KEY({query})` |
+| Web of Science | `databases.web_of_science.query_wrapper` | `TS=({query})` |
+
+**12.2 Output Field Consistency**
+
+Run each script at testing tier and verify output fields:
+
+```powershell
+python scripts\semanticscholar_harvest.py --search-config config\searches\electoral_integrity_search.yml --tier testing --output test_ss.json
+python -c "import json; r=json.load(open('test_ss.json'))[0]; print('Fields:', list(r.keys())); print('authors type:', type(r.get('authors'))); print('year type:', type(r.get('year')))"
+```
+
+Expected output fields per script:
+
+| Script | Expected Fields |
+|--------|-----------------|
+| All scripts | `source`, `title`, `authors`, `year`, `doi`, `abstract`, `url`, `raw_metadata` |
+| ieee_harvest.py | + `ieee_id` |
+| semanticscholar_harvest.py | + `s2_id`, `citation_count` |
+| openalex_harvest.py | + `openalex_id`, `citation_count` |
+| crossref_harvest.py | + `crossref_type`, `publisher` |
+| core_harvest.py | + `core_id` |
+| google_scholar_harvest.py | + `google_scholar_id`, `pdf_url`, `citation_count` |
+| scopus_harvest.py | + `scopus_id` |
+| wos_harvest.py | + `wos_id` |
+
+**12.3 Type Consistency Check**
+
+All scripts must output:
+- `authors`: **array** of strings (not a single string)
+- `year`: **integer** or null (not a string)
+
+```powershell
+# Check for type violations
+python -c "
+import json
+with open('test_output.json') as f:
+    data = json.load(f)
+for i, r in enumerate(data):
+    if isinstance(r.get('authors'), str):
+        print(f'Row {i}: authors is string, not array')
+    if isinstance(r.get('year'), str):
+        print(f'Row {i}: year is string, not integer')
+"
+```
+
+---
+
+## 13. Schema Alignment
+
+**Issue Discovered (2026-02-04):** The Appendix A schema (`schemas/appendix_a.schema.json`) requires fields that harvest scripts do not produce.
+
+**13.1 Schema Requirements vs Script Output**
+
+| Field | Schema | Harvest Scripts |
+|-------|--------|-----------------|
+| `id` | **required** | Not produced |
+| `retrieved_at` | **required** | Not produced |
+| `query_topic` | **required** | Not produced |
+| `query_string` | **required** | Not produced |
+| `source` | required | ✅ Produced |
+| `authors` | array | ⚠️ Some scripts output string |
+| `year` | integer/null | ⚠️ Some scripts output string |
+
+**13.2 Resolution Options**
+
+| Option | Pros | Cons |
+|--------|------|------|
+| **A: Update harvest scripts** | Scripts produce complete records | Duplicates metadata logic across 8 scripts |
+| **B: Add post-processing layer** | Single point for metadata enrichment | Extra step in pipeline |
+| **C: Relax schema** | No code changes | Loses provenance tracking |
+| **D: Orchestration workflow adds fields** | Clean separation of concerns | Requires orchestration layer |
+
+**13.3 Recommended Approach**
+
+Option D (orchestration adds fields) aligns with the existing valid records in `ELIS_Appendix_A_Search_rows.json` which have these fields from a prior orchestration run.
+
+The orchestration workflow should:
+1. Generate unique `id` (e.g., `t:{hash}`)
+2. Add `retrieved_at` timestamp
+3. Add `query_topic` from config
+4. Add `query_string` from config
+5. Normalize `authors` to array
+6. Normalize `year` to integer
+
+**13.4 Interim: Relax Validation**
+
+Until orchestration is implemented, validation can skip the metadata fields:
+
+```python
+# Minimal required fields for raw harvest output
+required = ["source", "title"]  # Not the full schema
+```
+
+---
+
+## 14. GitHub Workflow Test Sequence
+
+Use `test_database_harvest.yml` to verify each script works in CI before full integration.
+
+**14.1 Test Order (recommended)**
+
+Start with databases that have no/optional API keys, then move to those requiring secrets:
+
+1. `openalex` — no key required
+2. `crossref` — no key required
+3. `semantic_scholar` — optional key
+4. `ieee_xplore` — requires `IEEE_EXPLORE_API_KEY`
+5. `core` — requires `CORE_API_KEY`
+6. `google_scholar` — requires `APIFY_API_TOKEN`
+7. `scopus` — requires `SCOPUS_API_KEY`
+8. `web_of_science` — requires `WEB_OF_SCIENCE_API_KEY`
+
+**14.2 Workflow Parameters**
+
+For each test:
+- **Tier:** `testing` (25 results max)
+- **Config:** `config/searches/electoral_integrity_search.yml`
+- **Legacy test:** `false` (skip unless debugging legacy mode)
+
+**14.3 Success Criteria**
+
+- Script completes without error
+- Output JSON is valid
+- At least 1 result returned (or clear "no results" message)
+- Database-specific ID field present

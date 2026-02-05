@@ -92,6 +92,7 @@ def core_search(query: str, limit: int = 100, max_results: int = 1000):
     offset = 0
     retry_count = 0
     max_retries = 5
+    printed_rate_limits = False
 
     # Cache headers once before the loop (avoids repeated get_credentials calls)
     headers = get_headers()
@@ -106,13 +107,39 @@ def core_search(query: str, limit: int = 100, max_results: int = 1000):
         try:
             r = requests.get(url, headers=headers, params=params, timeout=30)
 
-            if r.status_code == 429 or r.status_code == 503:
+            # Log CORE rate limit headers when available (print once per run)
+            rl_remaining = r.headers.get("X-RateLimitRemaining")
+            rl_retry_after = r.headers.get("X-RateLimit-Retry-After")
+            rl_limit = r.headers.get("X-RateLimit-Limit")
+            if (rl_remaining or rl_retry_after or rl_limit) and not printed_rate_limits:
+                print("  Rate limits:",
+                      f"remaining={rl_remaining}" if rl_remaining is not None else "remaining=?",
+                      f"retry_after={rl_retry_after}" if rl_retry_after is not None else "retry_after=?",
+                      f"limit={rl_limit}" if rl_limit is not None else "limit=?")
+                printed_rate_limits = True
+
+            # Warn if remaining quota is low
+            if rl_remaining is not None:
+                try:
+                    remaining_int = int(rl_remaining)
+                    if remaining_int <= 5:
+                        print(f"  WARNING: Low rate limit remaining ({remaining_int})")
+                except (ValueError, TypeError):
+                    pass
+
+            if r.status_code in (429, 500, 503):
                 retry_count += 1
                 if retry_count > max_retries:
-                    print(f"  Max retries ({max_retries}) exceeded due to rate limiting. Stopping.")
+                    print(f"  Max retries ({max_retries}) exceeded due to transient server errors. Stopping.")
                     break
                 # Rate limited or service unavailable - back off and retry with exponential backoff
                 wait_time = 5 * retry_count
+                # If we hit a rate limit, honor Retry-After when provided
+                if r.status_code == 429 and rl_retry_after:
+                    try:
+                        wait_time = max(wait_time, int(rl_retry_after))
+                    except (ValueError, TypeError):
+                        pass
                 print(f"  HTTP {r.status_code}. Waiting {wait_time}s before retry ({retry_count}/{max_retries})...")
                 time.sleep(wait_time)
                 continue
@@ -124,7 +151,13 @@ def core_search(query: str, limit: int = 100, max_results: int = 1000):
             # Reset retry count after successful request
             retry_count = 0
 
-            data = r.json()
+            payload = r.json()
+            # CORE responses can be either top-level or nested under "data"
+            if isinstance(payload, dict) and isinstance(payload.get("data"), dict):
+                data = payload.get("data")
+            else:
+                data = payload if isinstance(payload, dict) else {}
+
             works = data.get("results", [])
 
             if not works:
@@ -134,7 +167,7 @@ def core_search(query: str, limit: int = 100, max_results: int = 1000):
             offset += len(works)
 
             # Check if we've reached the end
-            total_hits = data.get("totalHits", 0)
+            total_hits = data.get("totalHits", data.get("total", 0))
             if offset >= total_hits:
                 print(f"  Retrieved all {total_hits} available results")
                 break
