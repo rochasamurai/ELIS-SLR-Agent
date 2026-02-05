@@ -46,6 +46,7 @@ from pathlib import Path
 # SEARCH (pagination via page, mailto polite-pool conditional)
 # ---------------------------------------------------------------------------
 
+
 def openalex_search(query: str, per_page: int = 100, max_results: int = 1000):
     """
     Send a query to OpenAlex API and paginate up to max_results.
@@ -74,7 +75,9 @@ def openalex_search(query: str, per_page: int = 100, max_results: int = 1000):
     # Get contact email for polite pool — optional, no fallback
     mailto = os.getenv("ELIS_CONTACT")
     if not mailto:
-        print("[WARNING] ELIS_CONTACT not set. Polite pool recommended for better rate limits.")
+        print(
+            "[WARNING] ELIS_CONTACT not set. Polite pool recommended for better rate limits."
+        )
 
     while len(results) < max_results:
         params = {
@@ -93,11 +96,15 @@ def openalex_search(query: str, per_page: int = 100, max_results: int = 1000):
             if r.status_code == 429:
                 retry_count += 1
                 if retry_count > max_retries:
-                    print(f"  [ERROR] Max retries ({max_retries}) exceeded due to rate limiting. Stopping.")
+                    print(
+                        f"  [ERROR] Max retries ({max_retries}) exceeded due to rate limiting. Stopping."
+                    )
                     break
                 # Rate limited — back off and retry with exponential backoff
                 wait_time = 5 * retry_count
-                print(f"  [WARNING] Rate limited (429). Waiting {wait_time}s before retry ({retry_count}/{max_retries})...")
+                print(
+                    f"  [WARNING] Rate limited (429). Waiting {wait_time}s before retry ({retry_count}/{max_retries})..."
+                )
                 time.sleep(wait_time)
                 continue
 
@@ -137,6 +144,7 @@ def openalex_search(query: str, per_page: int = 100, max_results: int = 1000):
 # ---------------------------------------------------------------------------
 # TRANSFORM
 # ---------------------------------------------------------------------------
+
 
 def transform_openalex_entry(entry):
     """
@@ -200,6 +208,7 @@ def transform_openalex_entry(entry):
 # CONFIG LOADING — LEGACY
 # ---------------------------------------------------------------------------
 
+
 def load_config(config_path: str):
     """Load search configuration from YAML file."""
     with open(config_path, "r", encoding="utf-8") as f:
@@ -237,6 +246,7 @@ def get_openalex_queries_legacy(config):
 # ---------------------------------------------------------------------------
 # CONFIG LOADING — NEW (tier-based)
 # ---------------------------------------------------------------------------
+
 
 def get_openalex_config_new(config, tier=None):
     """
@@ -299,7 +309,9 @@ def get_openalex_config_new(config, tier=None):
         if tier:
             max_results = max_results_config.get(tier)
             if max_results is None:
-                print(f"[WARNING] Unknown tier '{tier}', available tiers: {list(max_results_config.keys())}")
+                print(
+                    f"[WARNING] Unknown tier '{tier}', available tiers: {list(max_results_config.keys())}"
+                )
                 tier = oa_config.get("max_results_default", "production")
                 max_results = max_results_config.get(tier, 1000)
                 print(f"   Using default tier: {tier}")
@@ -319,6 +331,7 @@ def get_openalex_config_new(config, tier=None):
 # CLI
 # ---------------------------------------------------------------------------
 
+
 def parse_args():
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(
@@ -337,33 +350,33 @@ Examples:
 
   # Override max_results
   python scripts/openalex_harvest.py --search-config config/searches/electoral_integrity_search.yml --max-results 500
-        """
+        """,
     )
 
     parser.add_argument(
         "--search-config",
         type=str,
-        help="Path to search configuration file (e.g., config/searches/electoral_integrity_search.yml)"
+        help="Path to search configuration file (e.g., config/searches/electoral_integrity_search.yml)",
     )
 
     parser.add_argument(
         "--tier",
         type=str,
         choices=["testing", "pilot", "benchmark", "production", "exhaustive"],
-        help="Max results tier to use (testing/pilot/benchmark/production/exhaustive)"
+        help="Max results tier to use (testing/pilot/benchmark/production/exhaustive)",
     )
 
     parser.add_argument(
         "--max-results",
         type=int,
-        help="Override max_results regardless of config or tier"
+        help="Override max_results regardless of config or tier",
     )
 
     parser.add_argument(
         "--output",
         type=str,
         default="json_jsonl/ELIS_Appendix_A_Search_rows.json",
-        help="Output file path (default: json_jsonl/ELIS_Appendix_A_Search_rows.json)"
+        help="Output file path (default: json_jsonl/ELIS_Appendix_A_Search_rows.json)",
     )
 
     return parser.parse_args()
@@ -391,7 +404,9 @@ if __name__ == "__main__":
         queries = get_openalex_queries_legacy(config)
         max_results = config.get("global", {}).get("max_results_per_source", 1000)
         config_mode = "LEGACY"
-        print("[WARNING] Using legacy config format. Consider using --search-config for new projects.")
+        print(
+            "[WARNING] Using legacy config format. Consider using --search-config for new projects."
+        )
 
     # Apply max_results override if provided
     if args.max_results:
@@ -424,7 +439,9 @@ if __name__ == "__main__":
 
     # Track existing DOIs and OpenAlex IDs to avoid duplicates
     existing_dois = {r.get("doi") for r in existing_results if r.get("doi")}
-    existing_oa_ids = {r.get("openalex_id") for r in existing_results if r.get("openalex_id")}
+    existing_oa_ids = {
+        r.get("openalex_id") for r in existing_results if r.get("openalex_id")
+    }
     new_count = 0
 
     # Execute each query

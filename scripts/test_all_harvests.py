@@ -28,6 +28,7 @@ SCRIPTS = [
     ("google_scholar", "scripts/google_scholar_harvest.py", "google_scholar_id"),
 ]
 
+
 def run_harvest(name, script, id_field):
     """Run a single harvest script and validate output."""
     output_file = OUTPUT_DIR / f"test_{name}.json"
@@ -38,10 +39,14 @@ def run_harvest(name, script, id_field):
 
     # Run the harvest script
     cmd = [
-        sys.executable, script,
-        "--search-config", CONFIG,
-        "--tier", TIER,
-        "--output", str(output_file)
+        sys.executable,
+        script,
+        "--search-config",
+        CONFIG,
+        "--tier",
+        TIER,
+        "--output",
+        str(output_file),
     ]
 
     result = {
@@ -52,7 +57,7 @@ def run_harvest(name, script, id_field):
         "has_id_field": False,
         "authors_issues": 0,
         "year_issues": 0,
-        "error": None
+        "error": None,
     }
 
     try:
@@ -122,9 +127,9 @@ def run_harvest(name, script, id_field):
 
 
 def main():
-    print("="*60)
+    print("=" * 60)
     print("ELIS Harvest Scripts - Local Validation")
-    print("="*60)
+    print("=" * 60)
     print(f"Config: {CONFIG}")
     print(f"Tier: {TIER}")
     print(f"Output: {OUTPUT_DIR}/")
@@ -140,11 +145,13 @@ def main():
 
     # Print summary
     print("\n")
-    print("="*60)
+    print("=" * 60)
     print("SUMMARY")
-    print("="*60)
-    print(f"{'Script':<20} {'Status':<12} {'Records':<8} {'ID':<5} {'Auth':<5} {'Year':<5}")
-    print("-"*60)
+    print("=" * 60)
+    print(
+        f"{'Script':<20} {'Status':<12} {'Records':<8} {'ID':<5} {'Auth':<5} {'Year':<5}"
+    )
+    print("-" * 60)
 
     passed = 0
     failed = 0
@@ -153,16 +160,20 @@ def main():
         id_ok = "Yes" if r["has_id_field"] else "No"
         auth = r["authors_issues"] if r["authors_issues"] > 0 else "-"
         year = r["year_issues"] if r["year_issues"] > 0 else "-"
-        print(f"{r['name']:<20} {r['status']:<12} {r['records']:<8} {id_ok:<5} {auth:<5} {year:<5}")
+        print(
+            f"{r['name']:<20} {r['status']:<12} {r['records']:<8} {id_ok:<5} {auth:<5} {year:<5}"
+        )
 
         if r["status"] == "PASSED":
             passed += 1
         elif r["status"] in ("FAILED", "ERROR", "TIMEOUT", "INVALID_JSON"):
             failed += 1
 
-    print("-"*60)
-    print(f"Passed: {passed}/8  |  Failed: {failed}/8  |  Type Issues: {8 - passed - failed}/8")
-    print("="*60)
+    print("-" * 60)
+    print(
+        f"Passed: {passed}/8  |  Failed: {failed}/8  |  Type Issues: {8 - passed - failed}/8"
+    )
+    print("=" * 60)
 
     # Cleanup hint
     print(f"\nTo clean up test files: Remove-Item -Recurse {OUTPUT_DIR}")
