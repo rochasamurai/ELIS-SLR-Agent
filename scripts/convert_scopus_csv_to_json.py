@@ -95,13 +95,6 @@ def main() -> int:
             print("CSV has no header row.")
             return 2
 
-        # Normalize header keys for case-insensitive access
-        field_map = {normalize_header(h): h for h in reader.fieldnames}
-
-        def get(row: Dict[str, str], keys: List[str]) -> str:
-            normalized_row = {normalize_header(k): v for k, v in row.items()}
-            return pick_field(normalized_row, keys)
-
         records = []
         for row in reader:
             normalized_row = {normalize_header(k): v for k, v in row.items()}
