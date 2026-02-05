@@ -38,7 +38,10 @@ class TestScopusSearch:
         mock_response = Mock()
         mock_response.status_code = 200
         mock_response.json.return_value = {
-            "search-results": {"entry": [{"dc:title": f"Paper {i}"} for i in range(25)]}
+            "search-results": {
+                "entry": [{"dc:title": f"Paper {i}"} for i in range(25)],
+                "opensearch:totalResults": "50",
+            }
         }
         mock_get.return_value = mock_response
 
@@ -105,7 +108,10 @@ class TestScopusSearch:
         mock_response = Mock()
         mock_response.status_code = 200
         mock_response.json.return_value = {
-            "search-results": {"entry": [{"dc:title": f"Paper {i}"} for i in range(25)]}
+            "search-results": {
+                "entry": [{"dc:title": f"Paper {i}"} for i in range(25)],
+                "opensearch:totalResults": "50",
+            }
         }
         mock_get.return_value = mock_response
 
@@ -163,7 +169,10 @@ class TestScopusSearch:
         mock_response = Mock()
         mock_response.status_code = 200
         mock_response.json.return_value = {
-            "search-results": {"entry": [{"dc:title": f"Paper {i}"} for i in range(25)]}
+            "search-results": {
+                "entry": [{"dc:title": f"Paper {i}"} for i in range(25)],
+                "opensearch:totalResults": "50",
+            }
         }
         mock_get.return_value = mock_response
 
