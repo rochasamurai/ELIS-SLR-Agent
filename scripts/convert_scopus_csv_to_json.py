@@ -49,7 +49,9 @@ def safe_int(value: str) -> Optional[int]:
         return None
 
 
-def make_id(doi: str, eid: str, title: str, year: Optional[int], authors: List[str]) -> str:
+def make_id(
+    doi: str, eid: str, title: str, year: Optional[int], authors: List[str]
+) -> str:
     if doi:
         return f"doi:{doi.lower().strip()}"
     if eid:
@@ -58,7 +60,9 @@ def make_id(doi: str, eid: str, title: str, year: Optional[int], authors: List[s
     return "sha1:" + hashlib.sha1(base.encode("utf-8")).hexdigest()
 
 
-def build_meta(config_path: str, retrieved_at: str, record_count: int, query_topic: str) -> Dict:
+def build_meta(
+    config_path: str, retrieved_at: str, record_count: int, query_topic: str
+) -> Dict:
     return {
         "_meta": True,
         "protocol_version": "ELIS 2025 (MVP)",
@@ -73,9 +77,15 @@ def build_meta(config_path: str, retrieved_at: str, record_count: int, query_top
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Convert Scopus CSV export to Appendix A JSON.")
-    parser.add_argument("--in", dest="input_path", required=True, help="Input CSV file path")
-    parser.add_argument("--out", dest="output_path", required=True, help="Output JSON file path")
+    parser = argparse.ArgumentParser(
+        description="Convert Scopus CSV export to Appendix A JSON."
+    )
+    parser.add_argument(
+        "--in", dest="input_path", required=True, help="Input CSV file path"
+    )
+    parser.add_argument(
+        "--out", dest="output_path", required=True, help="Output JSON file path"
+    )
     parser.add_argument("--query-topic", required=True, help="Query topic identifier")
     parser.add_argument("--query-string", required=True, help="Original query string")
     args = parser.parse_args()
@@ -119,7 +129,9 @@ def main() -> int:
                 ["source title", "publication title", "source"],
             )
             publisher = pick_field(normalized_row, ["publisher"])
-            language = pick_field(normalized_row, ["language of original document", "language"])
+            language = pick_field(
+                normalized_row, ["language of original document", "language"]
+            )
 
             record_id = make_id(doi, eid, title, year, authors)
 

@@ -94,8 +94,12 @@ def archive_reports(keep: int, dry_run: bool) -> int:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Archive older validation reports.")
-    parser.add_argument("--keep", type=int, default=10, help="How many recent reports to keep")
-    parser.add_argument("--dry-run", action="store_true", help="Print actions without moving files")
+    parser.add_argument(
+        "--keep", type=int, default=10, help="How many recent reports to keep"
+    )
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Print actions without moving files"
+    )
     args = parser.parse_args()
 
     if args.keep < 0:
