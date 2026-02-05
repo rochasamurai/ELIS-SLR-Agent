@@ -2,12 +2,73 @@
 __pycache__/
 *.py[cod]
 *$py.class
+*.pyo
+*.pyd
+
+# Distribution / build
+build/
+dist/
+*.egg-info/
+*.egg
+pip-wheel-metadata/
+
+# Virtual environment
+.venv/
 
 # Testing
 .coverage
 .pytest_cache/
 htmlcov/
+.tox/
+.nox/
+.mypy_cache/
+.hypothesis/
+
+# Lint / format
+.ruff_cache/
+.flake8
+
+# Notebooks / data science
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
 
 # IDE
 .vscode/
 .idea/
+
+# Secrets / credentials (never commit)
+.env
+.env.*
+.env.local
+.env.*.local
+*.pem
+credentials.json
+
+# Local editor / agent settings
+.claude/settings.local.json
+
+# Data policy: only json/jsonl committed
+**/*.csv
+**/*.tsv
+**/*.xlsx
+
+# Local/raw exports and staging (keep out of repo)
+imports/raw/
+imports/staging/
+
+# Generated benchmark outputs/reports
+benchmarks/outputs/
+benchmarks/reports/
+benchmarks/.cache/
+
+# Generated test outputs
+tests/outputs/
+test_outputs/
+test_artifacts/
+
+# Logs (preventive)
+logs/
+*.log
