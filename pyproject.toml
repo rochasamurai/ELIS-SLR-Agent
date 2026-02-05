@@ -38,5 +38,5 @@ select = ["E", "F"]      # pycodestyle errors + pyflakes
 ignore = ["E501"]        # allow long lines in legacy text/tests/docstrings
 
 [tool.pytest.ini_options]
-addopts = "-q --ignore docs/benchmark-1 --ignore docs/benchmark-2"
+addopts = "-q --ignore docs/benchmark-1 --ignore docs/benchmark-2 --ignore scripts/test_google_scholar.py"
 pythonpath = ["."]
