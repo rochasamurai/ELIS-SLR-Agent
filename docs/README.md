@@ -53,6 +53,21 @@ Guidelines for:
 
 ---
 
+### [REPO_HYGIENE_PLAN_2026-02-05.md](REPO_HYGIENE_PLAN_2026-02-05.md)
+**Repository Structure and Maintenance**
+
+Comprehensive plan for repository hygiene, including:
+- Benchmark restructure (`benchmarks/`)
+- JSON-only data policy (no CSV/TSV/XLSX tracked)
+- File review ledger ([FILE_REVIEW_LEDGER.md](FILE_REVIEW_LEDGER.md))
+- Validation report retention policy
+- CI guardrails and testing standards
+
+**Status:** Implemented (2026-02-05)
+**Format:** Markdown
+
+---
+
 ## 📖 Additional Resources
 
 ### Main Project Documentation

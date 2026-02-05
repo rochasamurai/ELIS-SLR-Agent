@@ -701,8 +701,11 @@ See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for detailed guidelines.
 - **Changelog** — Version history and amendments  
   [View changelog →](docs/CHANGELOG.md)
 
-- **Search Queries** — Configured search strategies  
+- **Search Queries** — Configured search strategies
   [View YAML →](config/elis_search_queries.yml)
+
+- **Repo Hygiene Plan** — Repository structure and maintenance
+  [View plan →](docs/REPO_HYGIENE_PLAN_2026-02-05.md)
 
 ### Protocol Sections
 
