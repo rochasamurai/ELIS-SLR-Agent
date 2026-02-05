@@ -155,7 +155,7 @@ def google_scholar_search(
     print(
         f"\n[SEARCH] GOOGLE SCHOLAR SEARCH (Attempt {retry_count + 1}/{max_retries + 1})"
     )
-    print(f"   Actor: easyapi/google-scholar-scraper")
+    print("   Actor: easyapi/google-scholar-scraper")
     print(f"   Original: {query[:100]}{'...' if len(query) > 100 else ''}")
     print(
         f"   Simplified: {search_query[:100]}{'...' if len(search_query) > 100 else ''}"
@@ -207,7 +207,7 @@ def google_scholar_search(
             return []
 
         # Fetch results from dataset
-        print(f"\n  Retrieving results from dataset...")
+        print("\n  Retrieving results from dataset...")
         dataset_id = run.get("defaultDatasetId")
 
         dataset_client = client.dataset(dataset_id)
@@ -218,7 +218,7 @@ def google_scholar_search(
         if len(results) == 0:
             print("  [WARNING] WARNING: 0 results")
             if retry_count < max_retries:
-                print(f"\n  Retrying...")
+                print("\n  Retrying...")
                 return google_scholar_search(
                     client,
                     query,
@@ -240,7 +240,7 @@ def google_scholar_search(
         print(f"  [ERROR] Error: {type(e).__name__}: {e}")
 
         if retry_count < max_retries:
-            print(f"\n  Retrying...")
+            print("\n  Retrying...")
             return google_scholar_search(
                 client,
                 query,
@@ -626,8 +626,8 @@ if __name__ == "__main__":
     print(f"{'=' * 80}\n")
 
     if new_count > 0 and new_count <= 10:
-        print(f"[NOTE] FREE TIER NOTE:")
-        print(f"   EasyAPI free tier limited to 10 results per run")
+        print("[NOTE] FREE TIER NOTE:")
+        print("   EasyAPI free tier limited to 10 results per run")
         print(
             f"   For full {max_results} results, upgrade at https://apify.com/pricing"
         )

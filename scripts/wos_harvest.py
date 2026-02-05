@@ -364,7 +364,7 @@ if __name__ == "__main__":
         max_results = config.get("global", {}).get("max_results_per_source", 100)
         config_mode = "LEGACY"
         print(
-            f"[WARNING] Using legacy config format. Consider using --search-config for new projects."
+            "[WARNING] Using legacy config format. Consider using --search-config for new projects."
         )
 
     # Apply max_results override if provided

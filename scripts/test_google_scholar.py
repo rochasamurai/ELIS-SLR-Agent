@@ -54,7 +54,8 @@ print("\n2. Running Google Scholar harvest...")
 print("   This will take 5-10 minutes...")
 print("-" * 80)
 
-import subprocess
+import subprocess  # noqa: E402
+
 result = subprocess.run(
     [sys.executable, "google_scholar_harvest.py"],
     cwd=str(Path(__file__).parent),
