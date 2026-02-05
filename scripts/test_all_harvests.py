@@ -68,7 +68,7 @@ def run_harvest(name, script, id_field):
         if not output_file.exists():
             result["status"] = "FAILED"
             result["error"] = "Output file not created"
-            print(f"  FAILED: Output file not created")
+            print("  FAILED: Output file not created")
             return result
 
         with open(output_file, "r", encoding="utf-8") as f:
@@ -78,7 +78,7 @@ def run_harvest(name, script, id_field):
 
         if not data:
             result["status"] = "EMPTY"
-            print(f"  WARNING: No records returned")
+            print("  WARNING: No records returned")
             return result
 
         # Check for ID field
@@ -108,7 +108,7 @@ def run_harvest(name, script, id_field):
     except subprocess.TimeoutExpired:
         result["status"] = "TIMEOUT"
         result["error"] = "Script timed out after 300s"
-        print(f"  TIMEOUT: Script took too long")
+        print("  TIMEOUT: Script took too long")
     except json.JSONDecodeError as e:
         result["status"] = "INVALID_JSON"
         result["error"] = str(e)

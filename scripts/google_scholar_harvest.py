@@ -144,7 +144,7 @@ def google_scholar_search(client, query: str, max_items: int = 1000,
     search_query = prepare_google_scholar_query(query)
 
     print(f"\n[SEARCH] GOOGLE SCHOLAR SEARCH (Attempt {retry_count + 1}/{max_retries + 1})")
-    print(f"   Actor: easyapi/google-scholar-scraper")
+    print("   Actor: easyapi/google-scholar-scraper")
     print(f"   Original: {query[:100]}{'...' if len(query) > 100 else ''}")
     print(f"   Simplified: {search_query[:100]}{'...' if len(search_query) > 100 else ''}")
     print(f"   Max items: {max_items}")
@@ -158,7 +158,7 @@ def google_scholar_search(client, query: str, max_items: int = 1000,
 
     # Year filtering not available in EasyAPI actor
     if start_year or end_year:
-        print(f"   [WARNING] Year filtering not supported by EasyAPI actor")
+        print("   [WARNING] Year filtering not supported by EasyAPI actor")
 
     try:
         print("\n  Starting Apify run...")
@@ -166,7 +166,7 @@ def google_scholar_search(client, query: str, max_items: int = 1000,
         # Run the actor and wait for it to finish
         run = client.actor("easyapi/google-scholar-scraper").call(run_input=run_input)
 
-        print(f"  [OK] Run completed")
+        print("  [OK] Run completed")
         print(f"    Run ID: {run.get('id')}")
         print(f"    Status: {run.get('status')}")
         print(f"    Run URL: https://console.apify.com/actors/runs/{run.get('id')}")
@@ -187,7 +187,7 @@ def google_scholar_search(client, query: str, max_items: int = 1000,
             return []
 
         # Fetch results from dataset
-        print(f"\n  Retrieving results from dataset...")
+        print("\n  Retrieving results from dataset...")
         dataset_id = run.get('defaultDatasetId')
 
         dataset_client = client.dataset(dataset_id)
@@ -196,16 +196,16 @@ def google_scholar_search(client, query: str, max_items: int = 1000,
         print(f"  [OK] Retrieved {len(results)} results from Google Scholar")
 
         if len(results) == 0:
-            print(f"  [WARNING] WARNING: 0 results")
+            print("  [WARNING] WARNING: 0 results")
             if retry_count < max_retries:
-                print(f"\n  Retrying...")
+                print("\n  Retrying...")
                 return google_scholar_search(client, query, max_items, start_year, end_year,
                                              retry_count + 1, max_retries)
             else:
-                print(f"  [ERROR] All retries exhausted")
+                print("  [ERROR] All retries exhausted")
         elif len(results) == 10:
-            print(f"  [NOTE] Note: Free tier limited to 10 results")
-            print(f"      Upgrade Apify account for up to 5000 results")
+            print("  [NOTE] Note: Free tier limited to 10 results")
+            print("      Upgrade Apify account for up to 5000 results")
 
         return results
 
@@ -213,7 +213,7 @@ def google_scholar_search(client, query: str, max_items: int = 1000,
         print(f"  [ERROR] Error: {type(e).__name__}: {e}")
 
         if retry_count < max_retries:
-            print(f"\n  Retrying...")
+            print("\n  Retrying...")
             return google_scholar_search(client, query, max_items, start_year, end_year,
                                          retry_count + 1, max_retries)
 
@@ -447,7 +447,7 @@ if __name__ == "__main__":
     print("GOOGLE SCHOLAR HARVEST - EASYAPI ACTOR")
     print("=" * 80)
     print(f"Start time: {datetime.now().isoformat()}")
-    print(f"Actor: easyapi/google-scholar-scraper")
+    print("Actor: easyapi/google-scholar-scraper")
 
     # Initialize Apify client
     api_token = get_credentials()
@@ -572,6 +572,6 @@ if __name__ == "__main__":
     print(f"{'=' * 80}\n")
 
     if new_count > 0 and new_count <= 10:
-        print(f"[NOTE] FREE TIER NOTE:")
-        print(f"   EasyAPI free tier limited to 10 results per run")
+        print("[NOTE] FREE TIER NOTE:")
+        print("   EasyAPI free tier limited to 10 results per run")
         print(f"   For full {max_results} results, upgrade at https://apify.com/pricing")

@@ -314,7 +314,7 @@ def get_core_config_new(config, tier=None):
     if simplified_query:
         # Use the curated simplified query directly
         core_query = simplified_query
-        print(f"Using simplified alternative query for CORE:")
+        print("Using simplified alternative query for CORE:")
         print(f"  Query: {core_query}")
     else:
         # Fall back to using boolean_string with quotes stripped
@@ -326,7 +326,7 @@ def get_core_config_new(config, tier=None):
         # Apply wrapper if defined, otherwise use raw query (quotes stripped)
         query_wrapper = core_config.get("query_wrapper", "{query}")
         core_query = query_wrapper.replace("{query}", query_string).replace('"', "")
-        print(f"Query for CORE (quotes stripped):")
+        print("Query for CORE (quotes stripped):")
         print(f"  Query: {core_query[:100]}{'...' if len(core_query) > 100 else ''}")
 
     # Determine max_results based on tier

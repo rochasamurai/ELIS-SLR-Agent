@@ -51,7 +51,7 @@ from pathlib import Path
 # Add repo root to path so that xploreapi/ is importable regardless of cwd
 _repo_root = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(_repo_root))
-from xploreapi.xploreapi import XPLORE
+from xploreapi.xploreapi import XPLORE  # noqa: E402
 
 
 # ---------------------------------------------------------------------------

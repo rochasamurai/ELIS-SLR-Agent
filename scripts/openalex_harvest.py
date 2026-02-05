@@ -276,7 +276,7 @@ def get_openalex_config_new(config, tier=None):
     if simplified_query:
         # Use the curated simplified query directly
         oa_query = simplified_query
-        print(f"Using simplified alternative query for OpenAlex:")
+        print("Using simplified alternative query for OpenAlex:")
         print(f"  Query: {oa_query}")
     else:
         # Fall back to using boolean_string with quotes stripped
@@ -288,7 +288,7 @@ def get_openalex_config_new(config, tier=None):
         # Apply wrapper if defined, otherwise use raw query (quotes stripped)
         query_wrapper = oa_config.get("query_wrapper", "{query}")
         oa_query = query_wrapper.replace("{query}", query_string).replace('"', "")
-        print(f"Query for OpenAlex (quotes stripped):")
+        print("Query for OpenAlex (quotes stripped):")
         print(f"  Query: {oa_query[:100]}{'...' if len(oa_query) > 100 else ''}")
 
     # Determine max_results based on tier

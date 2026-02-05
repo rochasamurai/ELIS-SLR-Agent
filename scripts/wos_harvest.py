@@ -351,7 +351,7 @@ if __name__ == "__main__":
         queries = get_wos_queries_legacy(config)
         max_results = config.get("global", {}).get("max_results_per_source", 100)
         config_mode = "LEGACY"
-        print(f"[WARNING] Using legacy config format. Consider using --search-config for new projects.")
+        print("[WARNING] Using legacy config format. Consider using --search-config for new projects.")
     
     # Apply max_results override if provided
     if args.max_results:

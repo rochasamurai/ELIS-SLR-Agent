@@ -240,7 +240,7 @@ def get_scopus_config_new(config, tier=None):
     # Apply Scopus-specific wrapper (TITLE-ABS-KEY for searching title, abstract, keywords)
     query_wrapper = scopus_config.get("query_wrapper", "TITLE-ABS-KEY({query})")
     scopus_query = query_wrapper.replace("{query}", query_string)
-    print(f"Query for Scopus:")
+    print("Query for Scopus:")
     print(f"  Query: {scopus_query[:100]}{'...' if len(scopus_query) > 100 else ''}")
     
     # Determine max_results based on tier
@@ -335,7 +335,7 @@ if __name__ == "__main__":
         queries = get_scopus_queries_legacy(config)
         max_results = config.get("global", {}).get("max_results_per_source", 100)
         config_mode = "LEGACY"
-        print(f"[WARNING] Using legacy config format. Consider using --search-config for new projects.")
+        print("[WARNING] Using legacy config format. Consider using --search-config for new projects.")
     
     # Apply max_results override if provided
     if args.max_results:

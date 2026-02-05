@@ -28,6 +28,7 @@ exclude = [
   ".github",
   "docs",
   "schemas",
+  "xploreapi",
 ]
 
 # New-style linter settings live under [tool.ruff.lint]
