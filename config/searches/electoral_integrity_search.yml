@@ -444,7 +444,7 @@ databases:
   - name: "Google Scholar"
     enabled: true
     max_results:
-      testing: 25
+      testing: 10
       pilot: 100
       benchmark: 500
       production: 500

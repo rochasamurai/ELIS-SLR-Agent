@@ -51,6 +51,8 @@ from pathlib import Path
 from datetime import datetime
 from apify_client import ApifyClient
 
+EASYAPI_FREE_TIER_MAX = 10
+
 
 # ---------------------------------------------------------------------------
 # CREDENTIALS
@@ -529,6 +531,14 @@ if __name__ == "__main__":
     if args.max_results:
         print(f"Overriding max_results: {max_results} -> {args.max_results}")
         max_results = args.max_results
+
+    # EasyAPI free tier hard-caps at 10 results regardless of config
+    if max_results > EASYAPI_FREE_TIER_MAX:
+        print(
+            f"[INFO] Capping Google Scholar max_results to free-tier limit: "
+            f"{max_results} -> {EASYAPI_FREE_TIER_MAX}"
+        )
+        max_results = EASYAPI_FREE_TIER_MAX
 
     # Validate queries
     if not queries:
