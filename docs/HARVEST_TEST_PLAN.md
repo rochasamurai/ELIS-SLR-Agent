@@ -2,7 +2,7 @@
 
 **Date:** 2026-02-03
 **Updated:** 2026-02-04
-**Scope:** All 8 harvest scripts upgraded this session
+**Scope:** All 9 harvest scripts upgraded this session
 **Env:** PowerShell, `.venv` activated, repo root as working directory
 
 ---
@@ -12,11 +12,12 @@
 | Phase | Status | Notes |
 |-------|--------|-------|
 | Script review & updates | ✅ Done | 2026-02-03 session |
-| API access confirmation | ✅ Done | All 8 databases accessible |
+| API access confirmation | ✅ Done | All 9 databases accessible |
 | GitHub workflow test | 🔲 Pending | Use `test_database_harvest.yml` |
 | Query & output review | 🔲 Pending | See Section 12 |
 | Schema alignment | 🔲 Pending | See Section 13 |
 | Full integration test | 🔲 Pending | Section 10 |
+| Test hygiene (pytest collection) | 🔲 Pending | Exclude script runners; add unit/integration tests |
 
 ---
 
@@ -473,7 +474,22 @@ print(f'Records missing title: {len(missing)}')
 "
 ```
 
-Expected: all 8 sources represented, zero missing titles, valid JSON.
+Expected: all 9 sources represented, zero missing titles, valid JSON.
+
+---
+
+## 10.1 Test Hygiene Tasks (pytest collection)
+
+Purpose: ensure ad-hoc runner scripts do not break CI and that Google Scholar logic is covered by real tests.
+
+**Tasks**
+- Exclude `docs/benchmark-1/` from pytest collection.
+- Exclude `docs/benchmark-2/` from pytest collection.
+- Exclude `scripts/test_google_scholar.py` from pytest collection.
+- Exclude `scripts/test_all_harvests.py` from pytest collection.
+- Replace `scripts/test_google_scholar.py` with unit tests for query simplification and record transformation (no network).
+- Add an integration test marked `@pytest.mark.integration` that runs only when `APIFY_API_TOKEN` is set.
+- Keep `scripts/test_all_harvests.py` as a manual batch runner (not a unit test).
 
 ---
 
