@@ -100,8 +100,6 @@ benchmarks/.cache/
 
 # Generated test outputs
 tests/outputs/
-test_outputs/
-test_artifacts/
 
 # Logs (no scripts currently produce log files, but prevent future accidents)
 logs/
@@ -159,7 +157,7 @@ git push
 **Generated (should be ignored):**
 - benchmark outputs under `benchmarks/outputs/`
 - most validation logs/reports unless curated (see §9)
-- test run outputs under `tests/outputs/`, `test_outputs/`, or `test_artifacts/`
+- test run outputs under `tests/outputs/` (generated)
 
 ### 4.3 JSON array → JSONL migration (deferred)
 All 9 harvest scripts currently output **JSON arrays** (`.json`). The `validate_json.py` validator, the Appendix A schema, and all downstream workflows expect this format.
@@ -326,8 +324,8 @@ Create:
 - `tests/outputs/` (generated; ignored)
 
 Reconcile current:
-- `test_artifacts/` → migrate useful files into `tests/fixtures/`, then delete (already ignored in `.gitignore`)
-- `test_outputs/` → generated only; ignored
+- `tests/fixtures/` → canonical test fixtures (inputs/expected)
+- `tests/outputs/` → generated only; ignored
 
 ### 8.2 Integration tests vs unit tests
 - Unit tests: run without network/secrets by default (`pytest`)
@@ -491,7 +489,7 @@ Naming convention:
 ## 14) Implementation checklist (Codex-ready)
 
 ### PR-1: Hygiene + JSON/JSONL enforcement
-- [ ] Update `.gitignore` (local caches, venv, benchmark outputs, **block csv/tsv/xlsx**, imports raw/staging, `.env`/secrets, `test_artifacts/`)
+- [ ] Update `.gitignore` (local caches, venv, benchmark outputs, **block csv/tsv/xlsx**, imports raw/staging, `.env`/secrets, `tests/outputs/`)
 - [ ] `git rm --cached` any tracked local artifacts (`.venv`, caches, `.claude/settings.local.json`)
 - [ ] `git rm --cached` any tracked `.csv` exports (move local copies to `imports/raw/`)
 - [ ] Add `docs/_inventory_tracked_files.txt`
@@ -556,7 +554,7 @@ This updated plan incorporates the following corrections and improvements:
 
 6. **Secrets added to .gitignore** (§3.1): Added `.env`, `.env.*`, `*.pem`, `credentials.json` patterns.
 
-7. **test_artifacts/ added to .gitignore** (§3.1): Added to ignored patterns alongside `test_outputs/`.
+7. **tests/outputs/ added to .gitignore** (§3.1): Generated test outputs are ignored.
 
 8. **Schema alignment gap documented** (§12.5): Documented that individual harvesters don't produce `id`, `retrieved_at`, `query_topic`, `query_string` — these are added by the orchestrator. Proposed subset schema for standalone testing.
 
