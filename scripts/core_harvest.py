@@ -143,11 +143,17 @@ def core_search(query: str, limit: int = 100, max_results: int = 1000):
                 retry_count += 1
                 if retry_count > max_retries:
                     print(
-                        f"  Max retries ({max_retries}) exceeded due to rate limiting. Stopping."
+                        f"  Max retries ({max_retries}) exceeded due to transient server errors. Stopping."
                     )
                     break
                 # Rate limited or service unavailable - back off and retry with exponential backoff
                 wait_time = 5 * retry_count
+                # If we hit a rate limit, honor Retry-After when provided
+                if r.status_code == 429 and rl_retry_after:
+                    try:
+                        wait_time = max(wait_time, int(rl_retry_after))
+                    except (ValueError, TypeError):
+                        pass
                 print(
                     f"  HTTP {r.status_code}. Waiting {wait_time}s before retry ({retry_count}/{max_retries})..."
                 )
