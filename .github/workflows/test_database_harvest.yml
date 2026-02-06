@@ -60,6 +60,75 @@ jobs:
           pip install requests pyyaml pycurl certifi
 
       # ---------------------------------------------------------------------------
+      # Verify all required secrets are configured
+      # ---------------------------------------------------------------------------
+      - name: Verify API Secrets
+        env:
+          SCOPUS_API_KEY:            ${{ secrets.SCOPUS_API_KEY }}
+          SCOPUS_INST_TOKEN:         ${{ secrets.SCOPUS_INST_TOKEN }}
+          SCIENCEDIRECT_API_KEY:     ${{ secrets.SCIENCEDIRECT_API_KEY }}
+          SCIENCEDIRECT_INST_TOKEN:  ${{ secrets.SCIENCEDIRECT_INST_TOKEN }}
+          WEB_OF_SCIENCE_API_KEY:    ${{ secrets.WEB_OF_SCIENCE_API_KEY }}
+          IEEE_EXPLORE_API_KEY:      ${{ secrets.IEEE_EXPLORE_API_KEY }}
+          SEMANTIC_SCHOLAR_API_KEY:  ${{ secrets.SEMANTIC_SCHOLAR_API_KEY }}
+          ELIS_CONTACT:              ${{ secrets.ELIS_CONTACT }}
+          CORE_API_KEY:              ${{ secrets.CORE_API_KEY }}
+          APIFY_API_TOKEN:           ${{ secrets.APIFY_API_TOKEN }}
+        run: |
+          echo "============================================"
+          echo "Verifying GitHub Secrets Configuration"
+          echo "============================================"
+          echo ""
+
+          MISSING_SECRETS=()
+
+          # Required secrets (all 10)
+          [ -z "$SCOPUS_API_KEY" ]           && MISSING_SECRETS+=("SCOPUS_API_KEY")
+          [ -z "$SCOPUS_INST_TOKEN" ]        && MISSING_SECRETS+=("SCOPUS_INST_TOKEN")
+          [ -z "$SCIENCEDIRECT_API_KEY" ]    && MISSING_SECRETS+=("SCIENCEDIRECT_API_KEY")
+          [ -z "$SCIENCEDIRECT_INST_TOKEN" ] && MISSING_SECRETS+=("SCIENCEDIRECT_INST_TOKEN")
+          [ -z "$WEB_OF_SCIENCE_API_KEY" ]   && MISSING_SECRETS+=("WEB_OF_SCIENCE_API_KEY")
+          [ -z "$IEEE_EXPLORE_API_KEY" ]     && MISSING_SECRETS+=("IEEE_EXPLORE_API_KEY")
+          [ -z "$SEMANTIC_SCHOLAR_API_KEY" ] && MISSING_SECRETS+=("SEMANTIC_SCHOLAR_API_KEY")
+          [ -z "$CORE_API_KEY" ]             && MISSING_SECRETS+=("CORE_API_KEY")
+          [ -z "$APIFY_API_TOKEN" ]          && MISSING_SECRETS+=("APIFY_API_TOKEN")
+          [ -z "$ELIS_CONTACT" ]             && MISSING_SECRETS+=("ELIS_CONTACT")
+
+          # Report results
+          if [ ${#MISSING_SECRETS[@]} -eq 0 ]; then
+            echo "✅ All 10 required secrets are configured"
+            echo ""
+            echo "Configured secrets:"
+            echo "  ✓ SCOPUS_API_KEY"
+            echo "  ✓ SCOPUS_INST_TOKEN"
+            echo "  ✓ SCIENCEDIRECT_API_KEY"
+            echo "  ✓ SCIENCEDIRECT_INST_TOKEN"
+            echo "  ✓ WEB_OF_SCIENCE_API_KEY"
+            echo "  ✓ IEEE_EXPLORE_API_KEY"
+            echo "  ✓ SEMANTIC_SCHOLAR_API_KEY"
+            echo "  ✓ CORE_API_KEY"
+            echo "  ✓ APIFY_API_TOKEN"
+            echo "  ✓ ELIS_CONTACT"
+            echo ""
+            echo "Ready to test database: ${{ github.event.inputs.database }}"
+          else
+            echo "❌ ERROR: Missing required secrets"
+            echo ""
+            echo "Missing secrets (${#MISSING_SECRETS[@]}):"
+            for secret in "${MISSING_SECRETS[@]}"; do
+              echo "  ✗ $secret"
+            done
+            echo ""
+            echo "Please configure missing secrets at:"
+            echo "  Repository → Settings → Secrets and variables → Actions → Repository secrets"
+            echo ""
+            echo "See documentation: docs/REPO_HYGIENE_PLAN_2026-02-05.md (Section 12)"
+            exit 1
+          fi
+
+          echo "============================================"
+
+      # ---------------------------------------------------------------------------
       # Map the database choice to the script filename.
       # api_key_var / api_token_var removed — they were never referenced
       # downstream; all credentials are injected via the env: block instead.

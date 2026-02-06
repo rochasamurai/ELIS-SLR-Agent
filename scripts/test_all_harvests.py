@@ -9,6 +9,7 @@ Usage:
 import subprocess
 import json
 import sys
+import os
 from pathlib import Path
 
 # Configuration
@@ -126,7 +127,62 @@ def run_harvest(name, script, id_field):
     return result
 
 
+def verify_secrets():
+    """Verify all required environment variables are set."""
+    print("=" * 60)
+    print("Verifying Environment Variables (API Keys/Tokens)")
+    print("=" * 60)
+    print()
+
+    required_secrets = [
+        "SCOPUS_API_KEY",
+        "SCOPUS_INST_TOKEN",
+        "SCIENCEDIRECT_API_KEY",
+        "SCIENCEDIRECT_INST_TOKEN",
+        "WEB_OF_SCIENCE_API_KEY",
+        "IEEE_EXPLORE_API_KEY",
+        "SEMANTIC_SCHOLAR_API_KEY",
+        "CORE_API_KEY",
+        "APIFY_API_TOKEN",
+        "ELIS_CONTACT",
+    ]
+
+    missing = []
+    for secret in required_secrets:
+        if not os.getenv(secret):
+            missing.append(secret)
+
+    if not missing:
+        print("✅ All 10 required environment variables are configured")
+        print()
+        print("Configured:")
+        for secret in required_secrets:
+            print(f"  ✓ {secret}")
+        print()
+        print("=" * 60)
+        print()
+        return True
+    else:
+        print(f"❌ ERROR: Missing {len(missing)} required environment variable(s)")
+        print()
+        print("Missing:")
+        for secret in missing:
+            print(f"  ✗ {secret}")
+        print()
+        print("Please set missing variables in your environment or .env file")
+        print("See: docs/REPO_HYGIENE_PLAN_2026-02-05.md (Section 12)")
+        print()
+        print("=" * 60)
+        return False
+
+
 def main():
+    # Verify environment variables first
+    if not verify_secrets():
+        print()
+        print("ABORTED: Cannot run tests without required API credentials")
+        return 1
+
     print("=" * 60)
     print("ELIS Harvest Scripts - Local Validation")
     print("=" * 60)
