@@ -86,9 +86,9 @@ def run_harvest(name, script, id_field):
             result["status"] = "EMPTY"
             print("  WARNING: No records returned")
             if proc.stderr:
-                print(f"  Error output: {proc.stderr[:500]}")
+                print(f"  Error output: {proc.stderr[:1000]}")
             if proc.stdout:
-                print(f"  Script output (first 300 chars): {proc.stdout[:300]}")
+                print(f"  Script output (last 800 chars): {proc.stdout[-800:]}")
             return result
 
         # Check for ID field
