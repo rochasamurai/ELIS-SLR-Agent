@@ -1,6 +1,6 @@
 """
 test_all_harvests.py
-Runs all 8 harvest scripts with testing tier and validates JSON output.
+Runs all 9 harvest scripts with testing tier and validates JSON output.
 
 Usage:
   python scripts/test_all_harvests.py
@@ -171,7 +171,7 @@ def main():
 
     print("-" * 60)
     print(
-        f"Passed: {passed}/8  |  Failed: {failed}/8  |  Type Issues: {8 - passed - failed}/8"
+        f"Passed: {passed}/9  |  Failed: {failed}/9  |  Type Issues: {9 - passed - failed}/9"
     )
     print("=" * 60)
 

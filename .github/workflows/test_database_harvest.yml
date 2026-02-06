@@ -9,6 +9,7 @@ on:
         type: choice
         options:
           - scopus
+          - sciencedirect
           - web_of_science
           - ieee_xplore
           - semantic_scholar
@@ -68,6 +69,7 @@ jobs:
         run: |
           case "${{ github.event.inputs.database }}" in
             scopus)            echo "script=scripts/scopus_harvest.py"            >> $GITHUB_OUTPUT ;;
+            sciencedirect)     echo "script=scripts/sciencedirect_harvest.py"     >> $GITHUB_OUTPUT ;;
             web_of_science)    echo "script=scripts/wos_harvest.py"               >> $GITHUB_OUTPUT ;;
             ieee_xplore)       echo "script=scripts/ieee_harvest.py"              >> $GITHUB_OUTPUT ;;
             semantic_scholar)  echo "script=scripts/semanticscholar_harvest.py"   >> $GITHUB_OUTPUT ;;
@@ -87,6 +89,8 @@ jobs:
         env:
           SCOPUS_API_KEY:            ${{ secrets.SCOPUS_API_KEY }}
           SCOPUS_INST_TOKEN:         ${{ secrets.SCOPUS_INST_TOKEN }}
+          SCIENCEDIRECT_API_KEY:     ${{ secrets.SCIENCEDIRECT_API_KEY }}
+          SCIENCEDIRECT_INST_TOKEN:  ${{ secrets.SCIENCEDIRECT_INST_TOKEN }}
           WEB_OF_SCIENCE_API_KEY:    ${{ secrets.WEB_OF_SCIENCE_API_KEY }}
           IEEE_EXPLORE_API_KEY:      ${{ secrets.IEEE_EXPLORE_API_KEY }}
           SEMANTIC_SCHOLAR_API_KEY:  ${{ secrets.SEMANTIC_SCHOLAR_API_KEY }}
@@ -148,6 +152,8 @@ jobs:
         env:
           SCOPUS_API_KEY:            ${{ secrets.SCOPUS_API_KEY }}
           SCOPUS_INST_TOKEN:         ${{ secrets.SCOPUS_INST_TOKEN }}
+          SCIENCEDIRECT_API_KEY:     ${{ secrets.SCIENCEDIRECT_API_KEY }}
+          SCIENCEDIRECT_INST_TOKEN:  ${{ secrets.SCIENCEDIRECT_INST_TOKEN }}
           WEB_OF_SCIENCE_API_KEY:    ${{ secrets.WEB_OF_SCIENCE_API_KEY }}
           IEEE_EXPLORE_API_KEY:      ${{ secrets.IEEE_EXPLORE_API_KEY }}
           SEMANTIC_SCHOLAR_API_KEY:  ${{ secrets.SEMANTIC_SCHOLAR_API_KEY }}
@@ -254,6 +260,7 @@ jobs:
           # ------------------------------------------------------------------
           id_checks = {
               "scopus":           ("scopus_id",           "Scopus IDs"),
+              "sciencedirect":    ("sciencedirect_id",    "ScienceDirect IDs"),
               "web_of_science":   ("wos_id",              "WoS IDs"),
               "ieee_xplore":      ("ieee_id",             "IEEE IDs"),
               "semantic_scholar": ("s2_id",               "Semantic Scholar IDs"),
