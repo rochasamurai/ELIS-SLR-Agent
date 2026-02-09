@@ -58,10 +58,17 @@ def get_credentials():
 
 
 def get_headers():
-    """Build CORE API headers with Bearer token."""
+    """Build CORE API headers with Bearer token and User-Agent.
+
+    A descriptive User-Agent is required because api.core.ac.uk sits behind
+    Cloudflare, which blocks the default ``python-requests/…`` UA with a 403.
+    """
     api_key = get_credentials()
+    mailto = os.getenv("ELIS_CONTACT", "")
+    ua = f"ELIS-SLR-Agent/1.0 (mailto:{mailto})" if mailto else "ELIS-SLR-Agent/1.0"
     return {
         "Authorization": f"Bearer {api_key}",
+        "User-Agent": ua,
     }
 
 
@@ -139,7 +146,7 @@ def core_search(query: str, limit: int = 100, max_results: int = 1000):
                 except (ValueError, TypeError):
                     pass
 
-            if r.status_code in (429, 500, 503):
+            if r.status_code in (403, 429, 500, 503):
                 retry_count += 1
                 if retry_count > max_retries:
                     print(
