@@ -1,7 +1,7 @@
 """
 google_scholar_harvest.py
 Harvests metadata from Google Scholar via Apify API using official Python client.
-Uses easyapi/google-scholar-scraper actor.
+Uses marco.gullo/google-scholar-scraper actor.
 
 CONFIGURATION MODES:
 1. NEW (Recommended): --search-config config/searches/electoral_integrity_search.yml
@@ -14,10 +14,9 @@ CONFIGURATION MODES:
    - Uses global max_results_per_source setting
 
 NOTE — Apify-specific constraints:
-- No direct pagination control (actor handles internally)
-- EasyAPI free tier hard-caps at 10 results per run regardless of maxItems
-- Year filtering not supported by the EasyAPI actor
-- DOI not provided by EasyAPI — dedup uses normalised title + google_scholar_id
+- Actor paginates in pages of 10; actual results may slightly exceed maxResults
+- Year filtering not supported by the actor
+- DOI not provided — dedup uses normalised title + google_scholar_id
 
 Environment Variables:
 - APIFY_API_TOKEN: Your Apify API token (required)
@@ -51,7 +50,7 @@ from pathlib import Path
 from datetime import datetime
 from apify_client import ApifyClient
 
-EASYAPI_FREE_TIER_MAX = 10
+ACTOR_ID = "marco.gullo/google-scholar-scraper"
 
 
 # ---------------------------------------------------------------------------
@@ -98,8 +97,8 @@ def check_apify_account_status(client):
 def prepare_google_scholar_query(original_query):
     """
     Convert complex Boolean query to simple format for Google Scholar.
-    EasyAPI actor works best with simple keyword queries — Boolean operators
-    and parentheses are stripped.
+    Google Scholar actors work best with simple keyword queries — Boolean
+    operators and parentheses are stripped.
     """
     simple_query = original_query.replace('"', "").replace("(", "").replace(")", "")
     simple_query = simple_query.replace(" AND ", " ").replace(" OR ", " ")
@@ -123,22 +122,21 @@ def google_scholar_search(
     max_retries: int = 2,
 ):
     """
-    Search Google Scholar via Apify using easyapi/google-scholar-scraper actor.
+    Search Google Scholar via Apify using marco.gullo/google-scholar-scraper actor.
 
     Apify-specific notes:
     - Actor is called via client.actor().call() — runs asynchronously, blocks until done
     - Results retrieved from the run's default dataset after completion
-    - Free tier hard-caps at 10 results regardless of maxItems
-    - maxItems minimum is 100 (actor requirement)
-    - Year filtering not available in EasyAPI actor
+    - Actor paginates in pages of 10; actual count may slightly exceed maxResults
+    - Year filtering not available in this actor
     - Recursive retry with random 30-60s back-off on failure or 0 results
 
     Args:
         client: ApifyClient instance
         query (str): Original search query (will be simplified)
-        max_items (int): Requested result count (actor may return fewer)
-        start_year (int): Not supported by EasyAPI — logged as warning only
-        end_year (int): Not supported by EasyAPI — logged as warning only
+        max_items (int): Requested result count (actor may return slightly more)
+        start_year (int): Not supported — logged as warning only
+        end_year (int): Not supported — logged as warning only
         retry_count (int): Current retry attempt (internal)
         max_retries (int): Maximum retry attempts
 
@@ -151,13 +149,13 @@ def google_scholar_search(
         print(f"\n  [WAIT] Waiting {delay:.0f} seconds before retry...")
         time.sleep(delay)
 
-    # Simplify query for EasyAPI
+    # Simplify query for Google Scholar
     search_query = prepare_google_scholar_query(query)
 
     print(
         f"\n[SEARCH] GOOGLE SCHOLAR SEARCH (Attempt {retry_count + 1}/{max_retries + 1})"
     )
-    print("   Actor: easyapi/google-scholar-scraper")
+    print(f"   Actor: {ACTOR_ID}")
     print(f"   Original: {query[:100]}{'...' if len(query) > 100 else ''}")
     print(
         f"   Simplified: {search_query[:100]}{'...' if len(search_query) > 100 else ''}"
@@ -165,21 +163,22 @@ def google_scholar_search(
     print(f"   Max items: {max_items}")
     print(f"   Timestamp: {datetime.now().isoformat()}")
 
-    # Prepare input — EasyAPI requires minimum 100 for maxItems
+    # Prepare input for marco.gullo actor
     run_input = {
-        "query": search_query,
-        "maxItems": max(100, max_items),
+        "keyword": search_query,
+        "maxResults": max_items,
+        "proxyOptions": {"useApifyProxy": True},
     }
 
-    # Year filtering not available in EasyAPI actor
+    # Year filtering not available in this actor
     if start_year or end_year:
-        print("   [WARNING] Year filtering not supported by EasyAPI actor")
+        print("   [WARNING] Year filtering not supported by this actor")
 
     try:
         print("\n  Starting Apify run...")
 
         # Run the actor and wait for it to finish
-        run = client.actor("easyapi/google-scholar-scraper").call(run_input=run_input)
+        run = client.actor(ACTOR_ID).call(run_input=run_input)
 
         print("  [OK] Run completed")
         print(f"    Run ID: {run.get('id')}")
@@ -232,9 +231,6 @@ def google_scholar_search(
                 )
             else:
                 print("  [ERROR] All retries exhausted")
-        elif len(results) == 10:
-            print("  [NOTE] Note: Free tier limited to 10 results")
-            print("      Upgrade Apify account for up to 5000 results")
 
         return results
 
@@ -263,21 +259,27 @@ def google_scholar_search(
 
 def transform_google_scholar_entry(entry):
     """
-    Transform EasyAPI Google Scholar result to standard format.
+    Transform marco.gullo Google Scholar result to standard format.
 
-    EasyAPI-specific field mapping:
-    - snippet -> abstract (EasyAPI uses 'snippet' not 'abstract')
+    Field mapping:
+    - searchMatch -> abstract
     - link -> url
-    - pdf_link -> pdf_url
-    - result_id -> google_scholar_id (fallback: hash of title+link)
-    - DOI: not provided by EasyAPI - set to None
+    - documentLink -> pdf_url (may be "N/A")
+    - cidCode -> google_scholar_id (fallback: hash of title+link)
+    - DOI: not provided — set to None
     """
     # Ensure citation_count is always an integer (API may return None)
     citation_count = entry.get("citations")
+    if isinstance(citation_count, str):
+        # Strip non-numeric characters (e.g. "Cited by 42")
+        import re
+
+        nums = re.findall(r"\d+", citation_count)
+        citation_count = int(nums[0]) if nums else 0
     citation_count = citation_count if citation_count is not None else 0
 
     # Extract authors (as array for schema compliance)
-    # EasyAPI returns authors as comma-separated string
+    # Actor returns authors as comma-separated string
     authors_str = entry.get("authors", "") or ""
     authors = (
         [a.strip() for a in authors_str.split(",") if a.strip()] if authors_str else []
@@ -293,23 +295,28 @@ def transform_google_scholar_entry(entry):
             year = None
 
     # Extract or generate google_scholar_id
-    # EasyAPI may not provide result_id, so generate a stable hash from title+link
-    gs_id = entry.get("result_id", "") or ""
+    # Use cidCode from marco.gullo actor, fallback to hash of title+link
+    gs_id = entry.get("cidCode", "") or ""
     if not gs_id:
         title = entry.get("title", "") or ""
         link = entry.get("link", "") or ""
         if title or link:
             gs_id = "gs_" + hashlib.md5((title + link).encode()).hexdigest()[:12]
 
+    # documentLink may be "N/A" — normalize to empty string
+    pdf_url = entry.get("documentLink") or ""
+    if pdf_url == "N/A":
+        pdf_url = ""
+
     return {
         "source": "Google Scholar",
         "title": entry.get("title", "") or "",
         "authors": authors,
         "year": year,
-        "doi": None,  # EasyAPI does not provide DOI
-        "abstract": entry.get("snippet", "") or "",  # EasyAPI uses 'snippet'
+        "doi": None,  # Actor does not provide DOI
+        "abstract": entry.get("searchMatch", "") or "",
         "url": entry.get("link", "") or "",
-        "pdf_url": entry.get("pdf_link") or "",
+        "pdf_url": pdf_url,
         "citation_count": citation_count,
         "google_scholar_id": gs_id,
         "raw_metadata": entry,
@@ -448,7 +455,7 @@ Examples:
   # Override max_results
   python scripts/google_scholar_harvest.py --search-config config/searches/electoral_integrity_search.yml --max-results 500
 
-NOTE: EasyAPI free tier hard-caps at 10 results regardless of max_results.
+NOTE: Actor paginates in pages of 10; actual results may slightly exceed max_results.
         """,
     )
 
@@ -490,10 +497,10 @@ if __name__ == "__main__":
     args = parse_args()
 
     print("=" * 80)
-    print("GOOGLE SCHOLAR HARVEST - EASYAPI ACTOR")
+    print("GOOGLE SCHOLAR HARVEST")
     print("=" * 80)
     print(f"Start time: {datetime.now().isoformat()}")
-    print("Actor: easyapi/google-scholar-scraper")
+    print(f"Actor: {ACTOR_ID}")
 
     # Initialize Apify client
     api_token = get_credentials()
@@ -522,7 +529,7 @@ if __name__ == "__main__":
             "[WARNING] Using legacy config format. Consider using --search-config for new projects."
         )
 
-    # Extract year range from config (logged only — not supported by EasyAPI)
+    # Extract year range from config (logged only — not supported by actor)
     global_config = config.get("global", {})
     year_from = global_config.get("year_from")
     year_to = global_config.get("year_to")
@@ -531,14 +538,6 @@ if __name__ == "__main__":
     if args.max_results:
         print(f"Overriding max_results: {max_results} -> {args.max_results}")
         max_results = args.max_results
-
-    # EasyAPI free tier hard-caps at 10 results regardless of config
-    if max_results > EASYAPI_FREE_TIER_MAX:
-        print(
-            f"[INFO] Capping Google Scholar max_results to free-tier limit: "
-            f"{max_results} -> {EASYAPI_FREE_TIER_MAX}"
-        )
-        max_results = EASYAPI_FREE_TIER_MAX
 
     # Validate queries
     if not queries:
@@ -551,7 +550,7 @@ if __name__ == "__main__":
     print(f"{'=' * 80}")
     print(f"Queries: {len(queries)}")
     print(f"Max results per query: {max_results}")
-    print(f"Year range: {year_from}-{year_to} (not supported by EasyAPI — logged only)")
+    print(f"Year range: {year_from}-{year_to} (not supported by actor — logged only)")
     print(f"Output: {args.output}")
     print(f"{'=' * 80}\n")
 
@@ -566,8 +565,8 @@ if __name__ == "__main__":
         print(f"Loaded {len(existing_results)} existing results")
 
     # Track existing titles and Google Scholar IDs to avoid duplicates.
-    # DOI is not available from EasyAPI — dual dedup uses normalised title
-    # (primary) + google_scholar_id / result_id (secondary).
+    # DOI is not available from actor — dual dedup uses normalised title
+    # (primary) + google_scholar_id / cidCode (secondary).
     existing_titles = {
         r.get("title", "").lower().strip() for r in existing_results if r.get("title")
     }
@@ -635,9 +634,5 @@ if __name__ == "__main__":
     print(f"End time: {datetime.now().isoformat()}")
     print(f"{'=' * 80}\n")
 
-    if new_count > 0 and new_count <= 10:
-        print("[NOTE] FREE TIER NOTE:")
-        print("   EasyAPI free tier limited to 10 results per run")
-        print(
-            f"   For full {max_results} results, upgrade at https://apify.com/pricing"
-        )
+    if new_count > 0:
+        print(f"[NOTE] {new_count} new results added to dataset")
