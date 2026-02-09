@@ -62,7 +62,9 @@ def run_harvest(name, script, id_field):
     }
 
     try:
-        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=300, env=os.environ.copy())
+        proc = subprocess.run(
+            cmd, capture_output=True, text=True, timeout=300, env=os.environ.copy()
+        )
 
         if proc.returncode != 0:
             result["status"] = "FAILED"
