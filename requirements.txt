@@ -36,3 +36,14 @@ PyYAML==6.0.2
 # - Pinned for: API stability, reproducible Google Scholar searches
 # - Docs: https://docs.apify.com/api/client/python
 apify-client==2.4.1
+
+# cURL bindings for Python
+# - Used by: xploreapi/xploreapi.py (IEEE Xplore API client)
+# - Purpose: HTTP requests to IEEE Xplore API via pycurl
+# - Pinned for: Binary compatibility with Ubuntu CI runners
+pycurl==7.45.4
+
+# TLS certificate bundle
+# - Used by: xploreapi/xploreapi.py (IEEE Xplore API client)
+# - Purpose: Provides up-to-date CA certificates for HTTPS connections
+certifi==2024.12.14
