@@ -57,7 +57,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install requests pyyaml pycurl certifi
+          pip install -r requirements.txt
 
       # ---------------------------------------------------------------------------
       # Verify all required secrets are configured
