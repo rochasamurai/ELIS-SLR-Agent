@@ -126,7 +126,9 @@ def extract_paper_ids(records: list[dict[str, Any]]) -> list[str]:
     return ids
 
 
-def group_by_paper_id(snippets: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
+def group_by_paper_id(
+    snippets: list[dict[str, Any]]
+) -> dict[str, list[dict[str, Any]]]:
     """Group snippets for one construct by paper id."""
     grouped: dict[str, list[dict[str, Any]]] = {}
     for snippet in snippets:
