@@ -16,6 +16,7 @@
 - [How It Works](#how-it-works)
 - [Project Structure](#project-structure)
 - [Quick Start](#quick-start)
+- [ASTA Integration](#asta-integration)
 - [Usage Guide](#usage-guide)
 - [Methodology](#methodology)
 - [Current Status](#current-status)
@@ -351,6 +352,33 @@ python scripts/test_all_harvests.py
 # Or test a single database via CI:
 # Actions tab → "Test Database Harvest Script" → Select database → Run workflow
 ```
+
+---
+
+## ASTA Integration
+
+ELIS integrates ASTA (Allen AI) via MCP for discovery support and evidence localization support.
+
+Policy: `ASTA proposes, ELIS decides`.
+ASTA is not counted as a canonical database source.
+
+### Quick Start
+
+1. Set ASTA key in PowerShell:
+```powershell
+$env:ASTA_TOOL_KEY = "your_key_here"
+```
+
+2. Run Phase 0 vocabulary bootstrapping:
+```powershell
+python scripts/phase0_asta_scoping.py --config config/asta_config.yml --output config/asta_extracted_vocabulary.yml --limit 25
+```
+
+3. Review outputs:
+- `config/asta_extracted_vocabulary.yml`
+- `runs/<run_id>/asta/`
+
+Documentation: [docs/ASTA_Integration.md](docs/ASTA_Integration.md)
 
 ---
 

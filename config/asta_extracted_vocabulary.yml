@@ -1,0 +1,372 @@
+statistics:
+  total_papers: 195
+  papers_with_abstract: 136
+  unique_terms: 4170
+  unique_venues: 137
+  unique_authors: 580
+key_terms:
+- term: voting
+  count: 285
+- term: system
+  count: 236
+- term: blockchain
+  count: 151
+- term: voter
+  count: 145
+- term: systems
+  count: 144
+- term: audit
+  count: 129
+- term: security
+  count: 120
+- term: technology
+  count: 115
+- term: e-voting
+  count: 111
+- term: process
+  count: 107
+- term: electoral
+  count: 101
+- term: election
+  count: 100
+- term: transparency
+  count: 94
+- term: elections
+  count: 94
+- term: verification
+  count: 82
+- term: integrity
+  count: 79
+- term: trust
+  count: 77
+- term: electronic
+  count: 73
+- term: audits
+  count: 72
+- term: secure
+  count: 66
+- term: confidence
+  count: 61
+- term: challenges
+  count: 60
+- term: voters
+  count: 57
+- term: hybrid
+  count: 56
+- term: vote
+  count: 54
+- term: risk
+  count: 50
+- term: ballot
+  count: 49
+- term: biometric
+  count: 48
+- term: online
+  count: 46
+- term: authentication
+  count: 46
+- term: votes
+  count: 45
+- term: transparent
+  count: 43
+- term: implementation
+  count: 41
+- term: technologies
+  count: 41
+- term: model
+  count: 41
+- term: privacy
+  count: 39
+- term: public
+  count: 39
+- term: statistical
+  count: 37
+- term: enhance
+  count: 36
+- term: traditional
+  count: 36
+- term: processes
+  count: 35
+- term: smart
+  count: 35
+- term: power
+  count: 35
+- term: efficiency
+  count: 34
+- term: fraud
+  count: 34
+- term: democratic
+  count: 34
+- term: digital
+  count: 34
+- term: blockchain-based
+  count: 34
+- term: effectiveness
+  count: 33
+- term: impact
+  count: 32
+- term: strategies
+  count: 32
+- term: management
+  count: 32
+- term: design
+  count: 31
+- term: risk-limiting
+  count: 31
+- term: ballots
+  count: 30
+- term: framework
+  count: 29
+- term: enhancing
+  count: 28
+- term: education
+  count: 27
+- term: decentralized
+  count: 27
+- term: ensuring
+  count: 27
+- term: features
+  count: 27
+- term: democracy
+  count: 26
+- term: registration
+  count: 26
+- term: comparison
+  count: 26
+- term: technological
+  count: 25
+- term: user
+  count: 25
+- term: efficient
+  count: 25
+- term: state
+  count: 25
+- term: sample
+  count: 25
+- term: social
+  count: 25
+- term: ensure
+  count: 24
+- term: article
+  count: 24
+- term: existing
+  count: 24
+- term: against
+  count: 24
+- term: during
+  count: 24
+- term: safety
+  count: 24
+- term: many
+  count: 23
+- term: need
+  count: 23
+- term: role
+  count: 23
+- term: application
+  count: 23
+- term: level
+  count: 23
+- term: work
+  count: 23
+- term: rlas
+  count: 23
+- term: assessment
+  count: 22
+- term: factors
+  count: 22
+- term: about
+  count: 22
+- term: solution
+  count: 22
+- term: influence
+  count: 21
+- term: integration
+  count: 21
+- term: risks
+  count: 21
+- term: adoption
+  count: 21
+- term: review
+  count: 21
+- term: verifiable
+  count: 21
+- term: cast
+  count: 21
+- term: contracts
+  count: 21
+- term: auditing
+  count: 21
+- term: software
+  count: 21
+- term: methodology
+  count: 20
+- term: accessibility
+  count: 20
+- term: case
+  count: 20
+venues:
+- venue: arXiv.org
+  count: 7
+- venue: INTERANTIONAL JOURNAL OF SCIENTIFIC RESEARCH IN ENGINEERING AND MANAGEMENT
+  count: 4
+- venue: International Joint Conference on Electronic Voting
+  count: 4
+- venue: IEEE Security and Privacy
+  count: 3
+- venue: IEEE Symposium on Security and Privacy
+  count: 2
+- venue: Cluster Computing
+  count: 2
+- venue: International Conference on Telecommunication Systems, Services, and Applications
+  count: 2
+- venue: 'International Conference on Hybrid Systems: Computation and Control'
+  count: 2
+- venue: Circuits, systems, and signal processing
+  count: 2
+- venue: USENIX Security Symposium
+  count: 2
+- venue: USENIX Workshop on Accurate Electronic Voting Technology
+  count: 2
+- venue: IACR Cryptology ePrint Archive
+  count: 2
+- venue: Jurnal Smart Hukum (JSH)
+  count: 1
+- venue: BMC Medical Ethics
+  count: 1
+- venue: "\xD0\x92\xD0\xB5\xD1\x81\xD1\x82\xD0\xBD\xD0\xB8\xD0\xBA \xD0\x9A\xD0\xB0\
+    \xD0\xB7\xD0\x90\xD0\xA2\xD0\x9A"
+  count: 1
+- venue: International Journal of Social Science Research and Review
+  count: 1
+- venue: International journal of education, learning and development
+  count: 1
+- venue: Highlights in Science Engineering and Technology
+  count: 1
+- venue: Asian Journal of Research in Computer Science
+  count: 1
+- venue: Baltic Journal of Law &amp; Politics
+  count: 1
+- venue: British Journal of Political Science
+  count: 1
+- venue: National Technical University of Ukraine Journal Political science Sociology
+    Law
+  count: 1
+- venue: Journal of Computer Assisted Learning
+  count: 1
+- venue: International Journal of Logistics Research and Applications
+  count: 1
+- venue: 'THE SCIENTIFIC ISSUES OF TERNOPIL VOLODYMYR HNATIUK NATIONAL PEDAGOGICAL
+    UNIVERSITY. SERIES: GEOGRAPHY'
+  count: 1
+- venue: GSC Advanced Research and Reviews
+  count: 1
+- venue: International Journal of English Language Teaching
+  count: 1
+- venue: Applied Sciences
+  count: 1
+- venue: International journal of research and innovation in social science
+  count: 1
+- venue: Journal of Computational Social Science
+  count: 1
+authors:
+- author: P. Stark
+  count: 5
+- author: P. Ryan
+  count: 5
+- author: "A. Poniszewska-Mara\xC5\x84da"
+  count: 4
+- author: M. Pawlak
+  count: 4
+- author: Jurlind Budurushi
+  count: 3
+- author: Jakub Guziur
+  count: 3
+- author: Xin Chen
+  count: 3
+- author: R. Rivest
+  count: 3
+- author: P. Vora
+  count: 3
+- author: Benjamin Fuller
+  count: 3
+- author: A. Harrison
+  count: 3
+- author: Alexander Russell
+  count: 3
+- author: Charles Stewart
+  count: 2
+- author: Teguh Nurhadi Suharsono
+  count: 2
+- author: Rini Nuraini Sukmana
+  count: 2
+- author: T. Hall
+  count: 2
+- author: Asmita Dalela
+  count: 2
+- author: O. Kulyk
+  count: 2
+- author: Ryan L. Claassen
+  count: 2
+- author: David B. Magleby
+  count: 2
+- author: Departemen Ilmu Komputer
+  count: 2
+- author: F. Alam
+  count: 2
+- author: S. Sridharan
+  count: 2
+- author: Luca Geretti
+  count: 2
+- author: Wang Lin
+  count: 2
+- author: Zhengfeng Yang
+  count: 2
+- author: Xuandong Li
+  count: 2
+- author: Philip B. Stark
+  count: 2
+- author: M. Lindeman
+  count: 2
+- author: Neal McBurnett
+  count: 2
+- author: Kellie Ottoboni
+  count: 2
+- author: Aaditya Ramdas
+  count: 2
+- author: Min Zou
+  count: 2
+- author: Yves Barmaz
+  count: 2
+- author: Melissa Preovolos
+  count: 2
+- author: Leszek Popko
+  count: 2
+- author: "T. M\xC3\xA9nard"
+  count: 2
+- author: Stephen N. Goggin
+  count: 2
+- author: M. Byrne
+  count: 2
+- author: D. Chaum
+  count: 2
+- author: A. Essex
+  count: 2
+- author: R. Carback
+  count: 2
+- author: J. Clark
+  count: 2
+- author: S. Popoveniuc
+  count: 2
+- author: A. Sherman
+  count: 2
+- author: D. Bismark
+  count: 2
+- author: J. Heather
+  count: 2
+- author: Steve A. Schneider
+  count: 2
+- author: Zhe Xia
+  count: 2
+- author: Firdaus Arifin
+  count: 1
