@@ -187,7 +187,7 @@ Create: `docs/FILE_REVIEW_LEDGER.md` using this template:
 ```
 
 ### 5.2 Review order (highest value first)
-1) `scripts/` (harvesters, preflights, agent entrypoints, validators)
+1) `scripts/` (harvesters, agent entrypoints, validators)
 2) `schemas/` (Appendix A/B/C schemas + alignment with validator)
 3) `tests/` (unit vs integration boundaries; fixture strategy)
 4) `config/` + `configs/` (consolidate; remove duplication)
@@ -388,27 +388,28 @@ Acceptance criteria:
 ---
 
 ## 12) Harvest + JSON contract verification (aligns with this sprint)
-Goal: confirm each harvester/preflight generates correct JSON output per schema.
+Goal: confirm each harvester generates correct JSON output per schema.
 
 **Note (Elsevier VPN/IP restrictions):** Scopus and ScienceDirect access can return HTTP 403 when run from a VPN or non‑institutional IP. If you see 403s with valid keys/tokens, retry from an approved network or adjust VPN settings.
 
+> **Note:** Preflight scripts (`*_preflight.py`) and their individual CI workflows were removed in Feb 2026 cleanup. All connectivity testing is now handled by `test_database_harvest.yml` (CI) and `scripts/test_all_harvests.py` (local).
+
 ### 12.1 Source list (all 9 production harvesters)
-| # | Script | Preflight | ID Field | API Key Env Var |
-|---|---|---|---|---|
-| 1 | `scripts/scopus_harvest.py` | `scripts/scopus_preflight.py` | `scopus_id` | `SCOPUS_API_KEY` + `SCOPUS_INST_TOKEN` |
-| 2 | `scripts/sciencedirect_harvest.py` | *(none)* | `sciencedirect_id` | `SCIENCEDIRECT_API_KEY` + `SCIENCEDIRECT_INST_TOKEN` |
-| 3 | `scripts/wos_harvest.py` | `scripts/wos_preflight.py` | `wos_id` | `WEB_OF_SCIENCE_API_KEY` |
-| 4 | `scripts/ieee_harvest.py` | `scripts/ieee_preflight.py` | `ieee_id` | `IEEE_EXPLORE_API_KEY` |
-| 5 | `scripts/semanticscholar_harvest.py` | `scripts/semanticscholar_preflight.py` | `s2_id` | *(none — public API)* |
-| 6 | `scripts/openalex_harvest.py` | `scripts/openalex_preflight.py` | `openalex_id` | *(none — public API)* |
-| 7 | `scripts/crossref_harvest.py` | `scripts/crossref_preflight.py` | `doi` | *(none — public API)* |
-| 8 | `scripts/core_harvest.py` | `scripts/core_preflight.py` | `core_id` | `CORE_API_KEY` |
-| 9 | `scripts/google_scholar_harvest.py` | *(none)* | `google_scholar_id` | `APIFY_API_TOKEN` |
+| # | Script | ID Field | API Key Env Var |
+|---|---|---|---|
+| 1 | `scripts/scopus_harvest.py` | `scopus_id` | `SCOPUS_API_KEY` + `SCOPUS_INST_TOKEN` |
+| 2 | `scripts/sciencedirect_harvest.py` | `sciencedirect_id` | `SCIENCEDIRECT_API_KEY` + `SCIENCEDIRECT_INST_TOKEN` |
+| 3 | `scripts/wos_harvest.py` | `wos_id` | `WEB_OF_SCIENCE_API_KEY` |
+| 4 | `scripts/ieee_harvest.py` | `ieee_id` | `IEEE_EXPLORE_API_KEY` |
+| 5 | `scripts/semanticscholar_harvest.py` | `s2_id` | *(none — public API)* |
+| 6 | `scripts/openalex_harvest.py` | `openalex_id` | *(none — public API)* |
+| 7 | `scripts/crossref_harvest.py` | `doi` | *(none — public API)* |
+| 8 | `scripts/core_harvest.py` | `core_id` | `CORE_API_KEY` |
+| 9 | `scripts/google_scholar_harvest.py` | `google_scholar_id` | `APIFY_API_TOKEN` |
 
 ### 12.2 Required checks per source
 For each source:
-1) run preflight (if exists) with `--tier testing` (limits results to ~25)
-2) run harvest with `--tier testing --output tests/outputs/<name>_smoke.json`
+1) run harvest with `--tier testing --output tests/outputs/<name>_smoke.json`
 3) validate output against schema:
    - Appendix A: `schemas/appendix_a.schema.json`
    - Appendix B: `schemas/appendix_b.schema.json`
@@ -419,9 +420,6 @@ For each source:
 
 ### 12.3 Command pattern (example)
 ```powershell
-# Run preflight (if exists)
-python scripts/scopus_preflight.py --search-config config/searches/electoral_integrity_search.yml --tier testing
-
 # Run harvest with testing tier (limits to ~25 results)
 python scripts/scopus_harvest.py --search-config config/searches/electoral_integrity_search.yml --tier testing --output tests/outputs/scopus_smoke.json
 
@@ -544,7 +542,7 @@ Repo is considered "clean + reorganized" when:
 
 This updated plan incorporates the following corrections and improvements:
 
-1. **Source list expanded to 9** (§12.1): Added `sciencedirect_harvest.py` and `google_scholar_harvest.py` with full details (ID fields, API keys, preflight availability).
+1. **Source list expanded to 9** (§12.1): Added `sciencedirect_harvest.py` and `google_scholar_harvest.py` with full details (ID fields, API keys). Preflight scripts removed in Feb 2026 cleanup.
 
 2. **CLI flags corrected** (§12.2, §12.3): Replaced non-existent `--limit 5` with actual CLI: `--tier testing` and `--search-config`. All 9 harvesters use `--search-config`, `--tier`, `--max-results`, `--output`.
 

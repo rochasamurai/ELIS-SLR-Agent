@@ -152,7 +152,7 @@ The 2 pending sources will add:
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  1. SEARCH STRATEGY                                          │
-│  Configure queries in YAML → Test with preflight scripts    │
+│  Configure queries in YAML → Test with CI workflow          │
 └──────────────────┬──────────────────────────────────────────┘
                    │
 ┌──────────────────▼──────────────────────────────────────────┐
@@ -184,15 +184,13 @@ The 2 pending sources will add:
 ### Detailed Steps
 
 #### 1. Search Strategy
-- **Define queries** in `config/elis_search_queries.yml`
-- **Test connectivity** using preflight scripts
+- **Define queries** in `config/searches/*.yml`
+- **Test connectivity** using `test_database_harvest.yml` CI workflow (testing tier)
 - **Validate syntax** against each API's requirements
 - **Document decisions** in protocol amendments
 
 #### 2. Data Harvesting
-Each source has two scripts:
-- **Preflight script** (`*_preflight.py`) — Tests API connectivity and configuration
-- **Harvest script** (`*_harvest.py`) — Executes search and retrieves results
+Each source has a harvest script (`*_harvest.py`) that executes the search and retrieves results.
 
 All results saved to: `json_jsonl/ELIS_Appendix_A_Search_rows.json`
 
@@ -236,33 +234,23 @@ ELIS-SLR-Agent/
 │   └── README.md                         # Documentation overview
 │
 ├── scripts/
-│   ├── scopus_preflight.py              # Scopus API connectivity test
 │   ├── scopus_harvest.py                # Scopus data harvester
-│   ├── wos_preflight.py                 # Web of Science connectivity test
+│   ├── sciencedirect_harvest.py         # ScienceDirect harvester
 │   ├── wos_harvest.py                   # Web of Science harvester
-│   ├── ieee_preflight.py                # IEEE Xplore connectivity test
 │   ├── ieee_harvest.py                  # IEEE Xplore harvester
-│   ├── semanticscholar_preflight.py     # Semantic Scholar connectivity test
 │   ├── semanticscholar_harvest.py       # Semantic Scholar harvester
-│   ├── openalex_preflight.py            # OpenAlex connectivity test
 │   ├── openalex_harvest.py              # OpenAlex harvester
-│   ├── crossref_preflight.py            # CrossRef connectivity test
 │   ├── crossref_harvest.py              # CrossRef harvester
-│   ├── core_preflight.py                # CORE connectivity test
-│   └── core_harvest.py                  # CORE harvester
+│   ├── core_harvest.py                  # CORE harvester
+│   ├── google_scholar_harvest.py        # Google Scholar harvester
+│   └── test_all_harvests.py             # Local batch test runner
 │
 ├── json_jsonl/
 │   └── ELIS_Appendix_A_Search_rows.json # Consolidated search results
 │
 ├── .github/
 │   └── workflows/
-│       ├── elis-scopus-preflight.yml    # Scopus CI workflow
-│       ├── elis-wos-preflight.yml       # Web of Science CI workflow
-│       ├── elis-ieee-preflight.yml      # IEEE Xplore CI workflow
-│       ├── elis-semanticscholar-preflight.yml  # Semantic Scholar CI
-│       ├── elis-openalex-preflight.yml  # OpenAlex CI workflow
-│       ├── elis-crossref-preflight.yml  # CrossRef CI workflow
-│       └── elis-core-preflight.yml      # CORE CI workflow
+│       └── test_database_harvest.yml    # Unified CI test (all 9 databases)
 │
 ├── requirements.txt                      # Python dependencies
 ├── .env.example                          # Environment variables template
@@ -283,8 +271,8 @@ ELIS-SLR-Agent/
   [View file →](docs/CHANGELOG.md)
 
 #### Core Scripts
-- **Preflight scripts** — Test API connectivity before harvesting
-- **Harvest scripts** — Execute searches and retrieve results
+- **Harvest scripts** (`*_harvest.py`) — Execute searches and retrieve results
+- **`test_all_harvests.py`** — Local batch test runner (all 9 databases)
 - **All scripts** documented with inline comments and docstrings
 
 #### Output
@@ -357,16 +345,11 @@ SEMANTIC_SCHOLAR_API_KEY=your_semantic_scholar_key_here
 
 ### Verify Installation
 ```bash
-# Test all API connections
-python scripts/scopus_preflight.py
-python scripts/wos_preflight.py
-python scripts/ieee_preflight.py
-python scripts/semanticscholar_preflight.py
-python scripts/openalex_preflight.py
-python scripts/crossref_preflight.py
-python scripts/core_preflight.py
+# Test all API connections locally (runs all 9 harvesters with testing tier)
+python scripts/test_all_harvests.py
 
-# All should return: ✅ Connection successful
+# Or test a single database via CI:
+# Actions tab → "Test Database Harvest Script" → Select database → Run workflow
 ```
 
 ---
@@ -377,14 +360,11 @@ python scripts/core_preflight.py
 
 #### 1. Test API Connectivity
 ```bash
-# Run all preflight checks
-python scripts/scopus_preflight.py
-python scripts/wos_preflight.py
-python scripts/ieee_preflight.py
-python scripts/semanticscholar_preflight.py
-python scripts/openalex_preflight.py
-python scripts/crossref_preflight.py
-python scripts/core_preflight.py
+# Test all API connections locally (runs all 9 harvesters with testing tier)
+python scripts/test_all_harvests.py
+
+# Or test a single database via CI:
+# Actions tab → "Test Database Harvest Script" → Select database → Run workflow
 ```
 
 #### 2. Run Individual Harvesters
@@ -425,13 +405,13 @@ python -c "import json; data=json.load(open('json_jsonl/ELIS_Appendix_A_Search_r
 #### Modify Search Queries
 ```bash
 # Edit search configuration
-nano config/elis_search_queries.yml
+nano config/searches/electoral_integrity_search.yml
 
-# Test new queries
-python scripts/scopus_preflight.py  # Tests query syntax
+# Test new queries (runs harvest with testing tier, limited results)
+python scripts/test_all_harvests.py
 
-# Run harvest with new queries
-python scripts/scopus_harvest.py
+# Run individual harvest with new queries
+python scripts/scopus_harvest.py --search-config config/searches/electoral_integrity_search.yml --tier testing
 ```
 
 #### Schedule Automated Runs
@@ -510,14 +490,16 @@ This project integrates Large Language Models (LLMs) while maintaining rigorous 
 
 | Component | Status | Notes |
 |-----------|--------|-------|
-| **Protocol v1.8** | ✅ Complete | 7 sources finalized and documented |
-| **Scopus** | ✅ Operational | Preflight + harvest scripts working |
-| **Web of Science** | ✅ Operational | Preflight + harvest scripts working |
-| **IEEE Xplore** | ✅ Operational | Preflight + harvest scripts working |
-| **Semantic Scholar** | ✅ Operational | Preflight + harvest scripts working |
-| **OpenAlex** | ✅ Operational | Preflight + harvest scripts working |
-| **CrossRef** | ✅ Operational | Preflight + harvest scripts working |
-| **CORE** | ⚠️ Operational | Occasional server timeouts (documented) |
+| **Protocol v1.8** | ✅ Complete | 9 sources finalized and documented |
+| **Scopus** | ✅ Operational | Harvest script + CI validated |
+| **ScienceDirect** | ✅ Operational | Harvest script + CI validated |
+| **Web of Science** | ✅ Operational | Harvest script + CI validated |
+| **IEEE Xplore** | ✅ Operational | Harvest script + CI validated |
+| **Semantic Scholar** | ✅ Operational | Harvest script + CI validated |
+| **OpenAlex** | ✅ Operational | Harvest script + CI validated |
+| **CrossRef** | ✅ Operational | Harvest script + CI validated |
+| **CORE** | ✅ Operational | Harvest script + CI validated (occasional timeouts) |
+| **Google Scholar** | ✅ Operational | Harvest script + CI validated (via Apify) |
 
 ### Review Progress
 
@@ -553,7 +535,7 @@ This project integrates Large Language Models (LLMs) while maintaining rigorous 
 
 #### API Connection Failures
 
-**Problem:** Preflight script returns authentication error.
+**Problem:** Harvest script returns authentication error.
 
 **Solutions:**
 ```bash

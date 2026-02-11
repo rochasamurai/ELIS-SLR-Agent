@@ -26,17 +26,17 @@ Every tracked file has an explicit decision. No "maybe".
 | `scripts/crossref_harvest.py` | CrossRef harvester | KEEP | none | | |
 | `scripts/core_harvest.py` | CORE harvester | KEEP | none | Retry-After support | |
 | `scripts/google_scholar_harvest.py` | Google Scholar harvester (via Apify) | KEEP | none | | |
-| `scripts/scopus_preflight.py` | Scopus API connectivity check | KEEP | none | | `tests/test_scopus_preflight.py` |
-| `scripts/core_preflight.py` | CORE API connectivity check | KEEP | none | | |
-| `scripts/crossref_preflight.py` | CrossRef API connectivity check | KEEP | none | | |
-| `scripts/ieee_preflight.py` | IEEE API connectivity check | KEEP | none | | |
-| `scripts/openalex_preflight.py` | OpenAlex API connectivity check | KEEP | none | | |
-| `scripts/semanticscholar_preflight.py` | Semantic Scholar API connectivity check | KEEP | none | | |
-| `scripts/wos_preflight.py` | WoS API connectivity check | KEEP | none | | |
+| ~~`scripts/scopus_preflight.py`~~ | Scopus API connectivity check | DELETED | Removed Feb 2026 | Superseded by `test_database_harvest.yml` CI | |
+| ~~`scripts/core_preflight.py`~~ | CORE API connectivity check | DELETED | Removed Feb 2026 | Superseded by `test_database_harvest.yml` CI | |
+| ~~`scripts/crossref_preflight.py`~~ | CrossRef API connectivity check | DELETED | Removed Feb 2026 | Superseded by `test_database_harvest.yml` CI | |
+| ~~`scripts/ieee_preflight.py`~~ | IEEE API connectivity check | DELETED | Removed Feb 2026 | Superseded by `test_database_harvest.yml` CI | |
+| ~~`scripts/openalex_preflight.py`~~ | OpenAlex API connectivity check | DELETED | Removed Feb 2026 | Superseded by `test_database_harvest.yml` CI | |
+| ~~`scripts/semanticscholar_preflight.py`~~ | Semantic Scholar API connectivity check | DELETED | Removed Feb 2026 | Superseded by `test_database_harvest.yml` CI | |
+| ~~`scripts/wos_preflight.py`~~ | WoS API connectivity check | DELETED | Removed Feb 2026 | Superseded by `test_database_harvest.yml` CI | |
 | `scripts/validate_json.py` | JSON schema validator | KEEP | none | Core infra | `tests/test_validate_json.py` |
 | `scripts/hello_bot.py` | CI smoke test (prints CI context) | KEEP | none | Used by `bot-commit.yml` | |
 | `scripts/test_all_harvests.py` | Runs all 9 harvesters with testing tier | KEEP | none | Added PR #203 | |
-| `scripts/test_google_scholar.py` | Google Scholar integration test | KEEP | none | Excluded from pytest | |
+| ~~`scripts/test_google_scholar.py`~~ | Google Scholar integration test | DELETED | Removed Feb 2026 | Superseded by `test_database_harvest.yml` CI | |
 | `scripts/archive_old_reports.py` | Archives old validation reports (§9.1) | KEEP | none | Added PR-3 | |
 | `scripts/convert_scopus_csv_to_json.py` | Converts Scopus CSV to Appendix A JSON (§7.2) | KEEP | none | Added PR-3 | |
 | `scripts/elis/imports_to_appendix_a.py` | Imports converter (agent workflow) | KEEP | none | | |
@@ -275,21 +275,21 @@ Every tracked file has an explicit decision. No "maybe".
 | `.github/workflows/elis-agent-nightly.yml` | Nightly agent run | KEEP | none | | |
 | `.github/workflows/elis-agent-screen.yml` | Screening agent workflow | KEEP | none | | |
 | `.github/workflows/elis-agent-search.yml` | Search agent workflow | KEEP | none | | |
-| `.github/workflows/elis-api-preflight.yml` | API preflight (all sources) | KEEP | none | | |
+| ~~`.github/workflows/elis-api-preflight.yml`~~ | API preflight (all sources) | DELETED | Removed Feb 2026 | Superseded by `test_database_harvest.yml` | |
 | `.github/workflows/elis-housekeeping.yml` | Housekeeping (cleanup old runs) | KEEP | none | | |
-| `.github/workflows/elis-ieee-preflight.yml` | IEEE preflight workflow | KEEP | none | | |
+| ~~`.github/workflows/elis-ieee-preflight.yml`~~ | IEEE preflight workflow | DELETED | Removed Feb 2026 | Superseded by `test_database_harvest.yml` | |
 | `.github/workflows/elis-imports-convert.yml` | Imports conversion workflow | KEEP | none | | |
-| `.github/workflows/elis-scopus-preflight.yml` | Scopus preflight workflow | KEEP | none | | |
+| ~~`.github/workflows/elis-scopus-preflight.yml`~~ | Scopus preflight workflow | DELETED | Removed Feb 2026 | Superseded by `test_database_harvest.yml` | |
 | `.github/workflows/elis-search-preflight.yml` | Search preflight workflow | KEEP | none | | |
-| `.github/workflows/elis-semanticscholar-preflight.yml` | Semantic Scholar preflight | KEEP | none | | |
+| ~~`.github/workflows/elis-semanticscholar-preflight.yml`~~ | Semantic Scholar preflight | DELETED | Removed Feb 2026 | Superseded by `test_database_harvest.yml` | |
 | `.github/workflows/elis-validate.yml` | Validation workflow | KEEP | none | | |
-| `.github/workflows/elis-wos-preflight.yml` | WoS preflight workflow | KEEP | none | | |
+| ~~`.github/workflows/elis-wos-preflight.yml`~~ | WoS preflight workflow | DELETED | Removed Feb 2026 | Superseded by `test_database_harvest.yml` | |
 | `.github/workflows/export-docx.yml` | Export to DOCX workflow | KEEP | none | | |
 | `.github/workflows/projects-autoadd.yml` | Auto-add to projects | KEEP | none | | |
 | `.github/workflows/projects-runid.yml` | Projects run ID workflow | KEEP | none | | |
 | `.github/workflows/test_database_harvest.yml` | Database harvest test workflow | KEEP | none | | |
-| `.github/workflows/test_google_scholar.yml` | Google Scholar test workflow | KEEP | none | | |
-| `.github/workflows/test_scopus_new_config.yml` | Scopus new config test workflow | KEEP | none | | |
+| ~~`.github/workflows/test_google_scholar.yml`~~ | Google Scholar test workflow | DELETED | Removed Feb 2026 | Superseded by `test_database_harvest.yml` | |
+| ~~`.github/workflows/test_scopus_new_config.yml`~~ | Scopus new config test workflow | DELETED | Removed Feb 2026 | Superseded by `test_database_harvest.yml` | |
 
 ---
 
@@ -311,9 +311,9 @@ Every tracked file has an explicit decision. No "maybe".
 
 | Decision | Count | Action needed |
 |---|---|---|
-| KEEP | 153 | none |
+| KEEP | 138 | none |
 | MOVE | 16 | Run `scripts/archive_old_reports.py --keep 10` |
-| DELETE | 0 | — |
+| DELETE | 15 | Removed Feb 2026 (7 preflight scripts, 1 test script, 5 preflight workflows, 2 test workflows) |
 | DEPRECATE | 11 | `schemas/_legacy/` — archive when no longer referenced |
 | **Total** | **180** | |
 
