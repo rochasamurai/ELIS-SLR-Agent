@@ -215,7 +215,7 @@ class VocabularyExtractor:
         if not top:
             return []
 
-        quoted = [f"\"{term.replace('\"', '')}\"" for term in top]
+        quoted = ['"{}"'.format(term.replace('"', "")) for term in top]
         if len(quoted) <= 5:
             return [f"({' OR '.join(quoted)})"]
 
