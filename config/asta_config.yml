@@ -1,0 +1,81 @@
+# ASTA MCP Integration Configuration
+# ELIS SLR Agent - Electoral Integrity Strategies
+
+asta_mcp:
+  endpoint: "https://asta-tools.allen.ai/mcp/v1"
+  evidence_window_end: "2025-01-31"
+
+  modes:
+    discovery:
+      enabled: true
+      default_limit: 100
+      max_limit: 500
+
+    evidence:
+      enabled: true
+      default_snippet_limit: 100
+      max_snippet_limit: 250
+
+  api:
+    timeout_seconds: 30
+    retry_on_rate_limit: true
+    retry_delay_seconds: 5
+
+  logging:
+    enabled: true
+    log_requests: true
+    log_responses: true
+    log_normalized: true
+    log_directory: "runs"
+
+  policy:
+    canonical_sources:
+      - scopus
+      - wos
+      - ieee
+      - semanticscholar
+      - openalex
+      - crossref
+      - core
+      - googlescholar
+
+    asta_role: "discovery_and_evidence_assistant"
+    decision_authority: "ELIS"
+    audit_requirement: "all_operations_logged"
+
+phases:
+  phase0_vocabulary:
+    research_questions:
+      - "electoral integrity technological strategies effectiveness"
+      - "voting system security audit trails verification"
+      - "election technology trust voter confidence"
+      - "biometric authentication voter registration"
+      - "blockchain voting transparency auditability"
+      - "paper ballot verification hybrid systems"
+      - "risk-limiting audit statistical methods"
+      - "voter verifiable paper audit trail VVPAT"
+
+    candidates_per_query: 100
+    vocabulary_top_terms: 100
+    vocabulary_top_venues: 30
+    vocabulary_top_authors: 50
+
+  phase2_screening:
+    snippet_queries:
+      - "audit mechanism"
+      - "verification protocol"
+      - "security threat model"
+      - "implementation case study"
+      - "effectiveness evaluation"
+
+    snippets_per_query: 100
+
+prisma:
+  asta_contribution_reporting:
+    - "Papers proposed by ASTA"
+    - "Papers uniquely found by ASTA"
+    - "Vocabulary terms contributed"
+    - "Evidence snippets retrieved"
+
+  exclusion_policy: "ASTA proposals evaluated against ELIS criteria"
+  transparency: "All ASTA operations logged in runs/<run_id>/asta/"
