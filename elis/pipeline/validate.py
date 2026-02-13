@@ -125,26 +125,52 @@ def generate_report(results: Dict[str, Tuple[bool, int, List[str]]]) -> str:
     return "\n".join(lines)
 
 
-def main(argv: List[str] | None = None) -> int:
-    """Main validation function. Returns 0 always (informational, not blocking)."""
-    appendices = {
-        "Appendix A (Search)": (
-            Path("json_jsonl/ELIS_Appendix_A_Search_rows.json"),
-            Path("schemas/appendix_a.schema.json"),
-        ),
-        "Appendix B (Screening)": (
-            Path("json_jsonl/ELIS_Appendix_B_Screening_rows.json"),
-            Path("schemas/appendix_b.schema.json"),
-        ),
-        "Appendix C (Extraction)": (
-            Path("json_jsonl/ELIS_Appendix_C_Extraction_rows.json"),
-            Path("schemas/appendix_c.schema.json"),
-        ),
-    }
+# ------------------------- Canonical appendix map ---------------------------
+CANONICAL_APPENDICES: Dict[str, Tuple[str, str]] = {
+    "Appendix A (Search)": (
+        "json_jsonl/ELIS_Appendix_A_Search_rows.json",
+        "schemas/appendix_a.schema.json",
+    ),
+    "Appendix B (Screening)": (
+        "json_jsonl/ELIS_Appendix_B_Screening_rows.json",
+        "schemas/appendix_b.schema.json",
+    ),
+    "Appendix C (Extraction)": (
+        "json_jsonl/ELIS_Appendix_C_Extraction_rows.json",
+        "schemas/appendix_c.schema.json",
+    ),
+}
 
-    results = {}
+# Map filename fragments to their canonical schemas for auto-detection.
+_SCHEMA_HINTS: Dict[str, str] = {
+    "appendix_a": "schemas/appendix_a.schema.json",
+    "search": "schemas/appendix_a.schema.json",
+    "appendix_b": "schemas/appendix_b.schema.json",
+    "screening": "schemas/appendix_b.schema.json",
+    "appendix_c": "schemas/appendix_c.schema.json",
+    "extraction": "schemas/appendix_c.schema.json",
+}
 
-    for name, (json_file, schema_file) in appendices.items():
+
+def _infer_schema(data_path: Path) -> Path | None:
+    """Try to guess the schema from the data filename."""
+    stem = data_path.stem.lower()
+    for hint, schema_rel in _SCHEMA_HINTS.items():
+        if hint in stem:
+            return Path(schema_rel)
+    return None
+
+
+def run_full_validation() -> int:
+    """Legacy behaviour: validate all canonical appendices, write reports.
+
+    Returns 0 always (informational, not blocking).
+    """
+    results: Dict[str, Tuple[bool, int, List[str]]] = {}
+
+    for name, (json_rel, schema_rel) in CANONICAL_APPENDICES.items():
+        json_file = Path(json_rel)
+        schema_file = Path(schema_rel)
         if not json_file.exists():
             print(f"[SKIP] {name}: file not found")
             continue
@@ -175,6 +201,86 @@ def main(argv: List[str] | None = None) -> int:
     print(f"  - Timestamped: {timestamped_report}")
 
     return 0
+
+
+# ------------------------- CLI entrypoint ------------------------------------
+def main(argv: List[str] | None = None) -> int:
+    """CLI for ELIS JSON validation.
+
+    Modes:
+      elis validate                        Legacy full validation (all appendices)
+      elis validate --data F --schema S    Validate data file against explicit schema
+      elis validate <data.json>            Validate data file; schema inferred from name
+    """
+    import argparse
+
+    if argv is None:
+        argv = sys.argv[1:]
+
+    ap = argparse.ArgumentParser(
+        prog="elis validate",
+        description="Validate ELIS JSON artefacts against schemas.",
+    )
+    ap.add_argument(
+        "data_pos",
+        nargs="?",
+        default=None,
+        metavar="DATA",
+        help="JSON data file to validate (positional shorthand for --data)",
+    )
+    ap.add_argument(
+        "--data",
+        default=None,
+        dest="data_flag",
+        metavar="FILE",
+        help="JSON data file to validate",
+    )
+    ap.add_argument(
+        "--schema",
+        default=None,
+        metavar="FILE",
+        help="JSON Schema file (inferred from data filename when omitted)",
+    )
+    args = ap.parse_args(argv)
+
+    data_path_str = args.data_flag or args.data_pos
+
+    # No explicit data → legacy full validation run.
+    if data_path_str is None:
+        return run_full_validation()
+
+    # Explicit data file supplied → single-file validation mode.
+    data_path = Path(data_path_str)
+    if not data_path.exists():
+        print(f"Error: data file not found: {data_path}", file=sys.stderr)
+        return 1
+
+    if args.schema:
+        schema_path = Path(args.schema)
+    else:
+        schema_path = _infer_schema(data_path)
+        if schema_path is None:
+            print(
+                f"Error: cannot infer schema for '{data_path.name}'. "
+                "Use --schema to specify explicitly.",
+                file=sys.stderr,
+            )
+            return 2
+
+    if not schema_path.exists():
+        print(f"Error: schema file not found: {schema_path}", file=sys.stderr)
+        return 1
+
+    is_valid, count, errors = validate_appendix(data_path.name, data_path, schema_path)
+
+    status = "[OK]" if is_valid else "[ERR]"
+    print(f"{status} {data_path.name}: rows={count}")
+    for err in errors[:10]:
+        print(f"  - {err}")
+    if len(errors) > 10:
+        print(f"  - ... and {len(errors) - 10} more errors")
+
+    return 0 if is_valid else 1
 
 
 if __name__ == "__main__":

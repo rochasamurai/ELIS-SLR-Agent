@@ -164,3 +164,26 @@ class TestSearchMain:
         cfg.write_text(yaml.dump(config), encoding="utf-8")
         rc = main(["--config", str(cfg), "--dry-run"])
         assert rc == 0
+
+    def test_dry_run_topic_with_name_not_id(self, tmp_path):
+        """Topics may use 'name' instead of 'id'; must not KeyError."""
+        config = {
+            "global": {
+                "year_from": 2024,
+                "year_to": 2024,
+                "languages": ["en"],
+                "max_results_per_source": 1,
+            },
+            "topics": [
+                {
+                    "name": "My Topic Without ID",
+                    "enabled": True,
+                    "queries": ["test"],
+                    "sources": [],
+                }
+            ],
+        }
+        cfg = tmp_path / "test_config.yml"
+        cfg.write_text(yaml.dump(config), encoding="utf-8")
+        rc = main(["--config", str(cfg), "--dry-run"])
+        assert rc == 0

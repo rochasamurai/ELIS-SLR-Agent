@@ -424,8 +424,8 @@ def orchestrate_search(config: dict) -> List[Dict[str, Any]]:
         seen.add(key)
         results.append(rec)
 
-    for topic in enabled_topics:
-        topic_id = topic["id"]
+    for i, topic in enumerate(enabled_topics):
+        topic_id = topic.get("id") or topic.get("name") or f"topic_{i}"
         include_preprints = bool(topic.get("include_preprints", True))
         sources = topic.get("sources", ["crossref", "semanticscholar"])
         for q in topic.get("queries") or []:
@@ -487,7 +487,9 @@ def main(argv: List[str] | None = None) -> int:
         "retrieved_at": now_utc_iso(),
         "global": config.get("global", {}),
         "topics_enabled": [
-            t["id"] for t in config.get("topics", []) if t.get("enabled", True)
+            t.get("id") or t.get("name") or f"topic_{i}"
+            for i, t in enumerate(config.get("topics", []))
+            if t.get("enabled", True)
         ],
         "sources": sorted(list({r["source"] for r in records})),
         "record_count": len(records),
