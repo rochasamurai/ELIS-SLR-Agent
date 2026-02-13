@@ -1,3 +1,5 @@
 .gitattributes text eol=lf
 * text=auto
 *.md text eol=lf
+
+.gitignore text eol=lf
