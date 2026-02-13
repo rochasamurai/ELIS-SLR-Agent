@@ -1,14 +1,2 @@
-# =============================================================================
-# Normalise line endings so Black (--check) is stable on Linux runners.
-# This prevents recurring "would reformat" failures caused by CRLF encodings.
-# =============================================================================
-
-# Code and text files we care about
-*.py   text eol=lf
-*.yml  text eol=lf
-*.yaml text eol=lf
-*.md   text eol=lf
-
-# You can extend with other text patterns as needed (e.g., *.toml, *.json)
-# *.toml text eol=lf
-# *.json text eol=lf
+* text=auto
+*.md text eol=lf
