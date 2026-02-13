@@ -613,6 +613,15 @@ scripts/
 │   ├── screen_mvp.py
 │   └── validate_json.py
 │
+├── __init__.py                      # KEEP: allow `import scripts.*` in tests
+├── core_preflight.py                # KEEP: CI/dev utility
+├── crossref_preflight.py            # KEEP: CI/dev utility
+├── ieee_preflight.py                # KEEP: CI/dev utility
+├── openalex_preflight.py            # KEEP: CI/dev utility
+├── scopus_preflight.py              # KEEP: CI/dev utility
+├── semanticscholar_preflight.py     # KEEP: CI/dev utility
+├── wos_preflight.py                 # KEEP: CI/dev utility
+│
 ├── phase0_asta_scoping.py            # KEEP: ASTA phase scripts
 ├── phase2_asta_screening.py
 ├── phase3_asta_extraction.py
@@ -749,6 +758,12 @@ These workflows exist today under `.github/workflows/`:
 | `projects-runid.yml` | ELIS - Projects Run ID | Unchanged |
 
 **v2.0 requirement:** All "must be green" workflows must call the canonical `elis` CLI (not legacy scripts) before tagging `v2.0.0`.
+**Preflight scripts (must remain in v2.0):**
+
+- Keep database preflight utilities under `scripts/*_preflight.py` (importable by tests and callable by CI/self-test workflows).
+- These are **not** “legacy harvesters”. They are **CI/dev utilities** and are exempt from PE6 wrapper-archiving.
+- If/when a canonical `elis preflight <source>` subcommand is added, workflows may switch to it, but the scripts remain until explicitly retired in a later release.
+
 
 ---
 
@@ -838,7 +853,7 @@ Use this checklist in **every** PR going into `release/2.0`.
 - [ ] Equivalence check completed for each migrated source (legacy vs canonical): counts match, schema validity identical, key field hashes comparable.
 - [ ] Legacy modes/options removed from all active code.
 - [ ] No workflow calls legacy codepaths.
-- [ ] Wrapper scripts moved to `scripts/_archive/`.
+- [ ] Wrapper harvest scripts moved to `scripts/_archive/` (preflight utilities remain in `scripts/`).
 - [ ] README and migration guide updated.
 - [ ] `elis export-latest` produces correct `json_jsonl/` output.
 
@@ -873,6 +888,17 @@ Use this checklist in **every** PR going into `release/2.0`.
 - `tests/test_scopus_preflight.py`
 - `tests/test_toy_agent_smoke.py`
 - `tests/test_validate_json.py`
+### Preflight scripts (CI/dev utilities)
+
+- `scripts/__init__.py`
+- `scripts/core_preflight.py`
+- `scripts/scopus_preflight.py`
+- `scripts/wos_preflight.py`
+- `scripts/openalex_preflight.py`
+- `scripts/crossref_preflight.py`
+- `scripts/semanticscholar_preflight.py`
+- `scripts/ieee_preflight.py`
+
 
 ### Harvester scripts (all 9, to be archived at PE6)
 
@@ -916,4 +942,3 @@ This plan incorporates five adjustments identified by Claude and ratified by Cha
 
 *Final release — 12 February 2026*
 *Claude Opus 4.6 + ChatGPT (cross-reviewed) — ratified by Carlos Rocha*
-
