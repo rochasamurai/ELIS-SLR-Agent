@@ -146,6 +146,23 @@ def _run_merge(args: argparse.Namespace) -> int:
     return 0
 
 
+def _run_dedup(args: argparse.Namespace) -> int:
+    """Execute PE4 deterministic dedup stage."""
+    from elis.pipeline.dedup import run_dedup
+
+    run_dedup(
+        args.input,
+        args.output,
+        args.report,
+        fuzzy=args.fuzzy,
+        threshold=args.threshold,
+        config_path=args.config_path,
+    )
+    print(f"[OK] Dedup complete -> {args.output}")
+    print(f"[OK] Dedup report  -> {args.report}")
+    return 0
+
+
 # ---------------------------------------------------------------------------
 # Parser
 # ---------------------------------------------------------------------------
@@ -224,6 +241,50 @@ def build_parser() -> argparse.ArgumentParser:
         help="Merge report output path",
     )
     merge.set_defaults(func=_run_merge)
+
+    # dedup --------------------------------------------------------------
+    dedup = subparsers.add_parser(
+        "dedup",
+        help="Deduplicate canonical Appendix A (PE4)",
+    )
+    dedup.add_argument(
+        "--input",
+        type=str,
+        default="json_jsonl/ELIS_Appendix_A_Search_rows.json",
+        help="Merged Appendix A input file",
+    )
+    dedup.add_argument(
+        "--output",
+        type=str,
+        default="dedup/appendix_a_deduped.json",
+        help="Deduped Appendix A output path",
+    )
+    dedup.add_argument(
+        "--report",
+        type=str,
+        default="dedup/dedup_report.json",
+        help="Dedup report output path",
+    )
+    dedup.add_argument(
+        "--fuzzy",
+        action="store_true",
+        default=False,
+        help="Enable fuzzy title-based deduplication (opt-in)",
+    )
+    dedup.add_argument(
+        "--threshold",
+        type=float,
+        default=0.85,
+        help="Similarity threshold for fuzzy mode (default: 0.85)",
+    )
+    dedup.add_argument(
+        "--config",
+        type=str,
+        default="config/sources.yml",
+        dest="config_path",
+        help="Path to sources.yml for keeper priority",
+    )
+    dedup.set_defaults(func=_run_dedup)
 
     return parser
 
