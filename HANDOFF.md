@@ -1,82 +1,47 @@
-# HANDOFF — PE2 OpenAlex Adapter (PR 1 of 3)
+# HANDOFF — PE2 CrossRef Adapter (PR 2 of 3)
 
 ## Summary
-Implemented the base adapter layer and OpenAlex adapter on `feature/pe2-openalex`:
-- created `SourceAdapter` ABC with `preflight()`, `harvest()`, `source_name`, `display_name`;
-- created `ELISHttpClient` with retry on 429/5xx, exponential backoff with jitter, secret-safe logging;
-- created config resolution module absorbing duplicated tier/query logic from 9 harvesters;
-- created adapter registry with `get_adapter(name)` / `available_sources()`;
-- ported OpenAlex harvester to adapter pattern (page-based pagination, inverted-index abstract, DOI prefix stripping);
-- added `elis harvest <source>` CLI subcommand with `--search-config`, `--tier`, `--max-results`, `--output`;
-- converted `scripts/openalex_harvest.py` to thin wrapper delegating to `elis harvest openalex`;
-- created `config/sources.yml` with per-source rate limits, endpoints, auth env vars, keeper priority;
-- added 58 unit tests across 5 test files.
+Added the CrossRef adapter on `feature/pe2-crossref`, building on the base adapter layer from PR 1:
+- ported CrossRef harvester to adapter pattern (offset pagination, title array[0], uppercase DOI key, published-print/online year);
+- converted `scripts/crossref_harvest.py` to thin wrapper delegating to `elis harvest crossref`;
+- registered CrossRef in the adapter registry;
+- added 30 unit tests.
 
 ## Files Changed (complete list)
 
 ### New files
-- `elis/sources/__init__.py` — adapter registry
-- `elis/sources/base.py` — SourceAdapter ABC
-- `elis/sources/http_client.py` — shared HTTP client with retry/backoff
-- `elis/sources/config.py` — config resolution (legacy + new + tier)
-- `elis/sources/openalex.py` — OpenAlex adapter
-- `config/sources.yml` — per-source configuration
-- `tests/test_source_adapter_base.py` — registry + ABC tests (6 tests)
-- `tests/test_http_client.py` — HTTP client tests (12 tests)
-- `tests/test_harvest_config.py` — config resolution tests (16 tests)
-- `tests/test_openalex_adapter.py` — OpenAlex adapter tests (22 tests)
-- `tests/test_harvest_config_adversarial.py` — config adversarial tests (2 tests)
+- `elis/sources/crossref.py` — CrossRef adapter
+- `tests/test_crossref_adapter.py` — CrossRef adapter tests (30 tests)
 
 ### Modified files
-- `elis/cli.py` — added `harvest` subcommand + `_run_harvest()` handler
-- `scripts/openalex_harvest.py` — replaced with thin wrapper
+- `elis/sources/__init__.py` — added crossref import for registration
+- `scripts/crossref_harvest.py` — replaced with thin wrapper
 
 ## Design Decisions
 
-### SourceAdapter ABC
-- Adapters are pure record generators: `harvest()` yields normalised dicts.
-- Output writing and cross-query deduplication are handled by the CLI handler (`_run_harvest`), not the adapter. This keeps adapters testable and composable.
-
-### ELISHttpClient
-- Retry on 429 and 5xx only (not 4xx client errors).
-- Exponential backoff: `min(base * 2^attempt + jitter, max_wait)` — base=1s, max=60s.
-- Max retries: 5.
-- Inter-request polite delay from `config/sources.yml`.
-- Uses `logging` module — never logs headers or params containing auth values.
-- `_sanitise_params()` masks known sensitive keys before any log output.
-
-### Config resolution
-- Priority: `--search-config + --tier` > `--search-config (default tier)` > `config/elis_search_queries.yml (legacy)`. `--max-results` always overrides.
-- OpenAlex uses the simplified alternative query from new config (better for `default.search` which doesn't support full boolean).
-- Tier values centralised: testing=25, pilot=100, benchmark=500, production=1000, exhaustive=99999.
-
-### Adapter registry
-- Lazy import via `_ensure_loaded()` — adapter modules are imported only on first `get_adapter()` / `available_sources()` call.
-- Self-registration via `@register("openalex")` decorator on the adapter class.
+### CrossRef adapter
+- **Offset-based pagination**: `offset` + `rows` params, `_ROWS_PER_REQUEST = 1000` (API max).
+- **Title**: Extracted from `title` array (`title[0]`), empty string if missing.
+- **Authors**: Built from `given` + `family` fields in `author` array; falls back to `family`-only.
+- **Year**: Prefers `published-print.date-parts[0][0]`, falls back to `published-online`.
+- **DOI**: Uppercase `DOI` key in CrossRef response, stored as-is (no URL prefix).
+- **Citations**: `is-referenced-by-count` field, defaults to 0.
+- **Abstract**: Raw `abstract` field (may contain XML tags from CrossRef).
+- **URL**: From `URL` field in response.
+- **Preflight**: Sends `rows=1` query to verify API reachability.
 
 ### Thin wrapper
-- `scripts/openalex_harvest.py` delegates to `elis.cli.main(["harvest", "openalex"] + sys.argv[1:])`.
-- Preserves identical CLI interface: `--search-config`, `--tier`, `--max-results`, `--output`.
+- `scripts/crossref_harvest.py` delegates to `elis.cli.main(["harvest", "crossref"] + sys.argv[1:])`.
+- Preserves identical CLI interface.
 
 ## Acceptance Criteria (from RELEASE_PLAN_v2.0.md PE2) + Status
-- `elis harvest openalex` passes `appendix_a_harvester.schema.json` validation — PASS (schema compliance verified in `test_openalex_adapter.py::TestTransformEntry::test_schema_compliance`)
-- `test_database_harvest.yml` passes for ported sources with no workflow changes — PASS (thin wrapper preserves identical CLI)
-- Thin wrapper scripts produce identical output to old monolithic versions — PASS (delegates to same transform logic)
-- HTTP client logs retry/backoff events on 429 — PASS (verified in `test_http_client.py`)
+- `elis harvest crossref` passes `appendix_a_harvester.schema.json` validation — PASS (schema compliance verified in `test_crossref_adapter.py::TestTransformEntry::test_schema_compliance`)
+- Thin wrapper script produces identical output to old monolithic version — PASS
 - CI (`ci.yml`) passes — ruff + black + pytest all green
 
-## Validation Commands Executed
-- `python -m pip install -e ".[dev]"` — PASS
-- `python -m ruff check .` — PASS (all checks passed)
-- `python -m black --check .` — PASS (72 files unchanged)
-- `python -m pytest -q` — PASS (154 tests passed, exit 0)
-- `python -m elis --help` — PASS (shows validate + harvest subcommands)
-- `python -m elis harvest --help` — PASS (shows source, --search-config, --tier, --max-results, --output)
-
 ## Scope Notes
-- This is PR 1 of 3 for PE2. CrossRef and Scopus adapters will follow in separate PRs.
-- The base layer (ABC, HTTP client, config, registry, CLI harvest command) is shared by all three PRs.
-- No changes to workflows, schemas, or existing test files.
+- This is PR 2 of 3 for PE2. Depends on PR 1 (base layer + OpenAlex).
+- Only CrossRef-specific files are changed; no modifications to base layer, HTTP client, config, or CLI handler.
 
 ## Ready for Validator
 Please validate against PE2 criteria and rerun:
