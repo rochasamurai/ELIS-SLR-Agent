@@ -67,6 +67,79 @@ def test_dedup_basic_removes_doi_duplicate(tmp_path: Path) -> None:
     assert report["doi_based_dedup"] == 1
 
 
+def test_dedup_duplicates_sidecar_traces_all_dropped(tmp_path: Path) -> None:
+    """Every dropped (non-keeper) record must appear in duplicates.jsonl."""
+    p = tmp_path / "input.json"
+    _write_json(
+        p,
+        [
+            {
+                "source": "openalex",
+                "title": "Same Paper",
+                "doi": "10.1/abc",
+                "year": 2020,
+            },
+            {
+                "source": "crossref",
+                "title": "Same Paper",
+                "doi": "10.1/abc",
+                "year": 2020,
+            },
+            {
+                "source": "scopus",
+                "title": "Same Paper",
+                "doi": "10.1/abc",
+                "year": 2020,
+            },
+            {"source": "wos", "title": "Unique Paper", "doi": "10.1/xyz", "year": 2021},
+        ],
+    )
+    out = tmp_path / "out.json"
+    rep = tmp_path / "rep.json"
+    dup = tmp_path / "dup.jsonl"
+    dedup.run_dedup(str(p), str(out), str(rep), duplicates_path=str(dup))
+
+    # Output has 2 keepers (one per DOI cluster)
+    records = json.loads(out.read_text())[1:]
+    assert len(records) == 2
+
+    # Sidecar has 2 non-keepers (the 2 dropped records from the 3-way cluster)
+    dup_lines = [
+        json.loads(line) for line in dup.read_text().splitlines() if line.strip()
+    ]
+    assert len(dup_lines) == 2
+
+    # Each dropped record has cluster_id and duplicate_of
+    for row in dup_lines:
+        assert "cluster_id" in row
+        assert "duplicate_of" in row
+        assert row["duplicate_of"]  # non-empty
+
+    # duplicate_of must point to the keeper's id
+    keeper_ids = {r["id"] for r in records if "id" in r}
+    for row in dup_lines:
+        assert row["duplicate_of"] in keeper_ids
+
+
+def test_dedup_sidecar_empty_when_no_duplicates(tmp_path: Path) -> None:
+    """duplicates.jsonl should be empty when there are no duplicates."""
+    p = tmp_path / "input.json"
+    _write_json(
+        p,
+        [
+            {"source": "A", "title": "P1", "doi": "10.1/a"},
+            {"source": "B", "title": "P2", "doi": "10.1/b"},
+        ],
+    )
+    out = tmp_path / "out.json"
+    dup = tmp_path / "dup.jsonl"
+    dedup.run_dedup(
+        str(p), str(out), str(tmp_path / "rep.json"), duplicates_path=str(dup)
+    )
+
+    assert dup.read_text().strip() == ""
+
+
 def test_dedup_no_duplicates_passthrough(tmp_path: Path) -> None:
     """Three records with distinct DOIs → all three survive."""
     p = tmp_path / "input.json"

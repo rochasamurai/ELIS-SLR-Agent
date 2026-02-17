@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 CANONICAL_INPUT = "json_jsonl/ELIS_Appendix_A_Search_rows.json"
 CANONICAL_OUTPUT = "dedup/appendix_a_deduped.json"
 CANONICAL_REPORT = "dedup/dedup_report.json"
+CANONICAL_DUPLICATES = "dedup/duplicates.jsonl"
 KEEPER_PRIORITY_CONFIG = "config/sources.yml"
 
 # Code-default keeper priority (used only when config absent / unreadable)
@@ -210,13 +211,16 @@ def run_dedup(
     output_path: str,
     report_path: str,
     *,
+    duplicates_path: str = CANONICAL_DUPLICATES,
     fuzzy: bool = False,
     threshold: float = 0.85,
     config_path: str = KEEPER_PRIORITY_CONFIG,
 ) -> tuple[Path, Path]:
     """
     Deduplicate records from *input_path*, write keepers to *output_path*
-    (JSON array with _meta header) and statistics to *report_path*.
+    (JSON array with _meta header), statistics to *report_path*, and all
+    non-keeper (dropped) records with traceability fields to *duplicates_path*
+    (JSONL, one record per line with ``cluster_id`` and ``duplicate_of``).
 
     Returns (output_path, report_path) as Path objects.
     """
@@ -288,6 +292,7 @@ def run_dedup(
 
     # --- Pick keepers and annotate ---
     keepers: list[dict[str, Any]] = []
+    non_keepers: list[dict[str, Any]] = []
 
     for key, recs in clusters.items():
         cid = _cluster_id(key)
@@ -301,7 +306,18 @@ def run_dedup(
         keeper["cluster_id"] = cid
         keeper["cluster_size"] = cluster_size
         keeper["cluster_sources"] = cluster_sources
+        keeper_id = str(keeper.get("id") or keeper.get("_stable_id") or cid)
+        keeper["id"] = keeper_id
         keepers.append(keeper)
+
+        # Collect non-keepers for traceability sidecar
+        for i, rec in enumerate(recs):
+            if i == keeper_idx:
+                continue
+            dup = dict(rec)
+            dup["cluster_id"] = cid
+            dup["duplicate_of"] = keeper_id
+            non_keepers.append(dup)
 
     # Deterministic sort
     keepers.sort(
@@ -356,12 +372,20 @@ def run_dedup(
                 _meta[field] = upstream_meta[field]
 
     # --- Write outputs ---
+    dup_path = Path(duplicates_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     rep_path.parent.mkdir(parents=True, exist_ok=True)
+    dup_path.parent.mkdir(parents=True, exist_ok=True)
 
     payload = [_meta] + keepers
     out_path.write_text(
         json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+
+    # Write traceability sidecar: every dropped record with cluster_id + duplicate_of
+    dup_path.write_text(
+        "".join(json.dumps(r, ensure_ascii=False) + "\n" for r in non_keepers),
         encoding="utf-8",
     )
 
@@ -380,7 +404,7 @@ def run_dedup(
         encoding="utf-8",
     )
 
-    return out_path, rep_path
+    return out_path, rep_path, dup_path
 
 
 # ---------------------------------------------------------------------------
@@ -425,12 +449,19 @@ def main(argv: list[str] | None = None) -> int:
         dest="config_path",
         help=f"Path to sources.yml for keeper priority (default: {KEEPER_PRIORITY_CONFIG})",
     )
+    parser.add_argument(
+        "--duplicates",
+        default=CANONICAL_DUPLICATES,
+        dest="duplicates_path",
+        help=f"JSONL sidecar for dropped records (default: {CANONICAL_DUPLICATES})",
+    )
     args = parser.parse_args(argv)
 
     run_dedup(
         args.input,
         args.output,
         args.report,
+        duplicates_path=args.duplicates_path,
         fuzzy=args.fuzzy,
         threshold=args.threshold,
         config_path=args.config_path,

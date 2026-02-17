@@ -154,12 +154,14 @@ def _run_dedup(args: argparse.Namespace) -> int:
         args.input,
         args.output,
         args.report,
+        duplicates_path=args.duplicates_path,
         fuzzy=args.fuzzy,
         threshold=args.threshold,
         config_path=args.config_path,
     )
     print(f"[OK] Dedup complete -> {args.output}")
     print(f"[OK] Dedup report  -> {args.report}")
+    print(f"[OK] Duplicates    -> {args.duplicates_path}")
     return 0
 
 
@@ -283,6 +285,13 @@ def build_parser() -> argparse.ArgumentParser:
         default="config/sources.yml",
         dest="config_path",
         help="Path to sources.yml for keeper priority",
+    )
+    dedup.add_argument(
+        "--duplicates",
+        type=str,
+        default="dedup/duplicates.jsonl",
+        dest="duplicates_path",
+        help="JSONL sidecar for dropped records with cluster_id + duplicate_of",
     )
     dedup.set_defaults(func=_run_dedup)
 
