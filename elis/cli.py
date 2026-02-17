@@ -7,6 +7,59 @@ import json
 from pathlib import Path
 from typing import Sequence
 
+from elis.manifest import emit_run_manifest, manifest_path_for_output, now_utc_iso
+
+
+def _count_data_rows(path: str | Path) -> int:
+    """Count data rows in a JSON array/JSONL payload, skipping _meta headers."""
+    target = Path(path)
+    if not target.exists():
+        return 0
+    text = target.read_text(encoding="utf-8").strip()
+    if not text:
+        return 0
+    if text.startswith("["):
+        payload = json.loads(text)
+        if isinstance(payload, list):
+            return sum(
+                1
+                for item in payload
+                if isinstance(item, dict) and not item.get("_meta")
+            )
+        return 0
+    count = 0
+    for line in text.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        row = json.loads(line)
+        if isinstance(row, dict) and not row.get("_meta"):
+            count += 1
+    return count
+
+
+def _load_inputs_from_manifest(manifest_path: str) -> list[str]:
+    """Read merge input file list from a run manifest."""
+    payload = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError("Manifest payload must be a JSON object.")
+    inputs = payload.get("input_paths")
+    if isinstance(inputs, list) and inputs:
+        return [str(item) for item in inputs if str(item).strip()]
+    fallback = payload.get("output_path")
+    if isinstance(fallback, str) and fallback.strip():
+        return [fallback]
+    raise ValueError("Manifest does not contain usable input_paths or output_path.")
+
+
+def _resolve_merge_inputs(args: argparse.Namespace) -> list[str]:
+    """Resolve merge inputs with --inputs taking precedence over --from-manifest."""
+    if args.inputs:
+        return [str(item) for item in args.inputs]
+    if args.from_manifest:
+        return _load_inputs_from_manifest(args.from_manifest)
+    raise SystemExit("Provide --inputs or --from-manifest.")
+
 
 def _run_validate(args: argparse.Namespace) -> int:
     """Run legacy validation via a thin wrapper for PE0a."""
@@ -14,6 +67,8 @@ def _run_validate(args: argparse.Namespace) -> int:
         main as legacy_main,
         validate_appendix,
     )
+
+    started_at = now_utc_iso()
 
     schema_path = args.schema_path
     json_path = args.json_path
@@ -30,18 +85,47 @@ def _run_validate(args: argparse.Namespace) -> int:
                 print(f"- {error}")
             if len(errors) > 10:
                 print(f"- ... and {len(errors) - 10} more errors")
+        emit_run_manifest(
+            stage="validate",
+            source="system",
+            input_paths=[str(Path(schema_path)), str(Path(json_path))],
+            output_path=str(Path(json_path)),
+            record_count=count,
+            config_payload={
+                "mode": "single",
+                "schema_path": str(Path(schema_path)),
+                "target_path": str(Path(json_path)),
+            },
+            started_at=started_at,
+            finished_at=now_utc_iso(),
+            manifest_path=manifest_path_for_output(Path(json_path)),
+        )
         return 0
 
     if schema_path or json_path:
         raise SystemExit("Provide both <schema_path> and <json_path>, or neither.")
 
+    code = 0
     try:
         legacy_main()
     except SystemExit as exc:
         if isinstance(exc.code, int):
-            return exc.code
-        return 0
-    return 0
+            code = exc.code
+    if code == 0:
+        report_path = Path("validation_reports/validation-report.md")
+        if report_path.exists():
+            emit_run_manifest(
+                stage="validate",
+                source="system",
+                input_paths=[],
+                output_path=str(report_path),
+                record_count=0,
+                config_payload={"mode": "full"},
+                started_at=started_at,
+                finished_at=now_utc_iso(),
+                manifest_path=manifest_path_for_output(report_path),
+            )
+    return code
 
 
 # ---------------------------------------------------------------------------
@@ -53,6 +137,8 @@ def _run_harvest(args: argparse.Namespace) -> int:
     """Execute a harvest run for a single source."""
     from elis.sources import get_adapter
     from elis.sources.config import load_harvest_config
+
+    started_at = now_utc_iso()
 
     # Resolve configuration
     harvest_cfg = load_harvest_config(
@@ -133,6 +219,28 @@ def _run_harvest(args: argparse.Namespace) -> int:
     print(f"Saved to: {harvest_cfg.output_path}")
     print(f"{'=' * 80}\n")
 
+    config_source = (
+        str(args.search_config)
+        if getattr(args, "search_config", None)
+        else "config/elis_search_queries.yml"
+    )
+    emit_run_manifest(
+        stage="harvest",
+        source=str(args.source),
+        input_paths=[config_source],
+        output_path=str(output_path),
+        record_count=len(existing_results),
+        config_payload={
+            "search_config": config_source,
+            "tier": getattr(args, "tier", None),
+            "max_results": harvest_cfg.max_results,
+            "output": str(output_path),
+        },
+        started_at=started_at,
+        finished_at=now_utc_iso(),
+        manifest_path=manifest_path_for_output(output_path),
+    )
+
     return 0
 
 
@@ -140,9 +248,26 @@ def _run_merge(args: argparse.Namespace) -> int:
     """Execute PE3 canonical merge stage."""
     from elis.pipeline.merge import run_merge
 
-    run_merge(args.inputs, args.output, args.report)
-    print(f"[OK] Merged {len(args.inputs)} input file(s) -> {args.output}")
+    started_at = now_utc_iso()
+    inputs = _resolve_merge_inputs(args)
+
+    run_merge(inputs, args.output, args.report)
+    print(f"[OK] Merged {len(inputs)} input file(s) -> {args.output}")
     print(f"[OK] Merge report -> {args.report}")
+    emit_run_manifest(
+        stage="merge",
+        source="system",
+        input_paths=inputs,
+        output_path=str(args.output),
+        record_count=_count_data_rows(args.output),
+        config_payload={
+            "report": str(args.report),
+            "from_manifest": getattr(args, "from_manifest", None),
+        },
+        started_at=started_at,
+        finished_at=now_utc_iso(),
+        manifest_path=manifest_path_for_output(args.output),
+    )
     return 0
 
 
@@ -150,6 +275,7 @@ def _run_dedup(args: argparse.Namespace) -> int:
     """Execute PE4 deterministic dedup stage."""
     from elis.pipeline.dedup import run_dedup
 
+    started_at = now_utc_iso()
     run_dedup(
         args.input,
         args.output,
@@ -162,7 +288,66 @@ def _run_dedup(args: argparse.Namespace) -> int:
     print(f"[OK] Dedup complete -> {args.output}")
     print(f"[OK] Dedup report  -> {args.report}")
     print(f"[OK] Duplicates    -> {args.duplicates_path}")
+    emit_run_manifest(
+        stage="dedup",
+        source="system",
+        input_paths=[str(args.input)],
+        output_path=str(args.output),
+        record_count=_count_data_rows(args.output),
+        config_payload={
+            "report": str(args.report),
+            "duplicates_path": str(args.duplicates_path),
+            "fuzzy": bool(args.fuzzy),
+            "threshold": float(args.threshold),
+            "config_path": str(args.config_path),
+        },
+        started_at=started_at,
+        finished_at=now_utc_iso(),
+        manifest_path=manifest_path_for_output(args.output),
+    )
     return 0
+
+
+def _run_screen(args: argparse.Namespace) -> int:
+    """Execute PE0b screening stage via package pipeline."""
+    from elis.pipeline.screen import main as screen_main
+
+    started_at = now_utc_iso()
+    cli_args: list[str] = ["--input", str(args.input), "--output", str(args.output)]
+    if args.year_from is not None:
+        cli_args.extend(["--year-from", str(args.year_from)])
+    if args.year_to is not None:
+        cli_args.extend(["--year-to", str(args.year_to)])
+    if args.languages:
+        cli_args.extend(["--languages", str(args.languages)])
+    if args.allow_unknown_language:
+        cli_args.append("--allow-unknown-language")
+    if args.enforce_preprint_policy:
+        cli_args.append("--enforce-preprint-policy")
+    if args.dry_run:
+        cli_args.append("--dry-run")
+
+    rc = int(screen_main(cli_args))
+    if rc == 0 and not args.dry_run and Path(args.output).exists():
+        emit_run_manifest(
+            stage="screen",
+            source="system",
+            input_paths=[str(args.input)],
+            output_path=str(args.output),
+            record_count=_count_data_rows(args.output),
+            config_payload={
+                "year_from": args.year_from,
+                "year_to": args.year_to,
+                "languages": args.languages,
+                "allow_unknown_language": bool(args.allow_unknown_language),
+                "enforce_preprint_policy": bool(args.enforce_preprint_policy),
+                "dry_run": bool(args.dry_run),
+            },
+            started_at=started_at,
+            finished_at=now_utc_iso(),
+            manifest_path=manifest_path_for_output(args.output),
+        )
+    return rc
 
 
 def _run_agentic_asta_discover(args: argparse.Namespace) -> int:
@@ -257,8 +442,15 @@ def build_parser() -> argparse.ArgumentParser:
     merge.add_argument(
         "--inputs",
         nargs="+",
-        required=True,
+        required=False,
         help="Input JSON/JSONL files to merge",
+    )
+    merge.add_argument(
+        "--from-manifest",
+        type=str,
+        default=None,
+        dest="from_manifest",
+        help="Run manifest path to read input_paths from (used when --inputs is omitted)",
     )
     merge.add_argument(
         "--output",
@@ -324,6 +516,63 @@ def build_parser() -> argparse.ArgumentParser:
         help="JSONL sidecar for dropped records with cluster_id + duplicate_of",
     )
     dedup.set_defaults(func=_run_dedup)
+
+    # screen --------------------------------------------------------------
+    screen = subparsers.add_parser(
+        "screen",
+        help="Screen canonical Appendix A into Appendix B",
+    )
+    screen.add_argument(
+        "--input",
+        type=str,
+        default="json_jsonl/ELIS_Appendix_A_Search_rows.json",
+        help="Path to canonical Appendix A JSON array",
+    )
+    screen.add_argument(
+        "--output",
+        type=str,
+        default="json_jsonl/ELIS_Appendix_B_Screening_rows.json",
+        help="Path to write canonical Appendix B JSON array",
+    )
+    screen.add_argument(
+        "--year-from",
+        type=int,
+        default=None,
+        dest="year_from",
+        help="Lower bound (inclusive). If omitted, read from Appendix A _meta.",
+    )
+    screen.add_argument(
+        "--year-to",
+        type=int,
+        default=None,
+        dest="year_to",
+        help="Upper bound (inclusive). If omitted, read from Appendix A _meta.",
+    )
+    screen.add_argument(
+        "--languages",
+        type=str,
+        default=None,
+        help="Comma-separated ISO codes. If omitted, read from Appendix A _meta.",
+    )
+    screen.add_argument(
+        "--allow-unknown-language",
+        action="store_true",
+        dest="allow_unknown_language",
+        help="Keep records where language is missing/unknown.",
+    )
+    screen.add_argument(
+        "--enforce-preprint-policy",
+        action="store_true",
+        dest="enforce_preprint_policy",
+        help="Respect per-topic include_preprints flags.",
+    )
+    screen.add_argument(
+        "--dry-run",
+        action="store_true",
+        default=False,
+        help="Compute screening but do not write output.",
+    )
+    screen.set_defaults(func=_run_screen)
 
     # agentic ------------------------------------------------------------
     agentic = subparsers.add_parser(
