@@ -3,29 +3,6 @@
 # Black (format), Ruff (lint), and Pytest defaults.
 # =============================================================================
 
-[build-system]
-requires = ["setuptools>=68", "wheel"]
-build-backend = "setuptools.build_meta"
-
-[project]
-name = "elis-slr-agent"
-version = "0.3.0"
-requires-python = ">=3.11"
-dependencies = [
-  "jsonschema==4.23.0",
-  "requests==2.31.0",
-  "PyYAML==6.0.2",
-]
-
-[project.optional-dependencies]
-dev = ["black", "ruff", "pytest"]
-
-[project.scripts]
-elis = "elis.cli:main"
-
-[tool.setuptools.packages.find]
-include = ["elis*"]
-
 [tool.black]
 target-version = ["py311"]
 line-length = 88
