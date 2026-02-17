@@ -1,47 +1,53 @@
-# HANDOFF — PE2 CrossRef Adapter (PR 2 of 3)
+# HANDOFF — PE2 Scopus Adapter (PR 3 of 3)
 
 ## Summary
-Added the CrossRef adapter on `feature/pe2-crossref`, building on the base adapter layer from PR 1:
-- ported CrossRef harvester to adapter pattern (offset pagination, title array[0], uppercase DOI key, published-print/online year);
-- converted `scripts/crossref_harvest.py` to thin wrapper delegating to `elis harvest crossref`;
-- registered CrossRef in the adapter registry;
-- added 30 unit tests.
+Added the Scopus adapter on `feature/pe2-scopus`, building on the base adapter layer from PR 1 and CrossRef from PR 2:
+- ported Scopus harvester to adapter pattern (required auth, offset pagination max 25/page, `dc:creator` single author, `SCOPUS_ID:` prefix stripping);
+- converted `scripts/scopus_harvest.py` to thin wrapper delegating to `elis harvest scopus`;
+- registered Scopus in the adapter registry;
+- removed stale `tests/test_scopus_harvest.py` (replaced by new adapter tests);
+- added 33 unit tests.
 
 ## Files Changed (complete list)
 
 ### New files
-- `elis/sources/crossref.py` — CrossRef adapter
-- `tests/test_crossref_adapter.py` — CrossRef adapter tests (30 tests)
+- `elis/sources/scopus.py` — Scopus adapter
+- `tests/test_scopus_adapter.py` — Scopus adapter tests (33 tests)
 
 ### Modified files
-- `elis/sources/__init__.py` — added crossref import for registration
-- `scripts/crossref_harvest.py` — replaced with thin wrapper
+- `elis/sources/__init__.py` — added scopus import for registration
+- `scripts/scopus_harvest.py` — replaced with thin wrapper
+
+### Removed files
+- `tests/test_scopus_harvest.py` — old monolithic tests replaced by `test_scopus_adapter.py`
 
 ## Design Decisions
 
-### CrossRef adapter
-- **Offset-based pagination**: `offset` + `rows` params, `_ROWS_PER_REQUEST = 1000` (API max).
-- **Title**: Extracted from `title` array (`title[0]`), empty string if missing.
-- **Authors**: Built from `given` + `family` fields in `author` array; falls back to `family`-only.
-- **Year**: Prefers `published-print.date-parts[0][0]`, falls back to `published-online`.
-- **DOI**: Uppercase `DOI` key in CrossRef response, stored as-is (no URL prefix).
-- **Citations**: `is-referenced-by-count` field, defaults to 0.
-- **Abstract**: Raw `abstract` field (may contain XML tags from CrossRef).
-- **URL**: From `URL` field in response.
-- **Preflight**: Sends `rows=1` query to verify API reachability.
+### Scopus adapter
+- **Required auth**: `SCOPUS_API_KEY` + `SCOPUS_INST_TOKEN` env vars → `X-ELS-APIKey` and `X-ELS-Insttoken` headers.
+- **Graceful degradation**: `harvest()` returns empty iterator (with warning log) if credentials are missing, rather than crashing.
+- **Offset-based pagination**: `start` + `count` params, `_COUNT_PER_PAGE = 25` (API maximum).
+- **Scopus ID**: `dc:identifier` with `SCOPUS_ID:` prefix stripped.
+- **Authors**: `dc:creator` as single-author string → list (Scopus search API returns first author only).
+- **Year**: From `prism:coverDate` (`YYYY-MM-DD`), first 4 chars parsed as int.
+- **DOI**: From `prism:doi`.
+- **Abstract**: From `dc:description`.
+- **Citations**: `citedby-count` as string → int, defaults to 0.
+- **Preflight**: Verifies credentials exist, then sends `count=1` query to test API reachability.
 
 ### Thin wrapper
-- `scripts/crossref_harvest.py` delegates to `elis.cli.main(["harvest", "crossref"] + sys.argv[1:])`.
+- `scripts/scopus_harvest.py` delegates to `elis.cli.main(["harvest", "scopus"] + sys.argv[1:])`.
 - Preserves identical CLI interface.
 
 ## Acceptance Criteria (from RELEASE_PLAN_v2.0.md PE2) + Status
-- `elis harvest crossref` passes `appendix_a_harvester.schema.json` validation — PASS (schema compliance verified in `test_crossref_adapter.py::TestTransformEntry::test_schema_compliance`)
+- `elis harvest scopus` passes `appendix_a_harvester.schema.json` validation — PASS (schema compliance verified in `test_scopus_adapter.py::TestTransformEntry::test_schema_compliance`)
 - Thin wrapper script produces identical output to old monolithic version — PASS
 - CI (`ci.yml`) passes — ruff + black + pytest all green
 
 ## Scope Notes
-- This is PR 2 of 3 for PE2. Depends on PR 1 (base layer + OpenAlex).
-- Only CrossRef-specific files are changed; no modifications to base layer, HTTP client, config, or CLI handler.
+- This is PR 3 of 3 for PE2. Depends on PR 1 (base layer + OpenAlex) and PR 2 (CrossRef).
+- Only Scopus-specific files are changed; no modifications to base layer, HTTP client, config, or CLI handler.
+- Completes the full PE2 source adapter layer.
 
 ## Ready for Validator
 Please validate against PE2 criteria and rerun:
