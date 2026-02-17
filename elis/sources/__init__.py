@@ -56,5 +56,6 @@ def _ensure_loaded() -> None:
     # Import adapter modules so their @register decorators execute.
     import elis.sources.crossref  # noqa: F401
     import elis.sources.openalex  # noqa: F401
+    import elis.sources.scopus  # noqa: F401
 
     _loaded = True
