@@ -128,11 +128,17 @@ _NEW_DB_NAMES: dict[str, list[str]] = {
 
 
 def _find_db_config(config: dict[str, Any], source_name: str) -> dict[str, Any] | None:
-    """Find the database block matching *source_name* in a new-format config."""
+    """Find the database block matching *source_name* in a new-format config.
+
+    Returns ``None`` when the database entry is missing **or** when
+    ``enabled`` is explicitly set to ``False``.
+    """
     known_names = _NEW_DB_NAMES.get(source_name, [source_name])
     for db in config.get("databases", []):
         db_name = db.get("name", "")
         if db_name in known_names or db_name.lower() in known_names:
+            if db.get("enabled", True) is False:
+                return None
             return db
     return None
 
@@ -160,6 +166,10 @@ def _get_new_queries(config: dict[str, Any], source_name: str) -> list[str]:
     # Use primary boolean string
     boolean_string = query_section.get("boolean_string", "").strip()
     if boolean_string:
+        # OpenAlex default.search doesn't support quoted phrases — strip quotes
+        # when falling back to the boolean string so behaviour matches legacy.
+        if source_name in ("openalex",):
+            boolean_string = boolean_string.replace('"', "")
         return [boolean_string]
 
     return []

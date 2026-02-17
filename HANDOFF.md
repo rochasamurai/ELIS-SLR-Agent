@@ -10,7 +10,7 @@ Implemented the base adapter layer and OpenAlex adapter on `feature/pe2-openalex
 - added `elis harvest <source>` CLI subcommand with `--search-config`, `--tier`, `--max-results`, `--output`;
 - converted `scripts/openalex_harvest.py` to thin wrapper delegating to `elis harvest openalex`;
 - created `config/sources.yml` with per-source rate limits, endpoints, auth env vars, keeper priority;
-- added 56 unit tests across 4 test files.
+- added 58 unit tests across 5 test files.
 
 ## Files Changed (complete list)
 
@@ -25,6 +25,7 @@ Implemented the base adapter layer and OpenAlex adapter on `feature/pe2-openalex
 - `tests/test_http_client.py` — HTTP client tests (12 tests)
 - `tests/test_harvest_config.py` — config resolution tests (16 tests)
 - `tests/test_openalex_adapter.py` — OpenAlex adapter tests (22 tests)
+- `tests/test_harvest_config_adversarial.py` — config adversarial tests (2 tests)
 
 ### Modified files
 - `elis/cli.py` — added `harvest` subcommand + `_run_harvest()` handler
