@@ -87,3 +87,94 @@ def test_validation_report_schema_accepts_valid_report() -> None:
         Path("schemas/validation_report.schema.json").read_text(encoding="utf-8")
     )
     jsonschema.validate(instance=_sample_validation_report(), schema=schema)
+
+
+# ---------------------------------------------------------------------------
+# Adversarial schema-rejection tests (Validator-added for PE1b)
+# ---------------------------------------------------------------------------
+
+
+def _schema() -> dict:
+    return json.loads(
+        Path("schemas/run_manifest.schema.json").read_text(encoding="utf-8")
+    )
+
+
+def test_schema_rejects_missing_required_field() -> None:
+    """Manifest without 'record_count' must fail schema validation."""
+    manifest = _sample_manifest()
+    del manifest["record_count"]
+    try:
+        jsonschema.validate(instance=manifest, schema=_schema())
+    except jsonschema.ValidationError:
+        pass
+    else:
+        raise AssertionError("Expected ValidationError for missing record_count.")
+
+
+def test_schema_rejects_negative_record_count() -> None:
+    """record_count must be >= 0; negative values must be rejected."""
+    manifest = _sample_manifest()
+    manifest["record_count"] = -1
+    try:
+        jsonschema.validate(instance=manifest, schema=_schema())
+    except jsonschema.ValidationError:
+        pass
+    else:
+        raise AssertionError("Expected ValidationError for negative record_count.")
+
+
+def test_schema_rejects_invalid_config_hash_format() -> None:
+    """config_hash must match pattern ^sha256:.+; other prefixes must be rejected."""
+    manifest = _sample_manifest()
+    manifest["config_hash"] = "md5:badhash"
+    try:
+        jsonschema.validate(instance=manifest, schema=_schema())
+    except jsonschema.ValidationError:
+        pass
+    else:
+        raise AssertionError("Expected ValidationError for non-sha256 config_hash.")
+
+
+def test_schema_rejects_additional_properties() -> None:
+    """additionalProperties: false — unknown fields must be rejected."""
+    manifest = _sample_manifest()
+    manifest["unexpected_field"] = "oops"
+    try:
+        jsonschema.validate(instance=manifest, schema=_schema())
+    except jsonschema.ValidationError:
+        pass
+    else:
+        raise AssertionError(
+            "Expected ValidationError for unexpected additional property."
+        )
+
+
+def test_schema_rejects_short_commit_sha() -> None:
+    """commit_sha must have minLength 7; a 6-char value must be rejected."""
+    manifest = _sample_manifest()
+    manifest["commit_sha"] = "abc123"  # only 6 chars
+    try:
+        jsonschema.validate(instance=manifest, schema=_schema())
+    except jsonschema.ValidationError:
+        pass
+    else:
+        raise AssertionError(
+            "Expected ValidationError for commit_sha shorter than 7 chars."
+        )
+
+
+def test_manifest_path_for_output_stem_pattern(tmp_path: Path) -> None:
+    """manifest_path_for_output returns <stem>_manifest.json next to the output."""
+    from elis.manifest import manifest_path_for_output
+
+    result = manifest_path_for_output(tmp_path / "appendix_b.json")
+    assert result == tmp_path / "appendix_b_manifest.json"
+
+
+def test_manifest_path_for_output_no_extension(tmp_path: Path) -> None:
+    """Output path with no extension → <name>_manifest.json."""
+    from elis.manifest import manifest_path_for_output
+
+    result = manifest_path_for_output(tmp_path / "report")
+    assert result == tmp_path / "report_manifest.json"
