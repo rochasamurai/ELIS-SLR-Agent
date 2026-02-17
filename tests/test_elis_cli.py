@@ -77,3 +77,39 @@ def test_merge_calls_pipeline_merge(tmp_path: Path) -> None:
         str(output_path),
         str(report_path),
     )
+
+
+def test_agentic_asta_discover_calls_runner() -> None:
+    with patch("elis.agentic.asta.run_discover") as run_discover:
+        code = cli.main(
+            [
+                "agentic",
+                "asta",
+                "discover",
+                "--query",
+                "electoral integrity",
+                "--run-id",
+                "r001",
+            ]
+        )
+    assert code == 0
+    run_discover.assert_called_once()
+
+
+def test_agentic_asta_enrich_calls_runner(tmp_path: Path) -> None:
+    inp = tmp_path / "a.json"
+    inp.write_text("[]", encoding="utf-8")
+    with patch("elis.agentic.asta.run_enrich") as run_enrich:
+        code = cli.main(
+            [
+                "agentic",
+                "asta",
+                "enrich",
+                "--input",
+                str(inp),
+                "--run-id",
+                "r002",
+            ]
+        )
+    assert code == 0
+    run_enrich.assert_called_once()
