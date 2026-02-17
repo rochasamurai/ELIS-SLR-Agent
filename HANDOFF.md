@@ -1,47 +1,38 @@
-# HANDOFF - PE1a Run Manifest Schema + Writer Utility
+# HANDOFF - PE3 Canonical Merge Stage
 
 ## Summary
-Implemented PE1a on `feature/pe1a-manifest-schema`:
-- added `write_manifest()` utility in `elis/manifest.py`;
-- added `schemas/run_manifest.schema.json`;
-- added `schemas/validation_report.schema.json`;
-- added tests validating writer behavior and schema compliance.
+Implemented PE3 on `feature/pe3-merge`:
+- added deterministic merge stage in `elis/pipeline/merge.py`;
+- added CLI subcommand `elis merge` in `elis/cli.py`;
+- added tests for normalization, determinism, schema compliance, and `elis screen` compatibility.
 
-## Files Changed (complete list)
-- `elis/manifest.py`
-- `schemas/run_manifest.schema.json`
-- `schemas/validation_report.schema.json`
-- `tests/test_manifest.py`
+## Files Changed
+- `elis/pipeline/merge.py`
+- `elis/cli.py`
+- `tests/test_pipeline_merge.py`
+- `tests/test_elis_cli.py`
 - `HANDOFF.md`
 
-## Design Decisions
-- `write_manifest()` is intentionally thin and stage-agnostic:
-  - accepts any mapping payload plus output path;
-  - creates parent directories;
-  - writes deterministic JSON (`indent=2`, `sort_keys=True`, newline-terminated);
-  - returns the written `Path`.
-- `run_manifest.schema.json` follows the release-plan contract:
-  - required fields include run/stage/source, timing, record count, paths, and tool versions;
-  - `stage` is constrained to `harvest|merge|dedup|screen|validate`;
-  - `schema_version` is fixed to `"1.0"`.
-- `validation_report.schema.json` is added as PE1a sidecar schema deliverable with strict required fields and `additionalProperties: false`.
+## Design Notes
+- Merge requires explicit `--inputs` and does not scan directories.
+- Inputs may be JSON arrays or JSONL files; `_meta` entries are ignored.
+- Record normalization in merge:
+  - DOI lowercase + prefix strip (`https://doi.org/`, `http://doi.org/`, `doi:`).
+  - Title/authors whitespace normalization.
+  - Year cast to `int | null`.
+- Merge adds provenance fields:
+  - `source_file`
+  - `merge_position`
+- Deterministic ordering uses sort key:
+  - `(source, query_topic, title, year, merge_position)`
+- Output is canonical Appendix A JSON array (with `_meta` header) plus `merge_report.json`.
 
-## Acceptance Criteria (verbatim from release plan) + Status
-- `write_manifest()` callable from any stage. - PASS
-- Manifests pass `run_manifest.schema.json` validation. - PASS
-- No enforcement in CI (that comes in PE1b). - PASS (no CI/workflow enforcement added)
+## Acceptance Criteria (PE3) + Status
+- Same inputs in same order -> byte-identical output (deterministic). - PASS (covered in `tests/test_pipeline_merge.py::test_merge_is_deterministic_for_same_inputs`)
+- Output passes `appendix_a.schema.json` validation. - PASS (covered in `tests/test_pipeline_merge.py::test_merge_output_validates_and_is_screen_compatible`)
+- `elis screen` accepts the merged output. - PASS (same test invokes `elis.pipeline.screen.main`)
 
 ## Validation Commands Executed
-- `python -m pytest -q tests/test_manifest.py` - PASS
-- `python -m black --check .` - PASS
-- `python -m ruff check .` - PASS
-- `python -m pytest -q` - PASS
-
-## Notes / Deferred Scope
-- No stage wiring performed in PE1a (by design). Manifest emission in search/merge/screen/validate is deferred to PE1b.
-
-## Ready for Validator
-Please validate against PE1a criteria and rerun:
-- `python -m black --check .`
-- `python -m ruff check .`
-- `python -m pytest -q`
+- `python -m black --check elis/cli.py elis/pipeline/merge.py tests/test_pipeline_merge.py tests/test_elis_cli.py`
+- `python -m ruff check elis/cli.py elis/pipeline/merge.py tests/test_pipeline_merge.py tests/test_elis_cli.py`
+- `python -m pytest -q tests/test_pipeline_merge.py tests/test_elis_cli.py tests/test_pipeline_screen.py`

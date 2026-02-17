@@ -136,6 +136,16 @@ def _run_harvest(args: argparse.Namespace) -> int:
     return 0
 
 
+def _run_merge(args: argparse.Namespace) -> int:
+    """Execute PE3 canonical merge stage."""
+    from elis.pipeline.merge import run_merge
+
+    run_merge(args.inputs, args.output, args.report)
+    print(f"[OK] Merged {len(args.inputs)} input file(s) -> {args.output}")
+    print(f"[OK] Merge report -> {args.report}")
+    return 0
+
+
 # ---------------------------------------------------------------------------
 # Parser
 # ---------------------------------------------------------------------------
@@ -189,6 +199,31 @@ def build_parser() -> argparse.ArgumentParser:
         help="Output file path (default: json_jsonl/ELIS_Appendix_A_Search_rows.json)",
     )
     harvest.set_defaults(func=_run_harvest)
+
+    # merge --------------------------------------------------------------
+    merge = subparsers.add_parser(
+        "merge",
+        help="Merge per-source Appendix A outputs into canonical Appendix A",
+    )
+    merge.add_argument(
+        "--inputs",
+        nargs="+",
+        required=True,
+        help="Input JSON/JSONL files to merge",
+    )
+    merge.add_argument(
+        "--output",
+        type=str,
+        default="json_jsonl/ELIS_Appendix_A_Search_rows.json",
+        help="Merged Appendix A output file path",
+    )
+    merge.add_argument(
+        "--report",
+        type=str,
+        default="json_jsonl/merge_report.json",
+        help="Merge report output path",
+    )
+    merge.set_defaults(func=_run_merge)
 
     return parser
 

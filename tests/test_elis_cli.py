@@ -49,3 +49,31 @@ def test_validate_rejects_partial_paths() -> None:
         assert str(exc) == "Provide both <schema_path> and <json_path>, or neither."
     else:
         raise AssertionError("Expected SystemExit for partial validate args.")
+
+
+def test_merge_calls_pipeline_merge(tmp_path: Path) -> None:
+    """merge subcommand should delegate to pipeline merge runner."""
+    input_path = tmp_path / "input.json"
+    input_path.write_text("[]", encoding="utf-8")
+    output_path = tmp_path / "out.json"
+    report_path = tmp_path / "report.json"
+
+    with patch("elis.pipeline.merge.run_merge") as run_merge:
+        code = cli.main(
+            [
+                "merge",
+                "--inputs",
+                str(input_path),
+                "--output",
+                str(output_path),
+                "--report",
+                str(report_path),
+            ]
+        )
+
+    assert code == 0
+    run_merge.assert_called_once_with(
+        [str(input_path)],
+        str(output_path),
+        str(report_path),
+    )
