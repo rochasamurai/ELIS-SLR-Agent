@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:elis:run-manifest:v1",
+  "title": "ELIS Run Manifest",
+  "description": "Run-level sidecar manifest for ELIS pipeline stages.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "stage",
+    "source",
+    "commit_sha",
+    "config_hash",
+    "started_at",
+    "finished_at",
+    "record_count",
+    "input_paths",
+    "output_path",
+    "tool_versions"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "stage": {
+      "type": "string",
+      "enum": ["harvest", "merge", "dedup", "screen", "validate"]
+    },
+    "source": {
+      "type": "string",
+      "minLength": 1
+    },
+    "commit_sha": {
+      "type": "string",
+      "minLength": 7
+    },
+    "config_hash": {
+      "type": "string",
+      "pattern": "^sha256:.+"
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "finished_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "record_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "input_paths": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "output_path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "tool_versions": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}
