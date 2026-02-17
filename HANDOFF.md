@@ -1,73 +1,61 @@
-# HANDOFF - PE4 Deterministic Dedup + Clusters
+# HANDOFF - PE5 ASTA Pipeline Integration
 
 ## Summary
-Implemented PE4 on `feature/pe4-dedup`:
-- added deterministic dedup stage in `elis/pipeline/dedup.py`;
-- added CLI subcommand `elis dedup` in `elis/cli.py`;
-- added 33 tests (smoke + adversarial + unit) in `tests/test_pipeline_dedup.py`.
+Implemented PE5 on `feature/pe5-asta-integration`:
+- added `elis/agentic` package for ASTA sidecar integration;
+- added evidence span validator (`elis/agentic/evidence.py`);
+- added ASTA discover/enrich wrappers (`elis/agentic/asta.py`);
+- added CLI commands:
+  - `elis agentic asta discover`
+  - `elis agentic asta enrich`
+- added tests for evidence validation, ASTA sidecar outputs, and CLI dispatch.
 
 ## Files Changed
-- `elis/pipeline/dedup.py` (new)
-- `elis/cli.py` (added `dedup` subparser + `_run_dedup` handler)
-- `tests/test_pipeline_dedup.py` (new, 33 tests)
+- `elis/agentic/__init__.py` (new)
+- `elis/agentic/evidence.py` (new)
+- `elis/agentic/asta.py` (new)
+- `elis/cli.py` (added `agentic asta discover|enrich`)
+- `tests/test_agentic_evidence.py` (new)
+- `tests/test_agentic_asta.py` (new)
+- `tests/test_elis_cli.py` (added agentic CLI dispatch tests)
 - `HANDOFF.md`
 
 ## Design Notes
 
-### Dedup key
-| Condition | Key |
-|---|---|
-| DOI present | `normalise_doi(doi)` |
-| No DOI | `normalise_text(title) + "\|" + str(year) + "\|" + normalise_text(first_author)` |
+### Sidecar-only outputs
+- Defaults are under `runs/<run_id>/agentic/asta/`:
+  - discover: `asta_discovery_report.json`
+  - enrich: `asta_outputs.jsonl`
+- Canonical pipeline paths (`merge/dedup/screen` and `json_jsonl`) are not written by PE5 code.
 
-- `normalise_doi`: lowercase + strip `https://doi.org/`, `http://doi.org/`, `doi:` prefixes.
-- `normalise_text`: lowercase, strip non-word characters, collapse whitespace.
+### Discover mode
+- Wrapper around `sources.asta_mcp.adapter.AstaMCPAdapter.search_candidates`.
+- Writes structured discovery report containing:
+  - policy statement,
+  - query/limit/run metadata,
+  - candidate payload.
 
-### Cluster ID
-`sha256(dedup_key)[:12]` — 12-char hex, deterministic.
+### Enrich mode
+- Reads input records (JSON array or JSONL, `_meta` skipped).
+- Uses ASTA snippets (`find_snippets`) and validates evidence spans against title+abstract.
+- Emits JSONL suggestions with required sidecar fields:
+  - `record_id`, `suggestion`, `confidence`, `evidence_spans`,
+  - `model_id`, `prompt_hash`, `run_id`, `timestamp`.
 
-### Keeper selection
-1. Most non-null fields (strings/lists must be non-empty to count).
-2. Tie-break: source priority from `config/sources.yml` → `keeper_priority`.
-   Code default (if config absent): scopus > wos > semanticscholar > crossref > openalex > ieee > core > sciencedirect > google_scholar.
+### Evidence validation
+- `validate_evidence_spans(record, spans)` marks each span as valid/invalid based on case-insensitive substring matching against `title + abstract`.
+- Invalid spans are preserved with `"valid": false` (flagged, not suppressed).
 
-### Output format
-- JSON array `[_meta, ...keepers]` — `_meta: True` header retained for `elis screen` compatibility.
-- Upstream `_meta` fields (`topics_enabled`, `protocol_version`, `sources`, `run_inputs`) forwarded.
-- Each keeper gains: `cluster_id`, `cluster_size`, `cluster_sources`.
-- Non-keepers written to `dedup/duplicates.jsonl` sidecar (traceability): each record has `cluster_id` + `duplicate_of` = keeper's `id`.
-
-### Traceability (No data loss)
-Every input record is either a keeper (in the output array) or a duplicate (in `duplicates.jsonl`).
-`duplicate_of` links the dropped record to its keeper's `id`, enabling full round-trip traceability.
-
-### Fuzzy mode
-Off by default. `--fuzzy --threshold 0.85` enables `difflib.SequenceMatcher` title similarity across clusters. Emits `warnings.warn` + `logger.warning` when enabled.
-
-### dedup_report.json fields
-`input_records`, `unique_clusters`, `duplicates_removed`, `doi_based_dedup`, `title_year_author_dedup`, `fuzzy_dedup`, `keeper_priority_source`, `top_10_collisions`.
-
-## Acceptance Criteria (PE4) + Status
-- Same input → same cluster IDs (deterministic). **PASS** (`test_dedup_is_deterministic`)
-- No data loss (all records traceable via `cluster_id`). **PASS** (`test_dedup_duplicates_sidecar_traces_all_dropped`, `test_dedup_sidecar_empty_when_no_duplicates`)
-- Fuzzy off by default. **PASS** (`test_dedup_fuzzy_off_by_default`, `test_dedup_fuzzy_enabled_warns`)
-- Keeper precedence read from config; code default used only if config absent. **PASS** (`test_dedup_keeper_tiebreak_by_source_priority`)
+## Acceptance Criteria (PE5) + Status
+- ASTA outputs go to `runs/<run_id>/agentic/asta/`, not canonical paths. - **PASS** (`tests/test_agentic_asta.py::test_run_discover_writes_under_runs_sidecar_default`, `tests/test_agentic_asta.py::test_run_enrich_default_output_path_uses_runs_sidecar`)
+- Evidence spans validated; invalid flagged, not suppressed. - **PASS** (`tests/test_agentic_evidence.py`, `tests/test_agentic_asta.py::test_run_enrich_outputs_jsonl_with_validated_spans`)
+- Canonical pipeline produces identical output with or without ASTA. - **PASS by design** (PE5 code only writes sidecars; no writes to canonical files).
+- Existing ASTA tests keep passing. - **PASS** (`tests/test_asta_adapter.py`, `tests/test_asta_phase_scripts.py`)
 
 ## Validation Commands Executed
-```
-python -m black --check elis/pipeline/dedup.py elis/cli.py tests/test_pipeline_dedup.py
-# → All done! 3 files would be left unchanged.
-
-python -m ruff check elis/pipeline/dedup.py elis/cli.py tests/test_pipeline_dedup.py
-# → All checks passed!
-
-python -m pytest tests/test_pipeline_dedup.py -v
-# → 33 passed
-
-python -m pytest -q
-# → 10 failed (pre-existing test_cli.py failures, unchanged from PE3), 381 passed
+```bash
+python -m black --check elis/agentic/__init__.py elis/agentic/evidence.py elis/agentic/asta.py elis/cli.py tests/test_agentic_evidence.py tests/test_agentic_asta.py tests/test_elis_cli.py
+python -m ruff check elis/agentic/__init__.py elis/agentic/evidence.py elis/agentic/asta.py elis/cli.py tests/test_agentic_evidence.py tests/test_agentic_asta.py tests/test_elis_cli.py
+python -m pytest -q tests/test_agentic_evidence.py tests/test_agentic_asta.py tests/test_elis_cli.py tests/test_asta_adapter.py tests/test_asta_phase_scripts.py
 ```
 
-## Known Issues (Pre-existing, not PE4)
-`tests/test_cli.py` has 10 failures from outdated CLI contract (PE0b tests expect legacy
-`search`/`screen` subcommands that no longer exist). Unchanged since PE3.

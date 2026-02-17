@@ -165,6 +165,36 @@ def _run_dedup(args: argparse.Namespace) -> int:
     return 0
 
 
+def _run_agentic_asta_discover(args: argparse.Namespace) -> int:
+    """Execute PE5 ASTA discover sidecar stage."""
+    from elis.agentic.asta import run_discover
+
+    output = run_discover(
+        query=args.query,
+        run_id=args.run_id,
+        output=args.output,
+        config_path=args.config_path,
+        limit=args.limit,
+    )
+    print(f"[OK] ASTA discover report -> {output}")
+    return 0
+
+
+def _run_agentic_asta_enrich(args: argparse.Namespace) -> int:
+    """Execute PE5 ASTA enrich sidecar stage."""
+    from elis.agentic.asta import run_enrich
+
+    output = run_enrich(
+        input_path=args.input_path,
+        run_id=args.run_id,
+        output=args.output,
+        config_path=args.config_path,
+        limit=args.limit,
+    )
+    print(f"[OK] ASTA enrich output -> {output}")
+    return 0
+
+
 # ---------------------------------------------------------------------------
 # Parser
 # ---------------------------------------------------------------------------
@@ -294,6 +324,75 @@ def build_parser() -> argparse.ArgumentParser:
         help="JSONL sidecar for dropped records with cluster_id + duplicate_of",
     )
     dedup.set_defaults(func=_run_dedup)
+
+    # agentic ------------------------------------------------------------
+    agentic = subparsers.add_parser(
+        "agentic",
+        help="Agentic sidecar workflows (PE5)",
+    )
+    agentic_sub = agentic.add_subparsers(dest="agentic_command", required=True)
+
+    asta = agentic_sub.add_parser("asta", help="ASTA sidecar workflows")
+    asta_sub = asta.add_subparsers(dest="asta_command", required=True)
+
+    asta_discover = asta_sub.add_parser(
+        "discover",
+        help="Run ASTA discovery sidecar",
+    )
+    asta_discover.add_argument("--query", required=True, help="Discovery query text")
+    asta_discover.add_argument("--run-id", required=True, help="Run identifier")
+    asta_discover.add_argument(
+        "--output",
+        type=str,
+        default=None,
+        help="Optional output path (default under runs/<run_id>/agentic/asta/)",
+    )
+    asta_discover.add_argument(
+        "--config",
+        type=str,
+        default="config/asta_config.yml",
+        dest="config_path",
+        help="Path to ASTA config",
+    )
+    asta_discover.add_argument(
+        "--limit",
+        type=int,
+        default=100,
+        help="Candidate limit (default: 100)",
+    )
+    asta_discover.set_defaults(func=_run_agentic_asta_discover)
+
+    asta_enrich = asta_sub.add_parser(
+        "enrich",
+        help="Run ASTA enrichment sidecar",
+    )
+    asta_enrich.add_argument(
+        "--input",
+        required=True,
+        dest="input_path",
+        help="Input records file (JSON/JSONL)",
+    )
+    asta_enrich.add_argument("--run-id", required=True, help="Run identifier")
+    asta_enrich.add_argument(
+        "--output",
+        type=str,
+        default=None,
+        help="Optional output path (default under runs/<run_id>/agentic/asta/)",
+    )
+    asta_enrich.add_argument(
+        "--config",
+        type=str,
+        default="config/asta_config.yml",
+        dest="config_path",
+        help="Path to ASTA config",
+    )
+    asta_enrich.add_argument(
+        "--limit",
+        type=int,
+        default=20,
+        help="Snippet limit per record (default: 20)",
+    )
+    asta_enrich.set_defaults(func=_run_agentic_asta_enrich)
 
     return parser
 
