@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path
 from typing import Sequence
 
@@ -43,11 +44,109 @@ def _run_validate(args: argparse.Namespace) -> int:
     return 0
 
 
+# ---------------------------------------------------------------------------
+# harvest subcommand (PE2)
+# ---------------------------------------------------------------------------
+
+
+def _run_harvest(args: argparse.Namespace) -> int:
+    """Execute a harvest run for a single source."""
+    from elis.sources import get_adapter
+    from elis.sources.config import load_harvest_config
+
+    # Resolve configuration
+    harvest_cfg = load_harvest_config(
+        source_name=args.source,
+        search_config=getattr(args, "search_config", None),
+        tier=getattr(args, "tier", None),
+        max_results_override=getattr(args, "max_results", None),
+        output=getattr(args, "output", None),
+    )
+
+    if not harvest_cfg.queries:
+        print(f"[ERROR] No queries found for source {args.source!r}")
+        return 1
+
+    # Print banner
+    print(f"\n{'=' * 80}")
+    print(f"{args.source.upper()} HARVEST — {harvest_cfg.config_mode} CONFIG")
+    print(f"{'=' * 80}")
+    print(f"Queries: {len(harvest_cfg.queries)}")
+    print(f"Max results per query: {harvest_cfg.max_results}")
+    print(f"Output: {harvest_cfg.output_path}")
+    print(f"{'=' * 80}\n")
+
+    # Load existing output for dedup
+    output_path = Path(harvest_cfg.output_path)
+    existing_results: list[dict] = []
+    if output_path.exists():
+        with output_path.open("r", encoding="utf-8") as fh:
+            existing_results = json.load(fh)
+        print(f"Loaded {len(existing_results)} existing results")
+
+    # Build dedup index (DOI + source-specific ID)
+    existing_dois: set[str] = {r["doi"] for r in existing_results if r.get("doi")}
+    existing_ids: set[str] = set()
+    for r in existing_results:
+        for key in ("openalex_id", "crossref_id", "scopus_id"):
+            val = r.get(key)
+            if val:
+                existing_ids.add(val)
+
+    # Instantiate adapter and harvest
+    adapter_cls = get_adapter(args.source)
+    adapter = adapter_cls()
+
+    new_count = 0
+    for record in adapter.harvest(harvest_cfg.queries, harvest_cfg.max_results):
+        doi = record.get("doi", "")
+        # Check all ID fields for dedup
+        is_dup = bool(doi and doi in existing_dois)
+        if not is_dup:
+            for key in ("openalex_id", "crossref_id", "scopus_id"):
+                val = record.get(key)
+                if val and val in existing_ids:
+                    is_dup = True
+                    break
+
+        if not is_dup:
+            existing_results.append(record)
+            if doi:
+                existing_dois.add(doi)
+            for key in ("openalex_id", "crossref_id", "scopus_id"):
+                val = record.get(key)
+                if val:
+                    existing_ids.add(val)
+            new_count += 1
+
+    # Write output
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with output_path.open("w", encoding="utf-8") as fh:
+        json.dump(existing_results, fh, indent=2, ensure_ascii=False)
+
+    # Summary
+    print(f"\n{'=' * 80}")
+    print(f"[OK] {adapter.display_name} harvest complete")
+    print(f"{'=' * 80}")
+    print(f"New results added: {new_count}")
+    print(f"Total records in dataset: {len(existing_results)}")
+    print(f"Saved to: {harvest_cfg.output_path}")
+    print(f"{'=' * 80}\n")
+
+    return 0
+
+
+# ---------------------------------------------------------------------------
+# Parser
+# ---------------------------------------------------------------------------
+
+
 def build_parser() -> argparse.ArgumentParser:
     """Build argument parser for ELIS CLI."""
     parser = argparse.ArgumentParser(prog="elis", description="ELIS SLR Agent CLI")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
+    # validate -----------------------------------------------------------
     validate = subparsers.add_parser(
         "validate",
         help="Validate JSON data against schema or run legacy full validation",
@@ -55,6 +154,41 @@ def build_parser() -> argparse.ArgumentParser:
     validate.add_argument("schema_path", nargs="?", help="Path to JSON schema")
     validate.add_argument("json_path", nargs="?", help="Path to JSON data file")
     validate.set_defaults(func=_run_validate)
+
+    # harvest ------------------------------------------------------------
+    harvest = subparsers.add_parser(
+        "harvest",
+        help="Harvest records from an academic source",
+    )
+    harvest.add_argument(
+        "source",
+        help="Source to harvest from (e.g. openalex, crossref, scopus)",
+    )
+    harvest.add_argument(
+        "--search-config",
+        type=str,
+        dest="search_config",
+        help="Path to search configuration YAML",
+    )
+    harvest.add_argument(
+        "--tier",
+        type=str,
+        choices=["testing", "pilot", "benchmark", "production", "exhaustive"],
+        help="Max-results tier",
+    )
+    harvest.add_argument(
+        "--max-results",
+        type=int,
+        dest="max_results",
+        help="Override max_results regardless of config or tier",
+    )
+    harvest.add_argument(
+        "--output",
+        type=str,
+        default="json_jsonl/ELIS_Appendix_A_Search_rows.json",
+        help="Output file path (default: json_jsonl/ELIS_Appendix_A_Search_rows.json)",
+    )
+    harvest.set_defaults(func=_run_harvest)
 
     return parser
 
