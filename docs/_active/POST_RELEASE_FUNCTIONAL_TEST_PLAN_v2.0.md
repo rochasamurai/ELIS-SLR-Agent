@@ -134,7 +134,7 @@ Legacy full mode:
 ```powershell
 elis validate
 ```
-Note: legacy full-mode currently exits `0` even when it finds validation errors. Mark FT-06 pass/fail from reported validation status (`[OK]` / `[ERR]` lines and error details), not exit code alone.
+Note: legacy full-mode currently exits `0` even when it finds validation errors. Mark FT-06 pass/fail by inspecting output text for `WARN:` / `FAIL:` lines (and error details), not exit code alone.
 
 ### FT-07: Manifest Presence and Schema
 Required stage sidecars:
