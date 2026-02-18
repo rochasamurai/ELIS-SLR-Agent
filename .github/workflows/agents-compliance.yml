@@ -30,7 +30,7 @@ jobs:
 
       - name: Fetch base branch
         run: |
-          git fetch origin "${{ github.event.pull_request.base.ref }}" --depth=1
+          git fetch origin "${{ github.event.pull_request.base.ref }}"
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -42,4 +42,3 @@ jobs:
           GITHUB_EVENT_PATH: ${{ github.event_path }}
         run: |
           python scripts/agents_compliance_check.py --event-path "$GITHUB_EVENT_PATH"
-
