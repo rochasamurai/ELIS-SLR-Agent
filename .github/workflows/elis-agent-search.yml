@@ -132,7 +132,8 @@ jobs:
       - name: Install runtime deps (pinned)
         run: |
           python -m pip install --upgrade pip
-          pip install "requests==2.32.3" "PyYAML==6.0.2"
+          pip install -r requirements.txt
+          pip install -e . --no-deps
 
       - name: Patch search config from UI inputs
         env:
@@ -160,40 +161,37 @@ jobs:
           print(f"Wrote patched config to {out}")
           PY
 
-      - name: Run Appendix A (Search)
+      - name: Run Appendix A (Harvest + Merge)
         env:
           ELIS_CONTACT: "elis@samurai.com.br"
-          ELIS_HTTP_SLEEP_S: "1.0"
-          SEMANTIC_SCHOLAR_API_KEY: ${{ secrets.SEMANTIC_SCHOLAR_API_KEY }}
-          IEEE_API_KEY: ${{ secrets.IEEE_EXPLORE_API_KEY }}
           SCOPUS_API_KEY: ${{ secrets.SCOPUS_API_KEY }}
-          WOS_API_KEY: ${{ secrets.WEB_OF_SCIENCE_API_KEY }}
+          SCOPUS_INST_TOKEN: ${{ secrets.SCOPUS_INST_TOKEN }}
         run: |
           set -eux
           DRY="${{ steps.knobs.outputs.dry_run }}"
+          MAX_RESULTS="${{ steps.knobs.outputs.cap_per_source }}"
+          mkdir -p json_jsonl
           if [ "$DRY" = "true" ]; then
-            python scripts/elis/search_mvp.py --config /tmp/elis_config.yml --dry-run
+            echo "[DRY RUN] Harvest skipped. Set dry_run=false to run harvests."
           else
-            python scripts/elis/search_mvp.py --config /tmp/elis_config.yml
+            elis harvest crossref \
+              --search-config config/searches/electoral_integrity_search.yml \
+              --max-results "$MAX_RESULTS" \
+              --output json_jsonl/harvest_crossref.json
+            elis harvest openalex \
+              --search-config config/searches/electoral_integrity_search.yml \
+              --max-results "$MAX_RESULTS" \
+              --output json_jsonl/harvest_openalex.json
+            elis harvest scopus \
+              --search-config config/searches/electoral_integrity_search.yml \
+              --max-results "$MAX_RESULTS" \
+              --output json_jsonl/harvest_scopus.json
+            elis merge \
+              --inputs json_jsonl/harvest_crossref.json json_jsonl/harvest_openalex.json json_jsonl/harvest_scopus.json \
+              --output json_jsonl/ELIS_Appendix_A_Search_rows.json \
+              --report json_jsonl/merge_report.json
           fi
 
-      - name: Harvest Scopus Institutional API
-        if: ${{ steps.knobs.outputs.dry_run != 'true' }}
-        run: |
-          # --------------------------------------------
-          # Run Scopus Institutional Harvest
-          # Requires valid API key and institution token
-          # --------------------------------------------
-          set -eux
-          export SCOPUS_API_KEY="${{ secrets.SCOPUS_API_KEY }}"
-          export SCOPUS_INST_TOKEN="${{ secrets.SCOPUS_INST_TOKEN }}"
-          
-          if [ ! -f scripts/scopus_harvest.py ]; then
-            echo "WARNING: scripts/scopus_harvest.py not found, skipping harvest"
-            exit 0
-          fi
-          
-          python scripts/scopus_harvest.py
 
       - name: Validate Appendix A artifact
         if: ${{ steps.knobs.outputs.dry_run != 'true' }}
@@ -213,10 +211,8 @@ jobs:
             exit 1
           fi
           
-          # Optionally validate against schema (if validator exists)
-          if [ -f scripts/validate_json.py ]; then
-            python scripts/validate_json.py "$ARTIFACT" || echo "WARNING: Schema validation failed"
-          fi
+          # Validate against ELIS schemas
+          elis validate || echo "WARNING: Schema validation failed"
           
           echo "Artifact validation passed"
 

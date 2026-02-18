@@ -46,32 +46,43 @@ jobs:
       - name: Install runtime dependencies (pinned)
         run: |
           python -m pip install --upgrade pip
-          pip install "requests==2.32.3" "PyYAML==6.0.2"
+          pip install -r requirements.txt
+          pip install -e . --no-deps
 
       # -----------------------------------------------------------------------
-      # Appendix A — Search
+      # Appendix A — Harvest + Merge
+      # Harvests from public adapters (no auth required), then merges.
       # Writes: json_jsonl/ELIS_Appendix_A_Search_rows.json
-      # The script emits a Step Summary with per-source/per-topic counts.
       # -----------------------------------------------------------------------
-      - name: Run Appendix A (Search)
+      - name: Run Appendix A (Harvest + Merge)
         env:
           # Optional: adds a polite contact to the User-Agent for public APIs.
           ELIS_CONTACT: ${{ secrets.ELIS_CONTACT_EMAIL || '' }}
-          # Optional: gentle pacing between paginated requests (seconds).
-          ELIS_HTTP_SLEEP_S: "0.5"
         run: |
           set -euo pipefail
-          python scripts/elis/search_mvp.py --config config/elis_search_queries.yml
+          mkdir -p json_jsonl
+          elis harvest crossref \
+            --search-config config/searches/electoral_integrity_search.yml \
+            --tier pilot \
+            --output json_jsonl/harvest_crossref.json
+          elis harvest openalex \
+            --search-config config/searches/electoral_integrity_search.yml \
+            --tier pilot \
+            --output json_jsonl/harvest_openalex.json
+          elis merge \
+            --inputs json_jsonl/harvest_crossref.json json_jsonl/harvest_openalex.json \
+            --output json_jsonl/ELIS_Appendix_A_Search_rows.json \
+            --report json_jsonl/merge_report.json
 
       # -----------------------------------------------------------------------
       # Appendix B — Screen
-      # Reads A’s JSON, normalises and emits a screening rows file.
+      # Reads A's JSON, normalises and emits a screening rows file.
       # Writes: json_jsonl/ELIS_Appendix_B_Screening_rows.json
       # -----------------------------------------------------------------------
       - name: Run Appendix B (Screen)
         run: |
           set -euo pipefail
-          python scripts/elis/screen_mvp.py \
+          elis screen \
             --input  json_jsonl/ELIS_Appendix_A_Search_rows.json \
             --output json_jsonl/ELIS_Appendix_B_Screening_rows.json
 
