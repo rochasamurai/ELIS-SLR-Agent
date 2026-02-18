@@ -24,7 +24,7 @@ dev = ["black", "ruff", "pytest"]
 elis = "elis.cli:main"
 
 [tool.setuptools.packages.find]
-include = ["elis*"]
+include = ["elis*", "scripts*"]
 
 [tool.black]
 target-version = ["py311"]
