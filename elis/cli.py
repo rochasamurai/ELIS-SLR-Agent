@@ -40,7 +40,10 @@ def _count_data_rows(path: str | Path) -> int:
 
 def _load_inputs_from_manifest(manifest_path: str) -> list[str]:
     """Read merge input file list from a run manifest."""
-    payload = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
+    try:
+        payload = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
+    except FileNotFoundError as exc:
+        raise SystemExit(f"Manifest file not found: {manifest_path}") from exc
     if not isinstance(payload, dict):
         raise ValueError("Manifest payload must be a JSON object.")
     inputs = payload.get("input_paths")

@@ -368,6 +368,27 @@ def test_merge_from_manifest_no_usable_paths_raises(tmp_path: Path) -> None:
         )
 
 
+def test_merge_from_manifest_missing_file_raises_system_exit() -> None:
+    """Missing --from-manifest path must raise a controlled CLI error."""
+    missing = "DOES_NOT_EXIST.json"
+    try:
+        cli.main(
+            [
+                "merge",
+                "--from-manifest",
+                missing,
+                "--output",
+                "out.json",
+                "--report",
+                "report.json",
+            ]
+        )
+    except SystemExit as exc:
+        assert str(exc) == f"Manifest file not found: {missing}"
+    else:
+        raise AssertionError("Expected SystemExit for missing --from-manifest path.")
+
+
 def test_screen_dry_run_does_not_emit_manifest(tmp_path: Path) -> None:
     """screen --dry-run must not write a manifest sidecar."""
     in_path = tmp_path / "appendix_a.json"
