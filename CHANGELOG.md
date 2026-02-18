@@ -6,6 +6,23 @@
 -->
 
 ## [Unreleased]
+### Fixed
+- Closed PE6 review record after hotfix resolution (`PR #229`): `REVIEW_PE6.md` now records the final PASS closure linked to `PR #225`.
+- Finalised SEV-1 corrections in post-release functional test planning (`PR #231`):
+  - FT-06 clarifies that legacy full-mode validation must be judged by reported markers, not exit code.
+  - FT-11 clarifies determinism checks must use normalized content hashing (exclude volatile fields).
+- Added ignore rules for recurring local run artefacts (`dedup/`, `*_manifest.json`) to reduce accidental workspace noise (`PR #231`).
+
+### Docs
+- Backfilled missing per-PE validation artefacts to satisfy `AGENTS.md` per-PE review file policy (`PR #230`):
+  - `REVIEW_PE0a.md`
+  - `REVIEW_PE0b.md`
+  - `REVIEW_PE1a.md`
+  - `REVIEW_PE2.md`
+  - `REVIEW_PE3.md`
+  - `REVIEW_PE4.md`
+- Added closure addendum in `REVIEW_PE6.md` tied to `PR #229`.
+
 ### Planned
 - Optional strict RFC 3339 checking for `"format": "date-time"` using `jsonschema[format-nongpl]` and a `FormatChecker`.
 - Broaden Data Contract fields once agreed (governance applies).
@@ -103,6 +120,7 @@ canonical pipeline behind the `elis` CLI.
   Link references (GitHub renders these at the bottom; keep them updated at release time).
   Unreleased compares the latest tag with HEAD.
 -->
-[Unreleased]: https://github.com/rochasamurai/ELIS-SLR-Agent/compare/v0.1.1-mvp...HEAD
+[Unreleased]: https://github.com/rochasamurai/ELIS-SLR-Agent/compare/v2.0.0...HEAD
+[v2.0.0]: https://github.com/rochasamurai/ELIS-SLR-Agent/releases/tag/v2.0.0
 [v0.1.1-mvp]: https://github.com/rochasamurai/ELIS-SLR-Agent/releases/tag/v0.1.1-mvp
 [v0.1.0-mvp]: https://github.com/rochasamurai/ELIS-SLR-Agent/releases/tag/v0.1.0-mvp
