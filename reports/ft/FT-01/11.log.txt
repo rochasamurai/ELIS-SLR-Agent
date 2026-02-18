@@ -1,0 +1,18 @@
+$ .\\.venv\\Scripts\\elis validate DOES_NOT_EXIST.json
+ExitCode: 1
+Output:
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\carlo\ELIS-SLR-Agent\.venv\Scripts\elis.exe\__main__.py", line 5, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "C:\Users\carlo\ELIS-SLR-Agent\elis\cli.py", line 723, in main
+    return args.func(args)
+           ~~~~~~~~~^^^^^^
+  File "C:\Users\carlo\ELIS-SLR-Agent\elis\cli.py", line 66, in _run_validate
+    from scripts._archive.validate_json import (
+    ...<2 lines>...
+    )
+ModuleNotFoundError: No module named 'scripts'
+

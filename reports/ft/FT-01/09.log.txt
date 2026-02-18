@@ -1,0 +1,5 @@
+$ .\\.venv\\Scripts\\elis merge
+ExitCode: 1
+Output:
+Provide --inputs or --from-manifest.
+

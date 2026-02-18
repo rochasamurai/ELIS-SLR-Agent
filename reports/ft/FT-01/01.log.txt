@@ -1,0 +1,24 @@
+$ .\\.venv\\Scripts\\elis --help
+ExitCode: 0
+Output:
+usage: elis [-h]
+            {validate,harvest,merge,dedup,screen,agentic,export-latest} ...
+
+ELIS SLR Agent CLI
+
+positional arguments:
+  {validate,harvest,merge,dedup,screen,agentic,export-latest}
+    validate            Validate JSON data against schema or run legacy full
+                        validation
+    harvest             Harvest records from an academic source
+    merge               Merge per-source Appendix A outputs into canonical
+                        Appendix A
+    dedup               Deduplicate canonical Appendix A (PE4)
+    screen              Screen canonical Appendix A into Appendix B
+    agentic             Agentic sidecar workflows (PE5)
+    export-latest       Copy canonical artefacts from runs/<run_id>/ to
+                        json_jsonl/ (backward-compat export)
+
+options:
+  -h, --help            show this help message and exit
+
