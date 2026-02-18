@@ -186,6 +186,7 @@ Recompute the same hashes after ASTA; all canonical hashes must match baseline.
 
 ### FT-11: Determinism
 Re-run merge and dedup with identical inputs and compare normalized content hashes.
+Do not use raw byte-level `Get-FileHash` for this check because volatile fields differ between runs.
 ```powershell
 elis merge --inputs runs/ft/harvest/openalex.json runs/ft/harvest/crossref.json runs/ft/harvest/scopus.json --output runs/ft/determinism/merge_1.json --report runs/ft/determinism/merge_1_report.json
 elis merge --inputs runs/ft/harvest/openalex.json runs/ft/harvest/crossref.json runs/ft/harvest/scopus.json --output runs/ft/determinism/merge_2.json --report runs/ft/determinism/merge_2_report.json
