@@ -58,6 +58,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
+          pip install -e . --no-deps
 
       # ---------------------------------------------------------------------------
       # Verify all required secrets are configured
@@ -129,32 +130,12 @@ jobs:
           echo "============================================"
 
       # ---------------------------------------------------------------------------
-      # Map the database choice to the script filename.
-      # api_key_var / api_token_var removed — they were never referenced
-      # downstream; all credentials are injected via the env: block instead.
+      # Harvest via elis CLI (all databases route through the same command)
+      # Note: adapters for openalex, crossref, scopus are available in v2.0.
+      # Other databases (wos, ieee, semantic_scholar, core, google_scholar,
+      # sciencedirect) will fail with "Unknown source" until adapters are added.
       # ---------------------------------------------------------------------------
-      - name: Set script path
-        id: setup
-        run: |
-          case "${{ github.event.inputs.database }}" in
-            scopus)            echo "script=scripts/scopus_harvest.py"            >> $GITHUB_OUTPUT ;;
-            sciencedirect)     echo "script=scripts/sciencedirect_harvest.py"     >> $GITHUB_OUTPUT ;;
-            web_of_science)    echo "script=scripts/wos_harvest.py"               >> $GITHUB_OUTPUT ;;
-            ieee_xplore)       echo "script=scripts/ieee_harvest.py"              >> $GITHUB_OUTPUT ;;
-            semantic_scholar)  echo "script=scripts/semanticscholar_harvest.py"   >> $GITHUB_OUTPUT ;;
-            openalex)          echo "script=scripts/openalex_harvest.py"          >> $GITHUB_OUTPUT ;;
-            crossref)          echo "script=scripts/crossref_harvest.py"          >> $GITHUB_OUTPUT ;;
-            core)              echo "script=scripts/core_harvest.py"              >> $GITHUB_OUTPUT ;;
-            google_scholar)    echo "script=scripts/google_scholar_harvest.py"    >> $GITHUB_OUTPUT ;;
-          esac
-
-          echo "Database: ${{ github.event.inputs.database }}"
-          echo "Script:   $(grep '^script=' $GITHUB_OUTPUT | cut -d= -f2)"
-
-      # ---------------------------------------------------------------------------
-      # New-config test  (always runs)
-      # ---------------------------------------------------------------------------
-      - name: Test New Config Format
+      - name: Test Harvest
         env:
           SCOPUS_API_KEY:            ${{ secrets.SCOPUS_API_KEY }}
           SCOPUS_INST_TOKEN:         ${{ secrets.SCOPUS_INST_TOKEN }}
@@ -168,14 +149,13 @@ jobs:
           APIFY_API_TOKEN:           ${{ secrets.APIFY_API_TOKEN }}
         run: |
           echo "============================================"
-          echo "TEST: ${{ github.event.inputs.database }} - New Config Format"
+          echo "TEST: ${{ github.event.inputs.database }}"
           echo "============================================"
-          echo "Script: ${{ steps.setup.outputs.script }}"
           echo "Config: ${{ github.event.inputs.search_config }}"
           echo "Tier:   ${{ github.event.inputs.tier }}"
           echo ""
 
-          python ${{ steps.setup.outputs.script }} \
+          elis harvest "${{ github.event.inputs.database }}" \
             --search-config "${{ github.event.inputs.search_config }}" \
             --tier "${{ github.event.inputs.tier }}" \
             --output test_output_new.json
@@ -214,30 +194,14 @@ jobs:
           PYTHON_SCRIPT
 
       # ---------------------------------------------------------------------------
-      # Legacy-config test  (only when test_legacy is checked)
+      # Legacy-config test  — REMOVED in v2.0 (single CLI, no legacy mode)
       # ---------------------------------------------------------------------------
-      - name: Test Legacy Config Format
+      - name: Legacy Config Notice
         if: github.event.inputs.test_legacy == 'true'
-        env:
-          SCOPUS_API_KEY:            ${{ secrets.SCOPUS_API_KEY }}
-          SCOPUS_INST_TOKEN:         ${{ secrets.SCOPUS_INST_TOKEN }}
-          SCIENCEDIRECT_API_KEY:     ${{ secrets.SCIENCEDIRECT_API_KEY }}
-          SCIENCEDIRECT_INST_TOKEN:  ${{ secrets.SCIENCEDIRECT_INST_TOKEN }}
-          WEB_OF_SCIENCE_API_KEY:    ${{ secrets.WEB_OF_SCIENCE_API_KEY }}
-          IEEE_EXPLORE_API_KEY:      ${{ secrets.IEEE_EXPLORE_API_KEY }}
-          SEMANTIC_SCHOLAR_API_KEY:  ${{ secrets.SEMANTIC_SCHOLAR_API_KEY }}
-          ELIS_CONTACT:              ${{ secrets.ELIS_CONTACT }}
-          CORE_API_KEY:              ${{ secrets.CORE_API_KEY }}
-          APIFY_API_TOKEN:           ${{ secrets.APIFY_API_TOKEN }}
         run: |
-          echo ""
-          echo "============================================"
-          echo "TEST: ${{ github.event.inputs.database }} - Legacy Config"
-          echo "============================================"
-          echo "Config: config/elis_search_queries.yml"
-          echo ""
-
-          python ${{ steps.setup.outputs.script }} --output test_output_legacy.json
+          echo "INFO: Legacy config test mode has been removed in v2.0."
+          echo "All databases now use: elis harvest <source> --search-config ..."
+          echo "The test_legacy flag is a no-op and will be removed in v2.1."
 
       - name: Validate Legacy Config Output
         if: github.event.inputs.test_legacy == 'true'

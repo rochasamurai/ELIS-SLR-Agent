@@ -380,6 +380,48 @@ def _run_agentic_asta_enrich(args: argparse.Namespace) -> int:
     return 0
 
 
+def _run_export_latest(args: argparse.Namespace) -> int:
+    """Copy canonical artefacts from runs/<run_id>/ to json_jsonl/ (PE6)."""
+    import shutil
+
+    runs_dir = Path(args.runs_dir)
+    export_dir = Path(args.export_dir)
+    latest_txt = export_dir / "LATEST_RUN_ID.txt"
+
+    run_id = getattr(args, "run_id", None)
+    if not run_id:
+        if latest_txt.exists():
+            run_id = latest_txt.read_text(encoding="utf-8").strip()
+        if not run_id:
+            print(
+                "[ERROR] No --run-id provided and json_jsonl/LATEST_RUN_ID.txt not found."
+            )
+            return 1
+
+    run_path = runs_dir / run_id
+    if not run_path.exists():
+        print(f"[ERROR] Run directory not found: {run_path}")
+        return 1
+
+    export_dir.mkdir(parents=True, exist_ok=True)
+
+    # Copy all JSON/JSONL files from the run tree into json_jsonl/ (flat).
+    copied = 0
+    for src in sorted(run_path.rglob("*.json")) + sorted(run_path.rglob("*.jsonl")):
+        if src.name.endswith("_manifest.json"):
+            continue  # skip manifest sidecars
+        dest = export_dir / src.name
+        shutil.copy2(src, dest)
+        copied += 1
+        print(f"  copied: {src.relative_to(runs_dir)} → {dest}")
+
+    # Write LATEST_RUN_ID.txt
+    latest_txt.write_text(run_id + "\n", encoding="utf-8")
+    print(f"\n[OK] Exported {copied} file(s) from run {run_id!r} → {export_dir}/")
+    print(f"[OK] LATEST_RUN_ID.txt written: {run_id}")
+    return 0
+
+
 # ---------------------------------------------------------------------------
 # Parser
 # ---------------------------------------------------------------------------
@@ -642,6 +684,34 @@ def build_parser() -> argparse.ArgumentParser:
         help="Snippet limit per record (default: 20)",
     )
     asta_enrich.set_defaults(func=_run_agentic_asta_enrich)
+
+    # export-latest ------------------------------------------------------
+    export_latest = subparsers.add_parser(
+        "export-latest",
+        help="Copy canonical artefacts from runs/<run_id>/ to json_jsonl/ (backward-compat export)",
+    )
+    export_latest.add_argument(
+        "--run-id",
+        type=str,
+        default=None,
+        dest="run_id",
+        help="Run ID to export. If omitted, reads json_jsonl/LATEST_RUN_ID.txt.",
+    )
+    export_latest.add_argument(
+        "--runs-dir",
+        type=str,
+        default="runs",
+        dest="runs_dir",
+        help="Parent directory for run artefacts (default: runs)",
+    )
+    export_latest.add_argument(
+        "--export-dir",
+        type=str,
+        default="json_jsonl",
+        dest="export_dir",
+        help="Export target directory (default: json_jsonl)",
+    )
+    export_latest.set_defaults(func=_run_export_latest)
 
     return parser
 

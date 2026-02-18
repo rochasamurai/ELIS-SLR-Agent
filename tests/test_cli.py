@@ -1,7 +1,8 @@
-"""Tests for elis.cli — top-level CLI dispatcher."""
+"""Tests for elis.cli — top-level CLI dispatcher (v2.0 contract)."""
 
 from __future__ import annotations
 
+import json
 import subprocess
 import sys
 
@@ -11,19 +12,26 @@ from elis.cli import main
 
 
 class TestCLIDispatch:
-    def test_no_args_returns_zero(self):
-        assert main([]) == 0
+    """Basic command dispatch contract for the v2.0 CLI."""
 
-    def test_help_returns_zero(self):
-        assert main(["--help"]) == 0
+    def test_no_args_raises_system_exit(self):
+        """Subcommand is required; no args must exit."""
+        with pytest.raises(SystemExit):
+            main([])
 
-    def test_unknown_command_returns_two(self):
-        assert main(["unknown-cmd"]) == 2
-
-    def test_search_help(self):
-        """search --help should trigger argparse SystemExit(0)."""
+    def test_help_exits_zero(self):
         with pytest.raises(SystemExit) as exc:
-            main(["search", "--help"])
+            main(["--help"])
+        assert exc.value.code == 0
+
+    def test_unknown_command_exits_nonzero(self):
+        with pytest.raises(SystemExit) as exc:
+            main(["unknown-cmd"])
+        assert exc.value.code != 0
+
+    def test_harvest_help(self):
+        with pytest.raises(SystemExit) as exc:
+            main(["harvest", "--help"])
         assert exc.value.code == 0
 
     def test_screen_help(self):
@@ -32,18 +40,29 @@ class TestCLIDispatch:
         assert exc.value.code == 0
 
     def test_validate_help(self):
-        """validate --help must show help and exit 0 (no side effects)."""
         with pytest.raises(SystemExit) as exc:
             main(["validate", "--help"])
         assert exc.value.code == 0
 
-    def test_search_missing_config(self, tmp_path):
-        rc = main(["search", "--config", str(tmp_path / "nope.yml")])
-        assert rc == 2
+    def test_merge_help(self):
+        with pytest.raises(SystemExit) as exc:
+            main(["merge", "--help"])
+        assert exc.value.code == 0
+
+    def test_dedup_help(self):
+        with pytest.raises(SystemExit) as exc:
+            main(["dedup", "--help"])
+        assert exc.value.code == 0
+
+    def test_search_subcommand_removed(self):
+        """search subcommand was removed in v2.0; must exit non-zero."""
+        with pytest.raises(SystemExit) as exc:
+            main(["search"])
+        assert exc.value.code != 0
 
 
 class TestModuleEntrypoint:
-    """Verify ``python -m elis`` works (BLOCKER A)."""
+    """Verify ``python -m elis`` works (entrypoint contract)."""
 
     def test_python_m_elis_help(self):
         result = subprocess.run(
@@ -57,7 +76,7 @@ class TestModuleEntrypoint:
 
 
 class TestValidateCLIContract:
-    """Tests for BLOCKER B + C — validate subcommand contract."""
+    """Tests for validate subcommand contract (v2.0 positional args)."""
 
     def test_validate_help_no_side_effects(self, tmp_path, monkeypatch):
         """--help must NOT write any reports."""
@@ -72,14 +91,15 @@ class TestValidateCLIContract:
         created = list((tmp_path / "validation_reports").iterdir())
         assert created == []
 
-    def test_validate_missing_file_exits_nonzero(self, tmp_path):
-        rc = main(["validate", str(tmp_path / "DOES_NOT_EXIST.json")])
-        assert rc != 0
+    def test_validate_one_positional_raises(self, tmp_path):
+        """Single positional arg → SystemExit (must provide both schema and data)."""
+        df = tmp_path / "data.json"
+        df.write_text(json.dumps([{"id": "1"}]), encoding="utf-8")
+        with pytest.raises(SystemExit):
+            main(["validate", str(df)])
 
-    def test_validate_explicit_schema_and_data(self, tmp_path):
-        """Explicit --data + --schema should work."""
-        import json
-
+    def test_validate_explicit_two_positionals(self, tmp_path):
+        """<schema_path> <json_path> positionals run single-file validation."""
         data = [{"_meta": True}, {"id": "1", "name": "test"}]
         schema = {
             "type": "object",
@@ -91,38 +111,13 @@ class TestValidateCLIContract:
         df.write_text(json.dumps(data), encoding="utf-8")
         sf.write_text(json.dumps(schema), encoding="utf-8")
 
-        rc = main(["validate", "--data", str(df), "--schema", str(sf)])
+        rc = main(["validate", str(sf), str(df)])
         assert rc == 0
 
-    def test_validate_positional_infers_schema(self, tmp_path, monkeypatch):
-        """Positional data path with appendix_a in name should infer schema."""
-        import json
-
-        monkeypatch.chdir(tmp_path)
-
-        # Create the schema at the expected relative path.
-        (tmp_path / "schemas").mkdir()
-        schema = {
-            "type": "object",
-            "required": ["id"],
-            "properties": {"id": {"type": "string"}},
-        }
-        (tmp_path / "schemas" / "appendix_a.schema.json").write_text(
-            json.dumps(schema), encoding="utf-8"
-        )
-
-        data = [{"_meta": True}, {"id": "1"}]
-        df = tmp_path / "ELIS_Appendix_A_Search_rows.json"
-        df.write_text(json.dumps(data), encoding="utf-8")
-
-        rc = main(["validate", str(df)])
-        assert rc == 0
-
-    def test_validate_unknown_name_no_schema_exits(self, tmp_path):
-        """Data file with unrecognised name and no --schema should fail."""
-        import json
-
-        df = tmp_path / "mystery.json"
+    def test_validate_old_flags_removed(self, tmp_path):
+        """--data/--schema flags from the old CLI no longer exist; argparse exits."""
+        df = tmp_path / "data.json"
         df.write_text(json.dumps([{"id": "1"}]), encoding="utf-8")
-        rc = main(["validate", str(df)])
-        assert rc == 2  # cannot infer schema
+        with pytest.raises(SystemExit) as exc:
+            main(["validate", "--data", str(df)])
+        assert exc.value.code != 0

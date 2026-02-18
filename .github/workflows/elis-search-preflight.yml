@@ -31,31 +31,19 @@ jobs:
       - name: Install deps
         run: |
           python -m pip install --upgrade pip
-          pip install requests pyyaml
+          pip install -r requirements.txt
+          pip install -e . --no-deps
 
-      - name: Limit config for smoke test (inject env caps)
+      - name: Run preflight harvest (CrossRef, testing tier)
         run: |
-          # Create a copy of the config with very small caps for the dry run
-          mkdir -p /tmp/elis
-          cp config/elis_search_queries.yml /tmp/elis/elis_search_queries.yml
-          # Reduce job cap to 50 to keep it quick
-          python - <<'PY'
-          import yaml, sys
-          p="/tmp/elis/elis_search_queries.yml"
-          y=yaml.safe_load(open(p, "r", encoding="utf-8"))
-          y.setdefault("global", {})["job_result_cap"]=50
-          with open(p, "w", encoding="utf-8") as f:
-              yaml.safe_dump(y, f, sort_keys=False, allow_unicode=True)
-          print("Patched job_result_cap=50")
-          PY
-
-      - name: Run search (dry-run)
-        env:
-          SEMANTIC_SCHOLAR_API_KEY: ${{ secrets.SEMANTIC_SCHOLAR_API_KEY }}
-        run: |
-          python scripts/elis/search_mvp.py --config /tmp/elis/elis_search_queries.yml --dry-run
+          # Use testing tier (25 results) for a quick smoke test against CrossRef (no auth).
+          elis harvest crossref \
+            --search-config config/searches/electoral_integrity_search.yml \
+            --tier testing \
+            --output /tmp/preflight_crossref.json
 
       - name: Preflight summary
         run: |
-          echo "✅ Search script executed in dry-run."
-          echo "Check logs for sources contacted and meta payload."
+          echo "✅ Preflight harvest executed (crossref, testing tier)."
+          python3 -c "import json; d=json.load(open('/tmp/preflight_crossref.json')); print(f'Records: {len(d)}')"
+          echo "Check logs for harvest details."

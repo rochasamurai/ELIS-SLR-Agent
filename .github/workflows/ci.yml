@@ -85,11 +85,12 @@ jobs:
           pip install -r requirements.txt
           # format-nongpl is optional; script tolerates absence
           pip install "jsonschema[format-nongpl]==4.23.0" || true
+          pip install -e . --no-deps
 
       - name: Validate artefacts (non-blocking)
         run: |
           set -e
-          python scripts/validate_json.py || true
+          elis validate || true
 
   add_and_set_status:
     name: Projects Auto-Add / add_and_set_status
