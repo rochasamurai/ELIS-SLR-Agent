@@ -81,6 +81,7 @@ Before starting any work on a PE, every agent MUST read:
 ### 2.8 Validator does not self-start
 - The Validator **waits for explicit PM authorisation** before beginning validation.
 - The PM assigns the Validator after receiving the Implementer's Status Packet (§5.1 step 9).
+- Assignment may be issued as a short PR comment (for example: `@claude-code — assigned as Validator. Begin review.`).
 - A Validator who starts without PM assignment is out of role.
 
 ---
@@ -189,6 +190,7 @@ EOF
 7. **Session-end check**: `git status -sb` must be clean before any push.
 8. Push branch + open PR to `release/2.0`. (`HANDOFF.md` must already be committed — see §2.7.)
 9. Deliver Status Packet to PM + explicitly ask PM to assign the Validator.
+   - Preferred channel: include/refresh the Status Packet in the PR body or PR comment.
 
 > **PM gate:** PM receives Status Packet, reviews it, and explicitly assigns the Validator.
 > Validator does not start without this assignment.
@@ -198,6 +200,7 @@ EOF
 ### 5.2 Validator workflow (Claude Code unless rotated)
 
 1. **Wait for PM assignment.** Do not begin without explicit PM authorisation (§2.8).
+   - Preferred assignment signal: PM PR comment on the active PR.
 2. **Refuse if Status Packet is missing.** Notify PM and wait for a complete packet.
 3. Read `HANDOFF.md` and verify scope:
    ```bash
@@ -213,7 +216,9 @@ EOF
 7. Write verdict in `REVIEW_PE<N>.md` using the standard format (Section 9).
 8. If any newly discovered pre-existing defect is not already in §11, add it now.
 9. Push validation commits to the **same branch** (validator-owned files only: `REVIEW_PE<N>.md` + adversarial tests).
-10. Deliver verdict + Status Packet to PM using the standard format (Section 9).
+10. Deliver verdict + Status Packet using a **GitHub PR review comment** (`approve` for PASS, `request-changes` for FAIL) using the standard format (Section 9).
+    - PM may still receive a direct summary message, but the PR review is the binding live handshake record.
+    - `REVIEW_PE<N>.md` remains mandatory as the durable on-branch artifact.
 
 > **PM gate:** PM receives verdict. If PASS → PM merges. If FAIL → PM assigns Implementer to fix (§5.3).
 
@@ -230,6 +235,7 @@ When the Validator issues a FAIL verdict:
 4. Update `HANDOFF.md`: mark fixed criteria PASS, paste new gate outputs.
 5. Commit to the same branch (do not open a new PR).
 6. Deliver updated Status Packet to PM + ask PM to re-assign the Validator.
+   - Preferred channel: reply in PR thread with fix summary + commit SHA and request re-review.
 
 > **PM gate:** PM receives updated Status Packet, reviews it, and re-assigns the Validator.
 
@@ -237,7 +243,7 @@ When the Validator issues a FAIL verdict:
 1. Re-read `REVIEW_PE<N>.md` and `HANDOFF.md` to confirm fixes address all blocking findings.
 2. Re-run full quality gates.
 3. Update `REVIEW_PE<N>.md` with a new dated verdict section (do not overwrite prior findings).
-4. Push to same branch. Deliver updated verdict + Status Packet to PM.
+4. Push to same branch and post an updated PR review/comment verdict + Status Packet.
 
 Repeat until verdict is PASS. If more than two iterations occur, the PM may call an audit (§7).
 
@@ -365,6 +371,8 @@ Validation verdicts are written to **per-PE files** rather than a single overwri
 - Owned by: Validator
 - Written once per PE; never overwritten by a subsequent PE
 - On re-validation after a FAIL, **append** a new dated section — do not overwrite prior findings.
+- Live handshake channel: PR review comments are used for PASS/FAIL signalling and fix/re-review loops.
+- Durable artifact rule: PR comments do **not** replace `REVIEW_PE<N>.md`; the file must still be committed.
 
 The root `REVIEW.md` is retained as a pointer to the most recent validation for quick reference.
 
@@ -426,8 +434,8 @@ pre-populated. Implementers copy it rather than writing from memory.
 ### 12.3 Tier 3 — Human checkpoints
 
 **PM gates (two explicit decision points per PE):**
-1. **Before Validator starts** — PM receives Implementer Status Packet and explicitly assigns Validator.
-2. **Before merge** — PM receives Validator verdict and Status Packet. Merge only on explicit GO.
+1. **Before Validator starts** — PM receives Implementer Status Packet and explicitly assigns Validator (preferred: PR comment assignment).
+2. **Before merge** — PM receives Validator verdict and Status Packet (preferred: PR review comment + `REVIEW_PE<N>.md`). Merge only on explicit GO.
 
 **Audit trigger** (§7): Any workflow deviation observed by any party triggers an audit report.
 The record creates accountability and a pattern log across PEs.
