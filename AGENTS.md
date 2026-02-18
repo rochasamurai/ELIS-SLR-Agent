@@ -389,37 +389,39 @@ Text instructions alone cannot guarantee compliance. The following structural co
 
 ### 12.1 Tier 1 — Automated (cannot be bypassed)
 
-**Branch protection on `release/2.0`** (configured in GitHub repository settings):
+**Branch protection on `release/2.0`** _(configure in GitHub → Settings → Branches)_:
 - All CI status checks must pass before merge is allowed.
 - At least 1 approving review (PM) required.
 - Direct pushes blocked — PRs only.
 
-**Required CI checks** (`.github/workflows/ci.yml`):
+**Currently active CI checks** (`.github/workflows/ci.yml`):
 - `python -m black --check .` — formatting gate.
 - `python -m ruff check .` — lint gate.
 - `python -m pytest -q` — full test suite.
-- HANDOFF.md presence check: CI verifies that `HANDOFF.md` contains the required section
-  headers (`## Summary`, `## Files Changed`, `## Acceptance Criteria`, `## Validation Commands`)
-  before a PR can be merged.
 
-**Pre-commit hooks** (`.pre-commit-config.yaml`):
+**Planned CI checks** _(not yet implemented — add to `ci.yml`)_:
+- HANDOFF.md presence and section check: verify that `HANDOFF.md` contains required
+  headers (`## Summary`, `## Files Changed`, `## Acceptance Criteria`, `## Validation Commands`)
+  before merge is allowed.
+
+**Planned: pre-commit hooks** (`.pre-commit-config.yaml`) _(not yet implemented)_:
 - Run black, ruff, and pytest on every local `git commit`.
 - Prevents "fix later" drift between commits and the final push.
 
 ### 12.2 Tier 2 — Structural prompting (reduces drift)
 
-**PR template** (`.github/pull_request_template.md`):
+**PR template** (`.github/pull_request_template.md`) — _active_:
 Every PR opens with a pre-filled Status Packet skeleton. The PM can verify at a glance
 whether all required fields are present before authorising merge.
 
-**`CLAUDE.md` for Claude Code:**
+**`CLAUDE.md` for Claude Code** _(planned — not yet implemented)_:
 Critical workflow rules — "update HANDOFF.md before opening PR", "Status Packet mandatory
-before any work", "wait for PM assignment before validating" — are duplicated in `CLAUDE.md`,
+before any work", "wait for PM assignment before validating" — duplicated in `CLAUDE.md`,
 which is always loaded into Claude Code's system prompt and survives context compression.
 
-**`HANDOFF.md` fill-in template:**
-A template file committed to the repo (`docs/templates/HANDOFF_template.md`) with all
-required sections pre-populated. Implementers copy it rather than writing from memory.
+**`HANDOFF.md` fill-in template** _(planned — not yet implemented)_:
+A template file (`docs/templates/HANDOFF_template.md`) with all required sections
+pre-populated. Implementers copy it rather than writing from memory.
 
 ### 12.3 Tier 3 — Human checkpoints
 
