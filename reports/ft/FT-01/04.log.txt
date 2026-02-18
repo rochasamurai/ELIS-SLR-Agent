@@ -1,0 +1,20 @@
+$ .\\.venv\\Scripts\\elis dedup --help
+ExitCode: 0
+Output:
+usage: elis dedup [-h] [--input INPUT] [--output OUTPUT] [--report REPORT]
+                  [--fuzzy] [--threshold THRESHOLD] [--config CONFIG_PATH]
+                  [--duplicates DUPLICATES_PATH]
+
+options:
+  -h, --help            show this help message and exit
+  --input INPUT         Merged Appendix A input file
+  --output OUTPUT       Deduped Appendix A output path
+  --report REPORT       Dedup report output path
+  --fuzzy               Enable fuzzy title-based deduplication (opt-in)
+  --threshold THRESHOLD
+                        Similarity threshold for fuzzy mode (default: 0.85)
+  --config CONFIG_PATH  Path to sources.yml for keeper priority
+  --duplicates DUPLICATES_PATH
+                        JSONL sidecar for dropped records with cluster_id +
+                        duplicate_of
+

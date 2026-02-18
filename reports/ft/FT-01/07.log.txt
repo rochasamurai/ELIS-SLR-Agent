@@ -1,0 +1,16 @@
+$ .\\.venv\\Scripts\\elis agentic asta discover --help
+ExitCode: 0
+Output:
+usage: elis agentic asta discover [-h] --query QUERY --run-id RUN_ID
+                                  [--output OUTPUT] [--config CONFIG_PATH]
+                                  [--limit LIMIT]
+
+options:
+  -h, --help            show this help message and exit
+  --query QUERY         Discovery query text
+  --run-id RUN_ID       Run identifier
+  --output OUTPUT       Optional output path (default under
+                        runs/<run_id>/agentic/asta/)
+  --config CONFIG_PATH  Path to ASTA config
+  --limit LIMIT         Candidate limit (default: 100)
+
