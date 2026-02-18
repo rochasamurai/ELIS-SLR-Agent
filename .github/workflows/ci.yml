@@ -2,7 +2,7 @@ name: ELIS - CI
 
 on:
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "release/2.0" ]
     types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
 
