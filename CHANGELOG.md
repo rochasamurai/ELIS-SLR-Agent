@@ -120,6 +120,7 @@ canonical pipeline behind the `elis` CLI.
   Link references (GitHub renders these at the bottom; keep them updated at release time).
   Unreleased compares the latest tag with HEAD.
 -->
-[Unreleased]: https://github.com/rochasamurai/ELIS-SLR-Agent/compare/v0.1.1-mvp...HEAD
+[Unreleased]: https://github.com/rochasamurai/ELIS-SLR-Agent/compare/v2.0.0...HEAD
+[v2.0.0]: https://github.com/rochasamurai/ELIS-SLR-Agent/releases/tag/v2.0.0
 [v0.1.1-mvp]: https://github.com/rochasamurai/ELIS-SLR-Agent/releases/tag/v0.1.1-mvp
 [v0.1.0-mvp]: https://github.com/rochasamurai/ELIS-SLR-Agent/releases/tag/v0.1.0-mvp
