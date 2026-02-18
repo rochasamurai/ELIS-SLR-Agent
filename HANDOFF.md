@@ -1,9 +1,13 @@
-# HANDOFF — PE6 Cut-over + v2.0.0 Release
+# HANDOFF — PE6 Cut-over + v2.0.0 Release (+ hotfix/pe6-codex-findings)
 
 ## Summary
 
 PE6 implemented on `feature/pe6-cutover`. Converges the dual-codepath architecture
 into a single canonical pipeline behind the `elis` CLI. One codepath remains.
+
+**Hotfix `hotfix/pe6-codex-findings` (PR #225)** — addresses 2 blocking findings from
+CODEX post-merge validation (PR #223): archives `validate_json.py` as the release plan
+required, and corrects the `elis-validate.yml` trigger path after cut-over.
 
 ---
 
@@ -38,12 +42,52 @@ into a single canonical pipeline behind the `elis` CLI. One codepath remains.
 
 ---
 
+## Hotfix Changes (PR #225 — `hotfix/pe6-codex-findings`)
+
+Addresses 2 blocking findings from CODEX post-merge validation (PR #223).
+
+### Files Changed
+
+| File | Change |
+|------|--------|
+| `scripts/validate_json.py` | Moved → `scripts/_archive/validate_json.py` via `git mv` |
+| `scripts/_archive/__init__.py` | Created — makes `_archive/` importable as a Python package |
+| `elis/cli.py` | Import updated: `from scripts.validate_json` → `from scripts._archive.validate_json` |
+| `tests/test_validate_json.py` | Import updated to new path |
+| `tests/test_elis_cli.py` | Mock patch path updated |
+| `tests/test_elis_cli_adversarial.py` | Mock patch paths updated (4 occurrences) |
+| `.github/workflows/elis-validate.yml` | `paths:` trigger: `scripts/validate_json.py` → `elis/**` + `scripts/_archive/validate_json.py` |
+
+### Acceptance Criteria (hotfix)
+
+- [x] `validate_json.py` archived to `scripts/_archive/` per release plan PE6.3.
+- [x] `elis validate` still functional (import chain updated throughout).
+- [x] `elis-validate.yml` trigger watches `elis/**` (the actual source of `elis validate` behaviour).
+- [x] All 437 tests pass (black PASS · ruff PASS · pytest 437 passed, 0 failed).
+
+### Validation Commands (hotfix)
+
+```bash
+python -m black --check .
+# All done! ✨ 🍰 ✨ — 95 files would be left unchanged.
+
+python -m ruff check elis/ tests/
+# All checks passed!
+
+python -m pytest
+# 437 passed, 17 warnings in 8.68s
+```
+
+---
+
 ## Design Notes
 
-### validate_json.py NOT archived
-`scripts/validate_json.py` is retained in `scripts/` (not moved to `_archive/`). It is
-imported by `elis/cli.py` via `from scripts.validate_json import main as legacy_main, validate_appendix`.
-Archiving it would break `elis validate` (legacy mode). To be refactored in v2.1.
+### validate_json.py — archived in hotfix (PR #225)
+`scripts/validate_json.py` was retained in `scripts/` during PE6 due to the import
+dependency in `elis/cli.py`. CODEX's post-merge validation (PR #223) correctly flagged
+this as a release-plan compliance gap. Fixed in `hotfix/pe6-codex-findings` (PR #225):
+file moved to `scripts/_archive/validate_json.py`; `scripts/_archive/__init__.py` added
+to preserve import chain; all callers updated. Full refactor into `elis/` deferred to v2.1.
 
 ### Adapter coverage
 Only 3 adapters exist in v2.0.0: `crossref`, `openalex`, `scopus`. The remaining 6 sources
