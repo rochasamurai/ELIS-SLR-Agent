@@ -127,3 +127,21 @@ python -m ruff check elis/ tests/
 python -m pytest
 # Results: 437 passed, 0 failed, 17 warnings (deprecation only)
 ```
+
+---
+
+## Hotfix Changes (PR #236 — `hotfix/pe6-ft-packaging-validate`)
+
+Addresses FT-01 packaging failure discovered during v2.0.0 qualification run (PR #233).
+
+### Root cause
+`pyproject.toml` `[tool.setuptools.packages.find]` only included `elis*`, excluding the
+`scripts` package from the installed distribution. The `elis` CLI entrypoint imports
+`scripts._archive.validate_json`, which is unavailable in installed mode (though masked
+in tests by `pythonpath = ["."]` in `pytest.ini_options`).
+
+### Files changed
+
+| File | Change |
+|------|--------|
+| `pyproject.toml` | `include = ["elis*"]` → `include = ["elis*", "scripts*"]` |
