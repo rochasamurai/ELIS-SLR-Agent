@@ -145,3 +145,29 @@ in tests by `pythonpath = ["."]` in `pytest.ini_options`).
 | File | Change |
 |------|--------|
 | `pyproject.toml` | `include = ["elis*"]` → `include = ["elis*", "scripts*"]` |
+
+---
+
+## Hotfix Changes (PR TBD — `hotfix/pe3-merge-manifest-notfound`)
+
+Addresses FT-01 CLI-contract failure found in qualification r2: `elis merge --from-manifest DOES_NOT_EXIST.json` returned an unhandled traceback.
+
+### Root cause
+`_load_inputs_from_manifest()` attempted to read the manifest path directly, allowing `FileNotFoundError` to bubble up and print a traceback.
+
+### Fix
+- Wrap manifest read in `try/except FileNotFoundError` and raise controlled CLI error:
+  - `SystemExit("Manifest file not found: <path>")`
+
+### Files changed
+
+| File | Change |
+|------|--------|
+| `elis/cli.py` | Catch `FileNotFoundError` in `_load_inputs_from_manifest` and raise controlled `SystemExit` |
+| `tests/test_elis_cli.py` | Add regression test for missing `--from-manifest` file path |
+
+### Validation
+```bash
+python -m pytest -q tests/test_elis_cli.py -k "from_manifest_missing_file or from_manifest_no_usable_paths or merge_reads_inputs_from_manifest"
+# Result: 3 passed
+```
