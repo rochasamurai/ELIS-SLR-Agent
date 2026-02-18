@@ -1,0 +1,5 @@
+$ .\\.venv\\Scripts\\elis validate DOES_NOT_EXIST.json
+ExitCode: 1
+Output:
+Provide both <schema_path> and <json_path>, or neither.
+
