@@ -7,18 +7,19 @@ It is mandatory for all **PEs** targeting the `release/2.0` line.
 - **CODEX** (default: Implementer)
 - **Claude Code** (default: Validator)
 
-> Roles **alternate per PE** unless Carlos explicitly overrides.
+> Roles **alternate per PE** unless the Project Manager (PM) explicitly overrides.
 > Default rotation: CODEX implements odd PEs, Claude Code implements even PEs — or as assigned.
-> Always confirm the current assignment before starting.
+> Always confirm the current assignment with the PM before starting.
 
 ---
 
 ## 0) Glossary (quick)
 
 - **PE**: Planned Execution step in `RELEASE_PLAN_v2.0.md` (e.g., PE0a, PE1a, PE2…)
+- **PM**: Project Manager — orchestrates PE assignments, authorises Validator start, approves merges, and receives all Status Packets.
 - **Implementer**: writes/changes product code + PE handoff documentation
 - **Validator**: verifies acceptance criteria, adds adversarial tests, issues verdict in `REVIEW_PE<N>.md`
-- **Status Packet**: the standard evidence bundle required in every agent update to Carlos
+- **Status Packet**: the standard evidence bundle required in every agent update to the PM (Section 6)
 - **Worktree**: a separate working directory for a branch (prevents checkout conflicts and cross‑PE contamination)
 - **Scope gate**: running `git diff --name-status origin/release/2.0..HEAD` before every commit to verify no unrelated files crept in
 
@@ -53,10 +54,10 @@ Before starting any work on a PE, every agent MUST read:
 ### 2.3 File ownership
 - **Implementer owns:** all PE code, `HANDOFF.md`, non-test deliverables declared in the PE.
 - **Validator owns:** `REVIEW_PE<N>.md`, adversarial tests, minimal scope‑safe fixes **only if strictly required** to satisfy acceptance criteria.
-- Neither agent modifies files owned by the other without explicit instructions from Carlos.
+- Neither agent modifies files owned by the other without explicit instructions from the PM.
 
 ### 2.4 Evidence‑first reporting (no "trust me")
-- Every agent update to Carlos MUST include the **Status Packet** (Section 6).
+- Every agent update to the PM MUST include the **Status Packet** (Section 6).
 - If a claim is not supported by pasted command output, it is not considered done.
 
 ### 2.5 Atomic session boundaries — commit before ending
@@ -73,6 +74,15 @@ Before starting any work on a PE, every agent MUST read:
   ```
 - Check drift: `git merge-base origin/release/2.0 HEAD` — if this returns the tip of `release/2.0`, the branch is current.
 
+### 2.7 HANDOFF.md committed before PR is opened
+- `HANDOFF.md` is an Implementer deliverable and must be committed on the feature branch **before** `git push` and PR creation.
+- Opening a PR without a committed `HANDOFF.md` is a workflow violation. The PR must arrive complete in one push.
+
+### 2.8 Validator does not self-start
+- The Validator **waits for explicit PM authorisation** before beginning validation.
+- The PM assigns the Validator after receiving the Implementer's Status Packet (§5.1 step 9).
+- A Validator who starts without PM assignment is out of role.
+
 ---
 
 ## 3) Recommended practice: use git worktrees for active PEs
@@ -84,9 +94,11 @@ Worktrees prevent:
 - agent collisions on shared files (e.g., `HANDOFF.md` / `REVIEW_PE<N>.md`).
 
 ### 3.2 When to use
-Use a worktree when **two or more PEs are active in parallel**, or when:
-- a PE has an open PR and may need follow‑up fixes,
+Worktrees are **required** when **two or more PEs are active in parallel**, or when:
+- a PE has an open PR and may need follow‑up fixes while another PE is in progress,
 - Implementer and Validator are working concurrently on different branches.
+
+A single active PE with no parallel work may use a standard checkout instead.
 
 ### 3.3 Worktree rule
 **Each active PE branch must have its own worktree folder.**
@@ -121,10 +133,12 @@ git worktree list
 ### 4.1 Branch naming
 Use one of:
 - `feature/pe<id>-<short-scope>` (e.g., `feature/pe4-dedup`)
-- `chore/<topic>` for non‑PE housekeeping (only if authorised)
+- `hotfix/pe<id>-<short-scope>` for post-merge corrective fixes
+- `chore/<topic>` for non‑PE housekeeping (only if authorised by PM)
 
 ### 4.2 PR title format
 - `feat(pe4): deterministic dedup + clusters (elis dedup)`
+- `fix(pe6): archive validate_json.py + fix elis-validate.yml trigger`
 - `chore(audit): Claude Code workflow audit report`
 
 ### 4.3 PR creation
@@ -144,8 +158,16 @@ EOF
 
 ### 5.1 Implementer workflow (CODEX unless rotated)
 
-1. **Preflight**: paste Status Packet to Carlos before starting.
-2. `git fetch origin && git checkout -b feature/pe<N>-<scope> origin/release/2.0`
+1. **Preflight — before any work begins:**
+   - Read all canonical references (Section 1).
+   - Confirm your role assignment for this PE with the PM.
+   - Paste the opening Status Packet to the PM. No work starts before the PM acknowledges.
+2. Rebase onto current `release/2.0`:
+   ```bash
+   git fetch origin
+   git rebase origin/release/2.0   # on any existing branch, or:
+   git checkout -b feature/pe<N>-<scope> origin/release/2.0
+   ```
 3. Implement **only** the PE acceptance criteria (no unrelated changes).
 4. **Pre-commit scope gate** (run before every `git commit`):
    ```bash
@@ -163,24 +185,61 @@ EOF
    - complete changed-file list
    - design decisions
    - acceptance criteria checklist (PASS/FAIL for each)
-   - exact validation commands and their output
-7. **Session-end check**: `git status -sb` must be clean.
-8. Push branch + open PR to `release/2.0`.
-9. Deliver Status Packet to Carlos + ask Validator to proceed.
+   - exact validation commands and their output (pasted verbatim — not paraphrased)
+7. **Session-end check**: `git status -sb` must be clean before any push.
+8. Push branch + open PR to `release/2.0`. (`HANDOFF.md` must already be committed — see §2.7.)
+9. Deliver Status Packet to PM + explicitly ask PM to assign the Validator.
+
+> **PM gate:** PM receives Status Packet, reviews it, and explicitly assigns the Validator.
+> Validator does not start without this assignment.
+
+---
 
 ### 5.2 Validator workflow (Claude Code unless rotated)
 
-1. **Refuse if Status Packet is missing.** Do not begin without it.
-2. Read `HANDOFF.md` and verify scope: `git diff --name-status origin/release/2.0..HEAD` must match declared files.
-3. Validate each acceptance criterion **verbatim** from `RELEASE_PLAN_v2.0.md`. No substitutions.
-4. Add adversarial tests covering:
+1. **Wait for PM assignment.** Do not begin without explicit PM authorisation (§2.8).
+2. **Refuse if Status Packet is missing.** Notify PM and wait for a complete packet.
+3. Read `HANDOFF.md` and verify scope:
+   ```bash
+   git diff --name-status origin/release/2.0..HEAD
+   ```
+   Output must match the files declared in `HANDOFF.md`. Any mismatch is a blocking finding.
+4. Validate each acceptance criterion **verbatim** from `RELEASE_PLAN_v2.0.md`. No substitutions.
+5. Add adversarial tests covering:
    - schema rejection cases (missing fields, wrong types, boundary values)
    - determinism / idempotence
    - invalid inputs / edge cases specific to the PE
-5. Run full quality gates (Section 6.3).
-6. Write verdict in `REVIEW_PE<N>.md` using the standard format (Section 9).
-7. Push validation commits to the **same branch** (validator-owned files only).
-8. Deliver verdict + Status Packet to Carlos using the standard format (Section 9).
+6. Run full quality gates (Section 6.3).
+7. Write verdict in `REVIEW_PE<N>.md` using the standard format (Section 9).
+8. If any newly discovered pre-existing defect is not already in §11, add it now.
+9. Push validation commits to the **same branch** (validator-owned files only: `REVIEW_PE<N>.md` + adversarial tests).
+10. Deliver verdict + Status Packet to PM using the standard format (Section 9).
+
+> **PM gate:** PM receives verdict. If PASS → PM merges. If FAIL → PM assigns Implementer to fix (§5.3).
+
+---
+
+### 5.3 Iteration loop (FAIL → fix → re-validate)
+
+When the Validator issues a FAIL verdict:
+
+**Implementer:**
+1. Read `REVIEW_PE<N>.md` on the same branch.
+2. Implement only the "Required fixes (blocking)" items — no scope creep.
+3. Re-run scope gate and quality gates (§5.1 steps 4–5).
+4. Update `HANDOFF.md`: mark fixed criteria PASS, paste new gate outputs.
+5. Commit to the same branch (do not open a new PR).
+6. Deliver updated Status Packet to PM + ask PM to re-assign the Validator.
+
+> **PM gate:** PM receives updated Status Packet, reviews it, and re-assigns the Validator.
+
+**Validator:**
+1. Re-read `REVIEW_PE<N>.md` and `HANDOFF.md` to confirm fixes address all blocking findings.
+2. Re-run full quality gates.
+3. Update `REVIEW_PE<N>.md` with a new dated verdict section (do not overwrite prior findings).
+4. Push to same branch. Deliver updated verdict + Status Packet to PM.
+
+Repeat until verdict is PASS. If more than two iterations occur, the PM may call an audit (§7).
 
 ---
 
@@ -188,7 +247,7 @@ EOF
 
 Paste command outputs exactly (no paraphrase). Run from the relevant worktree.
 
-### 6.1 Working‑tree state (new — catches uncommitted work)
+### 6.1 Working‑tree state (catches uncommitted work)
 ```bash
 git status -sb
 git diff --name-status
@@ -229,10 +288,11 @@ gh pr view <PR_NUMBER>
 ## 7) Audit feature (AUDITS.md)
 
 ### 7.1 When audits run
-Triggered by Carlos when:
+Triggered by the PM when:
 - repeated checkout conflicts occur,
 - PR scope contamination is detected,
 - agent role boundaries are breached,
+- more than two FAIL/fix iterations occur on a single PE,
 - or at major milestones.
 
 ### 7.2 What audits produce
@@ -253,13 +313,16 @@ See `AUDITS.md` for the full audit spec and report templates.
 - Do not declare PASS without pasted gate outputs.
 - Do not leave uncommitted implementation files when ending a session.
 - Do not open a PR without running the pre-commit scope gate first.
+- Do not open a PR before `HANDOFF.md` is committed on the branch (§2.7).
 - Do not start on a PE without rebasing onto the current `origin/release/2.0`.
+- Do not self-start as Validator without explicit PM assignment (§2.8).
+- Do not paraphrase command output — paste it verbatim in the Status Packet.
 
 ---
 
-## 9) Standard verdict and orchestrator update format
+## 9) Standard verdict and PM update format
 
-Every agent update to Carlos — whether an interim progress report or a final verdict — must use this format.
+Every agent update to the PM — whether an interim progress report or a final verdict — must use this format.
 
 ```
 ## Agent update — <AGENT_NAME> / <PE_ID> / <date>
@@ -275,7 +338,7 @@ Base: release/2.0
 ### Gate results
 black: PASS / FAIL
 ruff:  PASS / FAIL
-pytest: N passed, M failed (M pre-existing in tests/test_cli.py — not this PE)
+pytest: N passed, M failed (M pre-existing — not this PE)
 PE-specific tests: N/N passed
 
 ### Scope (diff vs release/2.0)
@@ -301,6 +364,7 @@ Validation verdicts are written to **per-PE files** rather than a single overwri
 - Location: repo root
 - Owned by: Validator
 - Written once per PE; never overwritten by a subsequent PE
+- On re-validation after a FAIL, **append** a new dated section — do not overwrite prior findings.
 
 The root `REVIEW.md` is retained as a pointer to the most recent validation for quick reference.
 
@@ -312,11 +376,61 @@ Pre-existing issues that are tracked but do not block current PEs:
 
 | Defect | File | Introduced | Blocking? | Owner |
 |--------|------|-----------|-----------|-------|
-| 10 tests using stale `search`/`screen` CLI contract | `tests/test_cli.py` | PE0b | No — must fix before PE6 | CODEX |
 | `datetime.utcnow()` deprecation warnings | `elis/pipeline/screen.py` | Pre-v2.0 | No | TBD |
 
 **Rule:** Any new PE that touches `elis/cli.py` must update `tests/test_cli.py` to stay current.
-Any validator who finds a new pre-existing defect not in this table must add it here.
+Any Validator who finds a new pre-existing defect not in this table must add it here (§5.2 step 8).
+
+---
+
+## 12) Enforcement mechanisms
+
+Text instructions alone cannot guarantee compliance. The following structural controls enforce the workflow without relying on agent discipline.
+
+### 12.1 Tier 1 — Automated (cannot be bypassed)
+
+**Branch protection on `release/2.0`** _(configure in GitHub → Settings → Branches)_:
+- All CI status checks must pass before merge is allowed.
+- At least 1 approving review (PM) required.
+- Direct pushes blocked — PRs only.
+
+**Currently active CI checks** (`.github/workflows/ci.yml`):
+- `python -m black --check .` — formatting gate.
+- `python -m ruff check .` — lint gate.
+- `python -m pytest -q` — full test suite.
+
+**Planned CI checks** _(not yet implemented — add to `ci.yml`)_:
+- HANDOFF.md presence and section check: verify that `HANDOFF.md` contains required
+  headers (`## Summary`, `## Files Changed`, `## Acceptance Criteria`, `## Validation Commands`)
+  before merge is allowed.
+
+**Planned: pre-commit hooks** (`.pre-commit-config.yaml`) _(not yet implemented)_:
+- Run black, ruff, and pytest on every local `git commit`.
+- Prevents "fix later" drift between commits and the final push.
+
+### 12.2 Tier 2 — Structural prompting (reduces drift)
+
+**PR template** (`.github/pull_request_template.md`) — _active_:
+Every PR opens with a pre-filled Status Packet skeleton. The PM can verify at a glance
+whether all required fields are present before authorising merge.
+
+**`CLAUDE.md` for Claude Code** _(planned — not yet implemented)_:
+Critical workflow rules — "update HANDOFF.md before opening PR", "Status Packet mandatory
+before any work", "wait for PM assignment before validating" — duplicated in `CLAUDE.md`,
+which is always loaded into Claude Code's system prompt and survives context compression.
+
+**`HANDOFF.md` fill-in template** _(planned — not yet implemented)_:
+A template file (`docs/templates/HANDOFF_template.md`) with all required sections
+pre-populated. Implementers copy it rather than writing from memory.
+
+### 12.3 Tier 3 — Human checkpoints
+
+**PM gates (two explicit decision points per PE):**
+1. **Before Validator starts** — PM receives Implementer Status Packet and explicitly assigns Validator.
+2. **Before merge** — PM receives Validator verdict and Status Packet. Merge only on explicit GO.
+
+**Audit trigger** (§7): Any workflow deviation observed by any party triggers an audit report.
+The record creates accountability and a pattern log across PEs.
 
 ---
 
