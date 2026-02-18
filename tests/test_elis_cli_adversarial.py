@@ -328,24 +328,24 @@ class TestLegacyDelegation:
 
     def test_legacy_main_system_exit_zero(self) -> None:
         """Legacy main raising SystemExit(0) → return 0."""
-        with patch("scripts.validate_json.main", side_effect=SystemExit(0)):
+        with patch("scripts._archive.validate_json.main", side_effect=SystemExit(0)):
             code = cli.main(["validate"])
         assert code == 0
 
     def test_legacy_main_system_exit_nonzero(self) -> None:
         """Legacy main raising SystemExit(1) → return 1."""
-        with patch("scripts.validate_json.main", side_effect=SystemExit(1)):
+        with patch("scripts._archive.validate_json.main", side_effect=SystemExit(1)):
             code = cli.main(["validate"])
         assert code == 1
 
     def test_legacy_main_system_exit_none(self) -> None:
         """Legacy main raising SystemExit(None) → return 0."""
-        with patch("scripts.validate_json.main", side_effect=SystemExit(None)):
+        with patch("scripts._archive.validate_json.main", side_effect=SystemExit(None)):
             code = cli.main(["validate"])
         assert code == 0
 
     def test_legacy_main_normal_return(self) -> None:
         """Legacy main returning normally → return 0."""
-        with patch("scripts.validate_json.main"):
+        with patch("scripts._archive.validate_json.main"):
             code = cli.main(["validate"])
         assert code == 0

@@ -20,9 +20,9 @@ def _assert_run_manifest(path: Path) -> None:
 
 
 def test_validate_without_paths_calls_legacy_main() -> None:
-    """Wrapper mode should delegate to scripts.validate_json.main."""
+    """Wrapper mode should delegate to scripts._archive.validate_json.main."""
     with (
-        patch("scripts.validate_json.main") as legacy_main,
+        patch("scripts._archive.validate_json.main") as legacy_main,
         patch("elis.cli.emit_run_manifest"),
     ):
         code = cli.main(["validate"])

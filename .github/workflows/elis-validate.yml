@@ -23,7 +23,8 @@ on:
     paths:
       - 'json_jsonl/**'
       - 'schemas/**'
-      - 'scripts/validate_json.py'
+      - 'elis/**'
+      - 'scripts/_archive/validate_json.py'
       - '.github/workflows/elis-validate.yml'
       # IMPORTANT: do NOT include 'validation_reports/**' here (prevents loops)
 

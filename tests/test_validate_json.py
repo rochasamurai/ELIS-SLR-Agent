@@ -4,7 +4,7 @@ Tests for validate_json.py validator.
 
 import json
 import pytest
-from scripts.validate_json import (
+from scripts._archive.validate_json import (
     load_json_file,
     load_schema,
     validate_records,
@@ -370,7 +370,7 @@ class TestMain:
             schema_file.write_text(json.dumps(schema), encoding="utf-8")
 
         # Import and run main - it calls sys.exit(0)
-        from scripts.validate_json import main
+        from scripts._archive.validate_json import main
 
         # Expect sys.exit(0) for successful validation
         with pytest.raises(SystemExit) as excinfo:
@@ -396,7 +396,7 @@ class TestMain:
         (tmp_path / "schemas").mkdir()
         (tmp_path / "validation_reports").mkdir()
 
-        from scripts.validate_json import main
+        from scripts._archive.validate_json import main
 
         # Should exit gracefully even with missing files
         with pytest.raises(SystemExit) as excinfo:
