@@ -63,7 +63,7 @@ def _resolve_merge_inputs(args: argparse.Namespace) -> list[str]:
 
 def _run_validate(args: argparse.Namespace) -> int:
     """Run legacy validation via a thin wrapper for PE0a."""
-    from scripts.validate_json import (
+    from scripts._archive.validate_json import (
         main as legacy_main,
         validate_appendix,
     )
