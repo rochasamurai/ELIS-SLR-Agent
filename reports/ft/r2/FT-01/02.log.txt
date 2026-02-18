@@ -1,0 +1,23 @@
+$ .\\.venv\\Scripts\\elis harvest --help
+ExitCode: 0
+Output:
+usage: elis harvest [-h] [--search-config SEARCH_CONFIG]
+                    [--tier {testing,pilot,benchmark,production,exhaustive}]
+                    [--max-results MAX_RESULTS] [--output OUTPUT]
+                    source
+
+positional arguments:
+  source                Source to harvest from (e.g. openalex, crossref,
+                        scopus)
+
+options:
+  -h, --help            show this help message and exit
+  --search-config SEARCH_CONFIG
+                        Path to search configuration YAML
+  --tier {testing,pilot,benchmark,production,exhaustive}
+                        Max-results tier
+  --max-results MAX_RESULTS
+                        Override max_results regardless of config or tier
+  --output OUTPUT       Output file path (default:
+                        json_jsonl/ELIS_Appendix_A_Search_rows.json)
+

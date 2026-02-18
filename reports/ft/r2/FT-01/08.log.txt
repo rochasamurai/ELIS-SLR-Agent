@@ -1,0 +1,16 @@
+$ .\\.venv\\Scripts\\elis agentic asta enrich --help
+ExitCode: 0
+Output:
+usage: elis agentic asta enrich [-h] --input INPUT_PATH --run-id RUN_ID
+                                [--output OUTPUT] [--config CONFIG_PATH]
+                                [--limit LIMIT]
+
+options:
+  -h, --help            show this help message and exit
+  --input INPUT_PATH    Input records file (JSON/JSONL)
+  --run-id RUN_ID       Run identifier
+  --output OUTPUT       Optional output path (default under
+                        runs/<run_id>/agentic/asta/)
+  --config CONFIG_PATH  Path to ASTA config
+  --limit LIMIT         Snippet limit per record (default: 20)
+
