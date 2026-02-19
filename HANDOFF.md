@@ -463,3 +463,20 @@ All checks passed!
 python -m pytest -q
 439 passed, 17 warnings in 9.63s
 ```
+
+## Hotfix — hotfix/pe3-manifest-input-path — 2026-02-19
+
+### Summary
+Fix `_load_inputs_from_manifest` to use `output_path` instead of `input_paths` for harvest manifests.
+
+### Files Changed
+- `elis/cli.py` — removed `input_paths` branch; use `output_path` exclusively
+- `tests/test_elis_cli.py` — updated error message assertions; added regression test
+
+### Root cause
+Harvest manifests set `input_paths` to the search config YAML (harvest input), not the records JSON.
+The merge command consumed the YAML path and crashed with JSONDecodeError.
+
+### Acceptance Criteria
+- `elis merge --from-manifest <harvest_manifest>` resolves to `output_path` -> PASS
+- All tests pass -> PASS (440 passed)
