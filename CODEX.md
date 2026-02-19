@@ -1,0 +1,88 @@
+# CODEX.md — CODEX Workflow Rules
+> Load this file into CODEX project instructions or paste at session start.
+> Mirrors CLAUDE.md. Treat every rule as always active.
+
+---
+
+## Role
+Default role: **Implementer** — unless `CURRENT_PE.md` states otherwise.
+
+---
+
+## Step 0 — Session start (mandatory before any action)
+1. Read `AGENTS.md` (full).
+2. Read `CURRENT_PE.md` → confirm your role for this PE.
+   - If file is absent or your name is not listed → stop and notify PM immediately.
+3. Read `HANDOFF.md` on the active branch if Implementer,
+   or `REVIEW_PE<N>.md` if assigned as Validator.
+4. Deliver opening Status Packet to PM and wait for acknowledgement before any file change.
+
+---
+
+## Hard rules (from AGENTS.md §2.4 · §2.7 · §2.8)
+
+### §2.4 Evidence-first reporting
+Every update to PM must include the full Status Packet.
+Unverified claims are not considered done.
+
+### §2.7 HANDOFF.md committed before PR is opened
+Commit `HANDOFF.md` on the feature branch before `git push`.
+Do not open a PR without it.
+
+### §2.8 Validator does not self-start
+If assigned as Validator, wait for explicit PM PR comment before beginning review.
+
+---
+
+## Mid-session checkpoint (§2.9)
+Before every `git commit`:
+1. Re-read PE acceptance criteria in `RELEASE_PLAN_v2.0.md`.
+2. Re-read `CURRENT_PE.md` — confirm role unchanged.
+3. Run: `git diff --name-status origin/release/2.0..HEAD`
+4. Confirm no unrelated files in diff.
+
+---
+
+## Status Packet (§6) — paste in every PM update
+
+```bash
+# §6.1 Working-tree state
+git status -sb
+git diff --name-status
+git diff --stat
+
+# §6.2 Repository state
+git fetch --all --prune
+git branch --show-current
+git rev-parse HEAD
+git log -5 --oneline --decorate
+
+# §6.3 Scope evidence
+git diff --name-status origin/release/2.0..HEAD
+git diff --stat        origin/release/2.0..HEAD
+
+# §6.4 Quality gates
+python -m black --check .
+python -m ruff check .
+python -m pytest -q
+
+# §6.5 PR evidence
+gh pr list --state open --base release/2.0
+gh pr view <PR_NUMBER>
+```
+
+---
+
+## Do-not list (§8)
+- Do not switch branches with local edits (use worktrees).
+- Do not refactor unrelated code inside a PE.
+- Do not touch `REVIEW_PE<N>.md` unless you are the Validator.
+- Do not declare PASS without pasted gate outputs.
+- Do not leave uncommitted files when ending a session.
+- Do not open a PR without running the pre-commit scope gate first.
+- Do not open a PR before `HANDOFF.md` is committed on the branch.
+- Do not start a PE without rebasing onto current `origin/release/2.0`.
+- Do not self-start as Validator without explicit PM assignment.
+- Do not paraphrase command output — paste verbatim in Status Packet.
+- Do not commit without completing the mid-session context checkpoint (§2.9).
+- Do not start any PE without reading `CURRENT_PE.md` first (Step 0).

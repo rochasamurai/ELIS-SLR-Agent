@@ -7,9 +7,11 @@ It is mandatory for all **PEs** targeting the `release/2.0` line.
 - **CODEX** (default: Implementer)
 - **Claude Code** (default: Validator)
 
-> Roles **alternate per PE** unless the Project Manager (PM) explicitly overrides.
-> Default rotation: CODEX implements odd PEs, Claude Code implements even PEs — or as assigned.
-> Always confirm the current assignment with the PM before starting.
+> Role assignment is structural, not advisory.
+> Every agent reads `CURRENT_PE.md` at repo root as Step 0 to determine its role for the current PE.
+> If `CURRENT_PE.md` is absent or the agent's name is not listed, the agent must stop immediately and notify PM.
+> The PM edits and commits `CURRENT_PE.md` to `release/2.0` before any PE begins.
+> The PM retains full override authority by editing `CURRENT_PE.md` at any time.
 
 ---
 
@@ -29,6 +31,7 @@ It is mandatory for all **PEs** targeting the `release/2.0` line.
 
 Before starting any work on a PE, every agent MUST read:
 
+0. `CURRENT_PE.md` (authoritative role assignment for the active PE)
 1. `docs/_active/RELEASE_PLAN_v2.0.md` (authoritative plan + acceptance criteria)
 2. `AGENTS.md` (this file — workflow rules)
 3. `AUDITS.md` (audit expectations)
@@ -83,6 +86,14 @@ Before starting any work on a PE, every agent MUST read:
 - The PM assigns the Validator after receiving the Implementer's Status Packet (§5.1 step 9).
 - Assignment may be issued as a short PR comment (for example: `@claude-code — assigned as Validator. Begin review.`).
 - A Validator who starts without PM assignment is out of role.
+
+### 2.9 Mid-session context checkpoint
+Before every `git commit`, the active agent must:
+1. Re-read the PE acceptance criteria in `RELEASE_PLAN_v2.0.md`.
+2. Re-read `CURRENT_PE.md` to confirm its role has not changed.
+3. Run the scope gate: `git diff --name-status origin/release/2.0..HEAD`
+4. Confirm no unrelated files appear in the diff.
+Only then proceed with the commit.
 
 ---
 
@@ -323,6 +334,8 @@ See `AUDITS.md` for the full audit spec and report templates.
 - Do not start on a PE without rebasing onto the current `origin/release/2.0`.
 - Do not self-start as Validator without explicit PM assignment (§2.8).
 - Do not paraphrase command output — paste it verbatim in the Status Packet.
+- Do not commit without completing the mid-session context checkpoint (§2.9).
+- Do not start any PE without reading `CURRENT_PE.md` first (Step 0).
 
 ---
 
@@ -443,3 +456,4 @@ The record creates accountability and a pattern log across PEs.
 ---
 
 End of AGENTS.md
+

@@ -203,3 +203,61 @@ Addresses FT-03 failure in qualification r3 where `elis merge --from-manifest` e
 python -m pytest -q tests/test_elis_cli.py -k "merge_from_manifest_missing_file_raises_system_exit or merge_from_manifest_no_usable_paths_raises or merge_from_manifest_wrong_stage_raises_system_exit or merge_reads_inputs_from_manifest"
 # Result: 4 passed
 ```
+
+---
+
+## PE-INFRA-02 — Role Registration Mechanism
+
+## Summary
+Implemented structural role registration for active PEs with a root `CURRENT_PE.md` authority file, persistent agent rule anchors (`CLAUDE.md`, `CODEX.md`), AGENTS workflow updates, and automated role-consistency checks.
+
+## Files Changed
+- `CURRENT_PE.md` (new)
+- `AGENTS.md` (role assignment model update; added §2.9; updated §8)
+- `CLAUDE.md` (new)
+- `CODEX.md` (new)
+- `scripts/check_role_registration.py` (new)
+
+## Design Decisions
+- `CURRENT_PE.md` is the source of truth for current PE role assignment.
+- `scripts/check_role_registration.py` is stdlib-only and supports `CURRENT_PE_PATH` env override for adversarial checks.
+- Role parsing validates both required agent names and exactly one valid role each (`Implementer`/`Validator`).
+
+## Acceptance Criteria
+- [x] AC-1: `CURRENT_PE.md` created with required structure/content.
+- [x] AC-2: `AGENTS.md` updated in targeted sections only (§0/§1 Step 0/§2.9/§8).
+- [x] AC-3: `CLAUDE.md` created and verified (<=120 lines).
+- [x] AC-4: `CODEX.md` created and do-not list aligned with `CLAUDE.md`.
+- [x] AC-5: `scripts/check_role_registration.py` created with env-path override and adversarial tests.
+
+## Validation Commands
+```bash
+python scripts/check_role_registration.py
+CURRENT_PE.md OK — role registration valid.
+```
+
+```bash
+Move-Item CURRENT_PE.md CURRENT_PE.md.bak; python scripts/check_role_registration.py; $code=$LASTEXITCODE; Move-Item CURRENT_PE.md.bak CURRENT_PE.md; exit $code
+ERROR: CURRENT_PE.md not found.
+```
+
+```bash
+$tmp = Join-Path $env:TEMP 'CURRENT_PE_bad.md'; (Get-Content -Raw CURRENT_PE.md).Replace('Validator','Implementer') | Set-Content $tmp; $env:CURRENT_PE_PATH=$tmp; python scripts/check_role_registration.py; $code=$LASTEXITCODE; Remove-Item Env:CURRENT_PE_PATH; Remove-Item $tmp; exit $code
+ERROR: Both agents have the same role. Roles must differ.
+```
+
+```bash
+python -m black --check .
+All done! ✨ 🍰 ✨
+97 files would be left unchanged.
+```
+
+```bash
+python -m ruff check .
+All checks passed!
+```
+
+```bash
+python -m pytest -q
+439 passed, 17 warnings in 8.80s
+```
