@@ -261,3 +261,182 @@ All checks passed!
 python -m pytest -q
 439 passed, 17 warnings in 8.80s
 ```
+
+---
+
+## PE-INFRA-03 — Release-plan Agnostic Workflow
+
+## Summary
+Implemented PE-INFRA-03 so workflow control files no longer hardcode a specific release branch or plan filename.
+`CURRENT_PE.md` now carries release context and is used as the runtime source for base branch and plan file references.
+
+## Files Changed
+- `CURRENT_PE.md` (replaced with canonical release-context template)
+- `AGENTS.md` (hardcoded release references replaced with `CURRENT_PE.md`-driven instructions)
+- `CLAUDE.md` (hardcoded release references removed)
+- `CODEX.md` (hardcoded release references removed)
+- `scripts/check_role_registration.py` (release-context field validation checks added)
+- `HANDOFF.md` (this PE-INFRA-03 section appended)
+
+## Design Decisions
+CURRENT_PE.md is the single source of truth for all release-specific values.
+All other workflow files are now release-agnostic. To move to v3.0, the PM
+edits only CURRENT_PE.md — no other workflow file requires changes.
+
+## Acceptance Criteria
+- [x] AC-1: `CURRENT_PE.md` extended with Release context table and populated values.
+- [x] AC-2: `AGENTS.md` hardcoded release references replaced; zero hits for `release/2.0` and `RELEASE_PLAN_v2.0.md`.
+- [x] AC-3: `CLAUDE.md` and `CODEX.md` hardcoded release references removed; do-not lists remain identical.
+- [x] AC-4: `scripts/check_role_registration.py` validates release context fields and catches missing/empty values.
+
+## Validation Commands
+### Pre-edit grep evidence (as requested)
+```bash
+rg -n "release/2\.0" AGENTS.md
+4:It is mandatory for all **PEs** targeting the `release/2.0` line.
+13:> The PM edits and commits `CURRENT_PE.md` to `release/2.0` before any PE begins.
+26:- **Scope gate**: running `git diff --name-status origin/release/2.0..HEAD` before every commit to verify no unrelated files crept in
+45:- Every PE is implemented on its own feature branch created from `release/2.0`.
+46:- The PR base is `release/2.0` unless the release plan explicitly states otherwise.
+72:### 2.6 Rebase after every `release/2.0` merge
+73:- After any PR is merged to `release/2.0`, every active feature branch **must be rebased** before continuing:
+76:  git rebase origin/release/2.0
+78:- Check drift: `git merge-base origin/release/2.0 HEAD` — if this returns the tip of `release/2.0`, the branch is current.
+94:3. Run the scope gate: `git diff --name-status origin/release/2.0..HEAD`
+158:gh pr create --base release/2.0 --head <branch> --title "feat(pe<N>): ..." --body "$(cat <<'EOF'
+177:2. Rebase onto current `release/2.0`:
+180:   git rebase origin/release/2.0   # on any existing branch, or:
+181:   git checkout -b feature/pe<N>-<scope> origin/release/2.0
+186:   git diff --name-status origin/release/2.0..HEAD
+202:8. Push branch + open PR to `release/2.0`. (`HANDOFF.md` must already be committed — see §2.7.)
+218:   git diff --name-status origin/release/2.0..HEAD
+283:### 6.3 Scope evidence (against `origin/release/2.0`)
+285:git diff --name-status origin/release/2.0..HEAD
+286:git diff --stat        origin/release/2.0..HEAD
+299:gh pr list --state open --base release/2.0
+334:- Do not start on a PE without rebasing onto the current `origin/release/2.0`.
+355:Base: release/2.0
+363:### Scope (diff vs release/2.0)
+413:**Branch protection on `release/2.0`** _(configure in GitHub → Settings → Branches)_:
+
+rg -n "RELEASE_PLAN_v2\.0\.md" AGENTS.md
+20:- **PE**: Planned Execution step in `RELEASE_PLAN_v2.0.md` (e.g., PE0a, PE1a, PE2…)
+35:1. `docs/_active/RELEASE_PLAN_v2.0.md` (authoritative plan + acceptance criteria)
+92:1. Re-read the PE acceptance criteria in `RELEASE_PLAN_v2.0.md`.
+221:4. Validate each acceptance criterion **verbatim** from `RELEASE_PLAN_v2.0.md`. No substitutions.
+
+rg -n "docs/_active/" AGENTS.md
+35:1. `docs/_active/RELEASE_PLAN_v2.0.md` (authoritative plan + acceptance criteria)
+
+rg -n "release/2\.0|RELEASE_PLAN_v2\.0\.md" CLAUDE.md
+42:1. Re-read PE acceptance criteria in `RELEASE_PLAN_v2.0.md`.
+44:3. Run: `git diff --name-status origin/release/2.0..HEAD`
+68:git diff --name-status origin/release/2.0..HEAD
+69:git diff --stat        origin/release/2.0..HEAD
+81:gh pr list --state open --base release/2.0
+95:- Do not start a PE without rebasing onto current `origin/release/2.0`.
+
+rg -n "release/2\.0|RELEASE_PLAN_v2\.0\.md" CODEX.md
+39:1. Re-read PE acceptance criteria in `RELEASE_PLAN_v2.0.md`.
+41:3. Run: `git diff --name-status origin/release/2.0..HEAD`
+61:git diff --name-status origin/release/2.0..HEAD
+62:git diff --stat        origin/release/2.0..HEAD
+70:gh pr list --state open --base release/2.0
+84:- Do not start a PE without rebasing onto current `origin/release/2.0`.
+```
+
+### AC-1 field verification
+```bash
+rg "Base branch" CURRENT_PE.md
+| Base branch    | release/2.0                        |
+
+rg "Plan file" CURRENT_PE.md
+| Plan file      | docs/_active/RELEASE_PLAN_v2.0.md  |
+
+rg "Release" CURRENT_PE.md
+## Release context
+| Release        | v2.0                               |
+2. At the start of every new release: update the entire `Release context` table.
+- Step 0: read `Release context` to know the base branch and plan file for this session.
+
+rg "Plan location" CURRENT_PE.md
+| Plan location  | docs/_active/                      |
+```
+
+### Post-edit zero-hit verification
+```bash
+rg -n "release/2\.0" AGENTS.md
+# (no output)
+
+rg -n "RELEASE_PLAN_v2\.0\.md" AGENTS.md
+# (no output)
+
+rg -n "release/2\.0|RELEASE_PLAN_v2\.0\.md" CLAUDE.md
+# (no output)
+
+rg -n "release/2\.0|RELEASE_PLAN_v2\.0\.md" CODEX.md
+# (no output)
+```
+
+### CURRENT_PE.md reference density
+```bash
+rg -n "CURRENT_PE.md" AGENTS.md
+11:> Every agent reads `CURRENT_PE.md` at repo root as Step 0 to determine its role for the current PE.
+12:> If `CURRENT_PE.md` is absent or the agent's name is not listed, the agent must stop immediately and notify PM.
+13:> The PM edits and commits `CURRENT_PE.md` to `<base-branch>` before any PE begins.
+14:> The PM retains full override authority by editing `CURRENT_PE.md` at any time.
+34:0. `CURRENT_PE.md` (authoritative role assignment for the active PE)
+35:1. `CURRENT_PE.md` → read `Plan file` to locate the authoritative plan for this release.
+47:  declared in `CURRENT_PE.md` → `Base branch` field.
+77:  # BASE=$(grep "Base branch" CURRENT_PE.md | awk '{print $NF}')
+95:1. Re-read `CURRENT_PE.md` → locate `Plan file` → re-read the PE acceptance criteria in that file.
+96:2. Re-read `CURRENT_PE.md` to confirm its role has not changed.
+97:3. Run the scope gate: `git diff --name-status origin/$BASE..HEAD` (`BASE` from `CURRENT_PE.md`).
+161:# BASE=$(grep "Base branch" CURRENT_PE.md | awk '{print $NF}')
+183:   # BASE=$(grep "Base branch" CURRENT_PE.md | awk '{print $NF}')
+191:   # BASE=$(grep "Base branch" CURRENT_PE.md | awk '{print $NF}')
+208:8. Push branch + open PR to the base branch declared in `CURRENT_PE.md`. (`HANDOFF.md` must already be committed — see §2.7.)
+224:   # BASE=$(grep "Base branch" CURRENT_PE.md | awk '{print $NF}')
+292:# BASE=$(grep "Base branch" CURRENT_PE.md | awk '{print $NF}')
+307:# BASE=$(grep "Base branch" CURRENT_PE.md | awk '{print $NF}')
+343:- Do not start on a PE without rebasing onto the current `origin/$BASE` (`BASE` from `CURRENT_PE.md`).
+347:- Do not start any PE without reading `CURRENT_PE.md` first (Step 0).
+364:Base: <base-branch-from-CURRENT_PE.md>
+372:### Scope (diff vs <base-branch-from-CURRENT_PE.md>)
+422:**Branch protection on the base branch declared in `CURRENT_PE.md`** _(configure in GitHub → Settings → Branches)_:
+```
+
+### CLAUDE/CODEX do-not list parity
+```bash
+$c = Get-Content CLAUDE.md | Where-Object { $_ -like '- *' }; $x = Get-Content CODEX.md | Where-Object { $_ -like '- *' }; Compare-Object $c $x
+# (no output)
+```
+
+### check_role_registration.py adversarial tests
+```bash
+python scripts/check_role_registration.py
+CURRENT_PE.md OK — role registration valid.
+```
+
+```bash
+$tmp = Join-Path $env:TEMP 'CURRENT_PE_nobase.md'; $lines = Get-Content CURRENT_PE.md | Where-Object { $_ -notmatch '^\| Base branch' }; Set-Content $tmp $lines; $env:CURRENT_PE_PATH=$tmp; python scripts/check_role_registration.py; $code=$LASTEXITCODE; Remove-Item Env:CURRENT_PE_PATH; Remove-Item $tmp; exit $code
+ERROR: Release context field missing: 'Base branch'
+```
+
+```bash
+$tmp = Join-Path $env:TEMP 'CURRENT_PE_emptyplan.md'; $content = Get-Content -Raw CURRENT_PE.md; $bad = [regex]::Replace($content, '\| Plan file\s+\|[^|]+\|', '| Plan file      |                |'); Set-Content $tmp $bad; $env:CURRENT_PE_PATH=$tmp; python scripts/check_role_registration.py; $code=$LASTEXITCODE; Remove-Item Env:CURRENT_PE_PATH; Remove-Item $tmp; exit $code
+ERROR: Release context field 'Plan file' has no value.
+```
+
+### Quality gates
+```bash
+python -m black --check .
+All done! ✨ 🍰 ✨
+97 files would be left unchanged.
+
+python -m ruff check .
+All checks passed!
+
+python -m pytest -q
+439 passed, 17 warnings in 8.80s
+```

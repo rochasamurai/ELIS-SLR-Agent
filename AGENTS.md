@@ -1,7 +1,7 @@
 # Agent Development Guide (AGENTS.md)
 
 This file defines the **two‑agent development workflow** for **ELIS SLR Agent — Release Plan v2.0**.
-It is mandatory for all **PEs** targeting the `release/2.0` line.
+It is mandatory for all **PEs** targeting the `<base-branch>` line.
 
 **Agents**
 - **CODEX** (default: Implementer)
@@ -10,20 +10,20 @@ It is mandatory for all **PEs** targeting the `release/2.0` line.
 > Role assignment is structural, not advisory.
 > Every agent reads `CURRENT_PE.md` at repo root as Step 0 to determine its role for the current PE.
 > If `CURRENT_PE.md` is absent or the agent's name is not listed, the agent must stop immediately and notify PM.
-> The PM edits and commits `CURRENT_PE.md` to `release/2.0` before any PE begins.
+> The PM edits and commits `CURRENT_PE.md` to `<base-branch>` before any PE begins.
 > The PM retains full override authority by editing `CURRENT_PE.md` at any time.
 
 ---
 
 ## 0) Glossary (quick)
 
-- **PE**: Planned Execution step in `RELEASE_PLAN_v2.0.md` (e.g., PE0a, PE1a, PE2…)
+- **PE**: Planned Execution step in `<plan-file>` (e.g., PE0a, PE1a, PE2…)
 - **PM**: Project Manager — orchestrates PE assignments, authorises Validator start, approves merges, and receives all Status Packets.
 - **Implementer**: writes/changes product code + PE handoff documentation
 - **Validator**: verifies acceptance criteria, adds adversarial tests, issues verdict in `REVIEW_PE<N>.md`
 - **Status Packet**: the standard evidence bundle required in every agent update to the PM (Section 6)
 - **Worktree**: a separate working directory for a branch (prevents checkout conflicts and cross‑PE contamination)
-- **Scope gate**: running `git diff --name-status origin/release/2.0..HEAD` before every commit to verify no unrelated files crept in
+- **Scope gate**: running `git diff --name-status origin/<base-branch>..HEAD` before every commit to verify no unrelated files crept in
 
 ---
 
@@ -32,7 +32,8 @@ It is mandatory for all **PEs** targeting the `release/2.0` line.
 Before starting any work on a PE, every agent MUST read:
 
 0. `CURRENT_PE.md` (authoritative role assignment for the active PE)
-1. `docs/_active/RELEASE_PLAN_v2.0.md` (authoritative plan + acceptance criteria)
+1. `CURRENT_PE.md` → read `Plan file` to locate the authoritative plan for this release.
+   Example path format: `<plan-location>/<plan-file>`
 2. `AGENTS.md` (this file — workflow rules)
 3. `AUDITS.md` (audit expectations)
 4. On the PE branch: `HANDOFF.md` (Implementer) **or** `REVIEW_PE<N>.md` (Validator)
@@ -42,8 +43,9 @@ Before starting any work on a PE, every agent MUST read:
 ## 2) Operating rules (hard requirements)
 
 ### 2.1 One PE = one branch = one PR
-- Every PE is implemented on its own feature branch created from `release/2.0`.
-- The PR base is `release/2.0` unless the release plan explicitly states otherwise.
+- Every PE is implemented on its own feature branch created from the base branch
+  declared in `CURRENT_PE.md` → `Base branch` field.
+- The PR base is that same branch unless the release plan explicitly states otherwise.
 - Never mix changes from different PEs on the same branch. If `git diff` shows unrelated files, **stop and split**.
 
 ### 2.2 Clean working tree before any context switch
@@ -69,13 +71,14 @@ Before starting any work on a PE, every agent MUST read:
 - Never leave implementation files as untracked `??` across a session boundary.
 - Stashing across sessions is prohibited; use a WIP commit instead (`git commit -m "wip: ..."`).
 
-### 2.6 Rebase after every `release/2.0` merge
-- After any PR is merged to `release/2.0`, every active feature branch **must be rebased** before continuing:
+### 2.6 Rebase after every `<base-branch>` merge
+- After any PR is merged to `<base-branch>`, every active feature branch **must be rebased** before continuing:
   ```bash
+  # BASE=$(grep "Base branch" CURRENT_PE.md | awk '{print $NF}')
   git fetch origin
-  git rebase origin/release/2.0
+  git rebase origin/$BASE
   ```
-- Check drift: `git merge-base origin/release/2.0 HEAD` — if this returns the tip of `release/2.0`, the branch is current.
+- Check drift: `git merge-base origin/$BASE HEAD` — if this returns the tip of `origin/$BASE`, the branch is current.
 
 ### 2.7 HANDOFF.md committed before PR is opened
 - `HANDOFF.md` is an Implementer deliverable and must be committed on the feature branch **before** `git push` and PR creation.
@@ -89,9 +92,9 @@ Before starting any work on a PE, every agent MUST read:
 
 ### 2.9 Mid-session context checkpoint
 Before every `git commit`, the active agent must:
-1. Re-read the PE acceptance criteria in `RELEASE_PLAN_v2.0.md`.
+1. Re-read `CURRENT_PE.md` → locate `Plan file` → re-read the PE acceptance criteria in that file.
 2. Re-read `CURRENT_PE.md` to confirm its role has not changed.
-3. Run the scope gate: `git diff --name-status origin/release/2.0..HEAD`
+3. Run the scope gate: `git diff --name-status origin/$BASE..HEAD` (`BASE` from `CURRENT_PE.md`).
 4. Confirm no unrelated files appear in the diff.
 Only then proceed with the commit.
 
@@ -155,7 +158,8 @@ Use one of:
 
 ### 4.3 PR creation
 ```bash
-gh pr create --base release/2.0 --head <branch> --title "feat(pe<N>): ..." --body "$(cat <<'EOF'
+# BASE=$(grep "Base branch" CURRENT_PE.md | awk '{print $NF}')
+gh pr create --base $BASE --head <branch> --title "feat(pe<N>): ..." --body "$(cat <<'EOF'
 ## Summary
 ...
 ## Test plan
@@ -174,16 +178,18 @@ EOF
    - Read all canonical references (Section 1).
    - Confirm your role assignment for this PE with the PM.
    - Paste the opening Status Packet to the PM. No work starts before the PM acknowledges.
-2. Rebase onto current `release/2.0`:
+2. Rebase onto current `<base-branch>`:
    ```bash
+   # BASE=$(grep "Base branch" CURRENT_PE.md | awk '{print $NF}')
    git fetch origin
-   git rebase origin/release/2.0   # on any existing branch, or:
-   git checkout -b feature/pe<N>-<scope> origin/release/2.0
+   git rebase origin/$BASE   # on any existing branch, or:
+   git checkout -b feature/pe<N>-<scope> origin/$BASE
    ```
 3. Implement **only** the PE acceptance criteria (no unrelated changes).
 4. **Pre-commit scope gate** (run before every `git commit`):
    ```bash
-   git diff --name-status origin/release/2.0..HEAD
+   # BASE=$(grep "Base branch" CURRENT_PE.md | awk '{print $NF}')
+   git diff --name-status origin/$BASE..HEAD
    # Verify: only PE-scope files appear. If unrelated files show, stop and split.
    ```
 5. Run quality gates:
@@ -199,7 +205,7 @@ EOF
    - acceptance criteria checklist (PASS/FAIL for each)
    - exact validation commands and their output (pasted verbatim — not paraphrased)
 7. **Session-end check**: `git status -sb` must be clean before any push.
-8. Push branch + open PR to `release/2.0`. (`HANDOFF.md` must already be committed — see §2.7.)
+8. Push branch + open PR to the base branch declared in `CURRENT_PE.md`. (`HANDOFF.md` must already be committed — see §2.7.)
 9. Deliver Status Packet to PM + explicitly ask PM to assign the Validator.
    - Preferred channel: include/refresh the Status Packet in the PR body or PR comment.
 
@@ -215,10 +221,11 @@ EOF
 2. **Refuse if Status Packet is missing.** Notify PM and wait for a complete packet.
 3. Read `HANDOFF.md` and verify scope:
    ```bash
-   git diff --name-status origin/release/2.0..HEAD
+   # BASE=$(grep "Base branch" CURRENT_PE.md | awk '{print $NF}')
+   git diff --name-status origin/$BASE..HEAD
    ```
    Output must match the files declared in `HANDOFF.md`. Any mismatch is a blocking finding.
-4. Validate each acceptance criterion **verbatim** from `RELEASE_PLAN_v2.0.md`. No substitutions.
+4. Validate each acceptance criterion **verbatim** from `<plan-file>`. No substitutions.
 5. Add adversarial tests covering:
    - schema rejection cases (missing fields, wrong types, boundary values)
    - determinism / idempotence
@@ -280,10 +287,11 @@ git rev-parse HEAD
 git log -5 --oneline --decorate
 ```
 
-### 6.3 Scope evidence (against `origin/release/2.0`)
+### 6.3 Scope evidence (against `origin/<base-branch>`)
 ```bash
-git diff --name-status origin/release/2.0..HEAD
-git diff --stat        origin/release/2.0..HEAD
+# BASE=$(grep "Base branch" CURRENT_PE.md | awk '{print $NF}')
+git diff --name-status origin/$BASE..HEAD
+git diff --stat        origin/$BASE..HEAD
 ```
 
 ### 6.4 Quality gates
@@ -296,7 +304,8 @@ python -m pytest -q
 
 ### 6.5 PR evidence (if applicable)
 ```bash
-gh pr list --state open --base release/2.0
+# BASE=$(grep "Base branch" CURRENT_PE.md | awk '{print $NF}')
+gh pr list --state open --base $BASE
 gh pr view <PR_NUMBER>
 ```
 
@@ -331,7 +340,7 @@ See `AUDITS.md` for the full audit spec and report templates.
 - Do not leave uncommitted implementation files when ending a session.
 - Do not open a PR without running the pre-commit scope gate first.
 - Do not open a PR before `HANDOFF.md` is committed on the branch (§2.7).
-- Do not start on a PE without rebasing onto the current `origin/release/2.0`.
+- Do not start on a PE without rebasing onto the current `origin/$BASE` (`BASE` from `CURRENT_PE.md`).
 - Do not self-start as Validator without explicit PM assignment (§2.8).
 - Do not paraphrase command output — paste it verbatim in the Status Packet.
 - Do not commit without completing the mid-session context checkpoint (§2.9).
@@ -352,7 +361,7 @@ PASS / FAIL / IN PROGRESS
 ### Branch / PR
 Branch: feature/pe<N>-<scope>
 PR: #NNN (open / merged)
-Base: release/2.0
+Base: <base-branch-from-CURRENT_PE.md>
 
 ### Gate results
 black: PASS / FAIL
@@ -360,7 +369,7 @@ ruff:  PASS / FAIL
 pytest: N passed, M failed (M pre-existing — not this PE)
 PE-specific tests: N/N passed
 
-### Scope (diff vs release/2.0)
+### Scope (diff vs <base-branch-from-CURRENT_PE.md>)
 <paste git diff --name-status output>
 
 ### Required fixes (if FAIL)
@@ -410,7 +419,7 @@ Text instructions alone cannot guarantee compliance. The following structural co
 
 ### 12.1 Tier 1 — Automated (cannot be bypassed)
 
-**Branch protection on `release/2.0`** _(configure in GitHub → Settings → Branches)_:
+**Branch protection on the base branch declared in `CURRENT_PE.md`** _(configure in GitHub → Settings → Branches)_:
 - All CI status checks must pass before merge is allowed.
 - At least 1 approving review (PM) required.
 - Direct pushes blocked — PRs only.
@@ -456,4 +465,5 @@ The record creates accountability and a pattern log across PEs.
 ---
 
 End of AGENTS.md
+
 
