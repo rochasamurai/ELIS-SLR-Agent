@@ -86,9 +86,15 @@ elis harvest scopus --search-config config/searches/electoral_integrity_search.y
 ```
 Validate harvested outputs:
 ```powershell
-python -m elis validate schemas/appendix_a_harvester.schema.json runs/ft/harvest/openalex.json
-python -m elis validate schemas/appendix_a_harvester.schema.json runs/ft/harvest/crossref.json
-python -m elis validate schemas/appendix_a_harvester.schema.json runs/ft/harvest/scopus.json
+# Isolate validate-sidecar manifests from harvest-sidecar manifests used by FT-03.
+New-Item -ItemType Directory -Force -Path runs/ft/harvest_validation | Out-Null
+Copy-Item runs/ft/harvest/openalex.json runs/ft/harvest_validation/openalex.json -Force
+Copy-Item runs/ft/harvest/crossref.json runs/ft/harvest_validation/crossref.json -Force
+Copy-Item runs/ft/harvest/scopus.json runs/ft/harvest_validation/scopus.json -Force
+
+python -m elis validate schemas/appendix_a_harvester.schema.json runs/ft/harvest_validation/openalex.json
+python -m elis validate schemas/appendix_a_harvester.schema.json runs/ft/harvest_validation/crossref.json
+python -m elis validate schemas/appendix_a_harvester.schema.json runs/ft/harvest_validation/scopus.json
 ```
 
 ### FT-03: Merge

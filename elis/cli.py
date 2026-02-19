@@ -42,17 +42,24 @@ def _load_inputs_from_manifest(manifest_path: str) -> list[str]:
     """Read merge input file list from a run manifest."""
     try:
         payload = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise SystemExit(f"Invalid manifest JSON: {manifest_path}") from exc
     except FileNotFoundError as exc:
         raise SystemExit(f"Manifest file not found: {manifest_path}") from exc
     if not isinstance(payload, dict):
-        raise ValueError("Manifest payload must be a JSON object.")
+        raise SystemExit("Manifest payload must be a JSON object.")
+    stage = payload.get("stage")
+    if stage and stage != "harvest":
+        raise SystemExit(
+            f"Manifest stage must be 'harvest' for merge --from-manifest, got: {stage}"
+        )
     inputs = payload.get("input_paths")
     if isinstance(inputs, list) and inputs:
         return [str(item) for item in inputs if str(item).strip()]
     fallback = payload.get("output_path")
     if isinstance(fallback, str) and fallback.strip():
         return [fallback]
-    raise ValueError("Manifest does not contain usable input_paths or output_path.")
+    raise SystemExit("Manifest does not contain usable input_paths or output_path.")
 
 
 def _resolve_merge_inputs(args: argparse.Namespace) -> list[str]:
