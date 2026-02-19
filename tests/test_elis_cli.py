@@ -342,7 +342,7 @@ def test_merge_from_manifest_fallback_to_output_path(tmp_path: Path) -> None:
 
 
 def test_merge_from_manifest_no_usable_paths_raises(tmp_path: Path) -> None:
-    """Manifest with no input_paths and no output_path must raise ValueError."""
+    """Manifest with no usable paths must raise controlled CLI error."""
     manifest = tmp_path / "bad_manifest.json"
     manifest.write_text(
         json.dumps({"input_paths": [], "output_path": "  "}), encoding="utf-8"
@@ -360,12 +360,10 @@ def test_merge_from_manifest_no_usable_paths_raises(tmp_path: Path) -> None:
                 str(tmp_path / "report.json"),
             ]
         )
-    except (ValueError, SystemExit):
-        pass
+    except SystemExit as exc:
+        assert str(exc) == "Manifest does not contain usable input_paths or output_path."
     else:
-        raise AssertionError(
-            "Expected ValueError or SystemExit for unusable manifest paths."
-        )
+        raise AssertionError("Expected SystemExit for unusable manifest paths.")
 
 
 def test_merge_from_manifest_missing_file_raises_system_exit() -> None:
@@ -387,6 +385,34 @@ def test_merge_from_manifest_missing_file_raises_system_exit() -> None:
         assert str(exc) == f"Manifest file not found: {missing}"
     else:
         raise AssertionError("Expected SystemExit for missing --from-manifest path.")
+
+
+def test_merge_from_manifest_wrong_stage_raises_system_exit(tmp_path: Path) -> None:
+    """Manifest stage other than harvest must raise controlled CLI error."""
+    manifest = tmp_path / "validate_manifest.json"
+    manifest.write_text(
+        json.dumps({"stage": "validate", "input_paths": [str(tmp_path / "x.json")]}),
+        encoding="utf-8",
+    )
+    try:
+        cli.main(
+            [
+                "merge",
+                "--from-manifest",
+                str(manifest),
+                "--output",
+                "out.json",
+                "--report",
+                "report.json",
+            ]
+        )
+    except SystemExit as exc:
+        assert (
+            str(exc)
+            == "Manifest stage must be 'harvest' for merge --from-manifest, got: validate"
+        )
+    else:
+        raise AssertionError("Expected SystemExit for non-harvest manifest stage.")
 
 
 def test_screen_dry_run_does_not_emit_manifest(tmp_path: Path) -> None:

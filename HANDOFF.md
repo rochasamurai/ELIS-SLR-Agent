@@ -171,3 +171,35 @@ Addresses FT-01 CLI-contract failure found in qualification r2: `elis merge --fr
 python -m pytest -q tests/test_elis_cli.py -k "from_manifest_missing_file or from_manifest_no_usable_paths or merge_reads_inputs_from_manifest"
 # Result: 3 passed
 ```
+
+---
+
+## Hotfix Changes (PR TBD — `hotfix/pe3-merge-manifest-invalid-content`)
+
+Addresses FT-03 failure in qualification r3 where `elis merge --from-manifest` exited with an unhandled/opaque error for invalid manifest content.
+
+### Root cause
+`_load_inputs_from_manifest()` only handled missing-file paths. Existing manifest files with invalid structure/stage could still fail without a controlled CLI message.
+
+### Fixes
+- Controlled CLI errors in `elis/cli.py` for:
+  - invalid JSON manifest (`Invalid manifest JSON: <path>`)
+  - non-object manifest payload
+  - non-harvest manifest stage
+  - missing usable `input_paths`/`output_path`
+- Added adversarial test for wrong-stage manifest handling.
+- Updated post-release FT plan to isolate FT-02 validation sidecar outputs from FT-03 harvest manifest inputs.
+
+### Files changed
+
+| File | Change |
+|------|--------|
+| `elis/cli.py` | Added controlled `SystemExit` errors for invalid manifest content paths |
+| `tests/test_elis_cli.py` | Added `test_merge_from_manifest_wrong_stage_raises_system_exit`; tightened no-usable-path assertion |
+| `docs/_active/POST_RELEASE_FUNCTIONAL_TEST_PLAN_v2.0.md` | Isolated FT-02 validation paths to avoid manifest filename collision with FT-03 |
+
+### Validation
+```bash
+python -m pytest -q tests/test_elis_cli.py -k "merge_from_manifest_missing_file_raises_system_exit or merge_from_manifest_no_usable_paths_raises or merge_from_manifest_wrong_stage_raises_system_exit or merge_reads_inputs_from_manifest"
+# Result: 4 passed
+```
