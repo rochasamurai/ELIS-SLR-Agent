@@ -3,8 +3,8 @@
 > Maintained by PM. Update at the start of every new PE.
 > Both agents read this file as Step 0 before any work.
 
-PE: PE-INFRA-02
-Branch: feature/pe-infra-02-role-registration
+PE: PE-INFRA-03
+Branch: chore/pe-infra-03-plan-agnostic
 
 | Agent       | Role         |
 |-------------|--------------|
