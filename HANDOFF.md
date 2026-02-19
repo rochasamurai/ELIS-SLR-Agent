@@ -440,3 +440,26 @@ All checks passed!
 python -m pytest -q
 439 passed, 17 warnings in 8.80s
 ```
+
+### Re-validation update (validator finding fix)
+- Fixed `CURRENT_PE.md` branch value mismatch:
+  - from `feature/pe-infra-03-plan-agnostic`
+  - to   `chore/pe-infra-03-plan-agnostic`
+
+```bash
+git status -sb
+## chore/pe-infra-03-plan-agnostic...origin/chore/pe-infra-03-plan-agnostic
+ M CURRENT_PE.md
+```
+
+```bash
+python -m black --check .
+All done! ✨ 🍰 ✨
+97 files would be left unchanged.
+
+python -m ruff check .
+All checks passed!
+
+python -m pytest -q
+439 passed, 17 warnings in 9.63s
+```

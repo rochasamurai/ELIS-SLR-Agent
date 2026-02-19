@@ -22,7 +22,7 @@
 | Field   | Value                                    |
 |---------|------------------------------------------|
 | PE      | PE-INFRA-03                              |
-| Branch  | feature/pe-infra-03-plan-agnostic        |
+| Branch  | chore/pe-infra-03-plan-agnostic          |
 
 ---
 
