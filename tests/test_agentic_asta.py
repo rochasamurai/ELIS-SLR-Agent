@@ -330,3 +330,33 @@ def test_run_enrich_invalid_spans_preserved_in_output(tmp_path: Path) -> None:
     valid_flags = {s["text"]: s["valid"] for s in spans}
     assert valid_flags["auditability study"] is True
     assert valid_flags["hallucinated phrase"] is False
+
+
+def test_asta_missing_adapter_raises_controlled_error(tmp_path: Path) -> None:
+    """If adapter module is unavailable, command should fail with controlled message."""
+    input_path = tmp_path / "input.jsonl"
+    input_path.write_text(
+        json.dumps({"id": "r1", "title": "T", "abstract": ""}) + "\n",
+        encoding="utf-8",
+    )
+
+    with (
+        patch("elis.agentic.asta.AstaMCPAdapter", None),
+        patch(
+            "elis.agentic.asta.importlib.import_module", side_effect=ModuleNotFoundError
+        ),
+    ):
+        try:
+            asta.run_enrich(
+                input_path=str(input_path),
+                run_id="r506",
+                output=str(tmp_path / "out.jsonl"),
+                config_path="DOES_NOT_EXIST.yml",
+                limit=1,
+            )
+        except SystemExit as exc:
+            assert "ASTA adapter unavailable" in str(exc)
+        else:
+            raise AssertionError(
+                "Expected SystemExit when ASTA adapter is unavailable."
+            )

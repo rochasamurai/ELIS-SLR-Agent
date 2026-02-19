@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
-from typing import Sequence
+from typing import Any, Sequence
 
 from elis.manifest import emit_run_manifest, manifest_path_for_output, now_utc_iso
 
@@ -70,11 +70,64 @@ def _resolve_merge_inputs(args: argparse.Namespace) -> list[str]:
     raise SystemExit("Provide --inputs or --from-manifest.")
 
 
+def _build_json_validator(schema: dict[str, Any]):
+    """Select validator class from schema metadata."""
+    from jsonschema import Draft7Validator, Draft202012Validator
+
+    schema_uri = str(schema.get("$schema", ""))
+    if "2020-12" in schema_uri or "2019-09" in schema_uri:
+        return Draft202012Validator(schema)
+    return Draft7Validator(schema)
+
+
+def _validate_json_target(
+    schema_path: Path,
+    json_path: Path,
+) -> tuple[bool, int, list[str]]:
+    """Validate JSON payload against schema for both array and object roots."""
+    try:
+        schema = json.loads(schema_path.read_text(encoding="utf-8"))
+        payload = json.loads(json_path.read_text(encoding="utf-8"))
+    except FileNotFoundError as exc:
+        return False, 0, [f"File not found: {exc}"]
+    except json.JSONDecodeError as exc:
+        return False, 0, [f"Invalid JSON: {exc}"]
+    except Exception as exc:  # pragma: no cover - defensive
+        return False, 0, [f"Unexpected error: {exc}"]
+
+    errors: list[str] = []
+
+    # Legacy behavior for row-based appendices: validate each non-_meta row.
+    if isinstance(payload, list):
+        item_schema = schema.get("items", schema)
+        validator = _build_json_validator(item_schema)
+        rows = [
+            row for row in payload if isinstance(row, dict) and not row.get("_meta")
+        ]
+        for idx, row in enumerate(rows):
+            for err in validator.iter_errors(row):
+                if err.path:
+                    field = ".".join(str(part) for part in err.path)
+                    errors.append(f"row {idx}, field '{field}': {err.message}")
+                else:
+                    errors.append(f"row {idx}: {err.message}")
+        return (len(errors) == 0), len(rows), errors
+
+    # Object/scalar roots (e.g., run_manifest.schema.json) validate as-is.
+    validator = _build_json_validator(schema)
+    for err in validator.iter_errors(payload):
+        if err.path:
+            field = ".".join(str(part) for part in err.path)
+            errors.append(f"field '{field}': {err.message}")
+        else:
+            errors.append(err.message)
+    return (len(errors) == 0), 0, errors
+
+
 def _run_validate(args: argparse.Namespace) -> int:
     """Run legacy validation via a thin wrapper for PE0a."""
     from scripts._archive.validate_json import (
         main as legacy_main,
-        validate_appendix,
     )
 
     started_at = now_utc_iso()
@@ -83,32 +136,32 @@ def _run_validate(args: argparse.Namespace) -> int:
     json_path = args.json_path
 
     if schema_path and json_path:
-        is_valid, count, errors = validate_appendix(
-            "Validation target", Path(json_path), Path(schema_path)
-        )
+        target_path = Path(json_path)
+        is_valid, count, errors = _validate_json_target(Path(schema_path), target_path)
         status = "[OK]" if is_valid else "[ERR]"
-        print(f"{status} Validation target: rows={count} file={Path(json_path).name}")
+        print(f"{status} Validation target: rows={count} file={target_path.name}")
         if errors:
             print("Errors:")
             for error in errors[:10]:
                 print(f"- {error}")
             if len(errors) > 10:
                 print(f"- ... and {len(errors) - 10} more errors")
-        emit_run_manifest(
-            stage="validate",
-            source="system",
-            input_paths=[str(Path(schema_path)), str(Path(json_path))],
-            output_path=str(Path(json_path)),
-            record_count=count,
-            config_payload={
-                "mode": "single",
-                "schema_path": str(Path(schema_path)),
-                "target_path": str(Path(json_path)),
-            },
-            started_at=started_at,
-            finished_at=now_utc_iso(),
-            manifest_path=manifest_path_for_output(Path(json_path)),
-        )
+        if not target_path.name.endswith("_manifest.json"):
+            emit_run_manifest(
+                stage="validate",
+                source="system",
+                input_paths=[str(Path(schema_path)), str(target_path)],
+                output_path=str(target_path),
+                record_count=count,
+                config_payload={
+                    "mode": "single",
+                    "schema_path": str(Path(schema_path)),
+                    "target_path": str(target_path),
+                },
+                started_at=started_at,
+                finished_at=now_utc_iso(),
+                manifest_path=manifest_path_for_output(target_path),
+            )
         return 0
 
     if schema_path or json_path:
@@ -422,11 +475,11 @@ def _run_export_latest(args: argparse.Namespace) -> int:
         dest = export_dir / src.name
         shutil.copy2(src, dest)
         copied += 1
-        print(f"  copied: {src.relative_to(runs_dir)} → {dest}")
+        print(f"  copied: {src.relative_to(runs_dir)} -> {dest}")
 
     # Write LATEST_RUN_ID.txt
     latest_txt.write_text(run_id + "\n", encoding="utf-8")
-    print(f"\n[OK] Exported {copied} file(s) from run {run_id!r} → {export_dir}/")
+    print(f"\n[OK] Exported {copied} file(s) from run {run_id!r} -> {export_dir}/")
     print(f"[OK] LATEST_RUN_ID.txt written: {run_id}")
     return 0
 
