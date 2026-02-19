@@ -21,8 +21,8 @@
 
 | Field   | Value                                    |
 |---------|------------------------------------------|
-| PE      | FT-r4                                    |
-| Branch  | chore/ft-qualification-v2-r4             |
+| PE      | FT-r5                                    |
+| Branch  | chore/ft-qualification-v2-r5             |
 
 ---
 
