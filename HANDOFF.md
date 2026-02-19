@@ -9,6 +9,18 @@ four new CI scripts (check_status_packet.py, check_handoff.py, parse_verdict.py,
 check_agent_scope.py), three secrets isolation artefacts (.agentignore, .env.example,
 .gitignore hardening), and updates to AGENTS.md / CLAUDE.md / CODEX.md.
 
+**r2 fixes (post REVIEW_PE_INFRA_04.md FAIL verdict):**
+- B-1: `parse_verdict.py` — added `REVIEW_FILE` env var override (deterministic selection);
+  verdict matching now tolerates trailing annotations via regex prefix match
+  (e.g. "PASS (with 1 non-blocking warning)" → PASS).
+- B-2: `auto-merge-on-pass.yml` — (a) added "Determine REVIEW file" step using
+  `git diff vs release/2.0 -- 'REVIEW_*.md'`; (b) added "Check PR is mergeable"
+  step that verifies `mergeable_state == 'clean'` (CI green) before auto-merge;
+  (c) added `steps.labels.outputs.veto != 'no-pr'` guard on "Notify PM — FAIL"
+  step to prevent undefined pr_number runtime error.
+- B-3: `ci.yml` — added `secrets-scope-check` job (runs `check_agent_scope.py`
+  on every PR); `add_and_set_status` now depends on this job.
+
 After this PE merges, Gate 1 (Validator assignment) and Gate 2 (auto-merge on PASS)
 are enforced by CI automation. This is the last PE requiring a manual Validator
 assignment request.
@@ -34,6 +46,7 @@ A    scripts/check_agent_scope.py                  (AC-5 Layer 4 — scan for se
 M    AGENTS.md                                     (AC-6 — §2.9 step 5, §2.10, §8 additions, §13)
 M    CLAUDE.md                                     (AC-7 — autonomous gate + secrets sections)
 M    CODEX.md                                      (AC-7 — autonomous gate + secrets sections)
+M    .github/workflows/ci.yml                      (B-3 — secrets-scope-check job added)
 A    HANDOFF.md                                    (this file)
 ```
 
