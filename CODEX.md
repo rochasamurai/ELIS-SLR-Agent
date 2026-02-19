@@ -11,8 +11,10 @@ Default role: **Implementer** — unless `CURRENT_PE.md` states otherwise.
 
 ## Step 0 — Session start (mandatory before any action)
 1. Read `AGENTS.md` (full).
-2. Read `CURRENT_PE.md` → confirm your role for this PE.
-   - If file is absent or your name is not listed → stop and notify PM immediately.
+2. Read `CURRENT_PE.md`:
+   - Confirm your role (`Agent roles` table).
+   - Note `Base branch` and `Plan file` — use these in every git command and plan reference.
+   - If any field is blank or the file is absent → stop and notify PM.
 3. Read `HANDOFF.md` on the active branch if Implementer,
    or `REVIEW_PE<N>.md` if assigned as Validator.
 4. Deliver opening Status Packet to PM and wait for acknowledgement before any file change.
@@ -36,9 +38,9 @@ If assigned as Validator, wait for explicit PM PR comment before beginning revie
 
 ## Mid-session checkpoint (§2.9)
 Before every `git commit`:
-1. Re-read PE acceptance criteria in `RELEASE_PLAN_v2.0.md`.
+1. Re-read `CURRENT_PE.md` → `Plan file` field → re-read PE acceptance criteria in that file.
 2. Re-read `CURRENT_PE.md` — confirm role unchanged.
-3. Run: `git diff --name-status origin/release/2.0..HEAD`
+3. Run: `git diff --name-status origin/$BASE..HEAD`
 4. Confirm no unrelated files in diff.
 
 ---
@@ -58,8 +60,9 @@ git rev-parse HEAD
 git log -5 --oneline --decorate
 
 # §6.3 Scope evidence
-git diff --name-status origin/release/2.0..HEAD
-git diff --stat        origin/release/2.0..HEAD
+# BASE=$(grep "Base branch" CURRENT_PE.md | awk '{print $NF}')
+git diff --name-status origin/$BASE..HEAD
+git diff --stat        origin/$BASE..HEAD
 
 # §6.4 Quality gates
 python -m black --check .
@@ -67,7 +70,8 @@ python -m ruff check .
 python -m pytest -q
 
 # §6.5 PR evidence
-gh pr list --state open --base release/2.0
+# BASE=$(grep "Base branch" CURRENT_PE.md | awk '{print $NF}')
+gh pr list --state open --base $BASE
 gh pr view <PR_NUMBER>
 ```
 
@@ -81,7 +85,7 @@ gh pr view <PR_NUMBER>
 - Do not leave uncommitted files when ending a session.
 - Do not open a PR without running the pre-commit scope gate first.
 - Do not open a PR before `HANDOFF.md` is committed on the branch.
-- Do not start a PE without rebasing onto current `origin/release/2.0`.
+- Do not start a PE without rebasing onto current `origin/$BASE` (`BASE` from `CURRENT_PE.md`).
 - Do not self-start as Validator without explicit PM assignment.
 - Do not paraphrase command output — paste verbatim in Status Packet.
 - Do not commit without completing the mid-session context checkpoint (§2.9).
