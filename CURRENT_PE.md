@@ -21,8 +21,8 @@
 
 | Field   | Value                                    |
 |---------|------------------------------------------|
-| PE      | PE-INFRA-03                              |
-| Branch  | chore/pe-infra-03-plan-agnostic          |
+| PE      | FT-r4                                    |
+| Branch  | chore/ft-qualification-v2-r4             |
 
 ---
 
