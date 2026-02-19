@@ -5,7 +5,7 @@
 **Date:** 2026-02-19
 **Agent:** CODEX
 **Role:** Implementer
-**Branch:** `feature/pe-infra-04-autonomous-secrets`
+**Branch:** `chore/pe-infra-04-autonomous-secrets`
 **Base:** `release/2.0`
 **PR title:** `chore(infra): autonomous agent gates + secrets isolation (PE-INFRA-04)`
 
@@ -100,7 +100,7 @@ git diff --name-status origin/$BASE..HEAD
 ```bash
 BASE=$(grep "Base branch" CURRENT_PE.md | awk '{print $NF}')
 git fetch origin
-git checkout -b feature/pe-infra-04-autonomous-secrets origin/$BASE
+git checkout -b chore/pe-infra-04-autonomous-secrets origin/$BASE
 git status -sb
 ```
 
@@ -124,21 +124,31 @@ automatically. The PM receives a notification but is not a blocking dependency.
 name: Auto-assign Validator
 
 on:
-  pull_request:
-    types: [opened, synchronize]
-    branches-ignore: []
+  workflow_run:
+    # Must match the 'name:' field in ci.yml exactly.
+    workflows: ["ELIS - CI"]
+    types: [completed]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
 
 jobs:
   gate-1:
     name: Verify Status Packet and assign Validator
     runs-on: ubuntu-latest
-    # Only run when all other CI jobs pass
-    needs: []
-    if: github.event.pull_request.base.ref != 'main'
+    # Only run when CI succeeded on a non-main branch PR.
+    if: |
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.head_branch != 'main'
 
     steps:
-      - name: Checkout
+      - name: Checkout PR head
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -146,25 +156,47 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install --break-system-packages -r requirements.txt || true
+        run: pip install -e ".[dev]"
 
-      - name: Verify Status Packet completeness
-        run: python scripts/check_status_packet.py
-        env:
-          PR_BODY: ${{ github.event.pull_request.body }}
-
-      - name: Verify HANDOFF.md present and complete
-        run: python scripts/check_handoff.py
-
-      - name: Verify role registration
-        run: python scripts/check_role_registration.py
-
-      - name: Auto-assign Validator via PR comment
-        if: success()
+      - name: Resolve PR number and body
+        id: pr
         uses: actions/github-script@v7
         with:
           script: |
-            const prNumber = context.payload.pull_request.number;
+            const prs = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              head: `${context.repo.owner}:${context.payload.workflow_run.head_branch}`,
+              state: 'open'
+            });
+            if (prs.data.length === 0) {
+              core.warning('No open PR found for this branch — skipping auto-assign.');
+              core.setOutput('number', '');
+              return;
+            }
+            core.setOutput('number', String(prs.data[0].number));
+            core.setOutput('body', prs.data[0].body || '');
+
+      - name: Verify Status Packet completeness
+        if: steps.pr.outputs.number != ''
+        run: python scripts/check_status_packet.py
+        env:
+          PR_BODY: ${{ steps.pr.outputs.body }}
+
+      - name: Verify HANDOFF.md present and complete
+        if: steps.pr.outputs.number != ''
+        run: python scripts/check_handoff.py
+
+      - name: Verify role registration
+        if: steps.pr.outputs.number != ''
+        run: python scripts/check_role_registration.py
+
+      - name: Auto-assign Validator via PR comment
+        if: success() && steps.pr.outputs.number != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = parseInt('${{ steps.pr.outputs.number }}');
             const body = [
               '## 🤖 Gate 1 — automated',
               '',
@@ -187,11 +219,11 @@ jobs:
             });
 
       - name: Notify PM on failure
-        if: failure()
+        if: failure() && steps.pr.outputs.number != ''
         uses: actions/github-script@v7
         with:
           script: |
-            const prNumber = context.payload.pull_request.number;
+            const prNumber = parseInt('${{ steps.pr.outputs.number }}');
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -254,7 +286,7 @@ jobs:
             const { data: pr } = await github.rest.pulls.list({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              head: context.ref,
+              head: `${context.repo.owner}:${context.ref_name}`,
               state: 'open'
             });
             if (pr.length === 0) { core.setOutput('veto', 'no-pr'); return; }
@@ -369,6 +401,62 @@ python scripts/check_status_packet.py
 export PR_BODY=""
 python scripts/check_status_packet.py
 # Expected: exit 1, "ERROR: PR body is empty."
+```
+
+---
+
+### AC-3b · `scripts/check_handoff.py` — validate HANDOFF.md completeness
+
+Pure Python stdlib. Called by `auto-assign-validator.yml` to ensure HANDOFF.md is present
+and contains all required sections (per AGENTS.md §12.2).
+
+Required sections:
+
+```python
+REQUIRED_SECTIONS = [
+    "## Summary",
+    "## Files Changed",
+    "## Acceptance Criteria",
+    "## Validation Commands",
+]
+```
+
+Logic:
+- Read the path from the `HANDOFF_PATH` env var (default: `HANDOFF.md` at repo root).
+- If the file does not exist → `print("ERROR: HANDOFF.md not found.")` and `exit(1)`.
+- For each missing section → `print(f"Missing section: {section}")` and `exit(1)`.
+- If all present → `print("HANDOFF.md OK — all required sections present.")` and `exit(0)`.
+
+**Adversarial tests — paste all outputs verbatim in HANDOFF.md:**
+
+```bash
+# Test 1 — complete HANDOFF.md
+cat > /tmp/HANDOFF_test.md << 'EOF'
+## Summary
+...
+## Files Changed
+...
+## Acceptance Criteria
+...
+## Validation Commands
+...
+EOF
+HANDOFF_PATH=/tmp/HANDOFF_test.md python scripts/check_handoff.py
+# Expected: exit 0, "HANDOFF.md OK — all required sections present."
+
+# Test 2 — missing section
+cat > /tmp/HANDOFF_test.md << 'EOF'
+## Summary
+...
+## Files Changed
+...
+EOF
+HANDOFF_PATH=/tmp/HANDOFF_test.md python scripts/check_handoff.py
+# Expected: exit 1, "Missing section: ## Acceptance Criteria"
+
+# Test 3 — file not found
+HANDOFF_PATH=/tmp/nonexistent.md python scripts/check_handoff.py
+# Expected: exit 1, "ERROR: HANDOFF.md not found."
 ```
 
 ---
@@ -688,7 +776,7 @@ BASE=$(grep "Base branch" CURRENT_PE.md | awk '{print $NF}')
 git diff --name-status origin/$BASE..HEAD
 ```
 
-Expected files — **only these, nothing else:**
+Expected files — **only these, nothing else (12 files):**
 
 ```
 M    .gitignore
@@ -697,11 +785,13 @@ A    .env.example
 A    .github/workflows/auto-assign-validator.yml
 A    .github/workflows/auto-merge-on-pass.yml
 A    scripts/check_status_packet.py
+A    scripts/check_handoff.py
 A    scripts/check_agent_scope.py
 A    scripts/parse_verdict.py
 M    AGENTS.md
 M    CLAUDE.md
 M    CODEX.md
+A    HANDOFF.md
 ```
 
 ---
@@ -738,14 +828,14 @@ Under `## Design Decisions`, include:
 BASE=$(grep "Base branch" CURRENT_PE.md | awk '{print $NF}')
 gh pr create \
   --base $BASE \
-  --head feature/pe-infra-04-autonomous-secrets \
+  --head chore/pe-infra-04-autonomous-secrets \
   --title "chore(infra): autonomous agent gates + secrets isolation (PE-INFRA-04)" \
   --body "$(cat <<'EOF'
 ### Verdict
 IN PROGRESS
 
 ### Branch / PR
-Branch: feature/pe-infra-04-autonomous-secrets
+Branch: chore/pe-infra-04-autonomous-secrets
 PR: this PR
 Base: release/2.0
 
@@ -783,6 +873,7 @@ Post §6.1–§6.5 and write:
 - [ ] `.github/workflows/auto-assign-validator.yml` — created
 - [ ] `.github/workflows/auto-merge-on-pass.yml` — created
 - [ ] `scripts/check_status_packet.py` — created, stdlib only
+- [ ] `scripts/check_handoff.py` — created, stdlib only, HANDOFF_PATH env override
 - [ ] `scripts/parse_verdict.py` — created, stdlib only, REVIEW_PATH env override
 - [ ] `scripts/check_agent_scope.py` — created, stdlib only
 - [ ] `AGENTS.md` — §2.9 updated, §2.10 added, §8 updated, §13 added
