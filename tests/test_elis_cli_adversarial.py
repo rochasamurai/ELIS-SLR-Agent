@@ -139,9 +139,24 @@ class TestValidateMalformedInput:
     def test_data_not_array(
         self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
     ) -> None:
-        """Data file containing an object (not array) should produce [ERR]."""
+        """Object root should validate when schema root is object."""
         schema = tmp_path / "s.json"
         schema.write_text(json.dumps({"type": "object"}), encoding="utf-8")
+        data = tmp_path / "obj.json"
+        data.write_text(json.dumps({"id": "single"}), encoding="utf-8")
+
+        cli.main(["validate", str(schema), str(data)])
+        out = capsys.readouterr().out
+        assert "[OK]" in out
+
+    def test_object_data_fails_when_schema_requires_array(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """Object root should fail when schema explicitly requires an array root."""
+        schema = tmp_path / "s.json"
+        schema.write_text(
+            json.dumps({"type": "array", "items": {"type": "object"}}), encoding="utf-8"
+        )
         data = tmp_path / "obj.json"
         data.write_text(json.dumps({"id": "single"}), encoding="utf-8")
 

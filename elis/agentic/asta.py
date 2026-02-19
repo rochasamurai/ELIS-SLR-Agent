@@ -5,12 +5,15 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import hashlib
+import importlib
 import json
+import sys
 from pathlib import Path
 from typing import Any
 
 from elis.agentic.evidence import validate_evidence_spans
-from sources.asta_mcp.adapter import AstaMCPAdapter
+
+AstaMCPAdapter = None
 
 DEFAULT_CONFIG = "config/asta_config.yml"
 DEFAULT_DISCOVER_LIMIT = 100
@@ -78,6 +81,31 @@ def _record_id(record: dict[str, Any]) -> str:
     return f"tmp:{digest}"
 
 
+def _resolve_asta_adapter():
+    """Resolve ASTA adapter class lazily with repo-local fallback."""
+    global AstaMCPAdapter
+    if AstaMCPAdapter is not None:
+        return AstaMCPAdapter
+
+    # Editable installs may not include top-level `sources`; fallback to repo root.
+    repo_root = Path(__file__).resolve().parents[2]
+    repo_root_str = str(repo_root)
+    if repo_root_str not in sys.path:
+        sys.path.append(repo_root_str)
+
+    for module_path in ("sources.asta_mcp.adapter", "elis.sources.asta_mcp.adapter"):
+        try:
+            module = importlib.import_module(module_path)
+            AstaMCPAdapter = getattr(module, "AstaMCPAdapter")
+            return AstaMCPAdapter
+        except (ModuleNotFoundError, AttributeError):
+            continue
+
+    raise SystemExit(
+        "ASTA adapter unavailable. Install/configure the ASTA sources package."
+    )
+
+
 def run_discover(
     *,
     query: str,
@@ -96,7 +124,8 @@ def run_discover(
         else "2025-01-31"
     )
 
-    adapter = AstaMCPAdapter(evidence_window_end=window_end, run_id=run_id)
+    adapter_cls = _resolve_asta_adapter()
+    adapter = adapter_cls(evidence_window_end=window_end, run_id=run_id)
     candidates = adapter.search_candidates(query=query, limit=limit)
 
     report = {
@@ -137,7 +166,8 @@ def run_enrich(
         else "2025-01-31"
     )
 
-    adapter = AstaMCPAdapter(evidence_window_end=window_end, run_id=run_id)
+    adapter_cls = _resolve_asta_adapter()
+    adapter = adapter_cls(evidence_window_end=window_end, run_id=run_id)
     records = _read_json_or_jsonl(Path(input_path))
 
     out_path = Path(output) if output else _default_enrich_output(run_id)

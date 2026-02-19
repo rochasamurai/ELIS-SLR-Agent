@@ -290,6 +290,71 @@ def test_validate_explicit_emits_manifest(tmp_path: Path) -> None:
     _assert_run_manifest(tmp_path / "rows_manifest.json")
 
 
+def test_validate_accepts_object_root_schema(tmp_path: Path) -> None:
+    """validate must handle object-root payloads (e.g., run manifests)."""
+    schema_path = tmp_path / "run_manifest.schema.json"
+    schema_path.write_text(
+        Path("schemas/run_manifest.schema.json").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+    manifest_path = tmp_path / "openalex_manifest.json"
+    manifest_path.write_text(
+        json.dumps(
+            {
+                "schema_version": "1.0",
+                "run_id": "r1",
+                "stage": "harvest",
+                "source": "openalex",
+                "commit_sha": "abc1234",
+                "config_hash": "sha256:abc",
+                "started_at": "2026-02-19T00:00:00Z",
+                "finished_at": "2026-02-19T00:00:01Z",
+                "record_count": 1,
+                "input_paths": ["config/search.yml"],
+                "output_path": "runs/ft/harvest/openalex.json",
+                "tool_versions": {"python": "3.14.0"},
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    code = cli.main(["validate", str(schema_path), str(manifest_path)])
+    assert code == 0
+
+
+def test_validate_manifest_input_does_not_emit_double_manifest(tmp_path: Path) -> None:
+    """validate on *_manifest.json should not create *_manifest_manifest.json."""
+    schema_path = tmp_path / "run_manifest.schema.json"
+    schema_path.write_text(
+        Path("schemas/run_manifest.schema.json").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+    manifest_path = tmp_path / "openalex_manifest.json"
+    manifest_path.write_text(
+        json.dumps(
+            {
+                "schema_version": "1.0",
+                "run_id": "r1",
+                "stage": "harvest",
+                "source": "openalex",
+                "commit_sha": "abc1234",
+                "config_hash": "sha256:abc",
+                "started_at": "2026-02-19T00:00:00Z",
+                "finished_at": "2026-02-19T00:00:01Z",
+                "record_count": 1,
+                "input_paths": ["config/search.yml"],
+                "output_path": "runs/ft/harvest/openalex.json",
+                "tool_versions": {"python": "3.14.0"},
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    code = cli.main(["validate", str(schema_path), str(manifest_path)])
+    assert code == 0
+    assert not (tmp_path / "openalex_manifest_manifest.json").exists()
+
+
 # ---------------------------------------------------------------------------
 # Adversarial tests — PE1b (Validator-added)
 # ---------------------------------------------------------------------------
@@ -599,3 +664,28 @@ def test_agentic_asta_enrich_calls_runner(tmp_path: Path) -> None:
         )
     assert code == 0
     run_enrich.assert_called_once()
+
+
+def test_export_latest_uses_ascii_output(tmp_path: Path, capsys) -> None:
+    """export-latest log lines must be ASCII-safe for Windows cp1252 terminals."""
+    runs_dir = tmp_path / "runs"
+    export_dir = tmp_path / "json_jsonl"
+    source_file = runs_dir / "ft" / "merge" / "appendix_a.json"
+    source_file.parent.mkdir(parents=True, exist_ok=True)
+    source_file.write_text("[]", encoding="utf-8")
+
+    code = cli.main(
+        [
+            "export-latest",
+            "--run-id",
+            "ft",
+            "--runs-dir",
+            str(runs_dir),
+            "--export-dir",
+            str(export_dir),
+        ]
+    )
+    assert code == 0
+    captured = capsys.readouterr().out
+    assert "->" in captured
+    assert "→" not in captured

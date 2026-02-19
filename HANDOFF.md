@@ -480,3 +480,103 @@ The merge command consumed the YAML path and crashed with JSONDecodeError.
 ### Acceptance Criteria
 - `elis merge --from-manifest <harvest_manifest>` resolves to `output_path` -> PASS
 - All tests pass -> PASS (440 passed)
+
+---
+
+## Hotfix — FT-r5 blockers B-2/B-3/B-4/B-5 — 2026-02-19
+
+## Summary
+Implements targeted fixes requested by Validator for FT-r5:
+- B-2: `elis validate` now supports object-root JSON payloads (run manifests).
+- B-3: `elis validate` no longer creates `*_manifest_manifest.json` sidecars when validating an existing manifest file.
+- B-4: `export-latest` console output uses ASCII `->` (Windows cp1252-safe).
+- B-5: ASTA adapter import is now lazy with fallback resolution and controlled failure messaging.
+
+## Files Changed
+- `elis/cli.py`
+- `elis/agentic/asta.py`
+- `tests/test_elis_cli.py`
+- `tests/test_elis_cli_adversarial.py`
+- `tests/test_agentic_asta.py`
+
+## Acceptance Criteria
+- [x] B-2 fixed: object-root manifest validation returns `[OK]` and exit 0.
+- [x] B-3 fixed: validating `*_manifest.json` does not generate `*_manifest_manifest.json`.
+- [x] B-4 fixed: `elis export-latest --run-id ft` no longer crashes on Unicode arrow.
+- [x] B-5 fixed: ASTA import no longer fails at module import with `ModuleNotFoundError: sources`.
+
+## Validation Commands
+```bash
+python -m black --check .
+All done! ✨ 🍰 ✨
+97 files would be left unchanged.
+```
+
+```bash
+python -m ruff check .
+All checks passed!
+```
+
+```bash
+python -m pytest -q -p no:cacheprovider
+445 passed, 17 warnings in 13.43s
+```
+
+```bash
+.\.venv\Scripts\elis.exe export-latest --run-id ft
+  copied: ft\dedup\appendix_a_deduped.json -> json_jsonl\appendix_a_deduped.json
+  copied: ft\dedup\appendix_a_deduped_fuzzy.json -> json_jsonl\appendix_a_deduped_fuzzy.json
+  copied: ft\dedup\dedup_report.json -> json_jsonl\dedup_report.json
+  copied: ft\dedup\dedup_report_fuzzy.json -> json_jsonl\dedup_report_fuzzy.json
+  copied: ft\determinism\dedup_1.json -> json_jsonl\dedup_1.json
+  copied: ft\determinism\dedup_1_report.json -> json_jsonl\dedup_1_report.json
+  copied: ft\determinism\dedup_2.json -> json_jsonl\dedup_2.json
+  copied: ft\determinism\dedup_2_report.json -> json_jsonl\dedup_2_report.json
+  copied: ft\determinism\merge_1.json -> json_jsonl\merge_1.json
+  copied: ft\determinism\merge_1_report.json -> json_jsonl\merge_1_report.json
+  copied: ft\determinism\merge_2.json -> json_jsonl\merge_2.json
+  copied: ft\determinism\merge_2_report.json -> json_jsonl\merge_2_report.json
+  copied: ft\harvest\crossref.json -> json_jsonl\crossref.json
+  copied: ft\harvest\openalex.json -> json_jsonl\openalex.json
+  copied: ft\harvest\scopus.json -> json_jsonl\scopus.json
+  copied: ft\harvest_validation\crossref.json -> json_jsonl\crossref.json
+  copied: ft\harvest_validation\openalex.json -> json_jsonl\openalex.json
+  copied: ft\harvest_validation\scopus.json -> json_jsonl\scopus.json
+  copied: ft\merge\appendix_a.json -> json_jsonl\appendix_a.json
+  copied: ft\merge\from_manifest_appendix_a.json -> json_jsonl\from_manifest_appendix_a.json
+  copied: ft\merge\from_manifest_report.json -> json_jsonl\from_manifest_report.json
+  copied: ft\merge\merge_report.json -> json_jsonl\merge_report.json
+  copied: ft\merge\override_appendix_a.json -> json_jsonl\override_appendix_a.json
+  copied: ft\merge\override_report.json -> json_jsonl\override_report.json
+  copied: ft\screen\appendix_b_decisions.json -> json_jsonl\appendix_b_decisions.json
+  copied: ft\screen\appendix_b_decisions_policy.json -> json_jsonl\appendix_b_decisions_policy.json
+  copied: ft\dedup\collisions.jsonl -> json_jsonl\collisions.jsonl
+  copied: ft\dedup\collisions_fuzzy.jsonl -> json_jsonl\collisions_fuzzy.jsonl
+  copied: ft\determinism\dedup_1_duplicates.jsonl -> json_jsonl\dedup_1_duplicates.jsonl
+  copied: ft\determinism\dedup_2_duplicates.jsonl -> json_jsonl\dedup_2_duplicates.jsonl
+
+[OK] Exported 30 file(s) from run 'ft' -> json_jsonl/
+[OK] LATEST_RUN_ID.txt written: ft
+```
+
+```bash
+.\.venv\Scripts\python.exe -m elis validate schemas/run_manifest.schema.json runs/ft/harvest/openalex_manifest.json
+[OK] Validation target: rows=0 file=openalex_manifest.json
+```
+
+```bash
+New-Item -ItemType Directory -Force -Path runs/ft_fix/harvest | Out-Null
+Copy-Item runs/ft/harvest/openalex_manifest.json runs/ft_fix/harvest/openalex_manifest.json -Force
+.\.venv\Scripts\python.exe -m elis validate schemas/run_manifest.schema.json runs/ft_fix/harvest/openalex_manifest.json
+[OK] Validation target: rows=0 file=openalex_manifest.json
+Get-ChildItem runs/ft_fix/harvest -Filter *_manifest_manifest.json | Select-Object -ExpandProperty FullName
+# (no output)
+```
+
+```bash
+.\.venv\Scripts\elis.exe agentic asta discover --help
+usage: elis agentic asta discover [-h] --query QUERY --run-id RUN_ID
+                                  [--output OUTPUT] [--config CONFIG_PATH]
+                                  [--limit LIMIT]
+...
+```
