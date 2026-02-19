@@ -37,6 +37,11 @@ Wait for explicit PM authorisation before beginning validation.
 PM assigns via PR comment: `@claude-code — assigned as Validator. Begin review.`
 Starting without this assignment is an out-of-role violation.
 
+### §5.2 Validator verdict delivery (two forms, always, before replying in chat)
+1. **PR comment** on the active PR — verdict summary, blocking findings, required fixes.
+2. **Formal GitHub PR review** — `approve` for PASS, `request-changes` for FAIL.
+A chat reply without both PR deliverables is an incomplete verdict.
+
 ---
 
 ## Mid-session checkpoint (§2.9)
@@ -92,6 +97,7 @@ gh pr view <PR_NUMBER>
 - Do not switch branches with local edits (use worktrees).
 - Do not refactor unrelated code inside a PE.
 - Do not touch `REVIEW_PE<N>.md` unless you are the Validator.
+- Do not deliver a verdict only in chat — always post PR comment + formal review first.
 - Do not declare PASS without pasted gate outputs.
 - Do not leave uncommitted files when ending a session.
 - Do not open a PR without running the pre-commit scope gate first.
