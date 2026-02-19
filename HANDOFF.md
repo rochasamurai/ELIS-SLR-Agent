@@ -9,6 +9,12 @@ four new CI scripts (check_status_packet.py, check_handoff.py, parse_verdict.py,
 check_agent_scope.py), three secrets isolation artefacts (.agentignore, .env.example,
 .gitignore hardening), and updates to AGENTS.md / CLAUDE.md / CODEX.md.
 
+**r3 fix (post re-validation FAIL verdict):**
+- B-4: `parse_verdict.py` — verdict extraction loop no longer `break`s on first
+  `### Verdict` match; now scans entire file and keeps the last occurrence.
+  This ensures Gate 2 reads the most recent Validator decision when a REVIEW file
+  has multiple appended sections (AGENTS.md §5.2 iterative re-validation pattern).
+
 **r2 fixes (post REVIEW_PE_INFRA_04.md FAIL verdict):**
 - B-1: `parse_verdict.py` — added `REVIEW_FILE` env var override (deterministic selection);
   verdict matching now tolerates trailing annotations via regex prefix match
@@ -106,7 +112,35 @@ python -m ruff check .
 → All checks passed!
 
 python -m pytest
-→ 445 passed, 17 warnings in 5.68s
+→ 445 passed, 17 warnings in 5.77s
+```
+
+### B-4: parse_verdict.py last-verdict adversarial tests
+
+```
+-- Test 1: single FAIL verdict (exit 0, verdict=FAIL expected) --
+review_file=<tmp>.md
+verdict=FAIL
+Verdict: FAIL (file: <tmp>.md)
+Exit: 0
+
+-- Test 2: FAIL first, PASS last (exit 0, verdict=PASS expected) --
+review_file=<tmp>.md
+verdict=PASS
+Verdict: PASS (file: <tmp>.md)
+Exit: 0
+
+-- Test 3: PASS first, FAIL last (exit 0, verdict=FAIL expected) --
+review_file=<tmp>.md
+verdict=FAIL
+Verdict: FAIL (file: <tmp>.md)
+Exit: 0
+
+-- Test 4: FAIL first, annotated PASS last (exit 0, verdict=PASS expected) --
+review_file=<tmp>.md
+verdict=PASS
+Verdict: PASS (file: <tmp>.md)
+Exit: 0
 ```
 
 ### check_agent_scope.py on clean worktree

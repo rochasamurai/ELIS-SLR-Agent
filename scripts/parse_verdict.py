@@ -68,6 +68,7 @@ def main() -> int:
 
     lines = review_file.read_text(encoding="utf-8").splitlines()
 
+    # Scan all sections; keep the last match (iterative re-validations append new sections).
     verdict_line = None
     for i, line in enumerate(lines):
         if line.strip() == "### Verdict":
@@ -76,7 +77,6 @@ def main() -> int:
                 if candidate:
                     verdict_line = candidate
                     break
-            break
 
     if verdict_line is None:
         print("ERROR: Verdict field missing or unrecognised.")
