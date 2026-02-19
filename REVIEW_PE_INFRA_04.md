@@ -55,3 +55,58 @@ NO — blocking findings above must be fixed.
 
 ### Next
 Implementer (Claude Code): fix the 3 blocking items on this same branch, update HANDOFF with fresh evidence, push, and request re-validation.
+
+---
+
+## Agent update — CODEX / PE-INFRA-04 / 2026-02-19 (Re-validation)
+
+### Verdict
+FAIL
+
+### Branch / PR
+Branch: chore/pe-infra-04-autonomous-secrets
+PR: #255 (open)
+Base: release/2.0
+
+### Gate results
+black: PASS
+ruff:  PASS
+pytest: 445 passed, 0 failed (17 deprecation warnings, pre-existing)
+PE-specific tests: N/A (infrastructure workflow/scripts)
+
+### Scope (diff vs release/2.0)
+A	.agentignore
+A	.env.example
+A	.github/workflows/auto-assign-validator.yml
+A	.github/workflows/auto-merge-on-pass.yml
+M	.github/workflows/ci.yml
+M	.gitignore
+M	AGENTS.md
+M	CLAUDE.md
+M	CODEX.md
+M	HANDOFF.md
+A	REVIEW_PE_INFRA_04.md
+A	scripts/check_agent_scope.py
+A	scripts/check_handoff.py
+A	scripts/check_status_packet.py
+A	scripts/parse_verdict.py
+
+### Required fixes (if FAIL)
+1. FAIL — `parse_verdict.py` reads the first `### Verdict` block in a review file, not the most recent appended verdict section.
+File: `scripts/parse_verdict.py` (verdict extraction loop)
+Evidence:
+- `REVIEW_PE_INFRA_04.md` now contains an appended re-validation section with PASS.
+- Running with deterministic file targeting still returns FAIL:
+  - `REVIEW_FILE=REVIEW_PE_INFRA_04.md python scripts/parse_verdict.py`
+  - Output: `verdict=FAIL` and `Verdict: FAIL (file: REVIEW_PE_INFRA_04.md)`
+Required fix: when `### Verdict` appears multiple times in one file, parse the last occurrence (latest section), not the first.
+
+### Ready to merge
+NO
+
+### Notes
+Re-validation confirms prior three blocking findings are resolved:
+1. Gate 2 now checks mergeability (`mergeable_state == 'clean'`) before auto-merge.
+2. Verdict parsing now supports deterministic file targeting via `REVIEW_FILE` and accepts verdict prefixes with annotations.
+3. CI now includes `secrets-scope-check` running `python scripts/check_agent_scope.py`.
+However, a new blocker remains: repeated verdict sections in a single REVIEW file still resolve to the first verdict.
