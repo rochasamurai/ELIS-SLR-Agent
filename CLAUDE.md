@@ -44,6 +44,15 @@ A chat reply without both PR deliverables is an incomplete verdict.
 
 ---
 
+## Autonomous gate operation (§2.10)
+Gate 1 (Validator assignment) is posted by CI bot — treat it as PM assignment.
+Gate 2 (merge) is executed by CI bot on PASS verdict + green CI.
+PM veto: `pm-review-required` label on the PR blocks auto-merge.
+Escalate to PM manually only for: scope disputes, >2 FAIL iterations,
+release merges, role rotation, or CI `pm-escalation` flag.
+
+---
+
 ## Mid-session checkpoint (§2.9)
 Before every `git commit`:
 1. Re-read `CURRENT_PE.md` → `Plan file` field → re-read PE acceptance criteria in that file.
@@ -107,3 +116,9 @@ gh pr view <PR_NUMBER>
 - Do not paraphrase command output — paste verbatim in Status Packet.
 - Do not commit without completing the mid-session context checkpoint (§2.9).
 - Do not start any PE without reading `CURRENT_PE.md` first (Step 0).
+
+## Secrets isolation (§13)
+- Read `.agentignore` at Step 0. None of those files may be open or in context.
+- Run `python scripts/check_agent_scope.py` at Step 0 and at every commit.
+- Never print, log, or include secret values in any output.
+- If a secret is detected in context → close file, notify PM, stop.

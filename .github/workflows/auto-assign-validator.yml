@@ -1,0 +1,109 @@
+name: Auto-assign Validator
+
+on:
+  workflow_run:
+    # Must match the 'name:' field in ci.yml exactly.
+    workflows: ["ELIS - CI"]
+    types: [completed]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  gate-1:
+    name: Verify Status Packet and assign Validator
+    runs-on: ubuntu-latest
+    # Only run when CI succeeded on a non-main branch PR.
+    if: |
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.head_branch != 'main'
+
+    steps:
+      - name: Checkout PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -e ".[dev]"
+
+      - name: Resolve PR number and body
+        id: pr
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prs = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              head: `${context.repo.owner}:${context.payload.workflow_run.head_branch}`,
+              state: 'open'
+            });
+            if (prs.data.length === 0) {
+              core.warning('No open PR found for this branch — skipping auto-assign.');
+              core.setOutput('number', '');
+              return;
+            }
+            core.setOutput('number', String(prs.data[0].number));
+            core.setOutput('body', prs.data[0].body || '');
+
+      - name: Verify Status Packet completeness
+        if: steps.pr.outputs.number != ''
+        run: python scripts/check_status_packet.py
+        env:
+          PR_BODY: ${{ steps.pr.outputs.body }}
+
+      - name: Verify HANDOFF.md present and complete
+        if: steps.pr.outputs.number != ''
+        run: python scripts/check_handoff.py
+
+      - name: Verify role registration
+        if: steps.pr.outputs.number != ''
+        run: python scripts/check_role_registration.py
+
+      - name: Auto-assign Validator via PR comment
+        if: success() && steps.pr.outputs.number != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = parseInt('${{ steps.pr.outputs.number }}');
+            const body = [
+              '## 🤖 Gate 1 — automated',
+              '',
+              'All automated checks passed:',
+              '- ✅ Status Packet complete',
+              '- ✅ HANDOFF.md present with all required sections',
+              '- ✅ Role registration valid',
+              '- ✅ CI quality gates green',
+              '',
+              '@claude-code — assigned as Validator. Begin review.',
+              '',
+              '_PM notified. No manual approval required for routine PEs._',
+              '_PM veto: close this PR to block merge._'
+            ].join('\n');
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body
+            });
+
+      - name: Notify PM on failure
+        if: failure() && steps.pr.outputs.number != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = parseInt('${{ steps.pr.outputs.number }}');
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: '## ⚠️ Gate 1 — manual PM review required\n\nAutomated checks did not pass. PM must review and assign Validator manually.'
+            });
