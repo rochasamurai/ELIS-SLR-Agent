@@ -96,7 +96,34 @@ Before every `git commit`, the active agent must:
 2. Re-read `CURRENT_PE.md` to confirm its role has not changed.
 3. Run the scope gate: `git diff --name-status origin/$BASE..HEAD` (`BASE` from `CURRENT_PE.md`).
 4. Confirm no unrelated files appear in the diff.
+5. Run: `python scripts/check_agent_scope.py`
+   If exit code is 1 → stop, close any secret-pattern files, notify PM.
 Only then proceed with the commit.
+
+### 2.10 Autonomous gate operation
+Gate 1 and Gate 2 are enforced by CI automation after PE-INFRA-04.
+
+**Gate 1 (Validator assignment):**
+- CI verifies Status Packet completeness, HANDOFF.md, role registration,
+  and quality gates automatically on every PR push.
+- On success, CI posts the Validator assignment comment. Agents treat this
+  comment as equivalent to a PM assignment.
+- On failure, CI flags the PR for manual PM review. Agents wait.
+
+**Gate 2 (merge):**
+- CI reads the REVIEW file verdict after every push to a feature branch.
+- On PASS + CI green + no `pm-review-required` label → CI merges automatically.
+- On FAIL → CI posts the fix assignment comment to the Implementer.
+- PM retains full veto authority by adding the `pm-review-required` label
+  to any PR at any time.
+
+**PM escalation triggers (unchanged — always require PM):**
+- Scope disputes between agents
+- More than two FAIL/fix iterations (audit trigger, §7)
+- Any release merge (feature branch → base branch is automated;
+  base branch → main always requires PM)
+- Agent role rotation
+- Any CI job that exits with the `pm-escalation` flag
 
 ---
 
@@ -345,6 +372,9 @@ See `AUDITS.md` for the full audit spec and report templates.
 - Do not paraphrase command output — paste it verbatim in the Status Packet.
 - Do not commit without completing the mid-session context checkpoint (§2.9).
 - Do not start any PE without reading `CURRENT_PE.md` first (Step 0).
+- Do not open, read, or reference any file listed in `.agentignore`.
+- Do not include secret values in Status Packets, HANDOFF.md, or any PR content.
+- Do not proceed if `check_agent_scope.py` returns exit code 1.
 
 ---
 
@@ -461,6 +491,39 @@ pre-populated. Implementers copy it rather than writing from memory.
 
 **Audit trigger** (§7): Any workflow deviation observed by any party triggers an audit report.
 The record creates accountability and a pattern log across PEs.
+
+---
+
+## 13) Secrets isolation policy
+
+### 13.1 What agents must never access
+Both CODEX and Claude Code are prohibited from reading, referencing,
+printing, logging, or including in any prompt or output:
+- Any file matching patterns in `.agentignore`
+- Any environment variable containing a credential, token, or key
+- Any value that appears to be a secret (matches patterns: sk-*, ghp_*, xox*, etc.)
+
+### 13.2 Structural controls
+- `.gitignore` excludes all secret-pattern files from version control.
+- `.agentignore` documents forbidden paths explicitly for agent reference.
+- `.env.example` is the only committed env file — contains placeholders only.
+- `scripts/check_agent_scope.py` runs in CI on every PR.
+- IDE context (CODEX Agent mode, Claude Code extension) automatically
+  includes open files — agents must not open secret-pattern files in the editor.
+
+### 13.3 Agent responsibility
+At Step 0 of every session, each agent reads `.agentignore` and confirms
+that none of the listed files are open in the editor or included in context.
+If a secret-pattern file is detected in context, the agent must:
+1. Close the file immediately.
+2. Notify the PM.
+3. Not proceed until the PM confirms the exposure is contained.
+
+### 13.4 What to do if a secret is accidentally exposed
+- Do not include the value in any further output.
+- Notify PM immediately with the file name only (not the value).
+- PM rotates the exposed credential before the session continues.
+- PM adds the incident to the defects register (§11) with status Blocking.
 
 ---
 

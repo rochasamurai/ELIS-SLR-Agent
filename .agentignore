@@ -1,0 +1,25 @@
+# .agentignore — paths agents must never read, reference, or include in context
+# Both CODEX and Claude Code must treat these as forbidden.
+# Any agent that reads a path matching these patterns is in violation.
+
+.env
+.env.*
+!.env.example
+secrets/
+.secrets/
+*.pem
+*.key
+*.p12
+*.pfx
+*.token
+*_credentials.*
+*_secrets.*
+.codex/
+.claude/
+~/.netrc
+~/.ssh/
+~/.aws/credentials
+~/.config/gh/hosts.yml
+GITHUB_TOKEN
+ANTHROPIC_API_KEY
+OPENAI_API_KEY
