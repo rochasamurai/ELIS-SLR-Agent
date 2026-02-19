@@ -361,7 +361,9 @@ def test_merge_from_manifest_no_usable_paths_raises(tmp_path: Path) -> None:
             ]
         )
     except SystemExit as exc:
-        assert str(exc) == "Manifest does not contain usable input_paths or output_path."
+        assert (
+            str(exc) == "Manifest does not contain usable input_paths or output_path."
+        )
     else:
         raise AssertionError("Expected SystemExit for unusable manifest paths.")
 
