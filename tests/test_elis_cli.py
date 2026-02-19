@@ -316,7 +316,7 @@ def test_merge_no_inputs_no_from_manifest_raises() -> None:
 
 
 def test_merge_from_manifest_fallback_to_output_path(tmp_path: Path) -> None:
-    """empty input_paths in manifest → fallback to manifest's output_path."""
+    """merge --from-manifest should use manifest output_path."""
     fallback_file = tmp_path / "fallback.json"
     fallback_file.write_text("[]", encoding="utf-8")
     manifest = tmp_path / "run_manifest.json"
@@ -342,7 +342,7 @@ def test_merge_from_manifest_fallback_to_output_path(tmp_path: Path) -> None:
 
 
 def test_merge_from_manifest_no_usable_paths_raises(tmp_path: Path) -> None:
-    """Manifest with no usable paths must raise controlled CLI error."""
+    """Manifest without usable output_path must raise controlled CLI error."""
     manifest = tmp_path / "bad_manifest.json"
     manifest.write_text(
         json.dumps({"input_paths": [], "output_path": "  "}), encoding="utf-8"
@@ -361,11 +361,45 @@ def test_merge_from_manifest_no_usable_paths_raises(tmp_path: Path) -> None:
             ]
         )
     except SystemExit as exc:
-        assert (
-            str(exc) == "Manifest does not contain usable input_paths or output_path."
-        )
+        assert str(exc) == "Manifest does not contain a usable output_path."
     else:
         raise AssertionError("Expected SystemExit for unusable manifest paths.")
+
+
+def test_merge_from_harvest_manifest_prefers_output_path_over_input_paths(
+    tmp_path: Path,
+) -> None:
+    """Harvest manifest input_paths may be config files; merge must use output_path."""
+    config_path = tmp_path / "search_config.yml"
+    config_path.write_text("topics: []\n", encoding="utf-8")
+    records_path = tmp_path / "records.json"
+    records_path.write_text("[]", encoding="utf-8")
+    manifest = tmp_path / "harvest_manifest.json"
+    manifest.write_text(
+        json.dumps(
+            {
+                "stage": "harvest",
+                "input_paths": [str(config_path)],
+                "output_path": str(records_path),
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    with patch("elis.pipeline.merge.run_merge") as run_merge:
+        code = cli.main(
+            [
+                "merge",
+                "--from-manifest",
+                str(manifest),
+                "--output",
+                str(tmp_path / "out.json"),
+                "--report",
+                str(tmp_path / "report.json"),
+            ]
+        )
+    assert code == 0
+    assert run_merge.call_args[0][0] == [str(records_path)]
 
 
 def test_merge_from_manifest_missing_file_raises_system_exit() -> None:

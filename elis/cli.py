@@ -53,13 +53,12 @@ def _load_inputs_from_manifest(manifest_path: str) -> list[str]:
         raise SystemExit(
             f"Manifest stage must be 'harvest' for merge --from-manifest, got: {stage}"
         )
-    inputs = payload.get("input_paths")
-    if isinstance(inputs, list) and inputs:
-        return [str(item) for item in inputs if str(item).strip()]
-    fallback = payload.get("output_path")
-    if isinstance(fallback, str) and fallback.strip():
-        return [fallback]
-    raise SystemExit("Manifest does not contain usable input_paths or output_path.")
+    # For harvest manifests, output_path is the records file.
+    # input_paths contains search configs (harvest inputs), not records.
+    output_path = payload.get("output_path")
+    if isinstance(output_path, str) and output_path.strip():
+        return [output_path]
+    raise SystemExit("Manifest does not contain a usable output_path.")
 
 
 def _resolve_merge_inputs(args: argparse.Namespace) -> list[str]:
