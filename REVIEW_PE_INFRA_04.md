@@ -110,3 +110,51 @@ Re-validation confirms prior three blocking findings are resolved:
 2. Verdict parsing now supports deterministic file targeting via `REVIEW_FILE` and accepts verdict prefixes with annotations.
 3. CI now includes `secrets-scope-check` running `python scripts/check_agent_scope.py`.
 However, a new blocker remains: repeated verdict sections in a single REVIEW file still resolve to the first verdict.
+
+---
+
+## Agent update — CODEX / PE-INFRA-04 / 2026-02-19 (Re-validation 2)
+
+### Verdict
+PASS
+
+### Branch / PR
+Branch: chore/pe-infra-04-autonomous-secrets
+PR: #255 (open)
+Base: release/2.0
+
+### Gate results
+black: PASS
+ruff:  PASS
+pytest: 445 passed, 0 failed (17 deprecation warnings, pre-existing)
+PE-specific tests: N/A (infrastructure workflow/scripts)
+
+### Scope (diff vs release/2.0)
+A	.agentignore
+A	.env.example
+A	.github/workflows/auto-assign-validator.yml
+A	.github/workflows/auto-merge-on-pass.yml
+M	.github/workflows/ci.yml
+M	.gitignore
+M	AGENTS.md
+M	CLAUDE.md
+M	CODEX.md
+M	HANDOFF.md
+A	REVIEW_PE_INFRA_04.md
+A	scripts/check_agent_scope.py
+A	scripts/check_handoff.py
+A	scripts/check_status_packet.py
+A	scripts/parse_verdict.py
+
+### Required fixes (if FAIL)
+None.
+
+### Ready to merge
+YES
+
+### Notes
+The previously blocking B-4 issue is resolved:
+- `scripts/parse_verdict.py` now parses the latest `### Verdict` section when multiple sections are appended.
+- Verified with adversarial temp review content:
+  - FAIL → PASS (annotated) returns PASS.
+All prior blocking findings (B-1/B-2/B-3) remain resolved.
