@@ -35,6 +35,22 @@ From repo root:
 - Additional:
   - `<command>`
 
+### Evidence
+<!-- At least one fenced code block required in this section. check_review.py will fail if Evidence section is empty. -->
+
+#### Files read
+- `<path>` — <what was checked>
+
+#### Commands run
+```
+<paste command and output here>
+```
+
+#### Key claims verified
+| Claim | Source | Result |
+|-------|--------|--------|
+| <claim> | <file or command output> | PASS / FAIL |
+
 ## Notes / risks
 - <what might break>
 - <what is likely to be flaky>

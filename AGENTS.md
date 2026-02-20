@@ -65,6 +65,14 @@ Before starting any work on a PE, every agent MUST read:
 - Every agent update to the PM MUST include the **Status Packet** (Section 6).
 - If a claim is not supported by pasted command output, it is not considered done.
 
+### 2.4.1 REVIEW file evidence requirement (hard)
+- Every `REVIEW_PE<N>.md` file MUST contain a `### Evidence` section with at least one
+  fenced code block showing actual command output or file content. A verdict without
+  inline evidence is invalid and will be rejected by Gate 2b.
+- The Validator MUST complete all verification steps before writing the `### Verdict`
+  line. Verdict-before-evidence is a workflow violation regardless of the final verdict
+  value.
+
 ### 2.5 Atomic session boundaries — commit before ending
 - **Before ending a work session, `git status -sb` must show a clean tree.**
 - If files remain uncommitted, commit them on the correct branch with a descriptive message before stopping.
@@ -528,5 +536,4 @@ If a secret-pattern file is detected in context, the agent must:
 ---
 
 End of AGENTS.md
-
 

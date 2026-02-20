@@ -107,9 +107,42 @@ jobs:
       - name: Check agent scope (no secret-pattern files in worktree)
         run: python scripts/check_agent_scope.py
 
+  review-evidence-check:
+    name: review-evidence-check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate REVIEW evidence for changed REVIEW files
+        run: |
+          set -e
+          base="${{ github.base_ref }}"
+          if [ -z "$base" ]; then
+            echo "No pull_request base ref available. Skipping review evidence check."
+            exit 0
+          fi
+          git fetch origin "$base" --depth=1
+          review_files="$(git diff --name-only "origin/$base...HEAD" -- 'REVIEW_*.md')"
+          if [ -z "$review_files" ]; then
+            echo "No REVIEW_*.md files changed in this PR. Skipping."
+            exit 0
+          fi
+          for file in $review_files; do
+            echo "Checking REVIEW evidence in $file"
+            REVIEW_FILE="$file" python scripts/check_review.py
+          done
+
   add_and_set_status:
     name: Projects Auto-Add / add_and_set_status
-    needs: [quality, tests, validate, secrets-scope-check]
+    needs: [quality, tests, validate, secrets-scope-check, review-evidence-check]
     runs-on: ubuntu-latest
     if: always()
     steps:
