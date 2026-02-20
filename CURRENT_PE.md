@@ -10,9 +10,9 @@
 
 | Field          | Value                                          |
 |----------------|------------------------------------------------|
-| Release        | v2.0 (post-release infra)                      |
+| Release        | ELIS 2025 SLR bootstrap                        |
 | Base branch    | main                                           |
-| Plan file      | docs/_active/PE-INFRA-05_CODEX_IMPLEMENTER.md  |
+| Plan file      | docs/_active/PE-SLR-01_CODEX_IMPLEMENTER.md    |
 | Plan location  | docs/_active/                                  |
 
 ---
@@ -21,8 +21,8 @@
 
 | Field   | Value                                    |
 |---------|------------------------------------------|
-| PE      | PE-INFRA-05                              |
-| Branch  | chore/pe-infra-05-review-evidence        |
+| PE      | PE-SLR-01                                |
+| Branch  | chore/pe-slr-01-repo-bootstrap           |
 
 ---
 
