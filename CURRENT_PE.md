@@ -8,12 +8,12 @@
 
 ## Release context
 
-| Field          | Value                              |
-|----------------|------------------------------------|
-| Release        | v2.0                               |
-| Base branch    | release/2.0                        |
-| Plan file      | docs/_active/RELEASE_PLAN_v2.0.md  |
-| Plan location  | docs/_active/                      |
+| Field          | Value                                          |
+|----------------|------------------------------------------------|
+| Release        | v2.0 (post-release infra)                      |
+| Base branch    | main                                           |
+| Plan file      | docs/_active/PE-INFRA-05_CODEX_IMPLEMENTER.md  |
+| Plan location  | docs/_active/                                  |
 
 ---
 
@@ -21,8 +21,8 @@
 
 | Field   | Value                                    |
 |---------|------------------------------------------|
-| PE      | FT-r5                                    |
-| Branch  | chore/ft-qualification-v2-r5             |
+| PE      | PE-INFRA-05                              |
+| Branch  | chore/pe-infra-05-review-evidence        |
 
 ---
 
