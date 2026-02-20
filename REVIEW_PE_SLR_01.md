@@ -63,3 +63,64 @@ docs/_active/ELIS_2025_SLR_RUN_AUDIT_CHECKLIST_TEMPLATE.md
 | Security requirements present: no secrets, `.env.example`, secret scanning | SPEC §8, CHECKLIST §F | PASS |
 | Directory structure in spec (§5) matches repo map in README (§3) | Cross-file read | PASS |
 | No security anti-patterns in templates | Full read | PASS |
+
+---
+
+## Agent update — Claude Code / PE-SLR-01 / 2026-02-20 (re-validation)
+
+### Verdict
+PASS
+
+### Gate results
+black: N/A
+ruff: N/A
+pytest: N/A
+
+### Scope
+M .github/workflows/auto-merge-on-pass.yml (+8/-1: IN_PROGRESS guard in Parse verdict step)
+A docs/_active/* (4 SLR docs — unchanged from r1, confirmed)
+
+### Required fixes
+None
+
+### Findings
+
+Non-blocking F3: workflow fix (`3920c6f`) is out of scope for a docs-only PE-SLR-01. Fix is
+correct and safe; no action required. PM may note for audit completeness.
+
+### Evidence
+
+#### Files read
+
+| File | What was checked |
+|------|-----------------|
+| `git show 3920c6f` full diff | Empty-file guard in "Parse verdict" step — logic, GITHUB_OUTPUT format, else branch |
+| `git diff main...origin/chore/pe-slr-01-repo-bootstrap --name-only` | 5 files total confirmed |
+
+#### Commands run
+
+```text
+git show 3920c6f --stat
+ .github/workflows/auto-merge-on-pass.yml | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+```
+
+```text
+git diff main...origin/chore/pe-slr-01-repo-bootstrap --name-only
+.github/workflows/auto-merge-on-pass.yml
+docs/_active/ELIS_2025_SLR_AMENDMENT_LOG_TEMPLATE.md
+docs/_active/ELIS_2025_SLR_README_TEMPLATE.md
+docs/_active/ELIS_2025_SLR_REPO_SPEC.md
+docs/_active/ELIS_2025_SLR_RUN_AUDIT_CHECKLIST_TEMPLATE.md
+```
+
+#### Key claims verified
+
+| Claim | Source | Result |
+|-------|--------|--------|
+| Empty-file guard uses correct shell idiom `[ -z "..." ]` | Diff | PASS |
+| `verdict=IN_PROGRESS` set via GITHUB_OUTPUT when no REVIEW file | Diff lines 47–48 | PASS |
+| `parse_verdict.py` still called in `else` branch | Diff line 50 | PASS |
+| Gate 2b `verdict == 'PASS'` condition unchanged — IN_PROGRESS bypasses merge | Workflow context | PASS |
+| Fix prevents stale REVIEW files triggering auto-merge for unrelated branches | Logic analysis | PASS |
+| 4 SLR docs unchanged from r1 | git show 3920c6f --stat | PASS |
