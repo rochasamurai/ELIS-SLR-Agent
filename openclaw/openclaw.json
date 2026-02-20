@@ -1,17 +1,30 @@
 {
-  "version": "0.2",
+  "version": "0.3",
   "agents": {
     "list": [
       {
         "id": "pm",
-        "role": "project_manager",
-        "workspace": "workspace-pm"
+        "workspace": "workspace-pm",
+        "model": "claude-opus-4-6",
+        "exec": {
+          "ask": true
+        }
       }
     ]
   },
-  "bindings": {
-    "workspace_root": "/app/workspaces",
-    "default_workspace": "workspace-pm"
+  "bindings": [
+    {
+      "agentId": "pm",
+      "match": {
+        "channel": "telegram",
+        "accountId": "po-channel"
+      }
+    }
+  ],
+  "skills": {
+    "hub": {
+      "autoInstall": false
+    }
   },
-  "notes": "PE-OC-01 stub schema aligned to plan. Workspace payloads arrive in PE-OC-02 through PE-OC-05."
+  "notes": "PE-OC-02: pm agent registered with Telegram binding. accountId 'po-channel' is a placeholder — set via 'openclaw pairing approve' during deployment. Worker agents added in PE-OC-03 through PE-OC-05."
 }
