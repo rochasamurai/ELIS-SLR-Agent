@@ -102,22 +102,23 @@ Adversarial smoke tests (Validator-authored, 6/6 PASS):
 
 ---
 
-## Agent update — Claude Code / PE-INFRA-05 / 2026-02-20 (re-validation)
+## Agent update — Claude Code / PE-INFRA-05 / 2026-02-20 (re-validation r2)
 
 ### Verdict
-PASS
+FAIL
 
 ### Gate results
 black: PASS
 ruff: PASS
 pytest: PASS
+CI review-evidence-check: FAIL (exit 128)
 
 ### Scope
 M .github/workflows/auto-merge-on-pass.yml (+1/-1 base-fix, Gate 2b intact)
 M HANDOFF.md (hotfix addendum)
 
 ### Required fixes
-None
+- F1: `ci.yml` `review-evidence-check` uses `git fetch origin "$base" --depth=1` before a three-dot diff. Shallow ref cannot compute merge-base → `fatal: no merge base` → exit 128. Fix: remove `--depth=1` from the fetch.
 
 ### Evidence
 
@@ -167,3 +168,5 @@ python -m pytest   (full suite, from worktree)
 | All original AC deliverables present (ci.yml, template, AGENTS.md, scripts, tests) | git diff --stat | PASS |
 | HANDOFF.md addendum documents scope + re-validation | HANDOFF.md read | PASS |
 | No regressions — 454 passed | pytest rc=0 | PASS |
+| CI `review-evidence-check` passes on PR | GitHub Actions run 22230280881 | **FAIL** |
+| `git fetch --depth=1` + three-dot diff = no merge base | Reproduced locally | CONFIRMED BUG |
