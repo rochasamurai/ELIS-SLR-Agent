@@ -1,0 +1,12 @@
+version: "3.9"
+
+services:
+  openclaw:
+    image: ghcr.io/openclaw/openclaw:latest
+    container_name: openclaw
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:18789:3000"
+    volumes:
+      - ${HOME}/.openclaw:/app/.openclaw:rw
+      - ${HOME}/openclaw/workspace-pm:/app/workspaces/workspace-pm:rw
