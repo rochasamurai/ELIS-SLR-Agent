@@ -28,7 +28,7 @@ jobs:
         run: |
           # Find REVIEW_*.md files that are new or modified on this branch vs base.
           # Uses the branch name published by the push event.
-          base="release/2.0"
+          base=$(gh pr list --head "$GITHUB_REF_NAME" --json baseRefName -q '.[0].baseRefName' 2>/dev/null || echo "main")
           git fetch origin "$base" --depth=1 2>/dev/null || true
           review_file=$(git diff --name-only "origin/$base" -- 'REVIEW_*.md' 2>/dev/null | head -1)
           if [ -z "$review_file" ]; then
@@ -45,6 +45,41 @@ jobs:
         env:
           REVIEW_FILE: ${{ steps.review.outputs.file }}
         # Outputs: verdict=PASS|FAIL|IN_PROGRESS, review_file=REVIEW_PEN.md
+
+      - name: Gate 2b — validate REVIEW evidence
+        id: gate2b
+        if: steps.verdict.outputs.verdict == 'PASS'
+        continue-on-error: true
+        run: python scripts/check_review.py
+        env:
+          REVIEW_FILE: ${{ steps.review.outputs.file }}
+
+      - name: Gate 2b — notify validator to add evidence
+        if: |
+          steps.verdict.outputs.verdict == 'PASS' &&
+          steps.gate2b.outcome == 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: prs } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              head: `${context.repo.owner}:${context.ref_name}`,
+              state: 'open'
+            });
+            if (prs.length === 0) { return; }
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prs[0].number,
+              body: 'Gate 2b — REVIEW file missing evidence section. Validator must update REVIEW file with command outputs before merge.'
+            });
+
+      - name: Gate 2b — fail workflow on missing evidence
+        if: |
+          steps.verdict.outputs.verdict == 'PASS' &&
+          steps.gate2b.outcome == 'failure'
+        run: exit 1
 
       - name: Check for PM veto label
         id: labels
@@ -66,6 +101,7 @@ jobs:
         id: mergeable
         if: |
           steps.verdict.outputs.verdict == 'PASS' &&
+          steps.gate2b.outcome == 'success' &&
           steps.labels.outputs.veto == 'false'
         uses: actions/github-script@v7
         with:
@@ -85,6 +121,7 @@ jobs:
       - name: Auto-merge if PASS, no veto, and CI green
         if: |
           steps.verdict.outputs.verdict == 'PASS' &&
+          steps.gate2b.outcome == 'success' &&
           steps.labels.outputs.veto == 'false' &&
           steps.mergeable.outputs.state == 'clean'
         uses: actions/github-script@v7
@@ -108,6 +145,7 @@ jobs:
       - name: Notify PM — veto label present
         if: |
           steps.verdict.outputs.verdict == 'PASS' &&
+          steps.gate2b.outcome == 'success' &&
           steps.labels.outputs.veto == 'true'
         uses: actions/github-script@v7
         with:
