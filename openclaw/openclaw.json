@@ -1,13 +1,17 @@
 {
-  "version": "0.1",
-  "environment": "local",
-  "workspaces_root": "/app/workspaces",
-  "notes": "Stub config for PE-OC-01. Populate in PE-OC-02+.",
-  "workspaces": [
-    {
-      "id": "workspace-pm",
-      "path": "/app/workspaces/workspace-pm",
-      "status": "scaffold"
-    }
-  ]
+  "version": "0.2",
+  "agents": {
+    "list": [
+      {
+        "id": "pm",
+        "role": "project_manager",
+        "workspace": "workspace-pm"
+      }
+    ]
+  },
+  "bindings": {
+    "workspace_root": "/app/workspaces",
+    "default_workspace": "workspace-pm"
+  },
+  "notes": "PE-OC-01 stub schema aligned to plan. Workspace payloads arrive in PE-OC-02 through PE-OC-05."
 }

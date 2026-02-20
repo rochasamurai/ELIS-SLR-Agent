@@ -140,9 +140,24 @@ jobs:
             REVIEW_FILE="$file" python scripts/check_review.py
           done
 
+  openclaw-health-check:
+    name: openclaw-health-check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Probe OpenClaw endpoint (non-blocking)
+        run: python scripts/check_openclaw_health.py
+
   add_and_set_status:
     name: Projects Auto-Add / add_and_set_status
-    needs: [quality, tests, validate, secrets-scope-check, review-evidence-check]
+    needs: [quality, tests, validate, secrets-scope-check, review-evidence-check, openclaw-health-check]
     runs-on: ubuntu-latest
     if: always()
     steps:
