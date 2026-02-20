@@ -8,12 +8,12 @@
 
 ## Release context
 
-| Field          | Value                                          |
-|----------------|------------------------------------------------|
-| Release        | ELIS 2025 SLR bootstrap                        |
-| Base branch    | main                                           |
-| Plan file      | docs/_active/PE-SLR-01_CODEX_IMPLEMENTER.md    |
-| Plan location  | docs/_active/                                  |
+| Field          | Value                                                      |
+|----------------|------------------------------------------------------------|
+| Release        | OpenClaw Multi-Agent Build Series                          |
+| Base branch    | main                                                       |
+| Plan file      | ELIS_MultiAgent_Implementation_Plan.md                     |
+| Plan location  | repo root                                                  |
 
 ---
 
@@ -21,8 +21,8 @@
 
 | Field   | Value                                    |
 |---------|------------------------------------------|
-| PE      | PE-SLR-01                                |
-| Branch  | chore/pe-slr-01-repo-bootstrap           |
+| PE      | PE-OC-02                                 |
+| Branch  | feature/pe-oc-02-pm-agent-telegram       |
 
 ---
 
@@ -30,8 +30,8 @@
 
 | Agent       | Role        |
 |-------------|-------------|
-| CODEX       | Implementer |
-| Claude Code | Validator   |
+| Claude Code | Implementer |
+| CODEX       | Validator   |
 
 ---
 
