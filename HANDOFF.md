@@ -41,7 +41,7 @@ require a running OpenClaw gateway with valid bot credentials — documented in
 - [x] `AGENTS.md` contains zero implementation or validation rules (AC#4 — verified by content)
 - [x] Only `pm` agentId in `bindings` — all other agents have no channel binding (AC#5 — verified by `openclaw.json`)
 - [ ] AC#1: PO "status" via Telegram → PM Agent responds — requires live OpenClaw (post-deployment)
-- [ ] AC#2: No worker agent IDs in PO-facing messages — verified by `AGENTS.md` §4.3 prohibition + `SOUL.md` authority section
+- [x] AC#2: No worker agent IDs in PO-facing messages — §2.2 assignment template uses engine-only output; §4.3 explicitly prohibits internal agent IDs
 - [ ] AC#3: `openclaw doctor --check dm-policy` exits 0 — requires live OpenClaw (post-deployment)
 
 ## Validation Commands

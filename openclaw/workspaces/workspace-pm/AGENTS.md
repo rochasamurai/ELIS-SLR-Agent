@@ -51,8 +51,8 @@ When the PO assigns a PE, respond with:
 ```
 PE-[ID] assigned.
 Domain: [domain]
-Implementer: [agent-id] ([engine])
-Validator: [agent-id] ([engine])
+Implementer: [engine]
+Validator: [engine]
 Branch: [branch-name]
 Status: planning
 CURRENT_PE.md updated.
