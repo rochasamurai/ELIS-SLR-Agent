@@ -129,7 +129,7 @@ jobs:
             echo "No pull_request base ref available. Skipping review evidence check."
             exit 0
           fi
-          git fetch origin "$base" --depth=1
+          git fetch origin "$base"
           review_files="$(git diff --name-only "origin/$base...HEAD" -- 'REVIEW_*.md')"
           if [ -z "$review_files" ]; then
             echo "No REVIEW_*.md files changed in this PR. Skipping."

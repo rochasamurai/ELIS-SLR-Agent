@@ -142,3 +142,20 @@ Validation rerun:
 - `python -m black --check .` -> PASS
 - `python -m ruff check .` -> PASS
 - `python -m pytest -q` -> 454 passed, 17 warnings (pre-existing deprecation warnings)
+
+## Hotfix Addendum — 2026-02-20 (re-validation round 2)
+
+Scope: blocking Validator finding F1 on PR #259.
+
+- File changed: `.github/workflows/ci.yml` only.
+- Change:
+  - from `git fetch origin "$base" --depth=1`
+  - to `git fetch origin "$base"`
+
+Reason:
+- Three-dot diff (`origin/$base...HEAD`) requires merge-base; shallow base fetch caused `no merge base` (exit 128).
+
+Validation rerun:
+- `python -m black --check .` -> PASS
+- `python -m ruff check .` -> PASS
+- `python -m pytest -q` -> 454 passed, 17 warnings
