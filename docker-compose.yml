@@ -8,5 +8,5 @@ services:
     ports:
       - "127.0.0.1:18789:3000"
     volumes:
-      - /c/Users/carlo/.openclaw:/app/.openclaw:rw
-      - /c/Users/carlo/openclaw/workspace-pm:/app/workspaces/workspace-pm:rw
+      - ${HOME}/.openclaw:/app/.openclaw:rw
+      - ${HOME}/openclaw/workspace-pm:/app/workspaces/workspace-pm:rw

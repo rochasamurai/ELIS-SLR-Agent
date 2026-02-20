@@ -70,6 +70,12 @@ Get-ChildItem -Recurse "openclaw","docs/openclaw","docker-compose.yml","scripts/
 ... check_openclaw_health.py
 ```
 
+## Addendum — NB3 portability fix
+- Replaced hardcoded host volume paths in `docker-compose.yml` with `${HOME}`:
+  - `${HOME}/.openclaw:/app/.openclaw:rw`
+  - `${HOME}/openclaw/workspace-pm:/app/workspaces/workspace-pm:rw`
+- Updated `docs/openclaw/DOCKER_SETUP.md` to document `${HOME}`-based mounts.
+
 ## Status Packet
 
 ### 6.1 Working-tree state

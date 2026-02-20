@@ -16,9 +16,9 @@ Workspace content is intentionally deferred to PE-OC-02 through PE-OC-05.
 
 ## Volume policy
 - ELIS repository paths are **not** mounted into the container.
-- Docker volumes mount from host OpenClaw paths:
-  - `/c/Users/carlo/.openclaw` -> `/app/.openclaw`
-  - `/c/Users/carlo/openclaw/workspace-pm` -> `/app/workspaces/workspace-pm`
+- Docker volumes mount from `${HOME}`-based host OpenClaw paths:
+  - `${HOME}/.openclaw` -> `/app/.openclaw`
+  - `${HOME}/openclaw/workspace-pm` -> `/app/workspaces/workspace-pm`
 
 ## Start OpenClaw
 ```bash
