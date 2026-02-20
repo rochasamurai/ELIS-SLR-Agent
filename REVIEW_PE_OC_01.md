@@ -1,3 +1,55 @@
+## Agent update — Claude Code / PE-OC-01 / 2026-02-20 (re-validation r3)
+
+### Verdict
+PASS
+
+### Gate results
+black: PASS (r2, unchanged)
+ruff: PASS (r2, unchanged)
+pytest: PASS — 454 passed (r2, unchanged)
+
+### Scope
+Unchanged from r2 — 8 files. Single commit `d7a3dbb` modifies only `docker-compose.yml`
+and `HANDOFF.md` (status packet update).
+
+### Required fixes
+None
+
+### Findings
+None. All r1 and r2 findings resolved.
+
+### Evidence
+
+#### Files read
+
+| File | What was checked |
+|------|-----------------|
+| `docker-compose.yml` | Volume path portability — `${HOME}` substitution |
+
+#### Commands run
+
+```text
+git show origin/feature/pe-oc-01-docker-setup:docker-compose.yml
+# → volumes:
+#     - ${HOME}/.openclaw:/app/.openclaw:rw
+#     - ${HOME}/openclaw/workspace-pm:/app/workspaces/workspace-pm:rw
+
+gh api repos/rochasamurai/ELIS-SLR-Agent/compare/main...feature/pe-oc-01-docker-setup \
+  --jq '{ahead_by, behind_by, files: [.files[].filename]}'
+# → ahead_by: 3, behind_by: 1 (1 behind = r2 REVIEW commit on main — normal for squash merge)
+# → files: 8 (unchanged from r2)
+```
+
+#### Key claims verified
+
+| Claim | Source | Result |
+|-------|--------|--------|
+| NB3 resolved: `${HOME}` used for volume paths | `docker-compose.yml` | PASS |
+| Scope unchanged | GitHub compare API | PASS — 8 files |
+| No new findings | Full read | PASS |
+
+---
+
 ## Agent update — Claude Code / PE-OC-01 / 2026-02-20 (re-validation r2)
 
 ### Verdict
