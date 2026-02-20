@@ -1,0 +1,12 @@
+version: "3.9"
+
+services:
+  openclaw:
+    image: openclaw/openclaw:latest
+    container_name: openclaw
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./openclaw/openclaw.json:/app/config/openclaw.json:ro
+      - ./openclaw/workspaces:/app/workspaces

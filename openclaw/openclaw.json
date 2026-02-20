@@ -1,0 +1,13 @@
+{
+  "version": "0.1",
+  "environment": "local",
+  "workspaces_root": "/app/workspaces",
+  "notes": "Stub config for PE-OC-01. Populate in PE-OC-02+.",
+  "workspaces": [
+    {
+      "id": "workspace-pm",
+      "path": "/app/workspaces/workspace-pm",
+      "status": "scaffold"
+    }
+  ]
+}
