@@ -1,0 +1,12 @@
+$ .\\.venv\\Scripts\\elis validate --help
+ExitCode: 0
+Output:
+usage: elis validate [-h] [schema_path] [json_path]
+
+positional arguments:
+  schema_path  Path to JSON schema
+  json_path    Path to JSON data file
+
+options:
+  -h, --help   show this help message and exit
+

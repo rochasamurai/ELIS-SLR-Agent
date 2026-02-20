@@ -1,0 +1,18 @@
+{
+  "total_records": 50,
+  "per_source_counts": {
+    "crossref": 25,
+    "openalex": 25
+  },
+  "doi_coverage_pct": 100.0,
+  "null_field_ratios": {
+    "title": 0.0,
+    "abstract": 0.32,
+    "language": 1.0
+  },
+  "input_files": [
+    "reports\\ft\\r2\\FT-02\\harvest\\openalex.json",
+    "reports\\ft\\r2\\FT-02\\harvest\\crossref.json",
+    "reports\\ft\\r2\\FT-02\\harvest\\scopus.json"
+  ]
+}

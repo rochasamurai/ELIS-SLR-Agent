@@ -1,0 +1,17 @@
+$ .\\.venv\\Scripts\\elis merge --help
+ExitCode: 0
+Output:
+usage: elis merge [-h] [--inputs INPUTS [INPUTS ...]]
+                  [--from-manifest FROM_MANIFEST] [--output OUTPUT]
+                  [--report REPORT]
+
+options:
+  -h, --help            show this help message and exit
+  --inputs INPUTS [INPUTS ...]
+                        Input JSON/JSONL files to merge
+  --from-manifest FROM_MANIFEST
+                        Run manifest path to read input_paths from (used when
+                        --inputs is omitted)
+  --output OUTPUT       Merged Appendix A output file path
+  --report REPORT       Merge report output path
+

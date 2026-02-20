@@ -1,0 +1,57 @@
+$ python -m venv .venv
+ExitCode: 0
+Output:
+
+`n$ .\.venv\Scripts\python -m pip install -U pip
+ExitCode: 0
+Output:
+Requirement already satisfied: pip in .\.venv\Lib\site-packages (26.0.1)
+
+`n$ .\.venv\Scripts\python -m pip install -e ".[dev]"
+ExitCode: 0
+Output:
+Obtaining file:///C:/Users/carlo/ELIS-SLR-Agent
+  Installing build dependencies: started
+  Installing build dependencies: finished with status 'done'
+  Checking if build backend supports build_editable: started
+  Checking if build backend supports build_editable: finished with status 'done'
+  Getting requirements to build editable: started
+  Getting requirements to build editable: finished with status 'done'
+  Preparing editable metadata (pyproject.toml): started
+  Preparing editable metadata (pyproject.toml): finished with status 'done'
+Requirement already satisfied: jsonschema==4.23.0 in .\.venv\Lib\site-packages (from elis-slr-agent==2.0.0) (4.23.0)
+Requirement already satisfied: requests==2.31.0 in .\.venv\Lib\site-packages (from elis-slr-agent==2.0.0) (2.31.0)
+Requirement already satisfied: PyYAML==6.0.2 in .\.venv\Lib\site-packages (from elis-slr-agent==2.0.0) (6.0.2)
+Requirement already satisfied: black in .\.venv\Lib\site-packages (from elis-slr-agent==2.0.0) (24.8.0)
+Requirement already satisfied: ruff in .\.venv\Lib\site-packages (from elis-slr-agent==2.0.0) (0.6.9)
+Requirement already satisfied: pytest in .\.venv\Lib\site-packages (from elis-slr-agent==2.0.0) (9.0.1)
+Requirement already satisfied: attrs>=22.2.0 in .\.venv\Lib\site-packages (from jsonschema==4.23.0->elis-slr-agent==2.0.0) (25.4.0)
+Requirement already satisfied: jsonschema-specifications>=2023.03.6 in .\.venv\Lib\site-packages (from jsonschema==4.23.0->elis-slr-agent==2.0.0) (2025.9.1)
+Requirement already satisfied: referencing>=0.28.4 in .\.venv\Lib\site-packages (from jsonschema==4.23.0->elis-slr-agent==2.0.0) (0.37.0)
+Requirement already satisfied: rpds-py>=0.7.1 in .\.venv\Lib\site-packages (from jsonschema==4.23.0->elis-slr-agent==2.0.0) (0.28.0)
+Requirement already satisfied: charset-normalizer<4,>=2 in .\.venv\Lib\site-packages (from requests==2.31.0->elis-slr-agent==2.0.0) (3.4.4)
+Requirement already satisfied: idna<4,>=2.5 in .\.venv\Lib\site-packages (from requests==2.31.0->elis-slr-agent==2.0.0) (3.11)
+Requirement already satisfied: urllib3<3,>=1.21.1 in .\.venv\Lib\site-packages (from requests==2.31.0->elis-slr-agent==2.0.0) (2.5.0)
+Requirement already satisfied: certifi>=2017.4.17 in .\.venv\Lib\site-packages (from requests==2.31.0->elis-slr-agent==2.0.0) (2025.11.12)
+Requirement already satisfied: click>=8.0.0 in .\.venv\Lib\site-packages (from black->elis-slr-agent==2.0.0) (8.3.0)
+Requirement already satisfied: mypy-extensions>=0.4.3 in .\.venv\Lib\site-packages (from black->elis-slr-agent==2.0.0) (1.1.0)
+Requirement already satisfied: packaging>=22.0 in .\.venv\Lib\site-packages (from black->elis-slr-agent==2.0.0) (25.0)
+Requirement already satisfied: pathspec>=0.9.0 in .\.venv\Lib\site-packages (from black->elis-slr-agent==2.0.0) (0.12.1)
+Requirement already satisfied: platformdirs>=2 in .\.venv\Lib\site-packages (from black->elis-slr-agent==2.0.0) (4.5.0)
+Requirement already satisfied: colorama in .\.venv\Lib\site-packages (from click>=8.0.0->black->elis-slr-agent==2.0.0) (0.4.6)
+Requirement already satisfied: iniconfig>=1.0.1 in .\.venv\Lib\site-packages (from pytest->elis-slr-agent==2.0.0) (2.3.0)
+Requirement already satisfied: pluggy<2,>=1.5 in .\.venv\Lib\site-packages (from pytest->elis-slr-agent==2.0.0) (1.6.0)
+Requirement already satisfied: pygments>=2.7.2 in .\.venv\Lib\site-packages (from pytest->elis-slr-agent==2.0.0) (2.19.2)
+Building wheels for collected packages: elis-slr-agent
+  Building editable for elis-slr-agent (pyproject.toml): started
+  Building editable for elis-slr-agent (pyproject.toml): finished with status 'done'
+  Created wheel for elis-slr-agent: filename=elis_slr_agent-2.0.0-0.editable-py3-none-any.whl size=3099 sha256=4a0e2b078f4ee04b6ee4b460ad186ff9262b139bb973ea4807464de8d4fd0820
+  Stored in directory: C:\Users\carlo\AppData\Local\Temp\pip-ephem-wheel-cache-477cwpfp\wheels\ee\93\c5\aeabeb4ac85bbca275337b450409549be93d92b94d71efcd82
+Successfully built elis-slr-agent
+Installing collected packages: elis-slr-agent
+  Attempting uninstall: elis-slr-agent
+    Found existing installation: elis-slr-agent 0.3.0
+    Uninstalling elis-slr-agent-0.3.0:
+      Successfully uninstalled elis-slr-agent-0.3.0
+Successfully installed elis-slr-agent-2.0.0
+

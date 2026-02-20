@@ -138,6 +138,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          pip install -e . --no-deps
 
       # 7) Run screening (always writes Step Summary; writes file unless dry-run).
       - name: Run Appendix B screening
@@ -153,7 +154,7 @@ jobs:
           if [ "${{ inputs.allow_unknown_language }}" = "true" ]; then ARGS+=(--allow-unknown-language); fi
           if [ "${{ inputs.dry_run }}" = "true" ]; then ARGS+=(--dry-run); fi
 
-          python scripts/elis/screen_mvp.py "${ARGS[@]}"
+          elis screen "${ARGS[@]}"
 
       # 8) Validate JSON against Appendix B schema (only when not dry-run).
       - name: Validate Appendix B against schema

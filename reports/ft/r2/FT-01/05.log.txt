@@ -1,0 +1,26 @@
+$ .\\.venv\\Scripts\\elis screen --help
+ExitCode: 0
+Output:
+usage: elis screen [-h] [--input INPUT] [--output OUTPUT]
+                   [--year-from YEAR_FROM] [--year-to YEAR_TO]
+                   [--languages LANGUAGES] [--allow-unknown-language]
+                   [--enforce-preprint-policy] [--dry-run]
+
+options:
+  -h, --help            show this help message and exit
+  --input INPUT         Path to canonical Appendix A JSON array
+  --output OUTPUT       Path to write canonical Appendix B JSON array
+  --year-from YEAR_FROM
+                        Lower bound (inclusive). If omitted, read from
+                        Appendix A _meta.
+  --year-to YEAR_TO     Upper bound (inclusive). If omitted, read from
+                        Appendix A _meta.
+  --languages LANGUAGES
+                        Comma-separated ISO codes. If omitted, read from
+                        Appendix A _meta.
+  --allow-unknown-language
+                        Keep records where language is missing/unknown.
+  --enforce-preprint-policy
+                        Respect per-topic include_preprints flags.
+  --dry-run             Compute screening but do not write output.
+

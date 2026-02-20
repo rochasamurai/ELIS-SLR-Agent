@@ -2,7 +2,7 @@ name: ELIS - CI
 
 on:
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "release/2.0" ]
     types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
 
@@ -85,15 +85,31 @@ jobs:
           pip install -r requirements.txt
           # format-nongpl is optional; script tolerates absence
           pip install "jsonschema[format-nongpl]==4.23.0" || true
+          pip install -e . --no-deps
 
       - name: Validate artefacts (non-blocking)
         run: |
           set -e
-          python scripts/validate_json.py || true
+          elis validate || true
+
+  secrets-scope-check:
+    name: secrets-scope-check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Check agent scope (no secret-pattern files in worktree)
+        run: python scripts/check_agent_scope.py
 
   add_and_set_status:
     name: Projects Auto-Add / add_and_set_status
-    needs: [quality, tests, validate]
+    needs: [quality, tests, validate, secrets-scope-check]
     runs-on: ubuntu-latest
     if: always()
     steps:

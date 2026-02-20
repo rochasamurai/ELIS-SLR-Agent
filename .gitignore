@@ -75,4 +75,35 @@ logs/
 
 runs/
 
+# Local elis run output artifacts (not for commit)
+dedup/
+*_manifest.json
+
 reports/preflight_scripts_history.txt
+
+# ── Secrets isolation (PE-INFRA-04) ──────────────────────────────
+# Environment and secrets files
+.env
+.env.*
+!.env.example
+*.env
+secrets/
+.secrets/
+*_secrets.*
+*_credentials.*
+*_key.*
+*.pem
+*.p12
+*.pfx
+*.key
+!*.pub.key
+
+# IDE context files that may expose environment
+.vscode/settings.json
+.idea/
+
+# Local agent config that may contain tokens
+.codex/
+.claude/
+codex_config.*
+claude_config.*

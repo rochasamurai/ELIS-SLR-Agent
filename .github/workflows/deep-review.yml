@@ -6,7 +6,7 @@
 #     Bandit (security SAST), pip-audit (dependency vulns), Pytest (+coverage).
 # Triggers:
 #   - Manual (workflow_dispatch)
-#   - Pull requests to main when label 'deep-review' is present
+#   - Pull requests to main/release/2.0 when label 'deep-review' is present
 # Notes:
 #   - Read-only: no commits or pushes. UK English comments.
 #   - Keep tools pinned for reproducibility.
@@ -18,7 +18,7 @@ on:
   workflow_dispatch: {}
   pull_request:
     types: [opened, synchronize, reopened, labeled]
-    branches: [main]
+    branches: [main, release/2.0]
 
 permissions:
   contents: read

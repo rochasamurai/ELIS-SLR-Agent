@@ -1,0 +1,97 @@
+# ==============================================================================
+# SOURCE CONFIGURATION: Per-source settings for the ELIS adapter layer
+# ==============================================================================
+#
+# Used by: elis/sources/config.py, elis/sources/http_client.py, dedup (PE4)
+# Created: PE2 (Source adapter layer)
+# ==============================================================================
+
+sources:
+  openalex:
+    display_name: "OpenAlex"
+    base_url: "https://api.openalex.org/works"
+    rate_limit_rps: 10
+    auth_env_var: null
+    polite_env_var: "ELIS_CONTACT"
+    pagination: page
+    delay_seconds: 0.1
+
+  crossref:
+    display_name: "CrossRef"
+    base_url: "https://api.crossref.org/works"
+    rate_limit_rps: 2
+    auth_env_var: null
+    polite_env_var: "ELIS_CONTACT"
+    pagination: offset
+    delay_seconds: 0.5
+
+  scopus:
+    display_name: "Scopus"
+    base_url: "https://api.elsevier.com/content/search/scopus"
+    rate_limit_rps: 3
+    auth_env_var: "SCOPUS_API_KEY"
+    auth_token_env_var: "SCOPUS_INST_TOKEN"
+    pagination: offset
+    delay_seconds: 0.5
+
+  semanticscholar:
+    display_name: "Semantic Scholar"
+    base_url: "https://api.semanticscholar.org/graph/v1/paper/search"
+    rate_limit_rps: 1
+    auth_env_var: "SEMANTIC_SCHOLAR_API_KEY"
+    pagination: offset
+    delay_seconds: 1.0
+
+  ieee:
+    display_name: "IEEE Xplore"
+    base_url: "https://ieeexploreapi.ieee.org/api/v1/search/articles"
+    rate_limit_rps: 3
+    auth_env_var: "IEEE_EXPLORE_API_KEY"
+    pagination: offset
+    delay_seconds: 0.5
+
+  core:
+    display_name: "CORE"
+    base_url: "https://api.core.ac.uk/v3/search/works"
+    rate_limit_rps: 5
+    auth_env_var: "CORE_API_KEY"
+    pagination: offset
+    delay_seconds: 0.2
+
+  wos:
+    display_name: "Web of Science"
+    base_url: "https://api.clarivate.com/apis/wos-starter/id/search"
+    rate_limit_rps: 5
+    auth_env_var: "WOS_API_KEY"
+    pagination: offset
+    delay_seconds: 0.2
+
+  sciencedirect:
+    display_name: "ScienceDirect"
+    base_url: "https://api.elsevier.com/content/search/sciencedirect"
+    rate_limit_rps: 3
+    auth_env_var: "SCOPUS_API_KEY"
+    auth_token_env_var: "SCOPUS_INST_TOKEN"
+    pagination: offset
+    delay_seconds: 0.5
+
+  google_scholar:
+    display_name: "Google Scholar"
+    base_url: null
+    rate_limit_rps: 1
+    auth_env_var: "APIFY_API_TOKEN"
+    pagination: none
+    delay_seconds: 2.0
+
+# Dedup keeper precedence (first = highest priority).
+# Used by PE4 dedup stage to select keeper record from clusters.
+keeper_priority:
+  - scopus
+  - wos
+  - semanticscholar
+  - crossref
+  - openalex
+  - ieee
+  - core
+  - sciencedirect
+  - google_scholar

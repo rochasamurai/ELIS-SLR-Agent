@@ -1,0 +1,27 @@
+$ .\\.venv\\Scripts\\elis merge --from-manifest DOES_NOT_EXIST.json
+ExitCode: 1
+Output:
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\carlo\ELIS-SLR-Agent\.venv\Scripts\elis.exe\__main__.py", line 5, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "C:\Users\carlo\ELIS-SLR-Agent\elis\cli.py", line 723, in main
+    return args.func(args)
+           ~~~~~~~~~^^^^^^
+  File "C:\Users\carlo\ELIS-SLR-Agent\elis\cli.py", line 252, in _run_merge
+    inputs = _resolve_merge_inputs(args)
+  File "C:\Users\carlo\ELIS-SLR-Agent\elis\cli.py", line 60, in _resolve_merge_inputs
+    return _load_inputs_from_manifest(args.from_manifest)
+  File "C:\Users\carlo\ELIS-SLR-Agent\elis\cli.py", line 43, in _load_inputs_from_manifest
+    payload = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
+                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "C:\Users\carlo\AppData\Local\Python\pythoncore-3.14-64\Lib\pathlib\__init__.py", line 792, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors, newline=newline) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\carlo\AppData\Local\Python\pythoncore-3.14-64\Lib\pathlib\__init__.py", line 776, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'DOES_NOT_EXIST.json'
+

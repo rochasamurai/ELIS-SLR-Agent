@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:elis:validation-report:v1",
+  "title": "ELIS Validation Report",
+  "description": "Structured validation report sidecar schema.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "stage",
+    "checked_at",
+    "target_path",
+    "schema_path",
+    "is_valid",
+    "record_count",
+    "error_count",
+    "errors"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "stage": {
+      "type": "string",
+      "enum": ["harvest", "merge", "dedup", "screen", "validate"]
+    },
+    "checked_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "target_path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "schema_path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "is_valid": {
+      "type": "boolean"
+    },
+    "record_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "error_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}

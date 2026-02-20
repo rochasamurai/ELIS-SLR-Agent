@@ -1,0 +1,136 @@
+name: Auto-merge on Validator PASS
+
+on:
+  push:
+    branches:
+      - 'feature/**'
+      - 'chore/**'
+      - 'hotfix/**'
+
+jobs:
+  gate-2:
+    name: Parse verdict and auto-merge if PASS
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Determine REVIEW file for this branch
+        id: review
+        run: |
+          # Find REVIEW_*.md files that are new or modified on this branch vs base.
+          # Uses the branch name published by the push event.
+          base="release/2.0"
+          git fetch origin "$base" --depth=1 2>/dev/null || true
+          review_file=$(git diff --name-only "origin/$base" -- 'REVIEW_*.md' 2>/dev/null | head -1)
+          if [ -z "$review_file" ]; then
+            echo "No REVIEW file found on this branch vs $base. Verdict will be IN_PROGRESS."
+            review_file=""
+          else
+            echo "Found REVIEW file: $review_file"
+          fi
+          echo "file=$review_file" >> "$GITHUB_OUTPUT"
+
+      - name: Parse verdict from REVIEW file
+        id: verdict
+        run: python scripts/parse_verdict.py
+        env:
+          REVIEW_FILE: ${{ steps.review.outputs.file }}
+        # Outputs: verdict=PASS|FAIL|IN_PROGRESS, review_file=REVIEW_PEN.md
+
+      - name: Check for PM veto label
+        id: labels
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: pr } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              head: `${context.repo.owner}:${context.ref_name}`,
+              state: 'open'
+            });
+            if (pr.length === 0) { core.setOutput('veto', 'no-pr'); return; }
+            const labels = pr[0].labels.map(l => l.name);
+            core.setOutput('veto', labels.includes('pm-review-required') ? 'true' : 'false');
+            core.setOutput('pr_number', String(pr[0].number));
+
+      - name: Check PR is mergeable (CI green)
+        id: mergeable
+        if: |
+          steps.verdict.outputs.verdict == 'PASS' &&
+          steps.labels.outputs.veto == 'false'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = parseInt('${{ steps.labels.outputs.pr_number }}');
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+            });
+            const state = pr.mergeable_state || 'unknown';
+            core.setOutput('state', state);
+            if (state !== 'clean') {
+              core.warning(`PR mergeable_state is '${state}' (not 'clean') — CI may still be running or checks are failing.`);
+            }
+
+      - name: Auto-merge if PASS, no veto, and CI green
+        if: |
+          steps.verdict.outputs.verdict == 'PASS' &&
+          steps.labels.outputs.veto == 'false' &&
+          steps.mergeable.outputs.state == 'clean'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = parseInt('${{ steps.labels.outputs.pr_number }}');
+            await github.rest.pulls.merge({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+              merge_method: 'squash',
+              commit_title: `Merge PE: auto-merged on Validator PASS`
+            });
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: '## ✅ Gate 2 — auto-merged\n\nValidator PASS verdict confirmed. PR merged automatically.\nPM audit trail: REVIEW file committed on branch.'
+            });
+
+      - name: Notify PM — veto label present
+        if: |
+          steps.verdict.outputs.verdict == 'PASS' &&
+          steps.labels.outputs.veto == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = parseInt('${{ steps.labels.outputs.pr_number }}');
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: '## 🔒 Gate 2 — PM approval required\n\nValidator PASS confirmed but `pm-review-required` label is set.\nPM must manually approve and merge.'
+            });
+
+      - name: Notify PM — FAIL verdict
+        if: |
+          steps.verdict.outputs.verdict == 'FAIL' &&
+          steps.labels.outputs.veto != 'no-pr'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = parseInt('${{ steps.labels.outputs.pr_number }}');
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: '## ❌ Gate 2 — FAIL verdict\n\nValidator issued FAIL. Assigning Implementer to fix blocking findings.\n\n@codex — read REVIEW file on this branch. Fix blocking findings only. Deliver updated Status Packet.'
+            });

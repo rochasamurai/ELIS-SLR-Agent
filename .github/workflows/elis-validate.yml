@@ -23,7 +23,8 @@ on:
     paths:
       - 'json_jsonl/**'
       - 'schemas/**'
-      - 'scripts/validate_json.py'
+      - 'elis/**'
+      - 'scripts/_archive/validate_json.py'
       - '.github/workflows/elis-validate.yml'
       # IMPORTANT: do NOT include 'validation_reports/**' here (prevents loops)
 
@@ -60,10 +61,11 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          pip install -e . --no-deps
 
       - name: Run validator (writes validation_reports/validation-report.md)
         run: |
-          python scripts/validate_json.py
+          elis validate
 
       - name: Stage report and detect diff
         id: diff

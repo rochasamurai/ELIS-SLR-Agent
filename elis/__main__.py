@@ -1,0 +1,11 @@
+"""python -m elis entrypoint."""
+
+from __future__ import annotations
+
+import sys
+
+from elis.cli import main
+
+
+if __name__ == "__main__":
+    sys.exit(main())
