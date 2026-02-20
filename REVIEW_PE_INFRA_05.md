@@ -99,3 +99,71 @@ Adversarial smoke tests (Validator-authored, 6/6 PASS):
 | AC-5: `AGENTS.md` §2.4.1 hard evidence rule added | git diff vs main | PASS |
 | `base="release/2.0"` is pre-existing (not introduced by CODEX) | git diff confirmed | CONFIRMED |
 | Full suite 454 passed — no regressions | pytest rc=0 | PASS |
+
+---
+
+## Agent update — Claude Code / PE-INFRA-05 / 2026-02-20 (re-validation)
+
+### Verdict
+PASS
+
+### Gate results
+black: PASS
+ruff: PASS
+pytest: PASS
+
+### Scope
+M .github/workflows/auto-merge-on-pass.yml (+1/-1 base-fix, Gate 2b intact)
+M HANDOFF.md (hotfix addendum)
+
+### Required fixes
+None
+
+### Evidence
+
+#### Files read
+
+| File | What was checked |
+|------|-----------------|
+| `git diff main..origin/chore/pe-infra-05-review-evidence` (auto-merge-on-pass.yml) | Fix line confirmed + all Gate 2b steps still present |
+| `HANDOFF.md` (worktree `0991c43`) | Hotfix Addendum section — scope, rationale, validation rerun |
+| `git show 0991c43 --stat` | 2 files, +19/-1 — minimal scope confirmed |
+
+#### Commands run
+
+```text
+git show 0991c43 --stat
+ .github/workflows/auto-merge-on-pass.yml |  2 +-
+ HANDOFF.md                               | 18 ++++++++++++++++++
+ 2 files changed, 19 insertions(+), 1 deletion(-)
+```
+
+```text
+python -m black --check scripts/check_review.py tests/test_check_review.py
+All done! ✨ 🍰 ✨
+2 files would be left unchanged.   rc: 0
+```
+
+```text
+python -m ruff check scripts/check_review.py tests/test_check_review.py
+All checks passed!   rc: 0
+```
+
+```text
+python -m pytest tests/test_check_review.py -v   (from worktree)
+9 passed in 0.08s   rc: 0
+
+python -m pytest   (full suite, from worktree)
+454 passed, 17 warnings in 6.78s   rc: 0
+```
+
+#### Key claims verified
+
+| Claim | Source | Result |
+|-------|--------|--------|
+| Fix applied exactly as prescribed — dynamic `gh pr list` + fallback `"main"` | git diff line 31 | PASS |
+| Gate 2b steps intact after fix commit | Full diff vs main | PASS |
+| Downstream guards (`gate2b.outcome == 'success'`) intact | Full diff vs main | PASS |
+| All original AC deliverables present (ci.yml, template, AGENTS.md, scripts, tests) | git diff --stat | PASS |
+| HANDOFF.md addendum documents scope + re-validation | HANDOFF.md read | PASS |
+| No regressions — 454 passed | pytest rc=0 | PASS |
