@@ -1,3 +1,76 @@
+## Agent update — Claude Code / PE-OC-01 / 2026-02-20 (re-validation r2)
+
+### Verdict
+PASS
+
+### Gate results
+black: PASS
+ruff: PASS
+pytest: PASS — 454 passed, 17 warnings
+
+### Scope
+M .github/workflows/ci.yml (+16/-1: openclaw-health-check job added)
+M HANDOFF.md
+M docker-compose.yml (corrected from r1)
+M docs/openclaw/DOCKER_SETUP.md
+M openclaw/openclaw.json
+A openclaw/workspaces/workspace-pm/.gitkeep
+A scripts/check_openclaw_health.py (new — F3 fix)
+M scripts/deploy_openclaw_workspaces.sh (rsync-to-host — F2 fix)
+
+### Required fixes
+None
+
+### Findings
+
+Non-blocking NB3: `docker-compose.yml` volume paths hardcoded to `/c/Users/carlo/`. Should
+use `${HOME}` for portability. Acceptable for local dev bootstrap; no action required for merge.
+
+### Evidence
+
+#### Files read
+
+| File | What was checked |
+|------|-----------------|
+| `docker-compose.yml` | Port binding `127.0.0.1:18789:3000`, image `ghcr.io/...`, volumes use host paths |
+| `scripts/check_openclaw_health.py` | Probe logic, URLError/TimeoutError/OSError paths all return 0 |
+| `scripts/deploy_openclaw_workspaces.sh` | rsync to `~/openclaw/`, cp fallback |
+| `.github/workflows/ci.yml` diff | `openclaw-health-check` job; wired into `add_and_set_status.needs` |
+| `openclaw/openclaw.json` | `agents.list` + `bindings` v0.2 stub shape |
+| `docs/openclaw/DOCKER_SETUP.md` | Port policy, volume policy, commands |
+| `HANDOFF.md` | AC checklist, scope, validation commands |
+
+#### Commands run
+
+```text
+gh api repos/rochasamurai/ELIS-SLR-Agent/compare/main...feature/pe-oc-01-docker-setup \
+  --jq '{ahead_by, behind_by, merge_base_commit: .merge_base_commit.sha, files: [.files[].filename]}'
+# → ahead_by: 2, behind_by: 0
+# → merge_base: 72c4954 (current main tip after r1 REVIEW commit)
+# → files: 8 (ci.yml added — within plan scope for health-check CI wiring)
+
+python -m black --check scripts/check_openclaw_health.py  → PASS
+python -m ruff check scripts/check_openclaw_health.py     → PASS
+python -m pytest --tb=no -q                               → 454 passed, 17 warnings
+```
+
+#### Key claims verified
+
+| Claim | Source | Result |
+|-------|--------|--------|
+| F1 resolved: localhost-only on port 18789 | `docker-compose.yml` ports | PASS — `127.0.0.1:18789:3000` |
+| F2 resolved: ELIS repo not mounted | `docker-compose.yml` volumes | PASS — host paths used |
+| F3 resolved: `check_openclaw_health.py` present and wired | File read + ci.yml diff | PASS |
+| Health check exits 0 on unreachable endpoint | Script logic | PASS — all exception paths return 0 |
+| NB1 resolved: GHCR image | `docker-compose.yml` image | PASS — `ghcr.io/openclaw/openclaw:latest` |
+| NB2 resolved: `openclaw.json` schema shape | File read | PASS — `agents.list` + `bindings` v0.2 |
+| black | local run | PASS |
+| ruff | local run | PASS |
+| pytest | local run | PASS — 454 passed, 17 warnings |
+| Scope — all 8 files justified | GitHub compare API | PASS |
+
+---
+
 ## Agent update — Claude Code / PE-OC-01 / 2026-02-20
 
 ### Verdict
