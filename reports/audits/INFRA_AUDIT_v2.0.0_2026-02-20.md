@@ -2,7 +2,7 @@
 
 **Date:** 2026-02-20
 **Scope:** All infrastructure improvements delivered for the v2.0 release line
-**Release:** v2.0.0 (tag `v2.0.0`, signed, Verified — main @ `781ab53`)
+**Release:** v2.0.0 (tag `v2.0.0`, signed, Verified — main at audit time: `781ab53`)
 
 ---
 
@@ -97,8 +97,8 @@ Verified adversarially: FAIL→PASS returns PASS; PASS→FAIL returns FAIL; anno
 
 | Workflow | Trigger | Action |
 |----------|---------|--------|
-| `auto-assign-validator.yml` | PR opened/reopened to `release/2.0` | Auto-assigns Validator agent as PR reviewer |
-| `auto-merge-on-pass.yml` | PR review comment event | Parses `REVIEW_PE<N>.md` via `parse_verdict.py`; merges only if verdict=PASS, veto=false, AND `mergeable_state == clean` |
+| `auto-assign-validator.yml` | `workflow_run` on `ELIS - CI` success (non-main branches) | Auto-assigns Validator agent as PR reviewer |
+| `auto-merge-on-pass.yml` | Push to `feature/**`, `chore/**`, `hotfix/**` | Parses `REVIEW_PE<N>.md` via `parse_verdict.py`; merges only if verdict=PASS, veto=false, AND `mergeable_state == clean` |
 | `agents-compliance.yml` | PR opened/synchronized | Runs `agents_compliance_check.py`: branch naming, HANDOFF.md, cross-PE contamination |
 | `ci.yml` (updated) | PR to `release/2.0` | Added `secrets-scope-check` job running `check_agent_scope.py` |
 
@@ -153,7 +153,7 @@ environment.
 
 | Finding | Fix | Location |
 |---------|-----|----------|
-| B-2/B-3: `elis validate` fails on object-type JSON; double-manifest artifacts | Detect JSON root type before iteration; skip `*_manifest.json` inputs | `elis/pipeline/validate.py` |
+| B-2/B-3: `elis validate` fails on object-type JSON; double-manifest artifacts | Detect JSON root type before iteration; skip `*_manifest.json` inputs | `elis/cli.py` |
 | B-4: `UnicodeEncodeError` on Windows (cp1252 + `→` char) | Replace `→` with `->` in two f-string print statements | `elis/cli.py:425,429` |
 | B-5: `ModuleNotFoundError: No module named 'sources'` in ASTA | Lazy import with `importlib`; module not required at CLI startup | `elis/agentic/asta.py` |
 
@@ -161,7 +161,7 @@ environment.
 
 ## 6. CI Enforcement Layer — Current State
 
-All gates active on every PR to `release/2.0` (and now `main`):
+Gates active on PRs to `release/2.0`. `ci.yml` also runs on `main`. Note: `agents-compliance.yml` is scoped to `release/2.0` only.
 
 | Gate | Workflow | What it checks |
 |------|----------|---------------|
@@ -169,7 +169,7 @@ All gates active on every PR to `release/2.0` (and now `main`):
 | Tests | `ci.yml` | `pytest` (445 tests, 0 failures at v2.0.0) |
 | Secrets scope | `ci.yml` | `check_agent_scope.py` — no agent reads `.env*` |
 | AGENTS compliance | `agents-compliance.yml` | Branch naming, HANDOFF.md presence, cross-PE contamination |
-| Validator auto-assign | `auto-assign-validator.yml` | Assigns Validator reviewer on PR open |
+| Validator auto-assign | `auto-assign-validator.yml` | Assigns Validator reviewer after CI completes successfully |
 | Auto-merge | `auto-merge-on-pass.yml` | Merges only on PASS verdict + CI green + no veto |
 
 ---
@@ -203,7 +203,7 @@ All gates active on every PR to `release/2.0` (and now `main`):
 | Artifact | Value |
 |----------|-------|
 | Release tag | `v2.0.0` (signed SSH, Verified) |
-| Main HEAD | `781ab53` |
+| Main HEAD at audit | `781ab53` (v2.0.0 merge commit) |
 | Preservation tag | `v1.0.0` (signed SSH, Verified) — pre-v2 main state |
 | Maintenance branch | `maint/v1.x` (at `v1.0.0`) |
 | Tag protection | Ruleset `protect-version-tags` — pattern `v*`, no-delete, no-force-push, Active |
