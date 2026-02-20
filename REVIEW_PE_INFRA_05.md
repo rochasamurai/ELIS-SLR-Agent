@@ -170,3 +170,70 @@ python -m pytest   (full suite, from worktree)
 | No regressions — 454 passed | pytest rc=0 | PASS |
 | CI `review-evidence-check` passes on PR | GitHub Actions run 22230280881 | **FAIL** |
 | `git fetch --depth=1` + three-dot diff = no merge base | Reproduced locally | CONFIRMED BUG |
+
+---
+
+## Agent update — Claude Code / PE-INFRA-05 / 2026-02-20 (r3)
+
+### Verdict
+PASS
+
+### Gate results
+black: PASS
+ruff: PASS
+pytest: PASS
+
+### Scope
+M .github/workflows/ci.yml (+1/-1: remove --depth=1 from base fetch)
+M HANDOFF.md (addendum r2)
+
+### Required fixes
+None
+
+### Evidence
+
+#### Files read
+
+| File | What was checked |
+|------|-----------------|
+| `git show 9ad7450` diff | Single line: `--depth=1` removed from `git fetch origin "$base"` |
+| `HANDOFF.md` addendum r2 | Scope, rationale, and validation rerun documented |
+
+#### Commands run
+
+```text
+git show 9ad7450 --stat
+ .github/workflows/ci.yml |  2 +-
+ HANDOFF.md               | 17 +++++++++++++++++
+ 2 files changed, 18 insertions(+), 1 deletion(-)
+```
+
+```text
+git diff --name-only "origin/main...origin/chore/pe-infra-05-review-evidence" -- 'REVIEW_*.md'
+(empty output — correct: no REVIEW_*.md files in PR diff)   rc=0
+```
+
+```text
+python -m black --check scripts/check_review.py tests/test_check_review.py
+rc=0 | 2 files would be left unchanged.
+
+python -m ruff check scripts/check_review.py tests/test_check_review.py
+rc=0 | All checks passed!
+
+python -m pytest tests/test_check_review.py -v   (from worktree at 9ad7450)
+rc=0 | 9 passed in 0.09s
+
+python -m pytest   (full suite from worktree)
+rc=0 | 454 passed, 17 warnings in 6.62s
+```
+
+#### Key claims verified
+
+| Claim | Source | Result |
+|-------|--------|--------|
+| F1 fix: `--depth=1` removed from fetch | git show 9ad7450 | PASS |
+| Three-dot diff resolves merge-base with full fetch | git diff rc=0 | PASS |
+| Empty diff result is correct (no REVIEW_*.md in PR) | Diff output | PASS |
+| HANDOFF.md r2 addendum complete | HANDOFF.md read | PASS |
+| Minimal scope: 2 files only | git show --stat | PASS |
+| No regressions — 454 passed | pytest rc=0 | PASS |
