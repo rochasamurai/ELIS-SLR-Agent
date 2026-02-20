@@ -28,7 +28,7 @@ jobs:
         run: |
           # Find REVIEW_*.md files that are new or modified on this branch vs base.
           # Uses the branch name published by the push event.
-          base="release/2.0"
+          base=$(gh pr list --head "$GITHUB_REF_NAME" --json baseRefName -q '.[0].baseRefName' 2>/dev/null || echo "main")
           git fetch origin "$base" --depth=1 2>/dev/null || true
           review_file=$(git diff --name-only "origin/$base" -- 'REVIEW_*.md' 2>/dev/null | head -1)
           if [ -z "$review_file" ]; then

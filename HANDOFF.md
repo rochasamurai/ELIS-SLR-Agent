@@ -124,3 +124,21 @@ pytest (full): 454 passed
 ```text
 PR not opened yet at handoff update time.
 ```
+
+## Hotfix Addendum — 2026-02-20 (post-validator follow-up)
+
+Scope: non-blocking follow-up requested by Validator on PR #259.
+
+- File changed: `.github/workflows/auto-merge-on-pass.yml` only.
+- Change:
+  - from `base="release/2.0"`
+  - to dynamic base resolution:
+    `base=$(gh pr list --head "$GITHUB_REF_NAME" --json baseRefName -q '.[0].baseRefName' 2>/dev/null || echo "main")`
+
+Reason:
+- Avoid hardcoded deleted branch (`release/2.0`) and align REVIEW-file diffing with the active PR base branch.
+
+Validation rerun:
+- `python -m black --check .` -> PASS
+- `python -m ruff check .` -> PASS
+- `python -m pytest -q` -> 454 passed, 17 warnings (pre-existing deprecation warnings)
