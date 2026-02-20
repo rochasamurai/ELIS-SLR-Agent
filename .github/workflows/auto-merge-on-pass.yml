@@ -41,7 +41,14 @@ jobs:
 
       - name: Parse verdict from REVIEW file
         id: verdict
-        run: python scripts/parse_verdict.py
+        run: |
+          if [ -z "${{ steps.review.outputs.file }}" ]; then
+            echo "No REVIEW file selected for this branch diff. Verdict set to IN_PROGRESS."
+            echo "verdict=IN_PROGRESS" >> "$GITHUB_OUTPUT"
+            echo "review_file=" >> "$GITHUB_OUTPUT"
+          else
+            python scripts/parse_verdict.py
+          fi
         env:
           REVIEW_FILE: ${{ steps.review.outputs.file }}
         # Outputs: verdict=PASS|FAIL|IN_PROGRESS, review_file=REVIEW_PEN.md
