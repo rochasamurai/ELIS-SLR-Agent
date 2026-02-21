@@ -270,6 +270,7 @@ EOF
 8. If any newly discovered pre-existing defect is not already in §11, add it now.
 9. Push validation commits to the **same branch** (validator-owned files only: `REVIEW_PE<N>.md` + adversarial tests).
 10. Deliver verdict + Status Packet using a **GitHub PR review comment** (`approve` for PASS, `request-changes` for FAIL) using the standard format (Section 9).
+    - Single-account fallback: if reviewer and PR author are the same GitHub account, and GitHub blocks `request-changes`, post the FAIL verdict as a plain PR comment and request PM attention explicitly.
     - PM may still receive a direct summary message, but the PR review is the binding live handshake record.
     - `REVIEW_PE<N>.md` remains mandatory as the durable on-branch artifact.
 
@@ -500,6 +501,16 @@ pre-populated. Implementers copy it rather than writing from memory.
 **Audit trigger** (§7): Any workflow deviation observed by any party triggers an audit report.
 The record creates accountability and a pattern log across PEs.
 
+### 12.4 Single-account GitHub constraint runbook
+
+When the repository operates with a single GitHub identity for both agents, GitHub may block
+`gh pr review --request-changes` on self-authored PRs. The operational fallback and migration
+paths are documented in:
+
+- `docs/_active/GITHUB_SINGLE_ACCOUNT_VALIDATION_RUNBOOK.md`
+
+That runbook is normative for this constraint and must be used together with §5.2.
+
 ---
 
 ## 13) Secrets isolation policy
@@ -536,4 +547,3 @@ If a secret-pattern file is detected in context, the agent must:
 ---
 
 End of AGENTS.md
-
