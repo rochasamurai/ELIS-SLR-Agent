@@ -1,44 +1,39 @@
-# HANDOFF.md — PE-OC-05
+# HANDOFF.md — PE-INFRA-07
 
 ## Summary
-PE-OC-05 introduces dedicated SLR implementer/validator workspaces, an SLR-specific
-quality gate script, and domain specification documentation. It also registers all four
-SLR agent IDs in `openclaw/openclaw.json`.
+Implements milestone-governance infrastructure to keep workflow files release-agnostic
+and transparent across future milestones.
+
+Delivered in this PE:
+- Added `docs/_active/MILESTONES.md` as milestone index and status tracker.
+- Added `docs/_active/MILESTONE_TRANSITION_RUNBOOK.md` with PM transition checklist.
+- Updated `CURRENT_PE.md` agent instructions to avoid hardcoded release/plan examples.
+- Added PE-INFRA-07 entry and schedule updates in `ELIS_MultiAgent_Implementation_Plan.md`.
 
 ## Files Changed
-- `openclaw/workspaces/workspace-slr-impl/AGENTS.md` (new)
-- `openclaw/workspaces/workspace-slr-impl/CLAUDE.md` (new)
-- `openclaw/workspaces/workspace-slr-impl/CODEX.md` (new)
-- `openclaw/workspaces/workspace-slr-val/AGENTS.md` (new)
-- `openclaw/workspaces/workspace-slr-val/CLAUDE.md` (new)
-- `openclaw/workspaces/workspace-slr-val/CODEX.md` (new)
-- `scripts/check_slr_quality.py` (new)
-- `docs/slr/SLR_DOMAIN_SPEC.md` (new)
-- `openclaw/openclaw.json` (modified)
+- `docs/_active/MILESTONES.md` (new)
+- `docs/_active/MILESTONE_TRANSITION_RUNBOOK.md` (new)
+- `CURRENT_PE.md` (modified)
+- `ELIS_MultiAgent_Implementation_Plan.md` (modified)
 - `HANDOFF.md` (this file)
 
 ## Design Decisions
-- Reused the established workspace pattern (`AGENTS.md`, `CLAUDE.md`, `CODEX.md`) to
-  keep behavior consistent across domains.
-- Added explicit SLR methodological checks in validator rules to differentiate SLR
-  validation from generic code validation.
-- Implemented `check_slr_quality.py` as a strict schema and consistency gate for
-  screening, extraction, PRISMA monotonicity, synthesis presence, and agreement threshold.
-- Registered SLR agents with dedicated SLR workspaces and `exec.ask: true` to align with
-  existing OpenClaw safety posture.
+- Kept milestone index and transition process in separate docs under `docs/_active/`
+  so policy (`AGENTS.md`) stays stable while milestone operations remain discoverable.
+- Advanced `CURRENT_PE.md` state in the same PE to preserve auditable sequence.
+- Updated plan totals and schedule immediately after adding PE-INFRA-07 to prevent
+  stale effort/capacity reporting.
+- PM-approved alternation exemption applied: PE-INFRA-07 is a cross-cutting governance PE
+  executed immediately after PE-INFRA-06 by CODEX to close milestone-control gaps. The
+  next infra-domain PE should return to normal alternation.
 
 ## Acceptance Criteria
-- [x] AC-1: `workspace-slr-impl/AGENTS.md` defines at least 5 SLR-specific acceptance criteria types.
-- [x] AC-2: `workspace-slr-val/AGENTS.md` defines at least 3 methodological validation checks absent from code validator rules.
-- [x] AC-3: `scripts/check_slr_quality.py` exits 0 on a compliant artifact set.
-- [x] AC-4: All four SLR agentIds registered in `openclaw.json` without gateway restart errors.
+- [x] AC-1: `docs/_active/MILESTONES.md` exists and lists current active milestone.
+- [x] AC-2: `docs/_active/MILESTONE_TRANSITION_RUNBOOK.md` exists with PM transition checklist.
+- [x] AC-3: `CURRENT_PE.md` agent instructions are agnostic (no specific release/plan literals).
+- [x] AC-4: Build schedule and totals include PE-INFRA-07.
 
 ## Validation Commands
-```text
-python scripts/check_slr_quality.py --input tmp_slr_compliant.json
-OK: SLR artifact set is compliant
-```
-
 ```text
 python -m black --check .
 All done! ✨ 🍰 ✨
@@ -67,18 +62,20 @@ python -m pytest -q
 ### 6.1 Working-tree state
 ```text
 git status -sb
-## feature/pe-oc-05-slr-workspaces...origin/main
- M openclaw/openclaw.json
-?? docs/slr/
-?? openclaw/workspaces/workspace-slr-impl/
-?? openclaw/workspaces/workspace-slr-val/
-?? scripts/check_slr_quality.py
+## chore/pe-infra-07-milestone-governance...origin/main [ahead 2]
+```
+
+```text
+git show --stat --oneline HEAD
+7ad3444 docs(val): add REVIEW_PE_INFRA_07.md — PE-INFRA-07 PASS
+ REVIEW_PE_INFRA_07.md | 131 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 131 insertions(+)
 ```
 
 ### 6.2 Repository state
 ```text
 git branch --show-current
-feature/pe-oc-05-slr-workspaces
+chore/pe-infra-07-milestone-governance
 ```
 
 ### 6.3 Quality gates
@@ -90,5 +87,5 @@ pytest: PASS (454 passed, 17 warnings)
 
 ### 6.4 Ready to merge
 ```text
-NO — pending commit/push/PR opening.
+YES — awaiting validator review.
 ```

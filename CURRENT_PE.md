@@ -21,8 +21,8 @@
 
 | Field   | Value                                    |
 |---------|------------------------------------------|
-| PE      | PE-OC-05                                 |
-| Branch  | feature/pe-oc-05-slr-workspaces          |
+| PE      | PE-INFRA-07                              |
+| Branch  | chore/pe-infra-07-milestone-governance   |
 
 ---
 
@@ -48,7 +48,8 @@
 | PE-OC-03    | openclaw-infra  | infra-impl-codex    | prog-val-claude   | feature/pe-oc-03-active-pe-registry     | merged          | 2026-02-21   |
 | PE-OC-04    | openclaw-infra  | infra-impl-claude   | infra-val-codex   | feature/pe-oc-04-agent-workspaces       | merged          | 2026-02-21   |
 | PE-INFRA-06 | infra           | infra-impl-codex    | prog-val-claude   | chore/single-account-review-runbook     | merged          | 2026-02-21   |
-| PE-OC-05    | openclaw-infra  | infra-impl-codex    | prog-val-claude   | feature/pe-oc-05-slr-workspaces         | implementing    | 2026-02-21   |
+| PE-OC-05    | openclaw-infra  | infra-impl-codex    | prog-val-claude   | feature/pe-oc-05-slr-workspaces         | merged          | 2026-02-21   |
+| PE-INFRA-07 | infra           | infra-impl-codex    | prog-val-claude   | chore/pe-infra-07-milestone-governance  | implementing    | 2026-02-21   |
 
 Valid status values:
 - `planning`
@@ -76,5 +77,5 @@ Alternation rule:
 ## Agent instructions
 
 - Step 0: read `Release context` to know the base branch and plan file for this session.
-- Never hardcode `release/2.0` or `RELEASE_PLAN_v2.0.md` — always resolve from this file.
+- Never hardcode specific branch names or plan filenames — always resolve from this file.
 - If a field in this file is blank or missing, stop and notify PM.

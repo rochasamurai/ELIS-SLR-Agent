@@ -351,6 +351,38 @@ All 11 PEs are implemented by the current 2-agent model. CODEX implements odd-nu
 
 ---
 
+#### PE-INFRA-07 · Milestone Governance Index & Transition Runbook
+
+| Field | Value |
+|---|---|
+| Implementer | CODEX (`infra-impl-codex`) |
+| Validator | Claude Code (`prog-val-claude`) |
+| Effort | 1–2 hours |
+| Phase | Cross-cutting (governance) |
+| Depends On | PE-INFRA-06 |
+
+**Scope**
+
+- Add milestone index for transparent release/milestone tracking.
+- Add a runbook defining PM milestone transition procedure.
+- Keep `CURRENT_PE.md` instructions release/plan agnostic (no hardcoded examples).
+- Register this governance PE in schedule and totals.
+
+**Acceptance Criteria**
+
+1. `docs/_active/MILESTONES.md` exists and lists current active milestone.
+2. `docs/_active/MILESTONE_TRANSITION_RUNBOOK.md` exists with PM transition checklist.
+3. `CURRENT_PE.md` agent instructions are agnostic (no specific release/plan literals).
+4. Build schedule and totals include PE-INFRA-07.
+
+**Deliverables**
+
+- `docs/_active/MILESTONES.md`
+- `docs/_active/MILESTONE_TRANSITION_RUNBOOK.md`
+- `CURRENT_PE.md` (agnostic instruction wording + PE-INFRA-07 state)
+
+---
+
 #### PE-OC-05 · SLR Agent Workspaces
 
 | Field | Value |
@@ -597,7 +629,7 @@ All 11 PEs are implemented by the current 2-agent model. CODEX implements odd-nu
 
 ## 4. Build Schedule
 
-The 11 PEs are sequenced to respect phase dependencies while allowing parallel execution with ongoing ELIS program and SLR work. The schedule assumes the current 2-agent model dedicates one PE slot per week to the OpenClaw build series.
+The PEs are sequenced to respect phase dependencies while allowing parallel execution with ongoing ELIS program and SLR work. The schedule assumes the current 2-agent model dedicates one PE slot per week to the OpenClaw build series.
 
 | Week | PE | Phase | Implementer Engine | Effort | Depends On |
 |---|---|---|---|---|---|
@@ -606,6 +638,7 @@ The 11 PEs are sequenced to respect phase dependencies while allowing parallel e
 | 2 | PE-OC-03: Active PE Registry | Phase 2 | CODEX | 3–4h | OC-02 |
 | 2 | PE-OC-04: Prog/Infra Workspaces | Phase 2 | Claude Code | 5–6h | OC-03 |
 | 2 | PE-INFRA-06: Single-account Review Runbook | Cross-cutting | CODEX | 1–2h | OC-04 |
+| 2 | PE-INFRA-07: Milestone Governance Index/Runbook | Cross-cutting | CODEX | 1–2h | INFRA-06 |
 | 3 | PE-OC-05: SLR Workspaces | Phase 2 | CODEX | 4–5h | OC-04 |
 | 3–4 | PE-OC-06: PE Assignment + Alternation | Phase 3 | Claude Code | 5–6h | OC-05 |
 | 4 | PE-OC-07: Gate Automation | Phase 3 | CODEX | 5–6h | OC-06 |
@@ -613,7 +646,7 @@ The 11 PEs are sequenced to respect phase dependencies while allowing parallel e
 | 6 | PE-OC-09: E2E Test — Programs | Phase 4 | CODEX | 4–5h | OC-08 |
 | 7 | PE-OC-10: E2E Test — SLR | Phase 4 | Claude Code | 4–5h | OC-09 |
 | 8 | PE-OC-11: Security Hardening | Phase 4 | CODEX | 3–4h | OC-10 |
-| **Total** | **12 PEs** | **4 Phases + governance** | **CODEX×7 · Claude Code×5** | **46–58h** | **~6–8 wks** |
+| **Total** | **13 PEs** | **4 Phases + governance** | **CODEX×8 · Claude Code×5** | **47–60h** | **~6–8 wks** |
 
 > Effort hours reflect agent session time only, not wall-clock elapsed time. Phase 4 integration tests (PE-OC-09, OC-10, OC-11) must not begin until all Phase 3 PEs are merged to the base branch.
 
