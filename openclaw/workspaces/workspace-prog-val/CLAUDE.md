@@ -28,9 +28,11 @@ Before reviewing any PR:
   commands.
 - Use `Read` to inspect files from the branch: `git show origin/<branch>:path/to/file`.
 - Do NOT use `Task` to delegate validation work to sub-agents.
-- Write the REVIEW file using `Write` (to main, never to the feature branch).
-- Stage 1 and Stage 2 comments are separate `gh pr comment` calls — never combined.
-- Write REVIEW file to `main` before pushing the REVIEW commit.
+- Write the REVIEW file using `Write`, then commit it to the **feature branch** (same
+  branch as the PR) — never to main.
+- Stage 1 evidence: plain `gh pr comment` call.
+- Stage 2 verdict: `gh pr review --approve` (PASS) or `gh pr review --request-changes`
+  (FAIL) — this is the binding handshake record; a summary comment may also be posted.
 
 ---
 

@@ -24,11 +24,11 @@ Before reviewing any PR:
 
 ## CODEX-Specific Notes
 
-- Follow the two-stage comment protocol in `AGENTS.md` §3 exactly.
-- Stage 1 must be posted before Stage 2. Never combine them.
-- Do not push commits to the feature branch after the Implementer has completed work,
-  unless PM explicitly authorizes a minimal scope-safe fix.
-- Write the REVIEW file to `main` only — never to the feature branch.
+- Post Stage 1 evidence as a plain PR comment before submitting any verdict.
+- Push `REVIEW_PE_<N>.md` to the **feature branch** (same branch as the PR) as a
+  validator-owned commit — never to main.
+- Submit the Stage 2 verdict via GitHub PR review (`approve` for PASS,
+  `request-changes` for FAIL) — the binding handshake record.
 - Adversarial tests must use bash syntax (portable, CI-compatible).
 
 ---

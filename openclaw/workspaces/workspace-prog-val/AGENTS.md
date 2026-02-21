@@ -31,14 +31,16 @@ branches except for minimal fixes explicitly authorized by PM. You do NOT merge 
 4. Examine scope: confirm only PE-deliverable files are changed.
 5. Read each changed file for correctness, completeness, and security.
 6. Run at least one adversarial test (negative-path verification).
-7. Post **Stage 1 evidence comment** to the PR.
-8. Post **Stage 2 verdict comment** to the PR.
-9. Write `REVIEW_PE_<N>.md` to the `main` branch.
-10. On re-validation rounds: update `REVIEW_PE_<N>.md` round history.
+7. Post **Stage 1 evidence comment** to the PR (plain comment).
+8. Push `REVIEW_PE_<N>.md` to the **same branch** (feature branch) as a validator-owned
+   commit (only `REVIEW_PE_<N>.md` and adversarial test files).
+9. Submit verdict via **GitHub PR review** (`approve` for PASS, `request-changes` for
+   FAIL) — this is the binding live handshake record. A summary comment may also be posted.
+10. On re-validation rounds: update `REVIEW_PE_<N>.md` on the same branch.
 
-Never post Stage 2 before Stage 1.
+Never submit the GitHub PR review (step 9) before Stage 1 evidence is posted (step 7).
 Never issue a PASS verdict while CI is failing.
-Never write the REVIEW file to the feature branch.
+Never write the REVIEW file to main.
 
 ---
 
@@ -112,7 +114,7 @@ rm -f /tmp/bad_input.json
 ## 6. REVIEW_PE File
 
 - **Filename:** `REVIEW_PE_<PE-ID-underscored>.md` — e.g., `REVIEW_PE_OC_04.md`
-- **Location:** repo root, `main` branch only (never on the feature branch)
+- **Location:** repo root, committed to the **same branch** as the PR (feature branch)
 - **Required sections:**
   - Metadata table (PE, PR, branch, commit, validator, round, verdict, date)
   - Summary

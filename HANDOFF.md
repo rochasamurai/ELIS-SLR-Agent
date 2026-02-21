@@ -101,13 +101,9 @@ grep "workspace-prog-impl\|workspace-infra-impl\|workspace-prog-val" docker-comp
 ### 6.1 Working-tree state
 ```text
 git status -sb
-## feature/pe-oc-04-agent-workspaces
- M CURRENT_PE.md
- M docker-compose.yml
-?? openclaw/workspaces/workspace-infra-impl/
-?? openclaw/workspaces/workspace-prog-impl/
-?? openclaw/workspaces/workspace-prog-val/
+## feature/pe-oc-04-agent-workspaces...origin/feature/pe-oc-04-agent-workspaces
 ```
+(clean — all changes committed)
 
 ### 6.2 Repository state
 ```text
