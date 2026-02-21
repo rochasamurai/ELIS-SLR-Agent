@@ -29,6 +29,9 @@ Before reviewing any PR:
   validator-owned commit — never to main.
 - Submit the Stage 2 verdict via GitHub PR review (`approve` for PASS,
   `request-changes` for FAIL) — the binding handshake record.
+  **Single-account fallback:** If reviewer = PR author (GitHub rejects `request-changes`
+  on self-authored PRs), post the FAIL verdict as a plain PR comment and apply the
+  `pm-review-required` label. `approve` still works for PASS.
 - Adversarial tests must use bash syntax (portable, CI-compatible).
 
 ---

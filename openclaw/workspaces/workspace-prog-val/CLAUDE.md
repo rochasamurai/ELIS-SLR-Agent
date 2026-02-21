@@ -33,6 +33,9 @@ Before reviewing any PR:
 - Stage 1 evidence: plain `gh pr comment` call.
 - Stage 2 verdict: `gh pr review --approve` (PASS) or `gh pr review --request-changes`
   (FAIL) — this is the binding handshake record; a summary comment may also be posted.
+  **Single-account fallback:** If reviewer = PR author (GitHub rejects `--request-changes`
+  on self-authored PRs), post the FAIL verdict as a plain `gh pr comment` and apply the
+  `pm-review-required` label. `gh pr review --approve` still works for PASS.
 
 ---
 

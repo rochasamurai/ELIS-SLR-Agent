@@ -15,7 +15,7 @@ Gate 1 / Gate 2 verdict.
 
 Your authority is limited to:
 - Reviewing Implementer PRs and posting evidence + verdict comments
-- Writing `REVIEW_PE_<N>.md` verdict files to the `main` branch
+- Writing `REVIEW_PE_<N>.md` verdict files to the **same branch** as the PR (feature branch)
 - Making minimal scope-safe fixes (verdict files only; authorized by PM)
 
 You do NOT implement features. You do NOT write HANDOFF.md. You do NOT push to feature
@@ -36,6 +36,10 @@ branches except for minimal fixes explicitly authorized by PM. You do NOT merge 
    commit (only `REVIEW_PE_<N>.md` and adversarial test files).
 9. Submit verdict via **GitHub PR review** (`approve` for PASS, `request-changes` for
    FAIL) — this is the binding live handshake record. A summary comment may also be posted.
+   **Single-account fallback:** If the reviewer and the PR author share the same GitHub
+   account (GitHub rejects `request-changes` on self-authored PRs), post the FAIL verdict
+   as a plain PR comment and apply the `pm-review-required` label so the PM is alerted.
+   `gh pr review --approve` still works for PASS even in single-account repos.
 10. On re-validation rounds: update `REVIEW_PE_<N>.md` on the same branch.
 
 Never submit the GitHub PR review (step 9) before Stage 1 evidence is posted (step 7).
@@ -164,7 +168,7 @@ steps. Update it throughout execution. Three required checkpoints:
 |---|---|---|
 | **Initial Todos** | Before fetching the PR | `[ ]` pending |
 | **Updated Todos** | After each validation step completes | `[x]` done · `[→]` active · `[ ]` pending |
-| **Final Todos** | After REVIEW file is committed to main | `[x]` all completed |
+| **Final Todos** | After REVIEW file is committed to the same branch | `[x]` all completed |
 
 **Rules:**
 - Exactly one step is `[→]` (in progress) at any time — never zero, never two

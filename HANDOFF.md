@@ -48,6 +48,13 @@ container. Each workspace contains `AGENTS.md` (engine-agnostic role rules), `CL
   `workspace-prog-impl/AGENTS.md` contains no references to REVIEW files, verdict
   issuance, or adversarial tests. `workspace-prog-val/AGENTS.md` contains no references
   to implementing features, pushing to feature branches, or writing HANDOFF.md.
+- **Single-account `gh pr review --request-changes` fallback:** GitHub rejects
+  `request-changes` when the reviewer and PR author share the same account (GraphQL:
+  "Can not request changes on your own pull request"). In this single-account repo all
+  PRs are opened by `rochasamurai` so Validators cannot use `--request-changes` for
+  FAIL verdicts. The `workspace-prog-val` rules were updated (r2→r3) to document this
+  constraint: FAIL verdicts use a plain PR comment plus the `pm-review-required` label;
+  PASS verdicts continue to use `gh pr review --approve` (works in all cases).
 
 ## Acceptance Criteria
 
@@ -102,8 +109,12 @@ grep "workspace-prog-impl\|workspace-infra-impl\|workspace-prog-val" docker-comp
 ```text
 git status -sb
 ## feature/pe-oc-04-agent-workspaces...origin/feature/pe-oc-04-agent-workspaces
+ M openclaw/workspaces/workspace-prog-val/AGENTS.md
+ M openclaw/workspaces/workspace-prog-val/CLAUDE.md
+ M openclaw/workspaces/workspace-prog-val/CODEX.md
+ M HANDOFF.md
 ```
-(clean — all changes committed)
+(staged and committed in r3 — clean after push)
 
 ### 6.2 Repository state
 ```text
