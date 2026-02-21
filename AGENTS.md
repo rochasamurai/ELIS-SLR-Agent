@@ -247,6 +247,22 @@ EOF
 > **PM gate:** PM receives Status Packet, reviews it, and explicitly assigns the Validator.
 > Validator does not start without this assignment.
 
+#### Progress Tracking (MANDATORY)
+
+At the start of every PE implementation, the Implementer must create and maintain a Todo list
+for the full execution sequence.
+
+| Checkpoint | When | All items |
+|---|---|---|
+| Initial Todos | Before any work begins | `[ ]` pending |
+| Updated Todos | After each step completes | `[x]` done · `[→]` active · `[ ]` pending |
+| Final Todos | Before delivering Status Packet | `[x]` all completed |
+
+Rules:
+- Exactly one step may be `[→]` at any time.
+- Completed steps must be marked `[x]` immediately.
+- If a step fails and is retried, keep it `[→]` until verification passes.
+
 ---
 
 ### 5.2 Validator workflow (Claude Code unless rotated)
@@ -275,6 +291,22 @@ EOF
     - `REVIEW_PE<N>.md` remains mandatory as the durable on-branch artifact.
 
 > **PM gate:** PM receives verdict. If PASS → PM merges. If FAIL → PM assigns Implementer to fix (§5.3).
+
+#### Progress Tracking (MANDATORY)
+
+At the start of every PR validation, the Validator must create and maintain a Todo list
+for the full validation sequence.
+
+| Checkpoint | When | All items |
+|---|---|---|
+| Initial Todos | Before fetching/reviewing PR | `[ ]` pending |
+| Updated Todos | After each validation step | `[x]` done · `[→]` active · `[ ]` pending |
+| Final Todos | After `REVIEW_PE<N>.md` is committed to branch | `[x]` all completed |
+
+Rules:
+- Exactly one step may be `[→]` at any time.
+- Completed steps must be marked `[x]` immediately.
+- In re-validation rounds, restart Updated Todos from step 1 and include round ID.
 
 ---
 
