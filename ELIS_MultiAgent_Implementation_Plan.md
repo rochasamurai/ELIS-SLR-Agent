@@ -314,6 +314,43 @@ All 11 PEs are implemented by the current 2-agent model. CODEX implements odd-nu
 
 ---
 
+#### PE-INFRA-06 · Single-account GitHub Review Runbook (Companion)
+
+| Field | Value |
+|---|---|
+| Implementer | CODEX (`infra-impl-codex`) |
+| Validator | Claude Code (`prog-val-claude`) |
+| Effort | 1–2 hours |
+| Phase | Cross-cutting (governance) |
+| Depends On | PE-OC-04 |
+
+**Scope**
+
+- Document the single-account GitHub limitation where `gh pr review --request-changes`
+  is blocked on self-authored PRs.
+- Define a compliant fallback handshake for FAIL verdicts in single-account repos.
+- Define preferred target-state migration paths:
+  - per-agent machine identities
+  - GitHub App + CI-enforced verdict gates
+- Provide branch-protection and PM gate configuration guidance for each model.
+- Cross-reference the runbook from `AGENTS.md` enforcement section.
+
+**Acceptance Criteria**
+
+1. Companion runbook exists at `docs/_active/GITHUB_SINGLE_ACCOUNT_VALIDATION_RUNBOOK.md`.
+2. Runbook includes fallback protocol with exact operator steps for PASS and FAIL verdicts.
+3. Runbook includes migration checklist to dual-identity or GitHub App model.
+4. `AGENTS.md` links to the runbook in enforcement mechanisms.
+5. `CURRENT_PE.md` is advanced to this PE with CODEX as Implementer and Claude Code as Validator.
+
+**Deliverables**
+
+- `docs/_active/GITHUB_SINGLE_ACCOUNT_VALIDATION_RUNBOOK.md`
+- `AGENTS.md` (cross-reference + workflow fallback note)
+- `CURRENT_PE.md` (new PE assignment and registry row)
+
+---
+
 #### PE-OC-05 · SLR Agent Workspaces
 
 | Field | Value |
@@ -568,6 +605,7 @@ The 11 PEs are sequenced to respect phase dependencies while allowing parallel e
 | 1 | PE-OC-02: PM Agent + Telegram | Phase 1 | Claude Code | 4–5h | OC-01 |
 | 2 | PE-OC-03: Active PE Registry | Phase 2 | CODEX | 3–4h | OC-02 |
 | 2 | PE-OC-04: Prog/Infra Workspaces | Phase 2 | Claude Code | 5–6h | OC-03 |
+| 2 | PE-INFRA-06: Single-account Review Runbook | Cross-cutting | CODEX | 1–2h | OC-04 |
 | 3 | PE-OC-05: SLR Workspaces | Phase 2 | CODEX | 4–5h | OC-04 |
 | 3–4 | PE-OC-06: PE Assignment + Alternation | Phase 3 | Claude Code | 5–6h | OC-05 |
 | 4 | PE-OC-07: Gate Automation | Phase 3 | CODEX | 5–6h | OC-06 |
@@ -575,7 +613,7 @@ The 11 PEs are sequenced to respect phase dependencies while allowing parallel e
 | 6 | PE-OC-09: E2E Test — Programs | Phase 4 | CODEX | 4–5h | OC-08 |
 | 7 | PE-OC-10: E2E Test — SLR | Phase 4 | Claude Code | 4–5h | OC-09 |
 | 8 | PE-OC-11: Security Hardening | Phase 4 | CODEX | 3–4h | OC-10 |
-| **Total** | **11 PEs** | **4 Phases** | **CODEX×6 · Claude Code×5** | **45–56h** | **~6–8 wks** |
+| **Total** | **12 PEs** | **4 Phases + governance** | **CODEX×7 · Claude Code×5** | **46–58h** | **~6–8 wks** |
 
 > Effort hours reflect agent session time only, not wall-clock elapsed time. Phase 4 integration tests (PE-OC-09, OC-10, OC-11) must not begin until all Phase 3 PEs are merged to the base branch.
 

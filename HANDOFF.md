@@ -1,75 +1,43 @@
-# HANDOFF.md — PE-OC-04
+# HANDOFF.md — PE-INFRA-06
 
 ## Summary
+Implements a companion runbook for the single-account GitHub review limitation and makes it
+a governed artifact in the PE workflow.
 
-PE-OC-04 creates the three worker agent workspaces for the Programs and Infrastructure
-implementer/validator roles, and mounts them as read-only volumes in the OpenClaw
-container. Each workspace contains `AGENTS.md` (engine-agnostic role rules), `CLAUDE.md`
-(Claude Code variant), and `CODEX.md` (CODEX variant). The Active PE Registry in
-`CURRENT_PE.md` is updated to reflect PE-OC-03 merged and PE-OC-04 implementing.
+Delivered in this PE:
+- Added `docs/_active/GITHUB_SINGLE_ACCOUNT_VALIDATION_RUNBOOK.md` with fallback protocol,
+  branch-protection guidance, and migration paths.
+- Updated `AGENTS.md` to reference the runbook in enforcement and document validator fallback
+  when GitHub review actions are blocked on self-authored PRs.
+- Added this PE to `ELIS_MultiAgent_Implementation_Plan.md`.
+- Advanced `CURRENT_PE.md` to `PE-INFRA-06` with CODEX implementer / Claude validator roles.
 
 ## Files Changed
-
-| File | Type |
-|---|---|
-| `openclaw/workspaces/workspace-prog-impl/AGENTS.md` | new |
-| `openclaw/workspaces/workspace-prog-impl/CLAUDE.md` | new |
-| `openclaw/workspaces/workspace-prog-impl/CODEX.md` | new |
-| `openclaw/workspaces/workspace-infra-impl/AGENTS.md` | new |
-| `openclaw/workspaces/workspace-infra-impl/CLAUDE.md` | new |
-| `openclaw/workspaces/workspace-infra-impl/CODEX.md` | new |
-| `openclaw/workspaces/workspace-prog-val/AGENTS.md` | new |
-| `openclaw/workspaces/workspace-prog-val/CLAUDE.md` | new |
-| `openclaw/workspaces/workspace-prog-val/CODEX.md` | new |
-| `docker-compose.yml` | modified |
-| `CURRENT_PE.md` | modified |
-| `HANDOFF.md` | this file |
+- `docs/_active/GITHUB_SINGLE_ACCOUNT_VALIDATION_RUNBOOK.md` (new)
+- `AGENTS.md` (modified)
+- `ELIS_MultiAgent_Implementation_Plan.md` (modified)
+- `CURRENT_PE.md` (modified)
+- `HANDOFF.md` (this file)
 
 ## Design Decisions
-
-- **Three-file pattern per workspace:** `AGENTS.md` holds the canonical engine-agnostic
-  rules. `CLAUDE.md` and `CODEX.md` are engine-specific variants with a session-start
-  checklist and engine notes, then a reference to `AGENTS.md` for the full rule set. This
-  allows each engine to auto-load its own file while keeping the authoritative rules in
-  one place.
-- **workspace-prog-impl vs workspace-infra-impl separation:** Programs domain covers Python
-  source (black/ruff/pytest standards). Infra domain covers CI, Docker, scripts (bash
-  safety, §5.4 hard limit). Keeping them separate avoids role confusion when an engine
-  reads its workspace instructions.
-- **:ro mounts for worker workspaces:** Worker workspaces are read-only — the OpenClaw
-  runtime has no need to write to them. The PM workspace remains :rw to allow the gateway
-  to write session or pairing state if needed.
-- **deploy_openclaw_workspaces.sh unchanged:** The existing deploy script uses
-  `rsync -av --delete "$SRC_DIR/" "$TARGET_ROOT/"` which picks up new workspaces
-  automatically. No modification required.
-- **CURRENT_PE.md registry updated on branch:** PE-OC-03 advanced to `merged` and PE-OC-04
-  added as `implementing`. This keeps the registry accurate before the PR is reviewed.
-- **Zero cross-contamination between Implementer and Validator workspaces:**
-  `workspace-prog-impl/AGENTS.md` contains no references to REVIEW files, verdict
-  issuance, or adversarial tests. `workspace-prog-val/AGENTS.md` contains no references
-  to implementing features, pushing to feature branches, or writing HANDOFF.md.
-- **Single-account `gh pr review --request-changes` fallback:** GitHub rejects
-  `request-changes` when the reviewer and PR author share the same account (GraphQL:
-  "Can not request changes on your own pull request"). In this single-account repo all
-  PRs are opened by `rochasamurai` so Validators cannot use `--request-changes` for
-  FAIL verdicts. The `workspace-prog-val` rules were updated (r2→r3) to document this
-  constraint: FAIL verdicts use a plain PR comment plus the `pm-review-required` label;
-  PASS verdicts continue to use `gh pr review --approve` (works in all cases).
+- Kept the runbook in `docs/_active/` as companion operational guidance while keeping
+  `AGENTS.md` as the normative workflow contract.
+- Used a fallback protocol that preserves PM gating and durable review artifacts without
+  weakening branch protections in single-account operation.
+- Clarified that in single-account mode, both `gh pr review --approve` and
+  `gh pr review --request-changes` can be blocked on self-authored PRs, so verdicts use
+  plain PR comments (and `pm-review-required` for FAIL).
+- Recorded this as an explicit PE (`PE-INFRA-06`) to keep audit trail, assignment, and
+  validation boundaries consistent with existing governance.
 
 ## Acceptance Criteria
-
-- [x] AC-1: `workspace-prog-impl/AGENTS.md` contains zero Validator rules — no REVIEW,
-  verdict, or adversarial test references
-- [x] AC-2: `workspace-prog-val/AGENTS.md` contains zero Implementer rules — no HANDOFF,
-  feature branch push, or code implementation references
-- [x] AC-3: All three workspaces added as `:ro` volume mounts in `docker-compose.yml`
-- [ ] AC-4: `CLAUDE.md` in each workspace auto-loads on Claude Code session start —
-  requires live OpenClaw session (post-deployment manual verification)
-- [ ] AC-5: `CODEX.md` in each workspace confirmed loadable as CODEX project instructions —
-  requires CODEX session (post-deployment manual verification)
+- [x] Companion runbook exists at `docs/_active/GITHUB_SINGLE_ACCOUNT_VALIDATION_RUNBOOK.md`.
+- [x] Runbook includes fallback protocol for PASS and FAIL verdicts.
+- [x] Runbook includes migration checklist for dual-identity and GitHub App models.
+- [x] `AGENTS.md` links to runbook in enforcement section and references fallback in validator workflow.
+- [x] `CURRENT_PE.md` advanced to PE-INFRA-06 with CODEX Implementer / Claude Code Validator.
 
 ## Validation Commands
-
 ```text
 python -m black --check .
 All done! ✨ 🍰 ✨
@@ -83,24 +51,14 @@ All checks passed!
 
 ```text
 python -m pytest -q
+........................................................................ [ 15%]
+........................................................................ [ 31%]
+........................................................................ [ 47%]
+........................................................................ [ 63%]
+........................................................................ [ 79%]
+........................................................................ [ 95%]
+......................                                                   [100%]
 454 passed, 17 warnings
-```
-
-```text
-grep -i "review\|verdict\|adversarial\|REVIEW_PE" openclaw/workspaces/workspace-prog-impl/AGENTS.md
-(no output — zero matches)
-```
-
-```text
-grep -i "handoff\|git push\|open pr\|feature branch" openclaw/workspaces/workspace-prog-val/AGENTS.md
-(no output — zero matches)
-```
-
-```text
-grep "workspace-prog-impl\|workspace-infra-impl\|workspace-prog-val" docker-compose.yml
-      - ${HOME}/openclaw/workspace-prog-impl:/app/workspaces/workspace-prog-impl:ro
-      - ${HOME}/openclaw/workspace-infra-impl:/app/workspaces/workspace-infra-impl:ro
-      - ${HOME}/openclaw/workspace-prog-val:/app/workspaces/workspace-prog-val:ro
 ```
 
 ## Status Packet
@@ -108,14 +66,13 @@ grep "workspace-prog-impl\|workspace-infra-impl\|workspace-prog-val" docker-comp
 ### 6.1 Working-tree state
 ```text
 git status -sb
-## feature/pe-oc-04-agent-workspaces...origin/feature/pe-oc-04-agent-workspaces
+## chore/single-account-review-runbook...origin/main [ahead 3]
 ```
-(clean — all changes committed)
 
 ### 6.2 Repository state
 ```text
 git branch --show-current
-feature/pe-oc-04-agent-workspaces
+chore/single-account-review-runbook
 ```
 
 ### 6.3 Quality gates

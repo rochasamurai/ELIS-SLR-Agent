@@ -247,6 +247,22 @@ EOF
 > **PM gate:** PM receives Status Packet, reviews it, and explicitly assigns the Validator.
 > Validator does not start without this assignment.
 
+#### Progress Tracking (MANDATORY)
+
+At the start of every PE implementation, the Implementer must create and maintain a Todo list
+for the full execution sequence.
+
+| Checkpoint | When | All items |
+|---|---|---|
+| Initial Todos | Before any work begins | `[ ]` pending |
+| Updated Todos | After each step completes | `[x]` done · `[→]` active · `[ ]` pending |
+| Final Todos | Before delivering Status Packet | `[x]` all completed |
+
+Rules:
+- Exactly one step may be `[→]` at any time.
+- Completed steps must be marked `[x]` immediately.
+- If a step fails and is retried, keep it `[→]` until verification passes.
+
 ---
 
 ### 5.2 Validator workflow (Claude Code unless rotated)
@@ -270,10 +286,27 @@ EOF
 8. If any newly discovered pre-existing defect is not already in §11, add it now.
 9. Push validation commits to the **same branch** (validator-owned files only: `REVIEW_PE<N>.md` + adversarial tests).
 10. Deliver verdict + Status Packet using a **GitHub PR review comment** (`approve` for PASS, `request-changes` for FAIL) using the standard format (Section 9).
+    - Single-account fallback: if reviewer and PR author are the same GitHub account, and GitHub blocks review actions, post verdicts as plain PR comments. For FAIL, explicitly request PM attention and apply `pm-review-required`.
     - PM may still receive a direct summary message, but the PR review is the binding live handshake record.
     - `REVIEW_PE<N>.md` remains mandatory as the durable on-branch artifact.
 
 > **PM gate:** PM receives verdict. If PASS → PM merges. If FAIL → PM assigns Implementer to fix (§5.3).
+
+#### Progress Tracking (MANDATORY)
+
+At the start of every PR validation, the Validator must create and maintain a Todo list
+for the full validation sequence.
+
+| Checkpoint | When | All items |
+|---|---|---|
+| Initial Todos | Before fetching/reviewing PR | `[ ]` pending |
+| Updated Todos | After each validation step | `[x]` done · `[→]` active · `[ ]` pending |
+| Final Todos | After `REVIEW_PE<N>.md` is committed to branch | `[x]` all completed |
+
+Rules:
+- Exactly one step may be `[→]` at any time.
+- Completed steps must be marked `[x]` immediately.
+- In re-validation rounds, restart Updated Todos from step 1 and include round ID.
 
 ---
 
@@ -500,6 +533,16 @@ pre-populated. Implementers copy it rather than writing from memory.
 **Audit trigger** (§7): Any workflow deviation observed by any party triggers an audit report.
 The record creates accountability and a pattern log across PEs.
 
+### 12.4 Single-account GitHub constraint runbook
+
+When the repository operates with a single GitHub identity for both agents, GitHub may block
+`gh pr review --request-changes` on self-authored PRs. The operational fallback and migration
+paths are documented in:
+
+- `docs/_active/GITHUB_SINGLE_ACCOUNT_VALIDATION_RUNBOOK.md`
+
+That runbook is normative for this constraint and must be used together with §5.2.
+
 ---
 
 ## 13) Secrets isolation policy
@@ -536,4 +579,3 @@ If a secret-pattern file is detected in context, the agent must:
 ---
 
 End of AGENTS.md
-

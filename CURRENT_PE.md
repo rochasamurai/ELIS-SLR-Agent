@@ -21,8 +21,8 @@
 
 | Field   | Value                                    |
 |---------|------------------------------------------|
-| PE      | PE-OC-04                                 |
-| Branch  | feature/pe-oc-04-agent-workspaces        |
+| PE      | PE-INFRA-06                              |
+| Branch  | chore/single-account-review-runbook      |
 
 ---
 
@@ -30,8 +30,8 @@
 
 | Agent       | Role        |
 |-------------|-------------|
-| Claude Code | Implementer |
-| CODEX       | Validator   |
+| CODEX       | Implementer |
+| Claude Code | Validator   |
 
 ---
 
@@ -46,7 +46,8 @@
 | PE-OC-01    | openclaw-infra  | infra-impl-codex    | prog-val-claude   | feature/pe-oc-01-docker-setup           | merged          | 2026-02-20   |
 | PE-OC-02    | openclaw-infra  | infra-impl-claude   | infra-val-codex   | feature/pe-oc-02-pm-agent-telegram      | merged          | 2026-02-20   |
 | PE-OC-03    | openclaw-infra  | infra-impl-codex    | prog-val-claude   | feature/pe-oc-03-active-pe-registry     | merged          | 2026-02-21   |
-| PE-OC-04    | openclaw-infra  | infra-impl-claude   | infra-val-codex   | feature/pe-oc-04-agent-workspaces       | implementing    | 2026-02-21   |
+| PE-OC-04    | openclaw-infra  | infra-impl-claude   | infra-val-codex   | feature/pe-oc-04-agent-workspaces       | merged          | 2026-02-21   |
+| PE-INFRA-06 | infra           | infra-impl-codex    | prog-val-claude   | chore/single-account-review-runbook     | implementing    | 2026-02-21   |
 
 Valid status values:
 - `planning`
