@@ -44,7 +44,7 @@
 | PE-INFRA-03 | infra           | infra-impl-codex    | prog-val-claude   | feature/pe-infra-03-release-agnostic    | merged          | 2026-02-19   |
 | PE-INFRA-04 | infra           | infra-impl-claude   | infra-val-codex   | chore/pe-infra-04-autonomous-secrets    | merged          | 2026-02-20   |
 | PE-OC-01    | openclaw-infra  | infra-impl-codex    | prog-val-claude   | feature/pe-oc-01-docker-setup           | merged          | 2026-02-20   |
-| PE-OC-02    | openclaw-infra  | infra-impl-claude   | infra-val-codex   | feature/pe-oc-02-pm-agent-telegram      | gate-2-pending  | 2026-02-20   |
+| PE-OC-02    | openclaw-infra  | infra-impl-claude   | infra-val-codex   | feature/pe-oc-02-pm-agent-telegram      | merged          | 2026-02-20   |
 | PE-OC-03    | openclaw-infra  | infra-impl-codex    | prog-val-claude   | feature/pe-oc-03-active-pe-registry     | implementing    | 2026-02-21   |
 
 Valid status values:
@@ -59,6 +59,7 @@ Valid status values:
 Alternation rule:
 - For consecutive PEs in the same domain, the implementer engine must alternate (`codex` <-> `claude`).
 - Validator engine must be opposite to implementer engine.
+- Historical rows with status `merged` may predate alternation enforcement and are preserved as audit history.
 
 ---
 

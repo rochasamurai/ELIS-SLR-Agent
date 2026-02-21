@@ -43,7 +43,9 @@ CURRENT_PE.md OK — role registration valid.
 ```
 
 ```text
-python -c "from pathlib import Path; p=Path('CURRENT_PE.md'); s=p.read_text(encoding='utf-8'); s=s.replace('| PE-OC-03    | openclaw-infra  | infra-impl-codex    | prog-val-claude   | feature/pe-oc-03-active-pe-registry     | implementing    | 2026-02-21   |','| PE-OC-03    | openclaw-infra  | infra-impl-claude   | infra-val-codex   | feature/pe-oc-03-active-pe-registry     | implementing    | 2026-02-21   |'); Path('CURRENT_PE_bad_roles.md').write_text(s, encoding='utf-8')"; $env:CURRENT_PE_PATH='CURRENT_PE_bad_roles.md'; python scripts/check_role_registration.py; $code=$LASTEXITCODE; Remove-Item Env:CURRENT_PE_PATH; Remove-Item CURRENT_PE_bad_roles.md; exit $code
+python -c "from pathlib import Path; p=Path('CURRENT_PE.md'); s=p.read_text(encoding='utf-8'); s=s.replace('| PE-OC-03    | openclaw-infra  | infra-impl-codex    | prog-val-claude   | feature/pe-oc-03-active-pe-registry     | implementing    | 2026-02-21   |','| PE-OC-03    | openclaw-infra  | infra-impl-claude   | infra-val-codex   | feature/pe-oc-03-active-pe-registry     | implementing    | 2026-02-21   |'); Path('CURRENT_PE_bad_roles.md').write_text(s, encoding='utf-8')"
+CURRENT_PE_PATH=CURRENT_PE_bad_roles.md python scripts/check_role_registration.py
+rm -f CURRENT_PE_bad_roles.md
 ERROR: Consecutive same-domain PEs use the same implementer engine.
 ```
 
@@ -76,4 +78,32 @@ python -m pytest -q
 ........................................................................ [ 95%]
 ......................                                                   [100%]
 454 passed, 17 warnings
+```
+
+## Status Packet
+
+### 6.1 Working-tree state
+```text
+git status -sb
+## feature/pe-oc-03-active-pe-registry...origin/main [ahead 1]
+ M CURRENT_PE.md
+ M HANDOFF.md
+```
+
+### 6.2 Repository state
+```text
+git branch --show-current
+feature/pe-oc-03-active-pe-registry
+```
+
+### 6.3 Quality gates
+```text
+black: PASS (104 files unchanged)
+ruff: PASS
+pytest: PASS (454 passed, 17 warnings)
+```
+
+### 6.4 Ready to merge
+```text
+YES — awaiting validator re-review.
 ```
