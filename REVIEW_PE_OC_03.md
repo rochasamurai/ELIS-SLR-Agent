@@ -5,10 +5,10 @@
 | PE | PE-OC-03 |
 | PR | #263 |
 | Branch | feature/pe-oc-03-active-pe-registry |
-| Commit | 42c2e5d |
+| Commit | d874394 |
 | Validator | Claude Code |
-| Round | r1 |
-| Verdict | **FAIL** |
+| Round | r2 |
+| Verdict | **PASS** |
 | Date | 2026-02-21 |
 
 ---
@@ -17,77 +17,37 @@
 
 PE-OC-03 delivered a working multi-row Active PE Registry with correct alternation
 enforcement, passing CI, and a sound `check_role_registration.py` implementation.
-Two blocking items prevent Gate 1 approval: an incorrect status in the registry data
-and a missing Status Packet in HANDOFF.md.
+All r1 blocking findings resolved. Gate 1 approved.
 
 ---
 
 ## Findings
 
-### F1 — BLOCKING: PE-OC-02 registry status is `gate-2-pending` (must be `merged`)
+### r1 Findings — All Resolved
 
-**File:** `CURRENT_PE.md`, Active PE Registry, PE-OC-02 row
-**Evidence:** PR #262 (PE-OC-02) was merged before this branch was created.
-
-```
-| PE-OC-02 | openclaw-infra | infra-impl-claude | infra-val-codex | feature/pe-oc-02-pm-agent-telegram | gate-2-pending | 2026-02-20 |
-```
-
-**Required fix:** Change `gate-2-pending` → `merged`.
-
-**Impact:** PM Agent reads the registry and will attempt Gate 2 processing on PE-OC-02,
-which is already closed.
+| # | Severity | Description | r2 Status |
+|---|----------|-------------|-----------|
+| F1 | BLOCKING | PE-OC-02 registry status `gate-2-pending` → must be `merged` | ✓ resolved |
+| F2 | BLOCKING | HANDOFF.md missing Status Packet (§6.1–§6.4) | ✓ resolved |
+| NB1 | non-blocking | Three consecutive `infra-impl-codex` in merged INFRA rows | ✓ documented in alternation rule note |
+| NB2 | non-blocking | Adversarial test command used PowerShell syntax | ✓ resolved (bash syntax) |
 
 ---
 
-### F2 — BLOCKING: HANDOFF.md missing Status Packet
-
-**File:** `HANDOFF.md`
-**Evidence:** No `## Status Packet` section present. PM AGENTS.md §3.1 requires "Status
-Packet in HANDOFF.md is complete (all fields populated)" as a Gate 1 condition.
-
-Required structure:
-
-```
-## Status Packet
-
-### 6.1 Working-tree state
-### 6.2 Repository state
-### 6.3 Quality gates
-### 6.4 Ready to merge
-```
-
-**Required fix:** Add the Status Packet with all four subsections populated.
-
----
-
-### NB1 — non-blocking: PE-INFRA-01/02/03 show three consecutive `infra-impl-codex`
-
-All three rows are `merged` and excluded from active alternation checks by design.
-Historical data may predate the alternation rule. No fix required.
-
----
-
-### NB2 — non-blocking: Adversarial test command uses PowerShell syntax
-
-HANDOFF.md adversarial test uses `$env:CURRENT_PE_PATH=`, `$LASTEXITCODE`, `Remove-Item Env:`.
-Non-reproducible on Linux/bash. Bash equivalent: `CURRENT_PE_PATH=... python scripts/check_role_registration.py`.
-
----
-
-## What Passed
+## All Checks (r2)
 
 | Check | Result |
 |---|---|
-| `check_role_registration.py` — main() returns 0 on valid registry | PASS |
-| Adversarial test — consecutive same-engine returns rc=1 | PASS |
-| `detect_role()` regression — registry rows do not pollute Agent roles detection | PASS |
-| Alternation logic trace — PE-OC-02 (claude) → PE-OC-03 (codex) alternates | PASS |
-| `docs/templates/CURRENT_PE_template.md` — complete and accurate | PASS |
-| black | PASS |
-| ruff | PASS |
-| pytest | PASS (454 passed, 17 warnings) |
+| `check_role_registration.py` — main() returns 0 on r2 registry | PASS |
+| Adversarial same-engine → rc=1 | PASS |
+| `detect_role()` no regression | PASS |
+| PE-OC-02 status = `merged` (active rows: PE-OC-03 only) | PASS |
+| `docs/templates/CURRENT_PE_template.md` | PASS |
+| Status Packet §6.1–§6.4 | PASS |
+| black / ruff / pytest (454 passed) | PASS |
 | CI — all jobs | PASS |
+
+Gate 1 conditions: CI green ✓ · HANDOFF.md present ✓ · Status Packet complete ✓
 
 ---
 
@@ -96,3 +56,4 @@ Non-reproducible on Linux/bash. Bash equivalent: `CURRENT_PE_PATH=... python scr
 | Round | Verdict | Date |
 |---|---|---|
 | r1 | FAIL | 2026-02-21 |
+| r2 | PASS | 2026-02-21 |
