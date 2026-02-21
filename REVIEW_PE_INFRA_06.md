@@ -30,6 +30,7 @@ Zero blocking findings.
 | ID | Severity | Description | Resolution |
 |---|---|---|---|
 | NB-1 | non-blocking | HANDOFF.md §6.1 shows pre-commit dirty snapshot (runbook `??` untracked, HANDOFF.md ` M` unstaged). All files ARE committed in `93b4672`. | Recurring pattern — informational only. |
+| NB-2 | non-blocking | Runbook §4.2 states `gh pr review --approve` works in single-account repos, but validation session confirmed GitHub blocks it too ("Can not approve your own pull request"). Runbook §4.2 should be updated in a follow-up cycle to use plain-comment fallback for PASS as well. | Not blocking — overall fallback protocol is correct, gap is only in §4.2 specifics. |
 
 ---
 
@@ -63,4 +64,4 @@ Zero blocking findings.
 
 | Round | Verdict | Key Findings | Date |
 |---|---|---|---|
-| r1 | PASS | NB-1: pre-commit status snapshot in HANDOFF §6.1 | 2026-02-21 |
+| r1 | PASS | NB-1: pre-commit status snapshot in HANDOFF §6.1; NB-2: runbook §4.2 `--approve` also blocked in single-account repos | 2026-02-21 |
