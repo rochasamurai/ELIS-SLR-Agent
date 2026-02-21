@@ -109,12 +109,8 @@ grep "workspace-prog-impl\|workspace-infra-impl\|workspace-prog-val" docker-comp
 ```text
 git status -sb
 ## feature/pe-oc-04-agent-workspaces...origin/feature/pe-oc-04-agent-workspaces
- M openclaw/workspaces/workspace-prog-val/AGENTS.md
- M openclaw/workspaces/workspace-prog-val/CLAUDE.md
- M openclaw/workspaces/workspace-prog-val/CODEX.md
- M HANDOFF.md
 ```
-(staged and committed in r3 — clean after push)
+(clean — all changes committed)
 
 ### 6.2 Repository state
 ```text
