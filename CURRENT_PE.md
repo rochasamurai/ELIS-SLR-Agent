@@ -21,8 +21,8 @@
 
 | Field   | Value                                    |
 |---------|------------------------------------------|
-| PE      | PE-OC-03                                 |
-| Branch  | feature/pe-oc-03-active-pe-registry      |
+| PE      | PE-OC-04                                 |
+| Branch  | feature/pe-oc-04-agent-workspaces        |
 
 ---
 
@@ -30,8 +30,8 @@
 
 | Agent       | Role        |
 |-------------|-------------|
-| CODEX       | Implementer |
-| Claude Code | Validator   |
+| Claude Code | Implementer |
+| CODEX       | Validator   |
 
 ---
 
