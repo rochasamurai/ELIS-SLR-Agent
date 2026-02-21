@@ -23,6 +23,9 @@ Delivered in this PE:
 - Advanced `CURRENT_PE.md` state in the same PE to preserve auditable sequence.
 - Updated plan totals and schedule immediately after adding PE-INFRA-07 to prevent
   stale effort/capacity reporting.
+- PM-approved alternation exemption applied: PE-INFRA-07 is a cross-cutting governance PE
+  executed immediately after PE-INFRA-06 by CODEX to close milestone-control gaps. The
+  next infra-domain PE should return to normal alternation.
 
 ## Acceptance Criteria
 - [x] AC-1: `docs/_active/MILESTONES.md` exists and lists current active milestone.
@@ -59,12 +62,14 @@ python -m pytest -q
 ### 6.1 Working-tree state
 ```text
 git status -sb
-## chore/pe-infra-07-milestone-governance...origin/main
- M CURRENT_PE.md
- M ELIS_MultiAgent_Implementation_Plan.md
- M HANDOFF.md
-?? docs/_active/MILESTONES.md
-?? docs/_active/MILESTONE_TRANSITION_RUNBOOK.md
+## chore/pe-infra-07-milestone-governance...origin/main [ahead 2]
+```
+
+```text
+git show --stat --oneline HEAD
+7ad3444 docs(val): add REVIEW_PE_INFRA_07.md — PE-INFRA-07 PASS
+ REVIEW_PE_INFRA_07.md | 131 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 131 insertions(+)
 ```
 
 ### 6.2 Repository state
