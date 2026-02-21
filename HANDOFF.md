@@ -1,50 +1,60 @@
-# HANDOFF.md — PE-OC-02
+# HANDOFF.md — PE-OC-03
 
 ## Summary
-PM Agent workspace and Telegram integration for the ELIS multi-agent series.
+PE-OC-03 migrated `CURRENT_PE.md` from single-PE assignment metadata to a multi-row
+Active PE Registry format, and upgraded role registration checks to validate the full
+registry model.
 
 Delivered in this PE:
-- `openclaw/workspaces/workspace-pm/AGENTS.md` — PM Agent orchestration rules
-- `openclaw/workspaces/workspace-pm/SOUL.md` — PM Agent persona definition
-- `openclaw/openclaw.json` (v0.3) — `pm` agent registered with model, exec.ask, Telegram binding, and skills.hub.autoInstall guard
-- `docs/openclaw/PM_AGENT_RULES.md` — source-controlled reference copy
-- `docs/openclaw/TELEGRAM_SETUP.md` — PO onboarding guide
-
-Telegram account pairing (`openclaw pairing approve`) and live status-query verification
-require a running OpenClaw gateway with valid bot credentials — documented in
-`docs/openclaw/TELEGRAM_SETUP.md`; performed post-deployment by PM.
+- `CURRENT_PE.md` migrated and populated with legacy PE-INFRA rows plus active PE-OC rows.
+- `scripts/check_role_registration.py` upgraded to validate:
+  - Active PE Registry presence and required columns
+  - Required status values per row
+  - Implementer/validator engine opposition per row
+  - Consecutive same-domain implementer alternation for active rows
+- `docs/templates/CURRENT_PE_template.md` added as the canonical registry template.
 
 ## Files Changed
-- `openclaw/workspaces/workspace-pm/AGENTS.md` (new)
-- `openclaw/workspaces/workspace-pm/SOUL.md` (new)
-- `openclaw/openclaw.json` (modified — v0.2 → v0.3)
-- `docs/openclaw/PM_AGENT_RULES.md` (new)
-- `docs/openclaw/TELEGRAM_SETUP.md` (new)
+- `CURRENT_PE.md` (modified — Active PE Registry populated with multi-PE rows)
+- `scripts/check_role_registration.py` (modified — multi-row registry + alternation validation)
+- `docs/templates/CURRENT_PE_template.md` (new)
 - `HANDOFF.md` (this file)
 
 ## Design Decisions
-- `AGENTS.md` contains only orchestration rules — zero implementation or validation rules.
-- `SOUL.md` defines persona and explicit authority boundaries, including hard limits.
-- `openclaw.json` uses `accountId: "po-channel"` as a deployment-time placeholder;
-  the real Telegram user ID is set via `openclaw pairing approve` and committed in a
-  follow-up commit (not in this PE to avoid secrets exposure risk).
-- `skills.hub.autoInstall: false` enforced in `openclaw.json` per plan §5.3 security freeze.
-- `exec.ask: true` enforced per plan §2.3 and risk R-01 mitigation.
-- `PM_AGENT_RULES.md` is a summary reference; canonical source is the workspace file.
+- Alternation is enforced on active rows only (`planning`, `implementing`,
+  `gate-1-pending`, `validating`, `gate-2-pending`), while historical rows
+  (`merged`, `blocked`) remain valid as immutable history.
+- Engine detection is derived from agent IDs (`codex` / `claude`) to enforce both:
+  row-level role opposition and domain-level implementer alternation.
+- Registry parsing is section-scoped (`## Active PE Registry`) and validates required
+  columns exactly as defined in the implementation plan.
+- Template file was added under `docs/templates/` to standardize PM updates.
 
 ## Acceptance Criteria
-- [x] `openclaw/workspaces/workspace-pm/AGENTS.md` created — orchestration rules only
-- [x] `openclaw/workspaces/workspace-pm/SOUL.md` created — persona and authority boundaries
-- [x] `openclaw.json` v0.3 — `pm` agentId registered with model `claude-opus-4-6`, `exec.ask: true`, Telegram binding, `skills.hub.autoInstall: false`
-- [x] `docs/openclaw/PM_AGENT_RULES.md` created — source-controlled reference
-- [x] `docs/openclaw/TELEGRAM_SETUP.md` created — PO onboarding guide with pairing steps
-- [x] `AGENTS.md` contains zero implementation or validation rules (AC#4 — verified by content)
-- [x] Only `pm` agentId in `bindings` — all other agents have no channel binding (AC#5 — verified by `openclaw.json`)
-- [ ] AC#1: PO "status" via Telegram → PM Agent responds — requires live OpenClaw (post-deployment)
-- [x] AC#2: No worker agent IDs in PO-facing messages — §2.2 assignment template uses engine-only output; §4.3 explicitly prohibits internal agent IDs
-- [ ] AC#3: `openclaw doctor --check dm-policy` exits 0 — requires live OpenClaw (post-deployment)
+- [x] AC-1: `CURRENT_PE.md` with 3+ rows and different statuses passes `check_role_registration.py`
+- [x] AC-2: Two consecutive same-domain active rows with same implementer engine fail with non-zero exit
+- [x] AC-3: PM Agent can read and operate with Active PE Registry model (workspace rules explicitly enforce registry usage)
+- [x] AC-4: Existing single-PE PE-INFRA-01 through PE-INFRA-04 represented in registry format
 
 ## Validation Commands
+```text
+python scripts/check_role_registration.py
+CURRENT_PE.md OK — role registration valid.
+```
+
+```text
+python -c "from pathlib import Path; p=Path('CURRENT_PE.md'); s=p.read_text(encoding='utf-8'); s=s.replace('| PE-OC-03    | openclaw-infra  | infra-impl-codex    | prog-val-claude   | feature/pe-oc-03-active-pe-registry     | implementing    | 2026-02-21   |','| PE-OC-03    | openclaw-infra  | infra-impl-claude   | infra-val-codex   | feature/pe-oc-03-active-pe-registry     | implementing    | 2026-02-21   |'); Path('CURRENT_PE_bad_roles.md').write_text(s, encoding='utf-8')"; $env:CURRENT_PE_PATH='CURRENT_PE_bad_roles.md'; python scripts/check_role_registration.py; $code=$LASTEXITCODE; Remove-Item Env:CURRENT_PE_PATH; Remove-Item CURRENT_PE_bad_roles.md; exit $code
+ERROR: Consecutive same-domain PEs use the same implementer engine.
+```
+
+```text
+rg -n "CURRENT_PE.md|shell|workspaces" openclaw/openclaw.json openclaw/workspaces/workspace-pm/AGENTS.md
+openclaw/workspaces/workspace-pm/AGENTS.md:40:**Enforcement:** Before assigning any PE, read the Active PE Registry (`CURRENT_PE.md`).
+openclaw/workspaces/workspace-pm/AGENTS.md:58:CURRENT_PE.md updated.
+openclaw/workspaces/workspace-pm/AGENTS.md:174:The Active PE Registry is maintained in `CURRENT_PE.md` on the `main` branch.
+openclaw/workspaces/workspace-pm/AGENTS.md:189:- `exec.ask: on` — always confirm before executing shell commands
+```
+
 ```text
 python -m black --check .
 All done! ✨ 🍰 ✨
@@ -57,46 +67,13 @@ All checks passed!
 ```
 
 ```text
-python -m pytest
+python -m pytest -q
+........................................................................ [ 15%]
+........................................................................ [ 31%]
+........................................................................ [ 47%]
+........................................................................ [ 63%]
+........................................................................ [ 79%]
+........................................................................ [ 95%]
+......................                                                   [100%]
 454 passed, 17 warnings
 ```
-
-```text
-git diff --name-status origin/main..HEAD
-M       HANDOFF.md
-M       openclaw/openclaw.json
-A       docs/openclaw/PM_AGENT_RULES.md
-A       docs/openclaw/TELEGRAM_SETUP.md
-A       openclaw/workspaces/workspace-pm/AGENTS.md
-A       openclaw/workspaces/workspace-pm/SOUL.md
-```
-
-## Status Packet
-
-### 6.1 Working-tree state
-```text
-git status -sb
-## feature/pe-oc-02-pm-agent-telegram
-M  HANDOFF.md
-M  openclaw/openclaw.json
-A  docs/openclaw/PM_AGENT_RULES.md
-A  docs/openclaw/TELEGRAM_SETUP.md
-A  openclaw/workspaces/workspace-pm/AGENTS.md
-A  openclaw/workspaces/workspace-pm/SOUL.md
-```
-
-### 6.2 Repository state
-```text
-git branch --show-current
-feature/pe-oc-02-pm-agent-telegram
-```
-
-### 6.3 Quality gates
-```text
-black: PASS (104 files unchanged)
-ruff: PASS
-pytest: PASS (454 passed, 17 warnings)
-```
-
-### 6.4 Ready to merge
-NO — awaiting CODEX validator review.
