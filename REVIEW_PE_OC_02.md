@@ -76,6 +76,19 @@ M	REVIEW_PE_OC_02.md
 2. **NB1 resolved**
    - `HANDOFF.md` AC#2 checkbox is now checked and text references the corrected section 2.2 template.
 
+### Evidence
+```text
+python -m black --check .
+All done! ✨ 🍰 ✨
+104 files would be left unchanged.
+
+python -m ruff check .
+All checks passed!
+
+python -m pytest -q
+454 passed, 17 warnings
+```
+
 ### Ready to merge
 YES — all blocking findings resolved and re-validated.
 
