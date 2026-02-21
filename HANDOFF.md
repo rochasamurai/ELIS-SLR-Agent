@@ -1,61 +1,67 @@
-# HANDOFF.md — PE-OC-03
+# HANDOFF.md — PE-OC-04
 
 ## Summary
-PE-OC-03 migrated `CURRENT_PE.md` from single-PE assignment metadata to a multi-row
-Active PE Registry format, and upgraded role registration checks to validate the full
-registry model.
 
-Delivered in this PE:
-- `CURRENT_PE.md` migrated and populated with legacy PE-INFRA rows plus active PE-OC rows.
-- `scripts/check_role_registration.py` upgraded to validate:
-  - Active PE Registry presence and required columns
-  - Required status values per row
-  - Implementer/validator engine opposition per row
-  - Consecutive same-domain implementer alternation for active rows
-- `docs/templates/CURRENT_PE_template.md` added as the canonical registry template.
+PE-OC-04 creates the three worker agent workspaces for the Programs and Infrastructure
+implementer/validator roles, and mounts them as read-only volumes in the OpenClaw
+container. Each workspace contains `AGENTS.md` (engine-agnostic role rules), `CLAUDE.md`
+(Claude Code variant), and `CODEX.md` (CODEX variant). The Active PE Registry in
+`CURRENT_PE.md` is updated to reflect PE-OC-03 merged and PE-OC-04 implementing.
 
 ## Files Changed
-- `CURRENT_PE.md` (modified — Active PE Registry populated with multi-PE rows)
-- `scripts/check_role_registration.py` (modified — multi-row registry + alternation validation)
-- `docs/templates/CURRENT_PE_template.md` (new)
-- `HANDOFF.md` (this file)
+
+| File | Type |
+|---|---|
+| `openclaw/workspaces/workspace-prog-impl/AGENTS.md` | new |
+| `openclaw/workspaces/workspace-prog-impl/CLAUDE.md` | new |
+| `openclaw/workspaces/workspace-prog-impl/CODEX.md` | new |
+| `openclaw/workspaces/workspace-infra-impl/AGENTS.md` | new |
+| `openclaw/workspaces/workspace-infra-impl/CLAUDE.md` | new |
+| `openclaw/workspaces/workspace-infra-impl/CODEX.md` | new |
+| `openclaw/workspaces/workspace-prog-val/AGENTS.md` | new |
+| `openclaw/workspaces/workspace-prog-val/CLAUDE.md` | new |
+| `openclaw/workspaces/workspace-prog-val/CODEX.md` | new |
+| `docker-compose.yml` | modified |
+| `CURRENT_PE.md` | modified |
+| `HANDOFF.md` | this file |
 
 ## Design Decisions
-- Alternation is enforced on active rows only (`planning`, `implementing`,
-  `gate-1-pending`, `validating`, `gate-2-pending`), while historical rows
-  (`merged`, `blocked`) remain valid as immutable history.
-- Engine detection is derived from agent IDs (`codex` / `claude`) to enforce both:
-  row-level role opposition and domain-level implementer alternation.
-- Registry parsing is section-scoped (`## Active PE Registry`) and validates required
-  columns exactly as defined in the implementation plan.
-- Template file was added under `docs/templates/` to standardize PM updates.
+
+- **Three-file pattern per workspace:** `AGENTS.md` holds the canonical engine-agnostic
+  rules. `CLAUDE.md` and `CODEX.md` are engine-specific variants with a session-start
+  checklist and engine notes, then a reference to `AGENTS.md` for the full rule set. This
+  allows each engine to auto-load its own file while keeping the authoritative rules in
+  one place.
+- **workspace-prog-impl vs workspace-infra-impl separation:** Programs domain covers Python
+  source (black/ruff/pytest standards). Infra domain covers CI, Docker, scripts (bash
+  safety, §5.4 hard limit). Keeping them separate avoids role confusion when an engine
+  reads its workspace instructions.
+- **:ro mounts for worker workspaces:** Worker workspaces are read-only — the OpenClaw
+  runtime has no need to write to them. The PM workspace remains :rw to allow the gateway
+  to write session or pairing state if needed.
+- **deploy_openclaw_workspaces.sh unchanged:** The existing deploy script uses
+  `rsync -av --delete "$SRC_DIR/" "$TARGET_ROOT/"` which picks up new workspaces
+  automatically. No modification required.
+- **CURRENT_PE.md registry updated on branch:** PE-OC-03 advanced to `merged` and PE-OC-04
+  added as `implementing`. This keeps the registry accurate before the PR is reviewed.
+- **Zero cross-contamination between Implementer and Validator workspaces:**
+  `workspace-prog-impl/AGENTS.md` contains no references to REVIEW files, verdict
+  issuance, or adversarial tests. `workspace-prog-val/AGENTS.md` contains no references
+  to implementing features, pushing to feature branches, or writing HANDOFF.md.
 
 ## Acceptance Criteria
-- [x] AC-1: `CURRENT_PE.md` with 3+ rows and different statuses passes `check_role_registration.py`
-- [x] AC-2: Two consecutive same-domain active rows with same implementer engine fail with non-zero exit
-- [x] AC-3: PM Agent can read and operate with Active PE Registry model (workspace rules explicitly enforce registry usage)
-- [x] AC-4: Existing single-PE PE-INFRA-01 through PE-INFRA-04 represented in registry format
+
+- [x] AC-1: `workspace-prog-impl/AGENTS.md` contains zero Validator rules — no REVIEW,
+  verdict, or adversarial test references
+- [x] AC-2: `workspace-prog-val/AGENTS.md` contains zero Implementer rules — no HANDOFF,
+  feature branch push, or code implementation references
+- [x] AC-3: All three workspaces added as `:ro` volume mounts in `docker-compose.yml`
+- [ ] AC-4: `CLAUDE.md` in each workspace auto-loads on Claude Code session start —
+  requires live OpenClaw session (post-deployment manual verification)
+- [ ] AC-5: `CODEX.md` in each workspace confirmed loadable as CODEX project instructions —
+  requires CODEX session (post-deployment manual verification)
 
 ## Validation Commands
-```text
-python scripts/check_role_registration.py
-CURRENT_PE.md OK — role registration valid.
-```
-
-```text
-python -c "from pathlib import Path; p=Path('CURRENT_PE.md'); s=p.read_text(encoding='utf-8'); s=s.replace('| PE-OC-03    | openclaw-infra  | infra-impl-codex    | prog-val-claude   | feature/pe-oc-03-active-pe-registry     | implementing    | 2026-02-21   |','| PE-OC-03    | openclaw-infra  | infra-impl-claude   | infra-val-codex   | feature/pe-oc-03-active-pe-registry     | implementing    | 2026-02-21   |'); Path('CURRENT_PE_bad_roles.md').write_text(s, encoding='utf-8')"
-CURRENT_PE_PATH=CURRENT_PE_bad_roles.md python scripts/check_role_registration.py
-rm -f CURRENT_PE_bad_roles.md
-ERROR: Consecutive same-domain PEs use the same implementer engine.
-```
-
-```text
-rg -n "CURRENT_PE.md|shell|workspaces" openclaw/openclaw.json openclaw/workspaces/workspace-pm/AGENTS.md
-openclaw/workspaces/workspace-pm/AGENTS.md:40:**Enforcement:** Before assigning any PE, read the Active PE Registry (`CURRENT_PE.md`).
-openclaw/workspaces/workspace-pm/AGENTS.md:58:CURRENT_PE.md updated.
-openclaw/workspaces/workspace-pm/AGENTS.md:174:The Active PE Registry is maintained in `CURRENT_PE.md` on the `main` branch.
-openclaw/workspaces/workspace-pm/AGENTS.md:189:- `exec.ask: on` — always confirm before executing shell commands
-```
 
 ```text
 python -m black --check .
@@ -70,14 +76,24 @@ All checks passed!
 
 ```text
 python -m pytest -q
-........................................................................ [ 15%]
-........................................................................ [ 31%]
-........................................................................ [ 47%]
-........................................................................ [ 63%]
-........................................................................ [ 79%]
-........................................................................ [ 95%]
-......................                                                   [100%]
 454 passed, 17 warnings
+```
+
+```text
+grep -i "review\|verdict\|adversarial\|REVIEW_PE" openclaw/workspaces/workspace-prog-impl/AGENTS.md
+(no output — zero matches)
+```
+
+```text
+grep -i "handoff\|git push\|open pr\|feature branch" openclaw/workspaces/workspace-prog-val/AGENTS.md
+(no output — zero matches)
+```
+
+```text
+grep "workspace-prog-impl\|workspace-infra-impl\|workspace-prog-val" docker-compose.yml
+      - ${HOME}/openclaw/workspace-prog-impl:/app/workspaces/workspace-prog-impl:ro
+      - ${HOME}/openclaw/workspace-infra-impl:/app/workspaces/workspace-infra-impl:ro
+      - ${HOME}/openclaw/workspace-prog-val:/app/workspaces/workspace-prog-val:ro
 ```
 
 ## Status Packet
@@ -85,15 +101,18 @@ python -m pytest -q
 ### 6.1 Working-tree state
 ```text
 git status -sb
-## feature/pe-oc-03-active-pe-registry...origin/main [ahead 1]
+## feature/pe-oc-04-agent-workspaces
  M CURRENT_PE.md
- M HANDOFF.md
+ M docker-compose.yml
+?? openclaw/workspaces/workspace-infra-impl/
+?? openclaw/workspaces/workspace-prog-impl/
+?? openclaw/workspaces/workspace-prog-val/
 ```
 
 ### 6.2 Repository state
 ```text
 git branch --show-current
-feature/pe-oc-03-active-pe-registry
+feature/pe-oc-04-agent-workspaces
 ```
 
 ### 6.3 Quality gates
@@ -105,5 +124,5 @@ pytest: PASS (454 passed, 17 warnings)
 
 ### 6.4 Ready to merge
 ```text
-YES — awaiting validator re-review.
+YES — awaiting validator review.
 ```

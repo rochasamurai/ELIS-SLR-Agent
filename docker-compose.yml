@@ -10,3 +10,6 @@ services:
     volumes:
       - ${HOME}/.openclaw:/app/.openclaw:rw
       - ${HOME}/openclaw/workspace-pm:/app/workspaces/workspace-pm:rw
+      - ${HOME}/openclaw/workspace-prog-impl:/app/workspaces/workspace-prog-impl:ro
+      - ${HOME}/openclaw/workspace-infra-impl:/app/workspaces/workspace-infra-impl:ro
+      - ${HOME}/openclaw/workspace-prog-val:/app/workspaces/workspace-prog-val:ro
