@@ -21,8 +21,8 @@
 
 | Field   | Value                                    |
 |---------|------------------------------------------|
-| PE      | PE-OC-02                                 |
-| Branch  | feature/pe-oc-02-pm-agent-telegram       |
+| PE      | PE-OC-03                                 |
+| Branch  | feature/pe-oc-03-active-pe-registry      |
 
 ---
 
@@ -30,8 +30,8 @@
 
 | Agent       | Role        |
 |-------------|-------------|
-| Claude Code | Implementer |
-| CODEX       | Validator   |
+| CODEX       | Implementer |
+| Claude Code | Validator   |
 
 ---
 
