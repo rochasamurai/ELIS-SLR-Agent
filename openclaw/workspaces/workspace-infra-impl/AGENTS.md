@@ -99,3 +99,26 @@ Violation of §5.4 is a blocking validator finding regardless of other pass cond
 - Never commit `.env` files or `~/.openclaw/` contents
 - No `--no-verify` to bypass pre-commit hooks
 - Report any accidental secret exposure to PM immediately
+
+---
+
+## 8. Progress Tracking (MANDATORY)
+
+At the start of every PE, create a Todo list covering all planned implementation steps.
+Update it throughout execution. Three required checkpoints:
+
+| Checkpoint | When | All items |
+|---|---|---|
+| **Initial Todos** | Before any work begins | `[ ]` pending |
+| **Updated Todos** | After each step completes | `[x]` done · `[→]` active · `[ ]` pending |
+| **Final Todos** | After PR is opened | `[x]` all completed |
+
+**Rules:**
+- Exactly one step is `[→]` (in progress) at any time — never zero, never two
+- Mark a step `[x]` immediately when it finishes — do not batch completions
+- If a step is retried due to a mid-step failure (e.g., a self-check that fails), keep
+  it `[→]` until the fix is verified, then mark `[x]`
+- The Final Todos list is the implementer's last output before delivering the Status Packet
+
+This record is visible to the Validator and PO and provides a transparent audit trail
+of the implementation sequence.

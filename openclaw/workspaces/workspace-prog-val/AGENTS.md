@@ -150,3 +150,26 @@ Flag as BLOCKING any of the following found in changed files:
 - ELIS repo paths mounted in Docker containers (§5.4 violation)
 - `--no-verify` bypassing hooks
 - Bare `except:` clauses catching all exceptions in security-sensitive paths
+
+---
+
+## 10. Progress Tracking (MANDATORY)
+
+At the start of every PR validation, create a Todo list covering all planned validation
+steps. Update it throughout execution. Three required checkpoints:
+
+| Checkpoint | When | All items |
+|---|---|---|
+| **Initial Todos** | Before fetching the PR | `[ ]` pending |
+| **Updated Todos** | After each validation step completes | `[x]` done · `[→]` active · `[ ]` pending |
+| **Final Todos** | After REVIEW file is committed to main | `[x]` all completed |
+
+**Rules:**
+- Exactly one step is `[→]` (in progress) at any time — never zero, never two
+- Mark a step `[x]` immediately when it finishes — do not batch completions
+- If a re-validation round is triggered (FAIL → fix → re-review), start a new
+  Updated Todos pass from the first validation step; carry round number in the list header
+- The Final Todos list is the validator's last output after the REVIEW file is pushed
+
+This record is visible to the Implementer, PM, and PO and provides a transparent audit
+trail of the validation sequence.
