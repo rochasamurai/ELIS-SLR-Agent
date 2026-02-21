@@ -9,6 +9,38 @@
         "exec": {
           "ask": true
         }
+      },
+      {
+        "id": "slr-impl-codex",
+        "workspace": "workspace-slr-impl",
+        "model": "gpt-5",
+        "exec": {
+          "ask": true
+        }
+      },
+      {
+        "id": "slr-impl-claude",
+        "workspace": "workspace-slr-impl",
+        "model": "claude-opus-4-6",
+        "exec": {
+          "ask": true
+        }
+      },
+      {
+        "id": "slr-val-codex",
+        "workspace": "workspace-slr-val",
+        "model": "gpt-5",
+        "exec": {
+          "ask": true
+        }
+      },
+      {
+        "id": "slr-val-claude",
+        "workspace": "workspace-slr-val",
+        "model": "claude-opus-4-6",
+        "exec": {
+          "ask": true
+        }
       }
     ]
   },
@@ -26,5 +58,5 @@
       "autoInstall": false
     }
   },
-  "notes": "PE-OC-02: pm agent registered with Telegram binding. accountId 'po-channel' is a placeholder — set via 'openclaw pairing approve' during deployment. Worker agents added in PE-OC-03 through PE-OC-05."
+  "notes": "PE-OC-02: pm agent registered with Telegram binding. accountId 'po-channel' is a placeholder \u2014 set via 'openclaw pairing approve' during deployment. Worker agents added in PE-OC-03 through PE-OC-05."
 }
