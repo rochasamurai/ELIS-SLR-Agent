@@ -8,7 +8,7 @@ Delivered in this PE:
 - Added `docs/_active/GITHUB_SINGLE_ACCOUNT_VALIDATION_RUNBOOK.md` with fallback protocol,
   branch-protection guidance, and migration paths.
 - Updated `AGENTS.md` to reference the runbook in enforcement and document validator fallback
-  when `request-changes` is blocked on self-authored PRs.
+  when GitHub review actions are blocked on self-authored PRs.
 - Added this PE to `ELIS_MultiAgent_Implementation_Plan.md`.
 - Advanced `CURRENT_PE.md` to `PE-INFRA-06` with CODEX implementer / Claude validator roles.
 
@@ -24,6 +24,9 @@ Delivered in this PE:
   `AGENTS.md` as the normative workflow contract.
 - Used a fallback protocol that preserves PM gating and durable review artifacts without
   weakening branch protections in single-account operation.
+- Clarified that in single-account mode, both `gh pr review --approve` and
+  `gh pr review --request-changes` can be blocked on self-authored PRs, so verdicts use
+  plain PR comments (and `pm-review-required` for FAIL).
 - Recorded this as an explicit PE (`PE-INFRA-06`) to keep audit trail, assignment, and
   validation boundaries consistent with existing governance.
 
@@ -63,12 +66,7 @@ python -m pytest -q
 ### 6.1 Working-tree state
 ```text
 git status -sb
-## chore/single-account-review-runbook...origin/main
-M  AGENTS.md
-M  CURRENT_PE.md
-M  ELIS_MultiAgent_Implementation_Plan.md
- M HANDOFF.md
-?? docs/_active/GITHUB_SINGLE_ACCOUNT_VALIDATION_RUNBOOK.md
+## chore/single-account-review-runbook...origin/main [ahead 3]
 ```
 
 ### 6.2 Repository state

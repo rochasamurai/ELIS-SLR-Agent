@@ -12,7 +12,9 @@ This runbook is a companion to `AGENTS.md` and is referenced from enforcement se
 
 ## 2. Problem Statement
 
-In single-account repositories, GitHub blocks `request-changes` reviews on self-authored PRs.
+In single-account repositories, GitHub blocks review actions on self-authored PRs:
+- `gh pr review --request-changes`
+- `gh pr review --approve`
 
 Typical error:
 
@@ -20,9 +22,13 @@ Typical error:
 GraphQL: Review Can not request changes on your own pull request (addPullRequestReview)
 ```
 
+```text
+GraphQL: Review Can not approve your own pull request (addPullRequestReview)
+```
+
 Impact:
-- Validator cannot always use `gh pr review --request-changes` for FAIL verdicts.
-- Without an explicit fallback, FAIL outcomes can be ambiguous in branch-protection flows.
+- Validator cannot rely on PR review API for PASS or FAIL verdicts in this mode.
+- Without an explicit fallback, verdict outcomes can be ambiguous in branch-protection flows.
 
 ---
 
@@ -31,8 +37,7 @@ Impact:
 ### Mode A — Single account (current fallback model)
 
 - Implementer and Validator actions are executed by the same GitHub user.
-- PASS: can still use `gh pr review --approve`.
-- FAIL: must use comment-based verdict fallback (below).
+- PASS and FAIL both use comment-based fallback (below).
 
 ### Mode B — Per-agent machine identities (recommended target)
 
@@ -57,11 +62,14 @@ Impact:
 ### 4.2 PASS flow
 
 1. Post Stage 1 evidence comment.
-2. Post PASS review:
+2. Post PASS verdict as plain PR comment:
    ```bash
-   gh pr review <PR> --approve --body "<standard PASS verdict>"
+   gh pr comment <PR> --body "<standard PASS verdict>"
    ```
-3. Post/refresh Status Packet comment (optional but recommended).
+3. Ensure no `pm-review-required` label remains:
+   ```bash
+   gh pr edit <PR> --remove-label pm-review-required
+   ```
 4. PM merges if all required checks are green.
 
 ### 4.3 FAIL flow
@@ -103,7 +111,7 @@ For single-account mode, configure branch protection to rely on automated checks
 3. Restrict direct pushes to protected branches.
 4. Keep PM merge authority explicit.
 
-Do not rely exclusively on `request-changes` gating in Mode A.
+Do not rely on GitHub review-action gating in Mode A.
 
 ---
 
