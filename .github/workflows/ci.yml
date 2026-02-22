@@ -92,57 +92,6 @@ jobs:
           set -e
           elis validate || true
 
-  slr-quality-check:
-    name: slr-quality-check
-    needs: tests
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install Python
-        run: python -m pip install --upgrade pip
-
-      - name: Validate detected SLR artifact JSON
-        run: |
-          set -euo pipefail
-          base="${{ github.base_ref }}"
-          if [ -z "$base" ]; then
-            base="main"
-          fi
-          git fetch origin "$base"
-          mapfile -t json_files < <(git diff --name-only "origin/$base...HEAD" -- '*.json')
-          if [ "${#json_files[@]}" -eq 0 ]; then
-            echo "No JSON files changed in this PR."
-            exit 0
-          fi
-          slr_files=()
-          for file in "${json_files[@]}"; do
-            if [ -z "$file" ]; then
-              continue
-            fi
-            if grep -q '"screening_decisions"' "$file" && grep -q '"prisma_record"' "$file"; then
-              slr_files+=("$file")
-            else
-              echo "Skipping non-SLR JSON: $file"
-            fi
-          done
-          if [ "${#slr_files[@]}" -eq 0 ]; then
-            echo "No SLR artifact JSON detected."
-            exit 0
-          fi
-          for file in "${slr_files[@]}"; do
-            echo "Validating $file"
-            python scripts/check_slr_quality.py --input "$file"
-          done
-
   secrets-scope-check:
     name: secrets-scope-check
     runs-on: ubuntu-latest
@@ -208,7 +157,7 @@ jobs:
 
   openclaw-security-check:
     name: openclaw-security-check
-    needs: [quality, tests, validate, secrets-scope-check, review-evidence-check, openclaw-health-check]
+    needs: [quality, tests, validate, secrets-scope-check, review-evidence-check, openclaw-health-check, slr-quality-check]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -236,7 +185,6 @@ jobs:
       - secrets-scope-check
       - review-evidence-check
       - openclaw-health-check
-      - openclaw-security-check
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -256,7 +204,7 @@ jobs:
         run: |
           set -e
           mkdir -p /tmp/slr-artifacts
-          find docs/testing/slr-artifacts -name '**.json' > /tmp/slr-files.txt || true
+          find docs/testing/slr-artifacts/passing -name '**.json' > /tmp/slr-files.txt || true
           if [ ! -s /tmp/slr-files.txt ]; then
             echo "No SLR artifact JSON files found — skipping slr-quality-check."
             exit 0

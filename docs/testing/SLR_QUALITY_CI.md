@@ -10,7 +10,7 @@ This is PE-OC-13’s core deliverable.
 
 - Runs after `quality`, `tests`, `validate`, `secrets-scope-check`, `review-evidence-check`,
   `openclaw-health-check`, and `openclaw-security-check`.
-- Checks the `docs/testing/slr-artifacts` directory for `*.json` files.
+- Checks the `docs/testing/slr-artifacts/passing` directory for `*.json` files.
 - For each artifact found, executes:
 
 ```bash
@@ -22,11 +22,11 @@ python scripts/check_slr_quality.py --input path/to/artifact.json
 ## Local command evidence
 
 ```text
-python scripts/check_slr_quality.py --input docs/testing/slr-artifacts/bad_artifact.json
+python scripts/check_slr_quality.py --input docs/testing/slr-artifacts/failing/bad_artifact.json
 FAIL: root: missing field 'prisma_record'
 rc: 1
 
-python scripts/check_slr_quality.py --input docs/testing/slr-artifacts/good_artifact.json
+python scripts/check_slr_quality.py --input docs/testing/slr-artifacts/passing/good_artifact.json
 OK: SLR artifact set is compliant
 rc: 0
 ```
