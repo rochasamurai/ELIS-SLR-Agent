@@ -21,8 +21,8 @@
 
 | Field   | Value                                    |
 |---------|------------------------------------------|
-| PE      | PE-OC-09                                  |
-| Branch  | feature/pe-oc-09-e2e-programs             |
+| PE      | PE-OC-10                                  |
+| Branch  | feature/pe-oc-10-e2e-slr                  |
 
 ---
 
@@ -30,8 +30,8 @@
 
 | Agent       | Role        |
 |-------------|-------------|
-| CODEX       | Implementer |
-| Claude Code | Validator   |
+| Claude Code | Implementer |
+| CODEX       | Validator   |
 
 ---
 
@@ -53,7 +53,8 @@
 | PE-OC-06    | openclaw-infra  | prog-impl-claude    | prog-val-codex    | feature/pe-oc-06-pe-assignment-alternation | merged          | 2026-02-22   |
 | PE-OC-07    | openclaw-infra  | prog-impl-codex     | prog-val-claude   | feature/pe-oc-07-gate-automation           | merged          | 2026-02-22   |
 | PE-OC-08    | openclaw-infra  | prog-impl-claude    | prog-val-codex    | feature/pe-oc-08-po-status-reporting       | merged          | 2026-02-22   |
-| PE-OC-09    | openclaw-infra  | prog-impl-codex     | prog-val-claude   | feature/pe-oc-09-e2e-programs              | planning        | 2026-02-22   |
+| PE-OC-09    | openclaw-infra  | prog-impl-codex     | prog-val-claude   | feature/pe-oc-09-e2e-programs              | merged          | 2026-02-22   |
+| PE-OC-10    | slr             | slr-impl-claude     | slr-val-codex     | feature/pe-oc-10-e2e-slr                   | planning        | 2026-02-22   |
 
 Valid status values:
 - `planning`
