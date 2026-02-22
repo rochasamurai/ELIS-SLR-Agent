@@ -712,6 +712,65 @@ All 11 PEs are implemented by the current 2-agent model. CODEX implements odd-nu
 
 ---
 
+#### PE-OC-15 · Make `openclaw doctor` Runnable in CI
+
+| Field | Value |
+|---|---|
+| Implementer | CODEX (`prog-impl-codex`) |
+| Validator | Claude Code (`prog-val-claude`) |
+| Effort | 2–3 hours |
+| Phase | 5 — Post-E2E Fixes |
+| Depends On | PE-OC-14 |
+
+**Background**
+
+`openclaw doctor --check dm-policy` (AC-2 of PE-OC-11) has failed in every PE since
+PE-OC-09 with `No module named openclaw.__main__`. Investigation (2026-02-22) confirms
+`openclaw` is **not pip-installable** (no PyPI distribution). The tool runs exclusively
+via Docker image `ghcr.io/openclaw/openclaw:latest`.
+
+**Discovery block (must complete before implementing)**
+
+Before writing any CI code, the Implementer must run the following discovery probe and
+record the result in the HANDOFF:
+
+```bash
+docker pull ghcr.io/openclaw/openclaw:latest
+docker run --rm ghcr.io/openclaw/openclaw:latest openclaw doctor --help
+```
+
+- **If the image pulls and `openclaw doctor` is available inside the container:** proceed
+  with Docker-based CI integration (see Scope below).
+- **If the image pull fails (authentication required or image not public):** stop, record
+  the error verbatim in HANDOFF, classify AC-1 as `BLOCKED (env)`, and notify PM before
+  writing any code.
+
+**Scope** (conditional on discovery block succeeding)
+
+- Add an `openclaw-doctor-check` job to `.github/workflows/ci.yml` that:
+  1. Pulls `ghcr.io/openclaw/openclaw:latest`
+  2. Runs `docker run --rm ghcr.io/openclaw/openclaw:latest openclaw doctor --check dm-policy`
+  3. Exits non-zero if the doctor check fails
+- Wire the new job into the `add_and_set_status` `needs` chain alongside
+  `openclaw-health-check`
+- Document findings in `docs/testing/OPENCLAW_DOCTOR_FIX.md`
+
+**Acceptance Criteria**
+
+1. `docker run --rm ghcr.io/openclaw/openclaw:latest openclaw doctor --check dm-policy`
+   exits 0 in CI
+2. CI job fails (non-zero) when the doctor check returns a policy violation
+3. `docs/testing/OPENCLAW_DOCTOR_FIX.md` present with discovery evidence and AC results
+4. If image is not publicly accessible: HANDOFF documents the env block and PM is
+   notified; no CI code is written; PE is marked `blocked`
+
+**Deliverables**
+
+- `.github/workflows/ci.yml` updated with `openclaw-doctor-check` job (if discovery succeeds)
+- `docs/testing/OPENCLAW_DOCTOR_FIX.md` — discovery evidence + AC results
+
+---
+
 ## 4. Build Schedule
 
 The PEs are sequenced to respect phase dependencies while allowing parallel execution with ongoing ELIS program and SLR work. The schedule assumes the current 2-agent model dedicates one PE slot per week to the OpenClaw build series.
@@ -734,7 +793,8 @@ The PEs are sequenced to respect phase dependencies while allowing parallel exec
 | 9 | PE-OC-12: Fix Gate 1 Automation | Phase 5 | Claude Code | 2–3h | OC-11 |
 | 9 | PE-OC-13: Wire SLR Quality Gate to CI | Phase 5 | CODEX | 1–2h | OC-12 |
 | 10 | PE-OC-14: Status Reporter Domain Grouping | Phase 5 | Claude Code | 2–3h | OC-13 |
-| **Total** | **16 PEs** | **5 Phases + governance** | **CODEX×9 · Claude Code×7** | **55–72h** | **~9–11 wks** |
+| 11 | PE-OC-15: Make `openclaw doctor` Runnable in CI | Phase 5 | CODEX | 2–3h | OC-14 |
+| **Total** | **17 PEs** | **5 Phases + governance** | **CODEX×10 · Claude Code×7** | **57–75h** | **~9–11 wks** |
 
 > Effort hours reflect agent session time only, not wall-clock elapsed time. Phase 4 integration tests (PE-OC-09, OC-10, OC-11) must not begin until all Phase 3 PEs are merged to the base branch.
 
