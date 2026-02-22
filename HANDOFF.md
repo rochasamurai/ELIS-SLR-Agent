@@ -31,9 +31,10 @@ Implements PE-OC-08 PO Status Reporting & Escalation automation for PM Agent:
   `scripts/pm_assign_pe.py` rather than importing it. `scripts/` has no package marker at
   root level; self-contained is safer and consistent with existing pattern.
 - **Stall detection by last-updated date only:** The Active PE Registry stores
-  `last-updated` as a calendar date (no time). The detector treats day boundaries as
-  midnight UTC and computes age in hours. This is conservative — a PE updated at 23:59
-  will appear stalled after ~48.0 h on the following day, not after 49 h.
+  `last-updated` as a calendar date (no time). The detector anchors the `last-updated`
+  date at **end-of-day (23:59:59 UTC)** to avoid premature stall escalation — a PE
+  updated at any time during a day will not be flagged as stalled until more than 48 h
+  after that day ends. This was fixed in commit `c144b77` in response to NB-2.
 - **Validator iteration count via REVIEW file Round History:** The simplest reliable
   signal for iteration count is the `## Round History` table in the PE's REVIEW file
   (`REVIEW_{PE_ID_WITH_UNDERSCORES}.md`). Each `| rN |` row counts as one round. If no
@@ -92,21 +93,24 @@ python scripts/pm_stall_detector.py --registry CURRENT_PE.md
 No stalls or iteration breaches detected.
 ```
 
+## Non-blocking findings (from PR #270 Validator review)
+
+| ID | Description | Resolution |
+|---|---|---|
+| NB-1 | HANDOFF.md §6.1 showed dirty tree (`M HANDOFF.md`) and truncated SHA. | ✓ Fixed — Status Packet updated with clean working-tree state and full SHA (this commit). |
+| NB-2 | `pm_stall_detector.py` used midnight UTC for `last-updated`, risking premature escalation by up to ~24h. | ✓ Fixed in `c144b77` — `_age_hours` now anchors at 23:59:59 UTC (end-of-day). |
+
 ## Status Packet
 
 ### 6.1 Working-tree state
 
 ```text
 git status -sb
-## feature/pe-oc-08-po-status-reporting
-M  HANDOFF.md
+## feature/pe-oc-08-po-status-reporting...origin/feature/pe-oc-08-po-status-reporting [ahead 2]
+ M HANDOFF.md
 
 git diff --name-status
 M  HANDOFF.md
-
-git diff --stat
-HANDOFF.md | 1 insertion(+)
-1 file changed, 1 insertion(+)
 ```
 
 ### 6.2 Repository state
@@ -119,14 +123,14 @@ git branch --show-current
 feature/pe-oc-08-po-status-reporting
 
 git rev-parse HEAD
-4cf8ac7...
+c144b77fb3cf563dedf001390d3e6670a4efedbb
 
 git log -5 --oneline --decorate
-4cf8ac7 (HEAD -> feature/pe-oc-08-po-status-reporting) feat(pe-oc-08): add PO status reporting and escalation automation
+c144b77 (HEAD -> feature/pe-oc-08-po-status-reporting) fix(pe-oc-08): treat last-updated as end-of-day to avoid premature stall
+89a69ee (origin/feature/pe-oc-08-po-status-reporting) docs(pe-oc-08): add HANDOFF.md with Status Packet
+4cf8ac7 feat(pe-oc-08): add PO status reporting and escalation automation
 38e8f50 (origin/main, origin/HEAD, main) chore(pm): advance registry to PE-OC-08
 bb72e7f Merge pull request #269 from rochasamurai/feature/pe-oc-07-gate-automation
-135acf6 review(pe-oc-07): update REVIEW_PE_OC_07.md — PASS r2
-54b34b5 docs(pe-oc-07): address NB findings in HANDOFF
 ```
 
 ### 6.3 Scope evidence (against `origin/main`)
@@ -140,17 +144,10 @@ A	scripts/pm_stall_detector.py
 A	scripts/pm_status_reporter.py
 A	tests/test_pm_stall_detector.py
 A	tests/test_pm_status_reporter.py
-
-git diff --stat origin/main..HEAD
- docs/pm_agent/ESCALATION_PROTOCOL.md              | 240 ++++++++++++++++++++++
- HANDOFF.md                                        | 133 ++++++++++++
- openclaw/workspaces/workspace-pm/AGENTS.md        |  21 +-
- scripts/pm_stall_detector.py                      | 338 +++++++++++++++++++++++++++++++
- scripts/pm_status_reporter.py                     | 295 ++++++++++++++++++++++++++++
- tests/test_pm_stall_detector.py                   | 330 ++++++++++++++++++++++++++++++
- tests/test_pm_status_reporter.py                  | 210 +++++++++++++++++++
- 7 files changed, 1557 insertions(+), 10 deletions(-)
 ```
+
+No out-of-scope files. The NB-2 fix is within `scripts/pm_stall_detector.py` and
+`tests/test_pm_stall_detector.py` — both in-plan deliverables.
 
 ### 6.4 Quality gates
 
@@ -163,11 +160,11 @@ python -m ruff check .
 All checks passed!
 
 python -m pytest -q
-(RC: 0 — 534 tests, 17 warnings)
+RC: 0 — 534 tests, 17 warnings
 ```
 
 ### 6.4 Ready to merge
 
 ```text
-YES
+YES — NB-1 and NB-2 addressed in this HANDOFF update.
 ```
