@@ -5,9 +5,9 @@
 | PE | PE-OC-07 |
 | PR | #269 |
 | Branch | `feature/pe-oc-07-gate-automation` |
-| Commit | `c93292d` |
+| Commit | `54b34b5` |
 | Validator | Claude Code (`prog-val-claude`) |
-| Round | r1 |
+| Round | r2 |
 | Verdict | **PASS** |
 | Date | 2026-02-22 |
 
@@ -30,14 +30,14 @@ PASS
 | CI — openclaw-health-check | ✓ PASS | |
 | CI — review-evidence-check | ✓ PASS | |
 | HANDOFF.md present | ✓ PASS | File exists on branch |
-| Status Packet §6.1–§6.4 | ✗ NB-1 | Content in PR body only; absent from HANDOFF.md file |
+| Status Packet §6.1–§6.4 | ✓ PASS | Added in r2 commit `54b34b5`; §6.1–§6.4 complete, Ready = YES |
 | Blocking findings | ✓ NONE | |
 
 ---
 
 ### Scope
 
-5 files changed — all PE-OC-07 plan deliverables (verified against `ELIS_MultiAgent_Implementation_Plan.md`):
+6 files changed — 5 PE-OC-07 plan deliverables + validator review file (verified against `ELIS_MultiAgent_Implementation_Plan.md`):
 
 | File | Type | In Plan? |
 |---|---|---|
@@ -46,6 +46,7 @@ PASS
 | `.github/workflows/notify-pm-agent.yml` | new | ✓ |
 | `openclaw/workspaces/workspace-pm/AGENTS.md` | modified | ✓ (§Gate Authority section) |
 | `HANDOFF.md` | modified | ✓ |
+| `REVIEW_PE_OC_07.md` | new | validator artifact |
 
 No out-of-scope files.
 
@@ -53,7 +54,7 @@ No out-of-scope files.
 
 ### Required fixes
 
-None (PASS verdict with non-blocking observations below).
+None (PASS verdict — all non-blocking findings resolved).
 
 ---
 
@@ -112,11 +113,33 @@ git diff origin/main..HEAD -- .github/workflows/ci.yml
 ```
 Existing CI workflows untouched. ✓
 
+**r2 scope check — CODEX's NB-fix commit (`54b34b5`):**
+
+```bash
+git diff --name-status 13b8282..54b34b5
+# M  HANDOFF.md
+```
+Only `HANDOFF.md` changed in the r2 fix commit. No scope creep. ✓
+
+**NB-1 resolution verified:**
+`HANDOFF.md` §6.1–§6.4 present in the file on disk (commit `54b34b5`):
+- §6.1: Working-tree state — clean, HANDOFF.md only
+- §6.2: Repository state — branch, HEAD, git log -5
+- §6.3: Scope evidence — 6 files vs `origin/main`
+- §6.4: Quality gates — black ✓ ruff ✓ 480 passed ✓; Ready = YES ✓
+
+**NB-2 resolution verified:**
+Design Decision bullet added to HANDOFF.md:
+> "Known limitation (tracked for PE-OC-09): in `.github/workflows/notify-pm-agent.yml`, Gate 1 event fields `handoff_present` and `status_packet_complete` are currently scaffolded as workflow-derived placeholders (`true`) rather than runtime-verified checks. This PE intentionally limits scope to webhook event publication."
+✓ Known limitation documented; PE-OC-09 follow-up noted.
+
 ---
 
 ## Summary
 
-PE-OC-07 delivers a clean gate automation engine (`pm_gate_evaluator.py`) with correct decision logic for all Gate 1/Gate 2 scenarios including label-driven escalation. The webhook notifier workflow layers cleanly on top of existing CI without modifying it. All 5 ACs verified by unit tests and adversarial testing. CI green across all 6 jobs. Zero blocking findings.
+PE-OC-07 delivers a clean gate automation engine (`pm_gate_evaluator.py`) with correct decision logic for all Gate 1/Gate 2 scenarios including label-driven escalation. The webhook notifier workflow layers cleanly on top of existing CI without modifying it. All 5 ACs verified by unit tests and adversarial testing. CI green across all 6 jobs.
+
+r2 fix commit `54b34b5` resolves both non-blocking findings from r1: Status Packet §6.1–§6.4 is present and complete in HANDOFF.md, and the NB-2 known limitation is documented in Design Decisions with PE-OC-09 tracking. Zero blocking findings across both rounds.
 
 ---
 
@@ -126,8 +149,8 @@ PE-OC-07 delivers a clean gate automation engine (`pm_gate_evaluator.py`) with c
 
 | ID | Severity | Description | Resolution |
 |---|---|---|---|
-| NB-1 | non-blocking | HANDOFF.md is missing the Status Packet (§6.1–§6.4). Content (working-tree state, scope evidence, quality gates) is present in the PR body but not in the HANDOFF.md file on disk. AGENTS.md §3.1 specifies the Status Packet must be in HANDOFF.md. | Implementer to add §6.1–§6.4 sections to HANDOFF.md. |
-| NB-2 | non-blocking | `notify-pm-agent.yml` hardcodes `handoff_present: gate === 'gate-1'` and `status_packet_complete: gate === 'gate-1'` (always `true` for Gate 1 events). The webhook payload does not reflect actual HANDOFF.md file presence or Status Packet completeness. | Acceptable for PE-OC-07 scope ("adding webhook notification only"). Document as known limitation in HANDOFF.md Design Decisions for PE-OC-09 follow-up. |
+| NB-1 | non-blocking | HANDOFF.md is missing the Status Packet (§6.1–§6.4). Content (working-tree state, scope evidence, quality gates) is present in the PR body but not in the HANDOFF.md file on disk. AGENTS.md §3.1 specifies the Status Packet must be in HANDOFF.md. | ✓ Resolved in r2 (`54b34b5`) — §6.1–§6.4 added to HANDOFF.md; Ready = YES. |
+| NB-2 | non-blocking | `notify-pm-agent.yml` hardcodes `handoff_present: gate === 'gate-1'` and `status_packet_complete: gate === 'gate-1'` (always `true` for Gate 1 events). The webhook payload does not reflect actual HANDOFF.md file presence or Status Packet completeness. | ✓ Resolved in r2 (`54b34b5`) — documented as known limitation in HANDOFF.md Design Decisions; PE-OC-09 follow-up noted. |
 
 ---
 
@@ -136,3 +159,4 @@ PE-OC-07 delivers a clean gate automation engine (`pm_gate_evaluator.py`) with c
 | Round | Verdict | Key Findings | Date |
 |---|---|---|---|
 | r1 | PASS | NB-1: Status Packet absent from HANDOFF.md; NB-2: hardcoded Gate 1 fields in workflow (scope-limited) | 2026-02-22 |
+| r2 | PASS | NB-1 and NB-2 both resolved in `54b34b5` | 2026-02-22 |
