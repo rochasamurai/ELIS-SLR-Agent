@@ -94,14 +94,14 @@ git branch --show-current
 feature/pe-oc-11-security-hardening
 
 git rev-parse HEAD
-924cbfb2b4b969132cfe3f8242bf11cc9771a369
+c7cd9c8
 
 git log -5 --oneline --decorate
-924cbfb (HEAD -> feature/pe-oc-09-e2e-programs) test(pe-oc-09): add programs E2E lifecycle report and findings
-88a3c96 (origin/main, origin/HEAD, main) chore(pm): advance registry to PE-OC-09
-c66377f Merge pull request #270 from rochasamurai/feature/pe-oc-08-po-status-reporting
-eca656c docs(pe-oc-08): fix NB-1 — clean §6.1 session-boundary capture
-870e443 docs(pe-oc-08): address NB-1 and NB-2 in HANDOFF update
+c7cd9c8 (HEAD -> feature/pe-oc-11-security-hardening) sec(pe-oc-11): add security audit checks
+8306952 (origin/main, origin/HEAD, main) chore(pm): advance to PE-OC-11; add PE-OC-12/13/14 fix PEs to plan
+9b84fa3 Merge pull request #272 from rochasamurai/feature/pe-oc-10-e2e-slr
+6e5f73d (feature/pe-oc-10-e2e-slr) docs(pe-oc-10): add HANDOFF.md with Status Packet
+8b96b67 test(pe-oc-10): add SLR domain E2E lifecycle report and findings
 ```
 
 ### 6.3 Scope evidence
@@ -115,12 +115,13 @@ A\tdocs/openclaw/SECURITY_AUDIT.md
 A\tscripts/check_openclaw_security.py
 
 git diff --stat origin/main..HEAD
- .agentignore                            |   2 ++
- .github/workflows/ci.yml                |  41 ++++++++++++++
- docker-compose.yml                      |  12 ++++--
- docs/openclaw/SECURITY_AUDIT.md         | 119 ++++++++++++++++++++++
- scripts/check_openclaw_security.py       |  62 ++++++++++++++++++++
- 5 files changed, 236 insertions(+), 0 deletions(-)
+ .agentignore                       |   2 +
+ .github/workflows/ci.yml           |  23 +++++-
+ HANDOFF.md                         | 161 +++++++++++++++++--------------------
+ docker-compose.yml                 |   8 ++
+ docs/openclaw/SECURITY_AUDIT.md    |  50 ++++++++++++
+ scripts/check_openclaw_security.py | 107 ++++++++++++++++++++++++
+ 6 files changed, 261 insertions(+), 90 deletions(-)
 ```
 
 ### 6.4 Quality gates
