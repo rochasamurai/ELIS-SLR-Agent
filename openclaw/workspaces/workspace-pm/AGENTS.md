@@ -104,6 +104,27 @@ When Gate 2 conditions are NOT met:
 - Never override a `pm-review-required` label without explicit PO instruction
 - Never auto-approve Gate 1 when `HANDOFF.md` is absent
 
+### 3.4 Gate Event Webhook Contract (PE-OC-07)
+
+Gate workflows send normalized event payloads to PM Agent webhook
+(`PM_AGENT_WEBHOOK_URL`) via `.github/workflows/notify-pm-agent.yml`.
+PM Agent evaluates with `scripts/pm_gate_evaluator.py`.
+
+Required payload fields:
+- `gate` (`gate-1` or `gate-2`)
+- `pe_id`
+- `pr_number`
+- `ci_green`
+- `labels` (list)
+- `review_verdict` (Gate 2 only)
+- `handoff_present` + `status_packet_complete` (Gate 1 only)
+
+PM Agent output must include:
+- Gate decision (`pass` | `fail` | `wait` | `escalate`)
+- Registry status transition (`gate-1-pending` | `validating` | `gate-2-pending` | `merged`)
+- PR action (`assign_validator` or `merge_pr`)
+- PO-facing summary message
+
 ---
 
 ## 4. PO Communication Protocol

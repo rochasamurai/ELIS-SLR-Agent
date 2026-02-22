@@ -1,132 +1,106 @@
-# HANDOFF.md — PE-OC-06
+# HANDOFF.md — PE-OC-07
 
 ## Summary
 
-Implements automated PE assignment for the PM Agent: a Python CLI
-(`scripts/pm_assign_pe.py`) that reads the Active PE Registry in `CURRENT_PE.md`,
-enforces the alternation rule, writes the new registry row, and creates the
-feature branch on the remote.
+Implements PE-OC-07 gate automation core for PM Agent:
 
-Delivered in this PE:
-- Added `scripts/pm_assign_pe.py`: CLI with `--domain`, `--pe`, `--description`,
-  `--dry-run`, and `--current-pe` flags; enforces codex↔claude alternation guard.
-- Added `tests/test_pm_assign_pe.py`: 26 unit tests covering all acceptance criteria.
-- Modified `openclaw/workspaces/workspace-pm/AGENTS.md`: appended §8 Assignment Rules
-  (algorithm pseudocode, domain prefix table, first-PE default, violation handling).
-- Added `docs/pm_agent/ASSIGNMENT_PROTOCOL.md`: full PM workflow reference
-  (trigger syntax, 7-step flow, response format, branch naming, error handling, examples).
+- Added `scripts/pm_gate_evaluator.py` with Gate 1 and Gate 2 decision logic.
+- Added `.github/workflows/notify-pm-agent.yml` to post normalized gate events
+  to PM Agent webhook (`PM_AGENT_WEBHOOK_URL`).
+- Updated `openclaw/workspaces/workspace-pm/AGENTS.md` with Gate Event Webhook
+  contract under Gate Authority.
+- Added `tests/test_pm_gate_evaluator.py` with simulation coverage for pass/fail,
+  label escalation, status transitions, and CLI behavior.
 
 ## Files Changed
 
-- `scripts/pm_assign_pe.py` (new)
-- `tests/test_pm_assign_pe.py` (new)
-- `openclaw/workspaces/workspace-pm/AGENTS.md` (modified — §8 appended)
-- `docs/pm_agent/ASSIGNMENT_PROTOCOL.md` (new)
+- `scripts/pm_gate_evaluator.py` (new)
+- `tests/test_pm_gate_evaluator.py` (new)
+- `.github/workflows/notify-pm-agent.yml` (new)
+- `openclaw/workspaces/workspace-pm/AGENTS.md` (updated)
 - `HANDOFF.md` (this file)
 
 ## Design Decisions
 
-- **Self-contained script:** `parse_active_registry()` and `extract_engine()` are copied
-  verbatim from `scripts/check_role_registration.py` rather than imported. `scripts/` has
-  no root `__init__.py` so cross-script imports are fragile in CI; self-contained is safer.
-- **Alternation guard as assert:** Uses `assert new_engine != prev_engine` (§8.4) rather
-  than a silent override. Any logic bug surfaces immediately with a clear error message and
-  exit 1, matching AGENTS.md §8.4 policy.
-- **Branch creation via push refspec:** `git push origin origin/<base>:refs/heads/<branch>`
-  creates the remote branch atomically without requiring a local checkout. Failure warns but
-  does not block the registry write — PM can create the branch manually if needed.
-- **Two-commit pattern:** Code deliverables committed first (`8de423e`); HANDOFF.md written
-  after capturing the clean post-commit snapshot to avoid the pre-commit dirty-tree anti-pattern
-  (NB-1, PE-INFRA-07 r1).
-- **r2 fix (ASSIGNMENT_PROTOCOL.md §4 + §7):** Removed internal agent IDs (`prog-impl-*`)
-  from PO-facing response format and examples. Engine-only names (`CODEX` / `Claude Code`)
-  used throughout per AGENTS.md §4.1 and §4.3. §7 output blocks relabeled "PM Agent response
-  to PO" to make the PO-facing scope explicit. Script stdout unchanged (internal PM Agent use).
+- **Decision engine separated from workflow glue:** gate rules live in
+  `scripts/pm_gate_evaluator.py` so they can be tested independently from
+  GitHub Actions orchestration.
+- **Normalized machine output:** evaluator returns a stable JSON payload
+  (`decision`, `registry_status`, `actions`, `notify_po`) suitable for webhook
+  consumption and deterministic tests.
+- **Label-driven escalation precedence:** `pm-review-required` always blocks
+  auto-merge and escalates, even when verdict is PASS and CI is green.
+- **Non-breaking rollout:** existing Gate 1/Gate 2 workflows remain intact;
+  new notifier workflow adds PM webhook event publication without changing
+  existing branch protection behavior.
 
 ## Acceptance Criteria
 
-- [x] AC-1: `pm_assign_pe.py --domain programs --pe PE-PROG-08` writes correct row
-  (`test_main_writes_row` + smoke `--dry-run` confirmed).
-- [x] AC-2: Same engine raises `AssertionError: Alternation violation` (`test_alternation_guard_raises`).
-- [x] AC-3: PO Telegram → PM Agent responds with implementer/validator/branch
-  (§8 in `AGENTS.md` + §§2–4 in `ASSIGNMENT_PROTOCOL.md`).
-- [x] AC-4: Branch `feature/pe-prog-08-pdf-export` created automatically
-  (`test_main_dry_run` with mocked git; smoke `--dry-run` output confirmed).
+- [x] AC-1: Simulated PR with Gate 1 conditions met returns pass and validator assignment action (`test_gate_1_pass_assigns_validator`).
+- [x] AC-2: Simulated PASS verdict + green CI returns auto-merge action (`test_gate_2_pass_merges_when_ci_green`).
+- [x] AC-3: `pm-review-required` label triggers escalation and blocks merge (`test_gate_2_escalates_on_pm_review_required_label`).
+- [x] AC-4: Registry transitions are emitted correctly (`validating`, `gate-1-pending`, `gate-2-pending`, `merged`, `implementing`) across tests.
+- [x] AC-5: PO notification message is produced for transitions (`test_po_message_contains_gate_and_status`) and included in evaluator action payloads.
 
 ## Validation Commands
 
 ```text
-python -m black --check scripts/pm_assign_pe.py tests/test_pm_assign_pe.py
+python -m black --check scripts/pm_gate_evaluator.py tests/test_pm_gate_evaluator.py
 All done! ✨ 🍰 ✨
 2 files would be left unchanged.
 ```
 
 ```text
-python -m ruff check scripts/pm_assign_pe.py tests/test_pm_assign_pe.py
+python -m ruff check scripts/pm_gate_evaluator.py tests/test_pm_gate_evaluator.py
 All checks passed!
 ```
 
 ```text
-python -m pytest tests/test_pm_assign_pe.py -v
-26 passed in 0.21s
+python -m pytest tests/test_pm_gate_evaluator.py -q
+..........                                                               [100%]
 ```
 
 ```text
-python -m pytest -q (full suite)
-480 passed, 17 warnings (RC: 0)
-```
+python -m pytest -q
+........................................................................ [ 14%]
+........................................................................ [ 29%]
+........................................................................ [ 44%]
+........................................................................ [ 58%]
+........................................................................ [ 73%]
+........................................................................ [ 88%]
+..........................................................               [100%]
+============================== warnings summary ===============================
+tests/test_elis_cli.py::test_screen_emits_manifest
+tests/test_elis_cli.py::test_screen_dry_run_does_not_emit_manifest
+tests/test_pipeline_merge.py::test_merge_output_validates_and_is_screen_compatible
+tests/test_pipeline_screen.py::TestScreenMain::test_dry_run
+tests/test_pipeline_screen.py::TestScreenMain::test_write_output
+  C:\Users\carlo\ELIS_worktrees\pe-oc-07\elis\pipeline\screen.py:276: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    else g.get("year_to", dt.datetime.utcnow().year)
 
-```text
-python scripts/pm_assign_pe.py --domain programs --pe PE-PROG-08 \
-    --description "PDF export" --dry-run
+tests/test_elis_cli.py::test_screen_emits_manifest
+tests/test_elis_cli.py::test_screen_dry_run_does_not_emit_manifest
+tests/test_pipeline_merge.py::test_merge_output_validates_and_is_screen_compatible
+tests/test_pipeline_screen.py::TestScreenMain::test_dry_run
+tests/test_pipeline_screen.py::TestScreenMain::test_write_output
+  C:\Users\carlo\ELIS_worktrees\pe-oc-07\elis\pipeline\screen.py:30: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    return dt.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
 
-PE-PROG-08 assigned.
-Domain: programs
-Implementer: CODEX (prog-impl-codex)
-Validator: CLAUDE (prog-val-claude)
-Branch: feature/pe-prog-08-pdf-export
-Status: planning
-[dry-run] CURRENT_PE.md would be updated (row appended).
-[dry-run] Git branch 'feature/pe-prog-08-pdf-export' would be created from 'main'.
-```
+tests/test_pipeline_search.py::TestBuildRunInputs::test_defaults
+tests/test_pipeline_search.py::TestSearchMain::test_dry_run_with_minimal_config
+tests/test_pipeline_search.py::TestSearchMain::test_dry_run_topic_with_name_not_id
+  C:\Users\carlo\ELIS_worktrees\pe-oc-07\elis\pipeline\search.py:154: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    year_to = int(g.get("year_to", dt.datetime.utcnow().year))
 
-## Status Packet
+tests/test_pipeline_search.py::TestSearchMain::test_dry_run_with_minimal_config
+tests/test_pipeline_search.py::TestSearchMain::test_dry_run_topic_with_name_not_id
+  C:\Users\carlo\ELIS_worktrees\pe-oc-07\elis\pipeline\search.py:405: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    y1 = int(config.get("global", {}).get("year_to", dt.datetime.utcnow().year))
 
-### 6.1 Working-tree state
+tests/test_pipeline_search.py::TestSearchMain::test_dry_run_with_minimal_config
+tests/test_pipeline_search.py::TestSearchMain::test_dry_run_topic_with_name_not_id
+  C:\Users\carlo\ELIS_worktrees\pe-oc-07\elis\pipeline\search.py:43: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    return dt.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
 
-```text
-git status -sb
-## feature/pe-oc-06-pe-assignment-alternation...origin/main [ahead 3, behind 1]
-```
-
-(behind 1 = CURRENT_PE.md gate-status update on main; not required on this branch)
-
-```text
-git show --stat --oneline HEAD
-abf2ae1 fix(pe-oc-06): remove internal agent IDs from PO-facing response format
- docs/pm_agent/ASSIGNMENT_PROTOCOL.md | 30 +++++++++++++++---------------
- 1 file changed, 15 insertions(+), 15 deletions(-)
-```
-
-### 6.2 Repository state
-
-```text
-git branch --show-current
-feature/pe-oc-06-pe-assignment-alternation
-```
-
-### 6.3 Quality gates
-
-```text
-black: PASS (no new Python changes in r2)
-ruff: PASS (no new Python changes in r2)
-pytest: PASS (480 passed, 17 warnings — RC: 0; unchanged from r1)
-smoke --dry-run: PASS (unchanged from r1)
-r2 fix: docs/pm_agent/ASSIGNMENT_PROTOCOL.md — agent IDs removed from §4 + §7
-```
-
-### 6.4 Ready to merge
-
-```text
-YES — r1 blocking finding resolved. Awaiting r2 validator review.
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
 ```
