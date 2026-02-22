@@ -50,7 +50,7 @@
 | PE-INFRA-06 | infra           | infra-impl-codex    | prog-val-claude   | chore/single-account-review-runbook     | merged          | 2026-02-21   |
 | PE-OC-05    | openclaw-infra  | infra-impl-codex    | prog-val-claude   | feature/pe-oc-05-slr-workspaces         | merged          | 2026-02-21   |
 | PE-INFRA-07 | infra           | infra-impl-codex    | prog-val-claude   | chore/pe-infra-07-milestone-governance  | merged          | 2026-02-21   |
-| PE-OC-06    | openclaw-infra  | prog-impl-claude    | prog-val-codex    | feature/pe-oc-06-pe-assignment-alternation | implementing | 2026-02-21   |
+| PE-OC-06    | openclaw-infra  | prog-impl-claude    | prog-val-codex    | feature/pe-oc-06-pe-assignment-alternation | gate-1-pending | 2026-02-21   |
 
 Valid status values:
 - `planning`
