@@ -104,13 +104,15 @@ No stalls or iteration breaches detected.
 
 ### 6.1 Working-tree state
 
+Captured after all code commits pushed and branch in sync with origin — before this
+HANDOFF edit.
+
 ```text
 git status -sb
-## feature/pe-oc-08-po-status-reporting...origin/feature/pe-oc-08-po-status-reporting [ahead 2]
- M HANDOFF.md
+## feature/pe-oc-08-po-status-reporting...origin/feature/pe-oc-08-po-status-reporting
 
 git diff --name-status
-M  HANDOFF.md
+(no output — working tree clean)
 ```
 
 ### 6.2 Repository state
@@ -123,11 +125,12 @@ git branch --show-current
 feature/pe-oc-08-po-status-reporting
 
 git rev-parse HEAD
-c144b77fb3cf563dedf001390d3e6670a4efedbb
+870e4436fa358441522e70fe05aa8af7810919de
 
-git log -5 --oneline --decorate
-c144b77 (HEAD -> feature/pe-oc-08-po-status-reporting) fix(pe-oc-08): treat last-updated as end-of-day to avoid premature stall
-89a69ee (origin/feature/pe-oc-08-po-status-reporting) docs(pe-oc-08): add HANDOFF.md with Status Packet
+git log -6 --oneline --decorate
+870e443 (HEAD -> feature/pe-oc-08-po-status-reporting, origin/feature/pe-oc-08-po-status-reporting) docs(pe-oc-08): address NB-1 and NB-2 in HANDOFF update
+c144b77 fix(pe-oc-08): treat last-updated as end-of-day to avoid premature stall
+89a69ee docs(pe-oc-08): add HANDOFF.md with Status Packet
 4cf8ac7 feat(pe-oc-08): add PO status reporting and escalation automation
 38e8f50 (origin/main, origin/HEAD, main) chore(pm): advance registry to PE-OC-08
 bb72e7f Merge pull request #269 from rochasamurai/feature/pe-oc-07-gate-automation
