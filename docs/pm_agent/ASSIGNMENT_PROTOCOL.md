@@ -78,20 +78,22 @@ After a successful assignment the PM Agent reports to the PO (§2.2):
 ```
 PE-[ID] assigned.
 Domain: [domain]
-Implementer: [ENGINE] ([impl-agent-id])
-Validator: [ENGINE] ([val-agent-id])
+Implementer: [ENGINE]
+Validator: [ENGINE]
 Branch: [branch-name]
 Status: planning
 CURRENT_PE.md updated.
 ```
+
+Where `[ENGINE]` is `CODEX` or `Claude Code` (§4.1 — never an internal agent ID).
 
 Example for `PE-PROG-08` in domain `programs` (previous implementer was `codex`):
 
 ```
 PE-PROG-08 assigned.
 Domain: programs
-Implementer: CLAUDE (prog-impl-claude)
-Validator: CODEX (prog-val-codex)
+Implementer: Claude Code
+Validator: CODEX
 Branch: feature/pe-prog-08-pdf-export
 Status: planning
 CURRENT_PE.md updated.
@@ -140,17 +142,16 @@ python scripts/pm_assign_pe.py \
     --description "bootstrap"
 ```
 
-Output:
+PM Agent response to PO:
 
 ```
 PE-PROG-01 assigned.
 Domain: programs
-Implementer: CODEX (prog-impl-codex)
-Validator: CLAUDE (prog-val-claude)
+Implementer: CODEX
+Validator: Claude Code
 Branch: feature/pe-prog-01-bootstrap
 Status: planning
 CURRENT_PE.md updated.
-Branch 'feature/pe-prog-01-bootstrap' created from 'main'.
 ```
 
 ### Subsequent PE (alternation)
@@ -164,17 +165,16 @@ python scripts/pm_assign_pe.py \
     --description "validation improvements"
 ```
 
-Output:
+PM Agent response to PO:
 
 ```
 PE-PROG-02 assigned.
 Domain: programs
-Implementer: CLAUDE (prog-impl-claude)
-Validator: CODEX (prog-val-codex)
+Implementer: Claude Code
+Validator: CODEX
 Branch: feature/pe-prog-02-validation-improvements
 Status: planning
 CURRENT_PE.md updated.
-Branch 'feature/pe-prog-02-validation-improvements' created from 'main'.
 ```
 
 ### Dry-run (no writes)
@@ -187,13 +187,13 @@ python scripts/pm_assign_pe.py \
     --dry-run
 ```
 
-Output:
+PM Agent response to PO:
 
 ```
 PE-PROG-08 assigned.
 Domain: programs
-Implementer: CLAUDE (prog-impl-claude)
-Validator: CODEX (prog-val-codex)
+Implementer: Claude Code
+Validator: CODEX
 Branch: feature/pe-prog-08-pdf-export
 Status: planning
 [dry-run] CURRENT_PE.md would be updated (row appended).
