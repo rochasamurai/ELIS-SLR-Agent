@@ -33,6 +33,11 @@ Implements PE-OC-07 gate automation core for PM Agent:
 - **Non-breaking rollout:** existing Gate 1/Gate 2 workflows remain intact;
   new notifier workflow adds PM webhook event publication without changing
   existing branch protection behavior.
+- **Known limitation (tracked for PE-OC-09):** in
+  `.github/workflows/notify-pm-agent.yml`, Gate 1 event fields
+  `handoff_present` and `status_packet_complete` are currently scaffolded as
+  workflow-derived placeholders (`true`) rather than runtime-verified checks.
+  This PE intentionally limits scope to webhook event publication.
 
 ## Acceptance Criteria
 
@@ -103,4 +108,88 @@ tests/test_pipeline_search.py::TestSearchMain::test_dry_run_topic_with_name_not_
     return dt.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+```
+
+## Status Packet
+
+### 6.1 Working-tree state
+
+```text
+git status -sb
+## feature/pe-oc-07-gate-automation...origin/feature/pe-oc-07-gate-automation
+
+git diff --name-status
+M	HANDOFF.md
+
+git diff --stat
+HANDOFF.md | 35 +++++++++++++++++++++++++++++++++++
+1 file changed, 35 insertions(+)
+```
+
+### 6.2 Repository state
+
+```text
+git fetch --all --prune
+(already up to date)
+
+git branch --show-current
+feature/pe-oc-07-gate-automation
+
+git rev-parse HEAD
+13b82825bbb5320dcf7f8105fe76c69d43eda3b0
+
+git log -5 --oneline --decorate
+13b8282 (HEAD -> feature/pe-oc-07-gate-automation, origin/feature/pe-oc-07-gate-automation) review(pe-oc-07): add REVIEW_PE_OC_07.md — PASS r1
+c93292d feat(pe-oc-07): add PM gate evaluator + webhook notifier
+f55a650 (origin/main, origin/HEAD, main) chore(pm): advance registry to PE-OC-07
+98b32d0 Merge pull request #268 from rochasamurai/feature/pe-oc-06-pe-assignment-alternation
+ab136a9 (feature/pe-oc-06-pe-assignment-alternation) docs(pe-oc-06): update HANDOFF.md for r2 — agent ID fix
+```
+
+### 6.3 Scope evidence (against `origin/main`)
+
+```text
+git diff --name-status origin/main..HEAD
+A	.github/workflows/notify-pm-agent.yml
+M	HANDOFF.md
+A	REVIEW_PE_OC_07.md
+M	openclaw/workspaces/workspace-pm/AGENTS.md
+A	scripts/pm_gate_evaluator.py
+A	tests/test_pm_gate_evaluator.py
+
+git diff --stat origin/main..HEAD
+ .github/workflows/notify-pm-agent.yml      |  94 ++++++++++++
+ HANDOFF.md                                 | 211 +++++++++++++++++++---------
+ REVIEW_PE_OC_07.md                         | 138 +++++++++++++++++
+ openclaw/workspaces/workspace-pm/AGENTS.md |  21 +++
+ scripts/pm_gate_evaluator.py               | 234 +++++++++++++++++++++++++++++
+ tests/test_pm_gate_evaluator.py            | 182 ++++++++++++++++++++++
+ 6 files changed, 779 insertions(+), 106 deletions(-)
+```
+
+### 6.4 Quality gates
+
+```text
+python -m black --check .
+All done! ✨ 🍰 ✨
+109 files would be left unchanged.
+
+python -m ruff check .
+All checks passed!
+
+python -m pytest -q
+........................................................................ [ 14%]
+........................................................................ [ 29%]
+........................................................................ [ 44%]
+........................................................................ [ 58%]
+........................................................................ [ 73%]
+........................................................................ [ 88%]
+..........................................................               [100%]
+480 passed, 17 warnings in 19.52s
+```
+
+### 6.4 Ready to merge
+
+```text
+YES — non-blocking findings NB-1 and NB-2 are addressed in this HANDOFF update.
 ```
