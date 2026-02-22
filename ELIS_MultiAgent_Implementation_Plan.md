@@ -627,6 +627,91 @@ All 11 PEs are implemented by the current 2-agent model. CODEX implements odd-nu
 
 ---
 
+#### PE-OC-12 · Fix Gate 1 Automation (`Auto-assign Validator`)
+
+| Field | Value |
+|---|---|
+| Implementer | Claude Code (`prog-impl-claude`) |
+| Validator | CODEX (`prog-val-codex`) |
+| Effort | 2–3 hours |
+| Phase | 5 — Post-E2E Fixes |
+| Depends On | PE-OC-11 |
+
+**Scope**
+
+- Debug `Auto-assign Validator` workflow — identify root cause of perpetual `failure` status
+- Patch `.github/workflows/auto-assign-validator.yml` so Gate 1 triggers correctly after PR open/update
+- Verify fix by observing a successful `Auto-assign Validator` run on a test PR
+
+**Acceptance Criteria**
+
+1. `Auto-assign Validator` workflow completes with `success` (not `failure`) on a new PR
+2. Validator is assigned automatically without PM manual intervention
+
+**Deliverables**
+
+- `.github/workflows/auto-assign-validator.yml` (patched)
+- `docs/testing/GATE1_FIX_VERIFICATION.md` — evidence of successful automated run
+
+---
+
+#### PE-OC-13 · Wire `check_slr_quality.py` into CI
+
+| Field | Value |
+|---|---|
+| Implementer | CODEX (`prog-impl-codex`) |
+| Validator | Claude Code (`prog-val-claude`) |
+| Effort | 1–2 hours |
+| Phase | 5 — Post-E2E Fixes |
+| Depends On | PE-OC-12 |
+
+**Scope**
+
+- Add `slr-quality-check` job to `.github/workflows/ci.yml` that runs
+  `python scripts/check_slr_quality.py` against any SLR artifact JSON committed on
+  the PR branch
+- Job must exit non-zero (block merge) when artifact is non-compliant
+
+**Acceptance Criteria**
+
+1. CI run on a PR with a non-compliant SLR artifact (missing `prisma_record`) fails with `FAIL: root: missing field 'prisma_record'`
+2. CI run on a PR with a compliant SLR artifact passes with `OK: SLR artifact set is compliant`
+
+**Deliverables**
+
+- `.github/workflows/ci.yml` updated with `slr-quality-check` job
+
+---
+
+#### PE-OC-14 · Status Reporter Domain Grouping
+
+| Field | Value |
+|---|---|
+| Implementer | Claude Code (`prog-impl-claude`) |
+| Validator | CODEX (`prog-val-codex`) |
+| Effort | 2–3 hours |
+| Phase | 5 — Post-E2E Fixes |
+| Depends On | PE-OC-13 |
+
+**Scope**
+
+- Extend `format_status_response()` in `scripts/pm_status_reporter.py` to group active
+  PEs into labelled domain sections when more than one domain is present
+- Single-domain registries retain the current flat-list format
+
+**Acceptance Criteria**
+
+1. `pm_status_reporter.py --command status` with a mixed programs + SLR registry outputs two labelled sections (`### programs domain` and `### slr domain`)
+2. Single-domain registry output is unchanged
+3. All existing `test_pm_status_reporter.py` tests pass; new tests cover multi-domain output
+
+**Deliverables**
+
+- `scripts/pm_status_reporter.py` (updated `format_status_response()`)
+- `tests/test_pm_status_reporter.py` (new multi-domain tests)
+
+---
+
 ## 4. Build Schedule
 
 The PEs are sequenced to respect phase dependencies while allowing parallel execution with ongoing ELIS program and SLR work. The schedule assumes the current 2-agent model dedicates one PE slot per week to the OpenClaw build series.
@@ -646,7 +731,10 @@ The PEs are sequenced to respect phase dependencies while allowing parallel exec
 | 6 | PE-OC-09: E2E Test — Programs | Phase 4 | CODEX | 4–5h | OC-08 |
 | 7 | PE-OC-10: E2E Test — SLR | Phase 4 | Claude Code | 4–5h | OC-09 |
 | 8 | PE-OC-11: Security Hardening | Phase 4 | CODEX | 3–4h | OC-10 |
-| **Total** | **13 PEs** | **4 Phases + governance** | **CODEX×8 · Claude Code×5** | **47–60h** | **~6–8 wks** |
+| 9 | PE-OC-12: Fix Gate 1 Automation | Phase 5 | Claude Code | 2–3h | OC-11 |
+| 9 | PE-OC-13: Wire SLR Quality Gate to CI | Phase 5 | CODEX | 1–2h | OC-12 |
+| 10 | PE-OC-14: Status Reporter Domain Grouping | Phase 5 | Claude Code | 2–3h | OC-13 |
+| **Total** | **16 PEs** | **5 Phases + governance** | **CODEX×9 · Claude Code×7** | **55–72h** | **~9–11 wks** |
 
 > Effort hours reflect agent session time only, not wall-clock elapsed time. Phase 4 integration tests (PE-OC-09, OC-10, OC-11) must not begin until all Phase 3 PEs are merged to the base branch.
 
