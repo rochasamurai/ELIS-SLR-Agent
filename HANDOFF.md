@@ -38,6 +38,10 @@ Delivered in this PE:
 - **Two-commit pattern:** Code deliverables committed first (`8de423e`); HANDOFF.md written
   after capturing the clean post-commit snapshot to avoid the pre-commit dirty-tree anti-pattern
   (NB-1, PE-INFRA-07 r1).
+- **r2 fix (ASSIGNMENT_PROTOCOL.md §4 + §7):** Removed internal agent IDs (`prog-impl-*`)
+  from PO-facing response format and examples. Engine-only names (`CODEX` / `Claude Code`)
+  used throughout per AGENTS.md §4.1 and §4.3. §7 output blocks relabeled "PM Agent response
+  to PO" to make the PO-facing scope explicit. Script stdout unchanged (internal PM Agent use).
 
 ## Acceptance Criteria
 
@@ -92,17 +96,16 @@ Status: planning
 
 ```text
 git status -sb
-## feature/pe-oc-06-pe-assignment-alternation...origin/main [ahead 1]
+## feature/pe-oc-06-pe-assignment-alternation...origin/main [ahead 3, behind 1]
 ```
+
+(behind 1 = CURRENT_PE.md gate-status update on main; not required on this branch)
 
 ```text
 git show --stat --oneline HEAD
-8de423e feat(pe-oc-06): add PM agent PE assignment script with alternation enforcement
- docs/pm_agent/ASSIGNMENT_PROTOCOL.md       | 213 +++++++++++++++
- openclaw/workspaces/workspace-pm/AGENTS.md |  41 +++
- scripts/pm_assign_pe.py                    | 316 +++++++++++++++++++++++
- tests/test_pm_assign_pe.py                 | 402 +++++++++++++++++++++++++++++
- 4 files changed, 972 insertions(+)
+abf2ae1 fix(pe-oc-06): remove internal agent IDs from PO-facing response format
+ docs/pm_agent/ASSIGNMENT_PROTOCOL.md | 30 +++++++++++++++---------------
+ 1 file changed, 15 insertions(+), 15 deletions(-)
 ```
 
 ### 6.2 Repository state
@@ -115,14 +118,15 @@ feature/pe-oc-06-pe-assignment-alternation
 ### 6.3 Quality gates
 
 ```text
-black: PASS (2 files unchanged)
-ruff: PASS
-pytest: PASS (480 passed, 17 warnings — RC: 0)
-smoke --dry-run: PASS
+black: PASS (no new Python changes in r2)
+ruff: PASS (no new Python changes in r2)
+pytest: PASS (480 passed, 17 warnings — RC: 0; unchanged from r1)
+smoke --dry-run: PASS (unchanged from r1)
+r2 fix: docs/pm_agent/ASSIGNMENT_PROTOCOL.md — agent IDs removed from §4 + §7
 ```
 
 ### 6.4 Ready to merge
 
 ```text
-YES — awaiting validator review.
+YES — r1 blocking finding resolved. Awaiting r2 validator review.
 ```
