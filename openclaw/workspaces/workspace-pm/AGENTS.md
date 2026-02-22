@@ -173,20 +173,32 @@ PM recommendation: [A/B/C] — [one sentence rationale]
 - Stack traces or raw error logs
 - Implementation or validation details beyond summary level
 
+### 4.4 Automation Tools (PE-OC-08)
+
+Status queries and escalations are implemented by two CLI scripts:
+
+| Script | Command | Purpose |
+|---|---|---|
+| `scripts/pm_status_reporter.py` | `--command status` | Format Active PE Registry for PO |
+| `scripts/pm_status_reporter.py` | `--command escalate --pe-id PE-X` | Immediate PO-initiated escalation |
+| `scripts/pm_stall_detector.py` | _(cron-triggered)_ | Stall and iteration-breach detection |
+
+See `docs/pm_agent/ESCALATION_PROTOCOL.md` for full CLI reference and message examples.
+
 ---
 
 ## 5. Escalation Triggers (Auto-Escalate to PO)
 
 Escalate without waiting for PO prompt when ANY of the following occur:
 
-| Trigger | Threshold | Action |
-|---|---|---|
-| PE stalled in same status | > 48 hours | Escalate with options |
-| Validator iterations | > 2 rounds | Escalate with resolution options |
-| Security finding in REVIEW | Any | Escalate immediately |
-| Scope dispute between agents | Any | Escalate immediately |
-| Cross-domain dependency conflict | Any | Escalate immediately |
-| Gate 2 FAIL on third attempt | Third FAIL | Escalate with rollback option |
+| Trigger | Threshold | Action | Detection |
+|---|---|---|---|
+| PE stalled in same status | > 48 hours | Escalate with options | `pm_stall_detector.py` |
+| Validator iterations | > 2 rounds | Escalate with resolution options | `pm_stall_detector.py` |
+| Security finding in REVIEW | Any | Escalate immediately | PM Agent self-check |
+| Scope dispute between agents | Any | Escalate immediately | PM Agent self-check |
+| Cross-domain dependency conflict | Any | Escalate immediately | PM Agent self-check |
+| Gate 2 FAIL on third attempt | Third FAIL | Escalate with rollback option | PM Agent self-check |
 
 ---
 

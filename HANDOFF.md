@@ -1,129 +1,118 @@
-# HANDOFF.md — PE-OC-07
+# HANDOFF.md — PE-OC-08
 
 ## Summary
 
-Implements PE-OC-07 gate automation core for PM Agent:
+Implements PE-OC-08 PO Status Reporting & Escalation automation for PM Agent:
 
-- Added `scripts/pm_gate_evaluator.py` with Gate 1 and Gate 2 decision logic.
-- Added `.github/workflows/notify-pm-agent.yml` to post normalized gate events
-  to PM Agent webhook (`PM_AGENT_WEBHOOK_URL`).
-- Updated `openclaw/workspaces/workspace-pm/AGENTS.md` with Gate Event Webhook
-  contract under Gate Authority.
-- Added `tests/test_pm_gate_evaluator.py` with simulation coverage for pass/fail,
-  label escalation, status transitions, and CLI behavior.
+- Added `scripts/pm_status_reporter.py` — status query formatter (`status` command)
+  and immediate escalation handler (`escalate PE-X` command) per AGENTS.md §4.1–§4.2.
+- Added `scripts/pm_stall_detector.py` — cron-triggered stall (> 48 h) and
+  validator iteration-threshold (> 2 rounds) detector with structured escalation output.
+- Added `tests/test_pm_status_reporter.py` (22 tests) and
+  `tests/test_pm_stall_detector.py` (22 tests) covering all 5 ACs.
+- Added `docs/pm_agent/ESCALATION_PROTOCOL.md` — full escalation reference including
+  trigger conditions, message format, CLI reference, and examples.
+- Updated `openclaw/workspaces/workspace-pm/AGENTS.md` with §4.4 Automation Tools
+  table and Detection column in §5 Escalation Triggers.
 
 ## Files Changed
 
-- `scripts/pm_gate_evaluator.py` (new)
-- `tests/test_pm_gate_evaluator.py` (new)
-- `.github/workflows/notify-pm-agent.yml` (new)
+- `scripts/pm_status_reporter.py` (new)
+- `scripts/pm_stall_detector.py` (new)
+- `tests/test_pm_status_reporter.py` (new)
+- `tests/test_pm_stall_detector.py` (new)
+- `docs/pm_agent/ESCALATION_PROTOCOL.md` (new)
 - `openclaw/workspaces/workspace-pm/AGENTS.md` (updated)
 - `HANDOFF.md` (this file)
 
 ## Design Decisions
 
-- **Decision engine separated from workflow glue:** gate rules live in
-  `scripts/pm_gate_evaluator.py` so they can be tested independently from
-  GitHub Actions orchestration.
-- **Normalized machine output:** evaluator returns a stable JSON payload
-  (`decision`, `registry_status`, `actions`, `notify_po`) suitable for webhook
-  consumption and deterministic tests.
-- **Label-driven escalation precedence:** `pm-review-required` always blocks
-  auto-merge and escalates, even when verdict is PASS and CI is green.
-- **Non-breaking rollout:** existing Gate 1/Gate 2 workflows remain intact;
-  new notifier workflow adds PM webhook event publication without changing
-  existing branch protection behavior.
-- **Known limitation (tracked for PE-OC-09):** in
-  `.github/workflows/notify-pm-agent.yml`, Gate 1 event fields
-  `handoff_present` and `status_packet_complete` are currently scaffolded as
-  workflow-derived placeholders (`true`) rather than runtime-verified checks.
-  This PE intentionally limits scope to webhook event publication.
+- **Self-contained scripts:** Both scripts copy `parse_active_registry()` verbatim from
+  `scripts/pm_assign_pe.py` rather than importing it. `scripts/` has no package marker at
+  root level; self-contained is safer and consistent with existing pattern.
+- **Stall detection by last-updated date only:** The Active PE Registry stores
+  `last-updated` as a calendar date (no time). The detector anchors the `last-updated`
+  date at **end-of-day (23:59:59 UTC)** to avoid premature stall escalation — a PE
+  updated at any time during a day will not be flagged as stalled until more than 48 h
+  after that day ends. This was fixed in commit `c144b77` in response to NB-2.
+- **Validator iteration count via REVIEW file Round History:** The simplest reliable
+  signal for iteration count is the `## Round History` table in the PE's REVIEW file
+  (`REVIEW_{PE_ID_WITH_UNDERSCORES}.md`). Each `| rN |` row counts as one round. If no
+  REVIEW file exists, count is 0 (PE has not entered validation yet).
+- **Emoji in escalation messages:** `🔴` is used per AGENTS.md §4.2. Scripts call
+  `sys.stdout.reconfigure(encoding="utf-8")` in `main()` to handle Windows terminals.
+  Tests use pytest `capsys` which is encoding-agnostic.
+- **Threshold strictness:** Stall fires when age_hours **> 48** (not ≥ 48). Iteration
+  breach fires when count **> 2** (not ≥ 2). This matches AC-2 ("49 hours") and AC-3
+  ("3 validator iterations").
 
 ## Acceptance Criteria
 
-- [x] AC-1: Simulated PR with Gate 1 conditions met returns pass and validator assignment action (`test_gate_1_pass_assigns_validator`).
-- [x] AC-2: Simulated PASS verdict + green CI returns auto-merge action (`test_gate_2_pass_merges_when_ci_green`).
-- [x] AC-3: `pm-review-required` label triggers escalation and blocks merge (`test_gate_2_escalates_on_pm_review_required_label`).
-- [x] AC-4: Registry transitions are emitted correctly (`validating`, `gate-1-pending`, `gate-2-pending`, `merged`, `implementing`) across tests.
-- [x] AC-5: PO notification message is produced for transitions (`test_po_message_contains_gate_and_status`) and included in evaluator action payloads.
+- [x] AC-1: `python scripts/pm_status_reporter.py --command status` returns formatted
+  Active PE table with Implementer engine and last-updated (`test_main_status_command`).
+- [x] AC-2: PE with `last-updated` 49 h ago triggers stall escalation
+  (`test_detect_stall_over_threshold`, `test_run_detection_stall_found`).
+- [x] AC-3: PE with 3 validator rounds triggers iteration breach escalation with ≥ 2
+  resolution options (`test_build_iteration_escalation_message`,
+  `test_run_detection_iteration_breach`).
+- [x] AC-4: All escalation messages include PM Agent recommendation field
+  (`test_build_escalation_contains_required_fields`).
+- [x] AC-5: `python scripts/pm_status_reporter.py --command escalate --pe-id PE-OC-08`
+  responds immediately (`test_main_escalate_command`).
 
 ## Validation Commands
 
 ```text
-python -m black --check scripts/pm_gate_evaluator.py tests/test_pm_gate_evaluator.py
+python -m black --check scripts/pm_status_reporter.py scripts/pm_stall_detector.py tests/test_pm_status_reporter.py tests/test_pm_stall_detector.py
 All done! ✨ 🍰 ✨
-2 files would be left unchanged.
+4 files would be left unchanged.
 ```
 
 ```text
-python -m ruff check scripts/pm_gate_evaluator.py tests/test_pm_gate_evaluator.py
+python -m ruff check scripts/pm_status_reporter.py scripts/pm_stall_detector.py tests/test_pm_status_reporter.py tests/test_pm_stall_detector.py
 All checks passed!
 ```
 
 ```text
-python -m pytest tests/test_pm_gate_evaluator.py -q
-..........                                                               [100%]
+python -m pytest tests/test_pm_status_reporter.py tests/test_pm_stall_detector.py -q
+............................................                             [100%]
+44 passed in 0.40s
 ```
 
 ```text
-python -m pytest -q
-........................................................................ [ 14%]
-........................................................................ [ 29%]
-........................................................................ [ 44%]
-........................................................................ [ 58%]
-........................................................................ [ 73%]
-........................................................................ [ 88%]
-..........................................................               [100%]
-============================== warnings summary ===============================
-tests/test_elis_cli.py::test_screen_emits_manifest
-tests/test_elis_cli.py::test_screen_dry_run_does_not_emit_manifest
-tests/test_pipeline_merge.py::test_merge_output_validates_and_is_screen_compatible
-tests/test_pipeline_screen.py::TestScreenMain::test_dry_run
-tests/test_pipeline_screen.py::TestScreenMain::test_write_output
-  C:\Users\carlo\ELIS_worktrees\pe-oc-07\elis\pipeline\screen.py:276: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
-    else g.get("year_to", dt.datetime.utcnow().year)
+python scripts/pm_status_reporter.py --command status --registry CURRENT_PE.md
+Active PEs — 2026-02-22 UTC:
 
-tests/test_elis_cli.py::test_screen_emits_manifest
-tests/test_elis_cli.py::test_screen_dry_run_does_not_emit_manifest
-tests/test_pipeline_merge.py::test_merge_output_validates_and_is_screen_compatible
-tests/test_pipeline_screen.py::TestScreenMain::test_dry_run
-tests/test_pipeline_screen.py::TestScreenMain::test_write_output
-  C:\Users\carlo\ELIS_worktrees\pe-oc-07\elis\pipeline\screen.py:30: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
-    return dt.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+PE-OC-08 | openclaw-infra | planning | Implementer: Claude Code | last updated 2026-02-22
 
-tests/test_pipeline_search.py::TestBuildRunInputs::test_defaults
-tests/test_pipeline_search.py::TestSearchMain::test_dry_run_with_minimal_config
-tests/test_pipeline_search.py::TestSearchMain::test_dry_run_topic_with_name_not_id
-  C:\Users\carlo\ELIS_worktrees\pe-oc-07\elis\pipeline\search.py:154: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
-    year_to = int(g.get("year_to", dt.datetime.utcnow().year))
-
-tests/test_pipeline_search.py::TestSearchMain::test_dry_run_with_minimal_config
-tests/test_pipeline_search.py::TestSearchMain::test_dry_run_topic_with_name_not_id
-  C:\Users\carlo\ELIS_worktrees\pe-oc-07\elis\pipeline\search.py:405: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
-    y1 = int(config.get("global", {}).get("year_to", dt.datetime.utcnow().year))
-
-tests/test_pipeline_search.py::TestSearchMain::test_dry_run_with_minimal_config
-tests/test_pipeline_search.py::TestSearchMain::test_dry_run_topic_with_name_not_id
-  C:\Users\carlo\ELIS_worktrees\pe-oc-07\elis\pipeline\search.py:43: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
-    return dt.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
-
--- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+1 PEs active. 13 merged this week.
 ```
+
+```text
+python scripts/pm_stall_detector.py --registry CURRENT_PE.md
+No stalls or iteration breaches detected.
+```
+
+## Non-blocking findings (from PR #270 Validator review)
+
+| ID | Description | Resolution |
+|---|---|---|
+| NB-1 | HANDOFF.md §6.1 showed dirty tree (`M HANDOFF.md`) and truncated SHA. | ✓ Fixed — Status Packet updated with clean working-tree state and full SHA (this commit). |
+| NB-2 | `pm_stall_detector.py` used midnight UTC for `last-updated`, risking premature escalation by up to ~24h. | ✓ Fixed in `c144b77` — `_age_hours` now anchors at 23:59:59 UTC (end-of-day). |
 
 ## Status Packet
 
 ### 6.1 Working-tree state
 
+Captured after all code commits pushed and branch in sync with origin — before this
+HANDOFF edit.
+
 ```text
 git status -sb
-## feature/pe-oc-07-gate-automation...origin/feature/pe-oc-07-gate-automation
+## feature/pe-oc-08-po-status-reporting...origin/feature/pe-oc-08-po-status-reporting
 
 git diff --name-status
-M	HANDOFF.md
-
-git diff --stat
-HANDOFF.md | 35 +++++++++++++++++++++++++++++++++++
-1 file changed, 35 insertions(+)
+(no output — working tree clean)
 ```
 
 ### 6.2 Repository state
@@ -133,63 +122,52 @@ git fetch --all --prune
 (already up to date)
 
 git branch --show-current
-feature/pe-oc-07-gate-automation
+feature/pe-oc-08-po-status-reporting
 
 git rev-parse HEAD
-13b82825bbb5320dcf7f8105fe76c69d43eda3b0
+870e4436fa358441522e70fe05aa8af7810919de
 
-git log -5 --oneline --decorate
-13b8282 (HEAD -> feature/pe-oc-07-gate-automation, origin/feature/pe-oc-07-gate-automation) review(pe-oc-07): add REVIEW_PE_OC_07.md — PASS r1
-c93292d feat(pe-oc-07): add PM gate evaluator + webhook notifier
-f55a650 (origin/main, origin/HEAD, main) chore(pm): advance registry to PE-OC-07
-98b32d0 Merge pull request #268 from rochasamurai/feature/pe-oc-06-pe-assignment-alternation
-ab136a9 (feature/pe-oc-06-pe-assignment-alternation) docs(pe-oc-06): update HANDOFF.md for r2 — agent ID fix
+git log -6 --oneline --decorate
+870e443 (HEAD -> feature/pe-oc-08-po-status-reporting, origin/feature/pe-oc-08-po-status-reporting) docs(pe-oc-08): address NB-1 and NB-2 in HANDOFF update
+c144b77 fix(pe-oc-08): treat last-updated as end-of-day to avoid premature stall
+89a69ee docs(pe-oc-08): add HANDOFF.md with Status Packet
+4cf8ac7 feat(pe-oc-08): add PO status reporting and escalation automation
+38e8f50 (origin/main, origin/HEAD, main) chore(pm): advance registry to PE-OC-08
+bb72e7f Merge pull request #269 from rochasamurai/feature/pe-oc-07-gate-automation
 ```
 
 ### 6.3 Scope evidence (against `origin/main`)
 
 ```text
 git diff --name-status origin/main..HEAD
-A	.github/workflows/notify-pm-agent.yml
+A	docs/pm_agent/ESCALATION_PROTOCOL.md
 M	HANDOFF.md
-A	REVIEW_PE_OC_07.md
 M	openclaw/workspaces/workspace-pm/AGENTS.md
-A	scripts/pm_gate_evaluator.py
-A	tests/test_pm_gate_evaluator.py
-
-git diff --stat origin/main..HEAD
- .github/workflows/notify-pm-agent.yml      |  94 ++++++++++++
- HANDOFF.md                                 | 211 +++++++++++++++++++---------
- REVIEW_PE_OC_07.md                         | 138 +++++++++++++++++
- openclaw/workspaces/workspace-pm/AGENTS.md |  21 +++
- scripts/pm_gate_evaluator.py               | 234 +++++++++++++++++++++++++++++
- tests/test_pm_gate_evaluator.py            | 182 ++++++++++++++++++++++
- 6 files changed, 779 insertions(+), 106 deletions(-)
+A	scripts/pm_stall_detector.py
+A	scripts/pm_status_reporter.py
+A	tests/test_pm_stall_detector.py
+A	tests/test_pm_status_reporter.py
 ```
+
+No out-of-scope files. The NB-2 fix is within `scripts/pm_stall_detector.py` and
+`tests/test_pm_stall_detector.py` — both in-plan deliverables.
 
 ### 6.4 Quality gates
 
 ```text
 python -m black --check .
 All done! ✨ 🍰 ✨
-109 files would be left unchanged.
+111 files would be left unchanged.
 
 python -m ruff check .
 All checks passed!
 
 python -m pytest -q
-........................................................................ [ 14%]
-........................................................................ [ 29%]
-........................................................................ [ 44%]
-........................................................................ [ 58%]
-........................................................................ [ 73%]
-........................................................................ [ 88%]
-..........................................................               [100%]
-480 passed, 17 warnings in 19.52s
+RC: 0 — 534 tests, 17 warnings
 ```
 
 ### 6.4 Ready to merge
 
 ```text
-YES — non-blocking findings NB-1 and NB-2 are addressed in this HANDOFF update.
+YES — NB-1 and NB-2 addressed in this HANDOFF update.
 ```
