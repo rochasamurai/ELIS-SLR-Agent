@@ -57,8 +57,6 @@ jobs:
       - name: Verify Status Packet completeness
         if: steps.pr.outputs.number != ''
         run: python scripts/check_status_packet.py
-        env:
-          PR_BODY: ${{ steps.pr.outputs.body }}
 
       - name: Verify HANDOFF.md present and complete
         if: steps.pr.outputs.number != ''
