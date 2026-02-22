@@ -1,0 +1,94 @@
+name: Notify PM Agent
+
+on:
+  workflow_run:
+    workflows:
+      - Auto-assign Validator
+      - Auto-merge on Validator PASS
+    types: [completed]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  notify:
+    name: Post gate event to PM Agent webhook
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.event == 'pull_request'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Resolve PR context
+        id: ctx
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prs = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              head: `${context.repo.owner}:${context.payload.workflow_run.head_branch}`,
+              state: 'open'
+            });
+            if (prs.data.length === 0) {
+              core.setOutput('has_pr', 'false');
+              return;
+            }
+            const pr = prs.data[0];
+            const labels = pr.labels.map(l => l.name);
+            const gate = context.payload.workflow_run.name === 'Auto-assign Validator'
+              ? 'gate-1'
+              : 'gate-2';
+            const payload = {
+              gate,
+              workflow_name: context.payload.workflow_run.name,
+              workflow_conclusion: context.payload.workflow_run.conclusion,
+              ci_green: context.payload.workflow_run.conclusion === 'success',
+              pe_id: (pr.head.ref || '').toUpperCase(),
+              pr_number: pr.number,
+              branch: pr.head.ref,
+              labels,
+              review_verdict: gate === 'gate-2'
+                ? (context.payload.workflow_run.conclusion === 'success' ? 'PASS' : 'FAIL')
+                : '',
+              handoff_present: gate === 'gate-1',
+              status_packet_complete: gate === 'gate-1'
+            };
+            core.setOutput('has_pr', 'true');
+            core.setOutput('payload', JSON.stringify(payload));
+
+      - name: Evaluate gate event
+        if: steps.ctx.outputs.has_pr == 'true'
+        id: eval
+        run: |
+          cat > event.json << 'EOF'
+          ${{ steps.ctx.outputs.payload }}
+          EOF
+          python scripts/pm_gate_evaluator.py \
+            --gate "$(python -c "import json;print(json.load(open('event.json'))['gate'])")" \
+            --event-file event.json \
+            --output decision.json
+          echo "decision=$(cat decision.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Post payload to PM Agent webhook
+        if: steps.ctx.outputs.has_pr == 'true' && env.PM_AGENT_WEBHOOK_URL != ''
+        env:
+          PM_AGENT_WEBHOOK_URL: ${{ secrets.PM_AGENT_WEBHOOK_URL }}
+        run: |
+          curl -sS -X POST "$PM_AGENT_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            --data-binary @decision.json
+
+      - name: Log when webhook is not configured
+        if: steps.ctx.outputs.has_pr == 'true' && env.PM_AGENT_WEBHOOK_URL == ''
+        env:
+          PM_AGENT_WEBHOOK_URL: ${{ secrets.PM_AGENT_WEBHOOK_URL }}
+        run: |
+          echo "PM_AGENT_WEBHOOK_URL is not configured. Gate event evaluation completed locally only."
