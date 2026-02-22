@@ -155,9 +155,30 @@ jobs:
       - name: Probe OpenClaw endpoint (non-blocking)
         run: python scripts/check_openclaw_health.py
 
+  openclaw-security-check:
+    name: openclaw-security-check
+    needs: [quality, tests, validate, secrets-scope-check, review-evidence-check, openclaw-health-check]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install PyYAML==6.0.2
+
+      - name: Run security checks
+        run: python scripts/check_openclaw_security.py
+
   add_and_set_status:
     name: Projects Auto-Add / add_and_set_status
-    needs: [quality, tests, validate, secrets-scope-check, review-evidence-check, openclaw-health-check]
+    needs: [quality, tests, validate, secrets-scope-check, review-evidence-check, openclaw-health-check, openclaw-security-check]
     runs-on: ubuntu-latest
     if: always()
     steps:

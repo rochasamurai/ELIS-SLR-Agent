@@ -7,6 +7,14 @@ services:
     restart: unless-stopped
     ports:
       - "127.0.0.1:18789:3000"
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:rw,nosuid,noexec
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
     volumes:
       - ${HOME}/.openclaw:/app/.openclaw:rw
       - ${HOME}/openclaw/workspace-pm:/app/workspaces/workspace-pm:rw
