@@ -87,7 +87,13 @@ def parse_active_registry(
 
 
 def _age_hours(last_updated: str, now: datetime.datetime) -> float | None:
-    """Return age in hours from last-updated date string, or None if unparseable."""
+    """Return age in hours from last-updated date string, or None if unparseable.
+
+    Treats the last-updated date as end-of-day (23:59:59 UTC) rather than
+    midnight to avoid premature stall escalation when a PE was updated late
+    in the day. This means a stall fires only when we are certain that at
+    least ``threshold_hours`` have elapsed since the *end* of the update day.
+    """
     try:
         updated_date = datetime.date.fromisoformat(last_updated.strip())
     except ValueError:
@@ -96,6 +102,9 @@ def _age_hours(last_updated: str, now: datetime.datetime) -> float | None:
         updated_date.year,
         updated_date.month,
         updated_date.day,
+        23,
+        59,
+        59,
         tzinfo=datetime.timezone.utc,
     )
     return (now - updated_dt).total_seconds() / 3600

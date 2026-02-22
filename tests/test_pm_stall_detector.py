@@ -54,12 +54,13 @@ def _row(pe_id: str, status: str, last_updated: str) -> str:
 
 
 def test_detect_stall_over_threshold() -> None:
-    # last updated 2026-02-20 → 48+ hours before 2026-02-22T12:00 → stalled
+    # last updated 2026-02-19 → end-of-day 2026-02-19T23:59:59Z is ~60h before
+    # 2026-02-22T12:00:00Z → stalled (age_hours > 48)
     _, rows = parse_active_registry(
         "# x\n\n## Active PE Registry\n\n"
         "| PE-ID | Domain | Implementer-agentId | Validator-agentId | Branch | Status | Last-updated |\n"
         "|---|---|---|---|---|---|---|\n"
-        "| PE-OC-08 | openclaw-infra | prog-impl-claude | prog-val-codex | feature/x | implementing | 2026-02-20 |\n"
+        "| PE-OC-08 | openclaw-infra | prog-impl-claude | prog-val-codex | feature/x | implementing | 2026-02-19 |\n"
     )
     stalled = detect_stalls(rows, _NOW, _THRESHOLD_HOURS)
     assert len(stalled) == 1
@@ -79,16 +80,15 @@ def test_no_stall_within_threshold() -> None:
 
 
 def test_detect_stall_exactly_at_threshold_not_stalled() -> None:
-    # last updated 2026-02-20 T12:00 → exactly 48h → NOT stalled (must be > 48h)
+    # last updated 2026-02-21 → end-of-day 2026-02-21T23:59:59Z is ~12h before
+    # 2026-02-22T12:00:00Z → NOT stalled (age ≈ 12h, well under 48h threshold)
     now = datetime.datetime(2026, 2, 22, 12, 0, 0, tzinfo=datetime.timezone.utc)
-    # 2026-02-20 midnight UTC → 60h before now → stalled
     _, rows = parse_active_registry(
         "# x\n\n## Active PE Registry\n\n"
         "| PE-ID | Domain | Implementer-agentId | Validator-agentId | Branch | Status | Last-updated |\n"
         "|---|---|---|---|---|---|---|\n"
         "| PE-OC-09 | openclaw-infra | prog-impl-codex | prog-val-claude | feature/y | gate-1-pending | 2026-02-21 |\n"
     )
-    # 2026-02-21 midnight → 36h before 2026-02-22T12 → NOT stalled
     stalled = detect_stalls(rows, now, _THRESHOLD_HOURS)
     assert stalled == []
 
