@@ -155,6 +155,32 @@ jobs:
       - name: Probe OpenClaw endpoint (non-blocking)
         run: python scripts/check_openclaw_health.py
 
+  openclaw-doctor-check:
+    name: openclaw-doctor-check
+    needs:
+      - quality
+      - tests
+      - validate
+      - secrets-scope-check
+      - review-evidence-check
+      - openclaw-health-check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+
+      - name: Run OpenClaw doctor config check
+        run: python scripts/check_openclaw_doctor.py
+
   openclaw-security-check:
     name: openclaw-security-check
     needs: [quality, tests, validate, secrets-scope-check, review-evidence-check, openclaw-health-check, slr-quality-check]
@@ -224,6 +250,7 @@ jobs:
       - secrets-scope-check
       - review-evidence-check
       - openclaw-health-check
+      - openclaw-doctor-check
       - openclaw-security-check
       - slr-quality-check
     runs-on: ubuntu-latest
