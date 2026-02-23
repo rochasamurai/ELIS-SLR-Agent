@@ -21,8 +21,8 @@
 
 | Field   | Value                                    |
 |---------|------------------------------------------|
-| PE      | PE-OC-15                                  |
-| Branch  | feature/pe-oc-15-openclaw-doctor-ci       |
+| PE      | PE-OC-14                                  |
+| Branch  | feature/pe-oc-14-status-reporter-domain-grouping |
 
 ---
 
@@ -30,8 +30,8 @@
 
 | Agent       | Role        |
 |-------------|-------------|
-| CODEX       | Implementer |
-| Claude Code | Validator   |
+| Claude Code | Implementer |
+| CODEX       | Validator   |
 
 ---
 
@@ -58,7 +58,8 @@
 | PE-OC-11    | openclaw-infra  | infra-impl-codex    | prog-val-claude   | feature/pe-oc-11-security-hardening         | merged          | 2026-02-22   |
 | PE-OC-12    | openclaw-infra  | prog-impl-claude    | prog-val-codex    | feature/pe-oc-12-fix-gate1-automation       | merged          | 2026-02-22   |
 | PE-OC-13    | openclaw-infra  | prog-impl-codex     | prog-val-claude   | feature/pe-oc-13-slr-quality-ci             | merged          | 2026-02-23   |
-| PE-OC-15    | openclaw-infra  | prog-impl-codex     | prog-val-claude   | feature/pe-oc-15-openclaw-doctor-ci         | implementing    | 2026-02-23   |
+| PE-OC-14    | openclaw-infra  | prog-impl-claude    | prog-val-codex    | feature/pe-oc-14-status-reporter-domain-grouping | implementing    | 2026-02-23   |
+| PE-OC-15    | openclaw-infra  | prog-impl-codex     | prog-val-claude   | feature/pe-oc-15-openclaw-doctor-ci         | planning        | 2026-02-22   |
 
 Valid status values:
 - `planning`
