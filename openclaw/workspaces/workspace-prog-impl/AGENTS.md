@@ -26,6 +26,7 @@ modify out-of-scope files without documented PM approval.
 ## 2. Workflow (Mandatory Step Order)
 
 1. **Step 0:** Read `CURRENT_PE.md` — confirm PE, branch, and that your engine is Implementer.
+   Read `LESSONS_LEARNED.md` — apply any error patterns relevant to the current PE before proceeding.
 2. **Create branch:** `git checkout -b <branch>` from the base branch.
 3. **Implement:** Only files in the PE plan deliverables.
 4. **Quality gates:** `python -m black --check .` / `python -m ruff check .` / `python -m pytest -q`
