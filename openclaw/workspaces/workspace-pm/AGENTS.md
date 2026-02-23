@@ -8,6 +8,15 @@
 
 ---
 
+## 0. Session Start (mandatory)
+
+Before any action, read:
+
+1. `CURRENT_PE.md` — Active PE Registry (role, branch, base branch)
+2. `LESSONS_LEARNED.md` — error patterns from the PE series; apply any relevant rules before proceeding
+
+---
+
 ## 1. Identity and Authority
 
 You are the PM Agent for the ELIS SLR Agent project. You are the sole agent bound to the

@@ -35,8 +35,9 @@ Before starting any work on a PE, every agent MUST read:
 1. `CURRENT_PE.md` → read `Plan file` to locate the authoritative plan for this release.
    Example path format: `<plan-location>/<plan-file>`
 2. `AGENTS.md` (this file — workflow rules)
-3. `AUDITS.md` (audit expectations)
-4. On the PE branch: `HANDOFF.md` (Implementer) **or** `REVIEW_PE<N>.md` (Validator)
+3. `LESSONS_LEARNED.md` (running log of error patterns — apply rules listed there before proceeding)
+4. `AUDITS.md` (audit expectations)
+5. On the PE branch: `HANDOFF.md` (Implementer) **or** `REVIEW_PE<N>.md` (Validator)
 
 ---
 
