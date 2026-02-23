@@ -1,0 +1,35 @@
+{
+  "screening_decisions": [
+    {
+      "study_id": "study-001",
+      "decision": "include",
+      "reason_code": "meets_criteria"
+    }
+  ],
+  "data_extraction": [
+    {
+      "study_id": "study-001",
+      "country": "CountryX",
+      "design": "RCT",
+      "sample_size": 100,
+      "outcomes": ["outcome1"]
+    }
+  ],
+  "prisma_record": {
+    "identified": 200,
+    "screened": 150,
+    "eligible": 120,
+    "included": 100
+  },
+  "synthesis_notes": [
+    {
+      "study_id": "study-001",
+      "note": "Complete"
+    }
+  ],
+  "agreement": {
+    "metric": "kappa",
+    "value": 0.85,
+    "threshold": 0.7
+  }
+}

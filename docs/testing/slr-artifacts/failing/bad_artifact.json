@@ -1,0 +1,29 @@
+{
+  "screening_decisions": [
+    {
+      "study_id": "study-002",
+      "decision": "include",
+      "reason_code": "meets_criteria"
+    }
+  ],
+  "data_extraction": [
+    {
+      "study_id": "study-002",
+      "country": "CountryY",
+      "design": "Observational",
+      "sample_size": 80,
+      "outcomes": ["outcome1"]
+    }
+  ],
+  "synthesis_notes": [
+    {
+      "study_id": "study-002",
+      "note": "In progress"
+    }
+  ],
+  "agreement": {
+    "metric": "kappa",
+    "value": 0.65,
+    "threshold": 0.7
+  }
+}

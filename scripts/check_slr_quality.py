@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""SLR artifact quality gate for PE-OC-05."""
+"""SLR artifact quality gate for PE-OC-13."""
 
 from __future__ import annotations
 
