@@ -7,12 +7,13 @@
 | HEAD reviewed | ba03a76 |
 | Validator | Claude Code (`prog-val-claude`) |
 | Round | r1 |
-| Verdict | **PASS** |
 | Date | 2026-02-23 |
 
----
+### Verdict
 
-## Scope check
+PASS
+
+### Scope
 
 ```
 git diff --name-status origin/main..origin/feature/pe-oc-15-openclaw-doctor-ci
@@ -22,11 +23,9 @@ A	docs/testing/OPENCLAW_DOCTOR_FIX.md
 A	scripts/check_openclaw_doctor.py
 ```
 
-4 files — all in-scope. ✅
+4 files — all in-scope.
 
----
-
-## Quality gates
+### Gate results
 
 ```
 python -m black --check .
@@ -39,58 +38,37 @@ python -m pytest
 547 passed, 17 warnings in 6.35s
 ```
 
----
+### Evidence
 
-## AC spot-checks
-
-**AC-1** — `python scripts/check_openclaw_doctor.py` exits 0 on current config:
 ```
+# AC-1 — exits 0 on current config
+python scripts/check_openclaw_doctor.py
 OK: openclaw doctor configuration meets expected policies
-exit code: 0 ✅
-```
+exit code: 0
 
-**AC-2** — exits non-zero when any agent has `exec.ask: false`:
-```
+# AC-2 — exits 1 when exec.ask is false
+(mocked bad config: exec.ask=False)
 FAIL: openclaw doctor stub validation failed
 - agent pm exec.ask is False; must be true
-exit code: 1 ✅
-```
+exit code: 1
 
-**AC-3** — exits non-zero when `skills.hub.autoInstall: true`:
-```
+# AC-3 — exits 1 when autoInstall=true
+(mocked bad config: skills.hub.autoInstall=True)
 FAIL: openclaw doctor stub validation failed
 - skills.hub.autoInstall must be false
-exit code: 1 ✅
+exit code: 1
+
+# AC-4 — CI job present and wired
+grep openclaw-doctor-check .github/workflows/ci.yml
+  openclaw-doctor-check:   (job definition)
+  - openclaw-doctor-check  (in add_and_set_status needs chain)
+
+# AC-5 — discovery doc present
+cat docs/testing/OPENCLAW_DOCTOR_FIX.md
+docker pull timed out at 124180ms and 184029ms
+Stub approach rationale documented.
 ```
 
-**AC-4** — CI job `openclaw-doctor-check` present and wired into `add_and_set_status` needs chain:
-```
-  openclaw-doctor-check:
-    name: openclaw-doctor-check
-    needs: [quality, tests, validate, secrets-scope-check,
-            review-evidence-check, openclaw-health-check]
-...
-add_and_set_status needs: [..., openclaw-doctor-check, ...]
-✅
-```
+### Required fixes
 
-**AC-5** — `docs/testing/OPENCLAW_DOCTOR_FIX.md` present with discovery evidence and scope change rationale:
-```
-Discovery: docker pull timed out at 124180ms and 184029ms
-Conclusion + stub rationale documented ✅
-```
-
----
-
-## Findings
-
-None. All ACs verified. Implementation is clean and minimal.
-
----
-
-## Verdict: PASS
-
-PE-OC-15 delivered a correct, minimal dm-policy stub that enforces
-`exec.ask: true` on all agents and `skills.hub.autoInstall: false`
-without depending on the unavailable Docker image. CI job is correctly
-wired. Discovery evidence is documented.
+None.
