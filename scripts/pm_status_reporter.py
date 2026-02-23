@@ -130,7 +130,12 @@ def _merged_this_week(rows: list[dict[str, str]], now: datetime.date) -> int:
 
 
 def format_status_response(rows: list[dict[str, str]], now: datetime.date) -> str:
-    """Format Active PE Registry for PO consumption (AGENTS.md §4.1)."""
+    """Format Active PE Registry for PO consumption (AGENTS.md §4.1).
+
+    When more than one domain is present, active PEs are grouped under labelled
+    ``### <domain> domain`` sections.  Single-domain registries retain the
+    existing flat-list format.
+    """
     active = [r for r in rows if r.get("status", "").lower() in ACTIVE_STATUSES]
     merged_week = _merged_this_week(rows, now)
 
@@ -138,17 +143,27 @@ def format_status_response(rows: list[dict[str, str]], now: datetime.date) -> st
     if not active:
         lines.append("(no active PEs)")
     else:
-        for row in active:
-            pe_id = row.get("pe-id", "UNKNOWN")
-            domain = row.get("domain", "")
-            status = row.get("status", "")
-            impl_id = row.get("implementer-agentid", "")
-            updated = row.get("last-updated", "")
-            engine = _engine_display(impl_id)
-            lines.append(
-                f"{pe_id} | {domain} | {status}"
-                f" | Implementer: {engine} | last updated {updated}"
-            )
+        # Preserve insertion order while deduplicating domains.
+        domains = list(dict.fromkeys(r.get("domain", "") for r in active))
+        multi_domain = len(domains) > 1
+
+        for domain in domains:
+            if multi_domain:
+                lines.append(f"### {domain} domain")
+            for row in active:
+                if row.get("domain", "") != domain:
+                    continue
+                pe_id = row.get("pe-id", "UNKNOWN")
+                status = row.get("status", "")
+                impl_id = row.get("implementer-agentid", "")
+                updated = row.get("last-updated", "")
+                engine = _engine_display(impl_id)
+                lines.append(
+                    f"{pe_id} | {domain} | {status}"
+                    f" | Implementer: {engine} | last updated {updated}"
+                )
+            if multi_domain:
+                lines.append("")
 
     lines.append("")
     lines.append(f"{len(active)} PEs active. {merged_week} merged this week.")
