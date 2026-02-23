@@ -86,7 +86,7 @@ tests/test_pipeline_search.py::TestSearchMain::test_dry_run_topic_with_name_not_
 ```
 # AC-1 — LESSONS_LEARNED.md has the required entries and format
 Get-Content LESSONS_LEARNED.md -TotalCount 60
-# LESSONS_LEARNED.md â€” Agent Error Log
+# LESSONS_LEARNED.md — Agent Error Log
 
 Both agents read this file at Step 0 (after `AGENTS.md`).
 Each entry records an error pattern observed during the PE-OC series,
@@ -94,17 +94,17 @@ the rule added to prevent recurrence, and how it was detected.
 
 ---
 
-## LL-01 â€” PR opened before HANDOFF committed
+## LL-01 — PR opened before HANDOFF committed
 
 | Field | Value |
 |---|---|
 | First seen | PE-OC-08 |
 | Agent | CODEX |
-| AGENTS.md rule | Â§2.7 â€” HANDOFF.md must be committed before `git push` and PR creation |
+| AGENTS.md rule | §2.7 — HANDOFF.md must be committed before `git push` and PR creation |
 
 **Error:** PR was opened on the feature branch before `HANDOFF.md` was committed. Gate 1 CI fired on a branch with no Status Packet.
 
-**Rule added:** Â§2.7 and Â§8 do-not: *"Do not open a final (ready) PR before HANDOFF.md is committed on the branch."*
+**Rule added:** §2.7 and §8 do-not: *”Do not open a final (ready) PR before HANDOFF.md is committed on the branch.”*
 ```
 
 ```
