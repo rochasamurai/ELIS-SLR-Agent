@@ -825,10 +825,11 @@ to intervene.
 | LL-04 | Stale HANDOFF HEAD SHA | PE-OC-13 |
 | LL-05 | PE skipped in registry (PE-OC-14 gap) | PE-OC-13→14 |
 | LL-06 | New AGENTS.md rules not followed mid-session | PE-OC-14→15 |
+| LL-07 | Host prerequisites assumed not scoped — Docker not installed blocked PE-OC-15 discovery probe | PE-OC-15 |
 
 **Acceptance Criteria**
 
-1. `LESSONS_LEARNED.md` present at repo root with all 6 initial entries in correct format
+1. `LESSONS_LEARNED.md` present at repo root with all 7 initial entries in correct format
 2. `AGENTS.md` Step 0 lists `LESSONS_LEARNED.md` as a required read (after `AGENTS.md`, before `HANDOFF.md`)
 3. Both agent workspace `AGENTS.md` files reference `LESSONS_LEARNED.md` at Step 0
 4. All existing tests pass (`python -m pytest tests/ --tb=no`)
