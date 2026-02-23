@@ -312,9 +312,14 @@ verified with pasted output. Never batch completions.
    - invalid inputs / edge cases specific to the PE
 6. Run full quality gates (Section 6.3).
 7. Write verdict in `REVIEW_PE<N>.md` using the standard format (Section 9).
-8. If any newly discovered pre-existing defect is not already in §11, add it now.
-9. Push validation commits to the **same branch** (validator-owned files only: `REVIEW_PE<N>.md` + adversarial tests).
-10. Deliver verdict + Status Packet using a **GitHub PR review comment** (`approve` for PASS, `request-changes` for FAIL) using the standard format (Section 9).
+8. **Before committing the REVIEW file**, verify it passes the local check:
+   ```bash
+   REVIEW_FILE=REVIEW_PE<N>.md python scripts/check_review.py
+   ```
+   Required sections: `### Verdict`, `### Gate results`, `### Scope`, `### Required fixes`, `### Evidence` (must contain a fenced code block). Do not push a REVIEW file that fails this check.
+9. If any newly discovered pre-existing defect is not already in §11, add it now.
+10. Push validation commits to the **same branch** (validator-owned files only: `REVIEW_PE<N>.md` + adversarial tests).
+11. Deliver verdict + Status Packet using a **GitHub PR review comment** (`approve` for PASS, `request-changes` for FAIL) using the standard format (Section 9).
     - Single-account fallback: if reviewer and PR author are the same GitHub account, and GitHub blocks review actions, post verdicts as plain PR comments. For FAIL, explicitly request PM attention and apply `pm-review-required`.
     - PM may still receive a direct summary message, but the PR review is the binding live handshake record.
     - `REVIEW_PE<N>.md` remains mandatory as the durable on-branch artifact.
@@ -439,6 +444,7 @@ See `AUDITS.md` for the full audit spec and report templates.
 - Do not start a PE without creating a dedicated worktree for its branch (§3.3).
 - Do not refactor unrelated code while inside a PE.
 - Do not touch `REVIEW_PE<N>.md` unless you are the Validator.
+- Do not push a `REVIEW_PE<N>.md` without first running `REVIEW_FILE=<file> python scripts/check_review.py` and confirming it exits 0 (§5.2 step 8).
 - Do not declare PASS without pasted gate outputs.
 - Do not leave uncommitted implementation files when ending a session.
 - Do not open a PR without running the pre-commit scope gate first.
