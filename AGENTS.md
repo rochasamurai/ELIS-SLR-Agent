@@ -284,7 +284,7 @@ Rules:
 - Completed steps must be marked `[x]` immediately, with pasted command output confirming the step.
 - If a step fails and is retried, keep it `[→]` until verification passes.
 
-**Tool note — Claude Code:** use the `TodoWrite` tool to maintain this list. Set status to
+**Tool note (both agents):** use the `TodoWrite` tool to maintain this list. Set status to
 `in_progress` before starting each step; set `completed` immediately after the step is
 verified with pasted output. Never batch completions.
 
@@ -345,7 +345,7 @@ Rules:
 - Completed steps must be marked `[x]` immediately, with pasted command output confirming the step.
 - In re-validation rounds, restart Updated Todos from step 1 and include round ID.
 
-**Tool note — Claude Code:** use the `TodoWrite` tool to maintain this list. Set status to
+**Tool note (both agents):** use the `TodoWrite` tool to maintain this list. Set status to
 `in_progress` before starting each step; set `completed` immediately after the step is
 verified with pasted output. Never batch completions.
 
