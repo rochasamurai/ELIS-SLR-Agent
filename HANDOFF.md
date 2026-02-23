@@ -1,37 +1,39 @@
-# HANDOFF.md — PE-OC-15
+# HANDOFF.md — PE-OC-16
 
 ## Summary
 
-- Implemented `scripts/check_openclaw_doctor.py` so dm-policy enforcement now reads `openclaw/openclaw.json` directly, because the Docker image is not available publicly.
-- Added the `openclaw-doctor-check` job to `.github/workflows/ci.yml` and wired it into `add_and_set_status` so the policy gate participates in the final needs chain alongside the existing OpenClaw probes.
-- Documented the blocked discovery probe and the rationale for the stub approach in `docs/testing/OPENCLAW_DOCTOR_FIX.md`.
+- Created `LESSONS_LEARNED.md` at repo root with 7 initial entries (LL-01 through LL-07) documenting all managed errors in the PE-OC series to date.
+- Updated root `AGENTS.md` §1 (Canonical references) Step 0 list to include `LESSONS_LEARNED.md` as item 3 — after AGENTS.md, before AUDITS.md.
+- Updated `openclaw/workspaces/workspace-pm/AGENTS.md` with a new §0 Session Start section requiring CURRENT_PE.md and LESSONS_LEARNED.md at startup.
+- Updated `openclaw/workspaces/workspace-prog-impl/AGENTS.md` Step 0 to include LESSONS_LEARNED.md read alongside CURRENT_PE.md.
 
 ## Files Changed
 
-- `.github/workflows/ci.yml`
-- `docs/testing/OPENCLAW_DOCTOR_FIX.md`
-- `scripts/check_openclaw_doctor.py`
+- `LESSONS_LEARNED.md` (new)
+- `AGENTS.md`
+- `openclaw/workspaces/workspace-pm/AGENTS.md`
+- `openclaw/workspaces/workspace-prog-impl/AGENTS.md`
 - `HANDOFF.md` (this file)
 
 ## Design Decisions
 
-- **JSON-first gate:** Running `openclaw doctor` in Docker is no longer viable because `ghcr.io/openclaw/openclaw:latest` cannot be pulled. The stub script enforces the same `exec.ask` + `skills.hub.autoInstall` policy on `openclaw/openclaw.json`, keeping the dm-policy check in CI without requiring external images.
-- **Minimal CI job:** `openclaw-doctor-check` simply runs the stub script after the other OpenClaw probes so failures surface before the PR is marked complete; adding it to `add_and_set_status` keeps the new job visible to the downstream summary step.
-- **Discovery documentation:** `docs/testing/OPENCLAW_DOCTOR_FIX.md` preserves the timeout evidence and clearly links the scope change to the stub approach, so future agents know why Docker was dropped.
+- **Repo-root placement:** `LESSONS_LEARNED.md` is at repo root so both agents find it via the same path as `AGENTS.md` and `CURRENT_PE.md`, without path ambiguity across worktrees.
+- **Step 0 insertion point:** Added between `AGENTS.md` (item 2) and `AUDITS.md` (previously item 3) so agents read error history after they understand workflow rules and before starting PE-specific reading.
+- **Workspace scope — workspace-pm + workspace-prog-impl:** The plan lists `workspace-pm` and `workspace-slr` (which does not exist). As a substitute, `workspace-prog-impl` was updated because it is the primary implementer workspace with an explicit numbered Step 0 workflow, used for all programs-domain PEs. `workspace-slr-impl` has no numbered workflow block so the reference is most actionable in `workspace-prog-impl`.
+- **Format:** Each LL entry follows the canonical format from the plan (`## LL-N`, table with First seen / Agent / AGENTS.md rule, then Error / Root cause / Detection / Rule added) to allow grep-based lookup by PE ID, agent, or rule section.
 
 ## Acceptance Criteria
 
-- [x] `python scripts/check_openclaw_doctor.py` exits 0 against the current `openclaw/openclaw.json`.
-- [x] The script exits non-zero when `exec.ask` is missing or `false` (verified via code inspection and early validation logic).
-- [x] The script exits non-zero when `skills.hub.autoInstall` is `true` (explicit guard in the stub).
-- [x] CI job `openclaw-doctor-check` now runs `python scripts/check_openclaw_doctor.py`.
-- [x] `docs/testing/OPENCLAW_DOCTOR_FIX.md` records the discovery evidence plus the new stub rationale.
+- [x] AC-1: `LESSONS_LEARNED.md` present at repo root with all 7 initial entries (LL-01 through LL-07) in correct format.
+- [x] AC-2: `AGENTS.md` Step 0 lists `LESSONS_LEARNED.md` as item 3 (after `AGENTS.md`, before `AUDITS.md`).
+- [x] AC-3: Both agent workspace `AGENTS.md` files reference `LESSONS_LEARNED.md` at Step 0 (`workspace-pm` §0 + `workspace-prog-impl` Step 1).
+- [x] AC-4: All existing tests pass (547 passed, 17 warnings).
 
 ## Validation Commands
 
 ```text
-python scripts/check_openclaw_doctor.py
-OK: openclaw doctor configuration meets expected policies
+python -m pytest --tb=no 2>&1 | tail -1
+547 passed, 17 warnings in 7.01s
 ```
 
 ## Status Packet
@@ -40,7 +42,7 @@ OK: openclaw doctor configuration meets expected policies
 
 ```text
 git status -sb
-## feature/pe-oc-15-openclaw-doctor-ci...origin/feature/pe-oc-15-openclaw-doctor-ci
+## feature/pe-oc-16-lessons-learned-log...origin/feature/pe-oc-16-lessons-learned-log
 
 git diff --name-status
 (no output)
@@ -52,37 +54,37 @@ git diff --stat
 ### 6.2 Repository state
 
 ```text
-git fetch --all --prune
-From https://github.com/rochasamurai/ELIS-SLR-Agent
- - [deleted]         (none)     -> origin/feature/pe-oc-14-status-reporter-domain-grouping
-
 git branch --show-current
-feature/pe-oc-15-openclaw-doctor-ci
+feature/pe-oc-16-lessons-learned-log
 
 git rev-parse HEAD
-d76ea83b1b78f3724f27f582d28ed9bbfde47d43
+16901d29e70fa6ae4546093e3f5bc657ef27dd2a
 
 git log -5 --oneline --decorate
-d76ea83 (HEAD -> feature/pe-oc-15-openclaw-doctor-ci, origin/feature/pe-oc-15-openclaw-doctor-ci) feat(pe-oc-15): add doctor policy stub
-38a6e66 (origin/main, origin/HEAD, main) chore(pe-oc-15): redefine scope to Python stub after Docker image unavailable
-88646e3 docs(pe-oc-01): add host prerequisites to DOCKER_SETUP.md; add LL-07
-29cdc1a chore(pm): advance to PE-OC-15; mark PE-OC-14 merged
-a9dd290 Merge pull request #276 from rochasamurai/feature/pe-oc-14-status-reporter-domain-grouping
+16901d2 (HEAD -> feature/pe-oc-16-lessons-learned-log, origin/feature/pe-oc-16-lessons-learned-log) feat(pe-oc-16): add LESSONS_LEARNED.md and update Step 0 references
+12a0029 (origin/main, origin/HEAD, main) chore(pm): advance to PE-OC-16; mark PE-OC-15 merged
+1973488 Merge pull request #278 from rochasamurai/feature/pe-oc-15-openclaw-doctor-ci
+98673fd chore(agents-md): require check_review.py before pushing REVIEW file
+81b48ff review(pe-oc-15): fix REVIEW file section headers for check_review.py
 ```
 
 ### 6.3 Scope evidence
 
 ```text
 git diff --name-status origin/main..HEAD
-M	.github/workflows/ci.yml
-A	docs/testing/OPENCLAW_DOCTOR_FIX.md
-A	scripts/check_openclaw_doctor.py
+M       AGENTS.md
+A       HANDOFF.md
+A       LESSONS_LEARNED.md
+M       openclaw/workspaces/workspace-pm/AGENTS.md
+M       openclaw/workspaces/workspace-prog-impl/AGENTS.md
 
 git diff --stat origin/main..HEAD
- .github/workflows/ci.yml            | 27 +++++++++++++++
- docs/testing/OPENCLAW_DOCTOR_FIX.md | 18 ++++++++++
- scripts/check_openclaw_doctor.py    | 66 +++++++++++++++++++++++++++++++++++++
- 3 files changed, 111 insertions(+)
+ AGENTS.md                                         |   5 +-
+ HANDOFF.md                                        | 129 +++++++++++++++++++++++++++++++++++++++++++
+ LESSONS_LEARNED.md                                | 131 +++++++++++++++++++++++++++++++++++++++++++
+ openclaw/workspaces/workspace-pm/AGENTS.md        |   9 +++
+ openclaw/workspaces/workspace-prog-impl/AGENTS.md |   1 +
+ 5 files changed, 273 insertions(+), 2 deletions(-)
 ```
 
 ### 6.4 Quality gates
@@ -95,63 +97,23 @@ All done! ✨ 🍰 ✨
 python -m ruff check .
 All checks passed!
 
-python -m pytest -q
-........................................................................ [ 13%]
-........................................................................ [ 26%]
-........................................................................ [ 39%]
-........................................................................ [ 52%]
-........................................................................ [ 65%]
-........................................................................ [ 78%]
-........................................................................ [ 92%]
-...........................................                              [100%]
-============================== warnings summary ===============================
-tests/test_elis_cli.py::test_screen_emits_manifest
-tests/test_elis_cli.py::test_screen_dry_run_does_not_emit_manifest
-tests/test_pipeline_merge.py::test_merge_output_validates_and_is-screen-compatible
-tests/test_pipeline_screen.py::TestScreenMain::test_dry_run
-tests/test_pipeline_screen.py::TestScreenMain::test_write_output
-  C:\Users\carlo\ELIS-SLR-Agent\elis\pipeline\screen.py:276: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
-    else g.get("year_to", dt.datetime.utcnow().year)
-
-tests/test_elis_cli.py::test_screen_emits_manifest
-tests/test_elis_cli.py::test_screen_dry_run_does_not_emit_manifest
-tests/test_pipeline_merge.py::test_merge_output_validates_and-is-screen-compatible
-tests/test_pipeline_screen.py::TestScreenMain::test_dry_run
-tests/test_pipeline_screen.py::TestScreenMain::test_write_output
-  C:\Users\carlo\ELIS-SLR-Agent\elis\pipeline\screen.py:30: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
-    return dt.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
-
-tests/test_pipeline_search.py::TestBuildRunInputs::test_defaults
-tests/test_pipeline_search.py::TestSearchMain::test_dry_run_with_minimal_config
-tests/test_pipeline_search.py::TestSearchMain::test_dry_run_topic_with_name_not_id
-  C:\Users\carlo\ELIS-SLR-Agent\elis\pipeline\search.py:154: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
-    year_to = int(g.get("year_to", dt.datetime.utcnow().year))
-
-tests/test_pipeline_search.py::TestSearchMain::test_dry_run_with_minimal_config
-tests/test_pipeline_search.py::TestSearchMain::test_dry_run_topic_with_name_not_id
-  C:\Users\carlo\ELIS-SLR-Agent\elis\pipeline\search.py:405: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
-    y1 = int(config.get("global", {}).get("year_to", dt.datetime.utcnow().year))
-
-tests/test_pipeline_search.py::TestSearchMain::test_dry_run_with_minimal_config
-tests/test_pipeline_search.py::TestSearchMain::test_dry_run_topic_with_name_not_id
-  C:\Users\carlo\ELIS-SLR-Agent\elis\pipeline\search.py:43: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
-    return dt.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
-
--- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+python -m pytest --tb=no 2>&1 | tail -1
+547 passed, 17 warnings in 7.01s
 ```
 
 ### 6.5 PR evidence
 
 ```text
 gh pr list --state open --base main
-278	WIP: feat(pe-oc-15): openclaw doctor stub	feature/pe-oc-15-openclaw-doctor-ci	DRAFT	2026-02-23T12:01:40Z
+279     WIP: feat(pe-oc-16): agent lessons-learned log   feature/pe-oc-16-lessons-learned-log    DRAFT   2026-02-23T...
 
-gh pr view 278 --json number,title,state,headRefName,baseRefName,isDraft
-{"baseRefName":"main","headRefName":"feature/pe-oc-15-openclaw-doctor-ci","isDraft":true,"number":278,"state":"OPEN","title":"WIP: feat(pe-oc-15): openclaw doctor stub"}
+gh pr view 279 --json number,title,state,headRefName,baseRefName,isDraft
+{"baseRefName":"main","headRefName":"feature/pe-oc-16-lessons-learned-log","isDraft":true,"number":279,"state":"OPEN","title":"WIP: feat(pe-oc-16): agent lessons-learned log"}
 ```
 
 ### 6.6 Ready to merge
 
 ```text
-NO — waiting on HANDOFF commit and Validator status tracking.
+YES — all deliverables committed, gates pass, HANDOFF.md complete.
+Awaiting CODEX Validator assignment after gh pr ready.
 ```
