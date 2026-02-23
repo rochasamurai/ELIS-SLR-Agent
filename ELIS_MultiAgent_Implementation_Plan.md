@@ -726,48 +726,49 @@ All 11 PEs are implemented by the current 2-agent model. CODEX implements odd-nu
 
 `openclaw doctor --check dm-policy` (AC-2 of PE-OC-11) has failed in every PE since
 PE-OC-09 with `No module named openclaw.__main__`. Investigation (2026-02-22) confirms
-`openclaw` is **not pip-installable** (no PyPI distribution). The tool runs exclusively
-via Docker image `ghcr.io/openclaw/openclaw:latest`.
+`openclaw` is **not pip-installable** (no PyPI distribution). The tool was intended to run
+via Docker image `ghcr.io/openclaw/openclaw:latest`, but discovery (2026-02-23) confirmed
+the image is not publicly accessible on GHCR (connection timeout; image does not exist as
+a public image). **Scope has been redefined by PM to a Python stub approach (Option B).**
 
-**Discovery block (must complete before implementing)**
+**Discovery findings (recorded 2026-02-23)**
 
-Before writing any CI code, the Implementer must run the following discovery probe and
-record the result in the HANDOFF:
-
-```bash
-docker pull ghcr.io/openclaw/openclaw:latest
-docker run --rm ghcr.io/openclaw/openclaw:latest openclaw doctor --help
+```
+docker pull ghcr.io/openclaw/openclaw:latest  →  timeout (124 s, then 184 s)
+docker manifest inspect ghcr.io/openclaw:latest  →  timeout (error pinging v2 registry)
+graalvm/graalvm-ce from ghcr.io  →  pulls successfully (GHCR reachable)
+Conclusion: ghcr.io/openclaw/openclaw:latest does not exist as a public image
 ```
 
-- **If the image pulls and `openclaw doctor` is available inside the container:** proceed
-  with Docker-based CI integration (see Scope below).
-- **If the image pull fails (authentication required or image not public):** stop, record
-  the error verbatim in HANDOFF, classify AC-1 as `BLOCKED (env)`, and notify PM before
-  writing any code.
+**Scope (redefined — stub approach)**
 
-**Scope** (conditional on discovery block succeeding)
+Instead of running the Docker container, implement a Python script that enforces the
+same dm-policy rules by validating `openclaw/openclaw.json` directly:
 
-- Add an `openclaw-doctor-check` job to `.github/workflows/ci.yml` that:
-  1. Pulls `ghcr.io/openclaw/openclaw:latest`
-  2. Runs `docker run --rm ghcr.io/openclaw/openclaw:latest openclaw doctor --check dm-policy`
-  3. Exits non-zero if the doctor check fails
+- Create `scripts/check_openclaw_doctor.py` that:
+  1. Loads `openclaw/openclaw.json`
+  2. Verifies every agent entry has `exec.ask: true`
+  3. Verifies `skills.hub.autoInstall` is `false`
+  4. Exits 0 if all checks pass; exits 1 with a clear error message for each violation
+- Add `openclaw-doctor-check` job to `.github/workflows/ci.yml` that runs:
+  `python scripts/check_openclaw_doctor.py`
 - Wire the new job into the `add_and_set_status` `needs` chain alongside
   `openclaw-health-check`
-- Document findings in `docs/testing/OPENCLAW_DOCTOR_FIX.md`
+- Document findings and scope change in `docs/testing/OPENCLAW_DOCTOR_FIX.md`
 
 **Acceptance Criteria**
 
-1. `docker run --rm ghcr.io/openclaw/openclaw:latest openclaw doctor --check dm-policy`
-   exits 0 in CI
-2. CI job fails (non-zero) when the doctor check returns a policy violation
-3. `docs/testing/OPENCLAW_DOCTOR_FIX.md` present with discovery evidence and AC results
-4. If image is not publicly accessible: HANDOFF documents the env block and PM is
-   notified; no CI code is written; PE is marked `blocked`
+1. `python scripts/check_openclaw_doctor.py` exits 0 on the current `openclaw/openclaw.json`
+2. Script exits non-zero when any agent has `exec.ask` absent or `false`
+3. Script exits non-zero when `skills.hub.autoInstall` is `true`
+4. CI job `openclaw-doctor-check` passes on the current config
+5. `docs/testing/OPENCLAW_DOCTOR_FIX.md` present with discovery evidence and scope change rationale
 
 **Deliverables**
 
-- `.github/workflows/ci.yml` updated with `openclaw-doctor-check` job (if discovery succeeds)
-- `docs/testing/OPENCLAW_DOCTOR_FIX.md` — discovery evidence + AC results
+- `scripts/check_openclaw_doctor.py` — dm-policy stub validator
+- `.github/workflows/ci.yml` — updated with `openclaw-doctor-check` job
+- `docs/testing/OPENCLAW_DOCTOR_FIX.md` — discovery evidence + scope change rationale
 
 ---
 
