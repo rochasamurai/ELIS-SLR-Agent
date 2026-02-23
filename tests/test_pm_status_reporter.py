@@ -287,3 +287,55 @@ def test_main_invalid_registry_returns_1(tmp_path: Path, capsys) -> None:
         sys.argv = old_argv
     assert rc == 1
     assert "ERROR" in capsys.readouterr().out
+
+
+# ---------------------------------------------------------------------------
+# format_status_response — multi-domain grouping (PE-OC-14)
+# ---------------------------------------------------------------------------
+
+_MULTI_DOMAIN_CONTENT = """\
+# Current PE Assignment
+
+## Active PE Registry
+
+| PE-ID | Domain | Implementer-agentId | Validator-agentId | Branch | Status | Last-updated |
+|---|---|---|---|---|---|---|
+| PE-OC-09 | programs | prog-impl-codex | prog-val-claude | feature/pe-oc-09 | implementing | 2026-02-21 |
+| PE-OC-10 | slr | slr-impl-claude | slr-val-codex | feature/pe-oc-10 | validating | 2026-02-22 |
+| PE-OC-07 | programs | prog-impl-codex | prog-val-claude | feature/pe-oc-07 | merged | 2026-02-20 |
+"""
+
+
+def test_multi_domain_section_headers_present() -> None:
+    _, rows = parse_active_registry(_MULTI_DOMAIN_CONTENT)
+    result = format_status_response(rows, datetime.date(2026, 2, 22))
+    assert "### programs domain" in result
+    assert "### slr domain" in result
+
+
+def test_multi_domain_pe_under_correct_section() -> None:
+    _, rows = parse_active_registry(_MULTI_DOMAIN_CONTENT)
+    result = format_status_response(rows, datetime.date(2026, 2, 22))
+    programs_idx = result.index("### programs domain")
+    slr_idx = result.index("### slr domain")
+    pe09_idx = result.index("PE-OC-09")
+    pe10_idx = result.index("PE-OC-10")
+    assert programs_idx < pe09_idx < slr_idx < pe10_idx
+
+
+def test_multi_domain_merged_excluded() -> None:
+    _, rows = parse_active_registry(_MULTI_DOMAIN_CONTENT)
+    result = format_status_response(rows, datetime.date(2026, 2, 22))
+    assert "PE-OC-07" not in result
+
+
+def test_multi_domain_active_count() -> None:
+    _, rows = parse_active_registry(_MULTI_DOMAIN_CONTENT)
+    result = format_status_response(rows, datetime.date(2026, 2, 22))
+    assert "2 PEs active" in result
+
+
+def test_single_domain_no_section_headers() -> None:
+    _, rows = parse_active_registry(_REGISTRY_CONTENT)
+    result = format_status_response(rows, datetime.date(2026, 2, 22))
+    assert "###" not in result
