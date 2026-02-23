@@ -844,6 +844,60 @@ to intervene.
 
 ---
 
+#### PE-OC-17 · Live Telegram Integration
+
+| Field | Value |
+|---|---|
+| Implementer | CODEX (`prog-impl-codex`) |
+| Validator | Claude Code (`prog-val-claude`) |
+| Effort | 2–3 hours |
+| Phase | 5 — Post-E2E Fixes |
+| Depends On | PE-OC-16 |
+
+**Background**
+
+The OpenClaw container (`ghcr.io/openclaw/openclaw:latest`, v2026.2.17) is running locally.
+Discovery (2026-02-23) confirmed two blockers preventing host-to-gateway connectivity:
+1. `docker-compose.yml` maps `host:18789 → container:3000` but the gateway listens on port `18789` inside the container.
+2. Gateway defaults to `--bind loopback` (`ws://127.0.0.1:18789`) — Docker port forwarding requires `--bind lan` (`0.0.0.0`).
+
+Additionally, `check_openclaw_health.py` probes HTTP `/health` but the gateway exposes a WebSocket-only interface.
+The `openclaw.json` Telegram binding uses placeholder `accountId: "po-channel"` — real pairing has not been done.
+
+**Pre-conditions (PM must complete before CODEX starts)**
+
+1. **Telegram account** — PM/PO must have a Telegram account on their mobile phone and Windows notebook app.
+2. **Telegram bot token** — Create a bot via `@BotFather` on Telegram. The token (`123456:ABC-DEF...`) is required for the gateway pairing step.
+3. **Token in `.openclaw`** — PM provides the bot token to CODEX for injection into `${HOME}/.openclaw/` (CODEX will document the exact file path and key from the OpenClaw docs/config).
+
+**Scope**
+
+- Fix `docker-compose.yml`:
+  - Change port mapping from `"127.0.0.1:18789:3000"` to `"127.0.0.1:18789:18789"`
+  - Add `--bind lan` to gateway command: `node openclaw.mjs gateway --allow-unconfigured --bind lan`
+- Fix `scripts/check_openclaw_health.py` to use a WebSocket probe instead of HTTP GET `/health`
+- Configure Telegram bot token in `${HOME}/.openclaw/` (exact path discovered at implementation time)
+- Run `docker exec openclaw node openclaw.mjs pairing` (or equivalent) to pair PO Telegram account
+- Update `openclaw/openclaw.json` binding `accountId` from placeholder `"po-channel"` to actual PO Telegram account ID
+- Verify PM Agent responds to `"status"` message sent by PO via Telegram
+
+**Acceptance Criteria**
+
+1. `docker compose up -d` starts the container; gateway log shows `--bind lan` (`ws://0.0.0.0:18789`)
+2. `python scripts/check_openclaw_health.py` exits 0 (WebSocket probe succeeds)
+3. PO sends `"status"` via Telegram — PM Agent responds with Active PE Registry summary
+4. `openclaw/openclaw.json` `accountId` reflects actual PO Telegram account ID (not placeholder)
+5. `python scripts/check_openclaw_doctor.py` exits 0 after config changes
+
+**Deliverables**
+
+- `docker-compose.yml` — port mapping and bind mode fixed
+- `scripts/check_openclaw_health.py` — WebSocket probe
+- `openclaw/openclaw.json` — `accountId` updated to real PO account
+- `docs/openclaw/TELEGRAM_SETUP.md` — step-by-step pairing runbook for future reference
+
+---
+
 ## 4. Build Schedule
 
 The PEs are sequenced to respect phase dependencies while allowing parallel execution with ongoing ELIS program and SLR work. The schedule assumes the current 2-agent model dedicates one PE slot per week to the OpenClaw build series.
@@ -868,7 +922,8 @@ The PEs are sequenced to respect phase dependencies while allowing parallel exec
 | 10 | PE-OC-14: Status Reporter Domain Grouping | Phase 5 | Claude Code | 2–3h | OC-13 |
 | 11 | PE-OC-15: Make `openclaw doctor` Runnable in CI | Phase 5 | CODEX | 2–3h | OC-14 |
 | 12 | PE-OC-16: Agent Lessons-Learned Log | Phase 5 | Claude Code | 1–2h | OC-15 |
-| **Total** | **18 PEs** | **5 Phases + governance** | **CODEX×10 · Claude Code×8** | **58–77h** | **~9–11 wks** |
+| 13 | PE-OC-17: Live Telegram Integration | Phase 5 | CODEX | 2–3h | OC-16 |
+| **Total** | **19 PEs** | **5 Phases + governance** | **CODEX×11 · Claude Code×8** | **60–80h** | **~9–11 wks** |
 
 > Effort hours reflect agent session time only, not wall-clock elapsed time. Phase 4 integration tests (PE-OC-09, OC-10, OC-11) must not begin until all Phase 3 PEs are merged to the base branch.
 

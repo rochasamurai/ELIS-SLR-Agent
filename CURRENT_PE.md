@@ -19,10 +19,10 @@
 
 ## Current PE
 
-| Field   | Value                                    |
-|---------|------------------------------------------|
-| PE      | — (awaiting PM assignment)               |
-| Branch  | —                                        |
+| Field   | Value                                         |
+|---------|-----------------------------------------------|
+| PE      | PE-OC-17                                      |
+| Branch  | feature/pe-oc-17-live-telegram-integration    |
 
 ---
 
@@ -30,8 +30,8 @@
 
 | Agent       | Role        |
 |-------------|-------------|
-| Claude Code | —           |
-| CODEX       | —           |
+| Claude Code | Validator   |
+| CODEX       | Implementer |
 
 ---
 
@@ -61,6 +61,7 @@
 | PE-OC-14    | openclaw-infra  | prog-impl-claude    | prog-val-codex    | feature/pe-oc-14-status-reporter-domain-grouping | merged          | 2026-02-23   |
 | PE-OC-15    | openclaw-infra  | prog-impl-codex     | prog-val-claude   | feature/pe-oc-15-openclaw-doctor-ci         | merged          | 2026-02-23   |
 | PE-OC-16    | openclaw-infra  | prog-impl-claude    | prog-val-codex    | feature/pe-oc-16-lessons-learned-log        | merged          | 2026-02-23   |
+| PE-OC-17    | openclaw-infra  | prog-impl-codex     | prog-val-claude   | feature/pe-oc-17-live-telegram-integration  | planning        | 2026-02-23   |
 
 Valid status values:
 - `planning`
