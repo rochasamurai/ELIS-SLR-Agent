@@ -138,45 +138,37 @@ Gate 1 and Gate 2 are enforced by CI automation after PE-INFRA-04.
 
 ---
 
-## 3) Recommended practice: use git worktrees for active PEs
+## 3) Worktree lifecycle — mandatory for every PE
 
 ### 3.1 Why worktrees
 Worktrees prevent:
 - checkout failures ("local changes would be overwritten"),
 - branch contamination (PE1 edits leaking into PE2),
-- agent collisions on shared files (e.g., `HANDOFF.md` / `REVIEW_PE<N>.md`).
+- agent collisions on shared files (e.g., `HANDOFF.md` / `REVIEW_PE<N>.md`),
+- VS Code Source Control accumulating stale GitHub connections from old branches.
 
 ### 3.2 When to use
-Worktrees are **required** when **two or more PEs are active in parallel**, or when:
-- a PE has an open PR and may need follow‑up fixes while another PE is in progress,
-- Implementer and Validator are working concurrently on different branches.
+Worktrees are **required for every PE**, regardless of whether parallel work exists.
+The main repo folder always stays on `main`. Each PE branch lives in its own worktree.
 
-A single active PE with no parallel work may use a standard checkout instead.
-
-### 3.3 Worktree rule
-**Each active PE branch must have its own worktree folder.**
-Avoid "in‑place checkout" switching between active PE branches.
+### 3.3 Worktree lifecycle rule
+**Create one worktree per PE at the start of the PE. Remove it immediately after the PR merges.**
+Never leave a worktree open for a merged branch.
 
 ### 3.4 Commands (Windows / PowerShell friendly)
 From the *main* repo folder:
 
 ```bash
+# PE START — Implementer creates worktree on first commit
 git fetch --all --prune
-mkdir -p ../ELIS_worktrees
+git worktree add ../ELIS_worktrees/pe-oc-XX feature/pe-oc-XX-description
 
-# Create worktrees for active PEs
-git worktree add ../ELIS_worktrees/pe4  feature/pe4-dedup
-git worktree add ../ELIS_worktrees/pe5  feature/pe5-asta
-
-# Open each in its own VS Code window
-code ../ELIS_worktrees/pe4
-code ../ELIS_worktrees/pe5
-
-# Remove when PE is merged
-git worktree remove ../ELIS_worktrees/pe4
-
-# List all worktrees
+# Verify
 git worktree list
+
+# PR MERGED — remove worktree immediately
+git worktree remove ../ELIS_worktrees/pe-oc-XX
+git worktree list   # confirm removed
 ```
 
 ---
@@ -443,6 +435,8 @@ See `AUDITS.md` for the full audit spec and report templates.
 ## 8) Do‑not list
 
 - Do not switch branches with local edits in the same folder (use worktrees).
+- Do not leave a worktree open after its PR is merged — remove it immediately (§3.3).
+- Do not start a PE without creating a dedicated worktree for its branch (§3.3).
 - Do not refactor unrelated code while inside a PE.
 - Do not touch `REVIEW_PE<N>.md` unless you are the Validator.
 - Do not declare PASS without pasted gate outputs.
