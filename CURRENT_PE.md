@@ -60,6 +60,7 @@
 | PE-OC-13    | openclaw-infra  | prog-impl-codex     | prog-val-claude   | feature/pe-oc-13-slr-quality-ci             | merged          | 2026-02-23   |
 | PE-OC-14    | openclaw-infra  | prog-impl-claude    | prog-val-codex    | feature/pe-oc-14-status-reporter-domain-grouping | implementing    | 2026-02-23   |
 | PE-OC-15    | openclaw-infra  | prog-impl-codex     | prog-val-claude   | feature/pe-oc-15-openclaw-doctor-ci         | planning        | 2026-02-22   |
+| PE-OC-16    | openclaw-infra  | prog-impl-claude    | prog-val-codex    | feature/pe-oc-16-lessons-learned-log        | planning        | 2026-02-23   |
 
 Valid status values:
 - `planning`

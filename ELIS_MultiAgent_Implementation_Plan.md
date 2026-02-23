@@ -771,6 +771,77 @@ docker run --rm ghcr.io/openclaw/openclaw:latest openclaw doctor --help
 
 ---
 
+#### PE-OC-16 · Agent Lessons-Learned Log
+
+| Field | Value |
+|---|---|
+| Implementer | Claude Code (`prog-impl-claude`) |
+| Validator | CODEX (`prog-val-codex`) |
+| Effort | 1–2 hours |
+| Phase | 5 — Post-E2E Fixes |
+| Depends On | PE-OC-15 |
+
+**Background**
+
+Across the PE-OC series, recurring agent errors have been managed reactively: PM detects
+an error, a rule is added to `AGENTS.md`, and agents pick it up at the next session start.
+This lag allows errors to recur across sessions before the rule is in effect.
+
+A `LESSONS_LEARNED.md` at repo root gives both agents a searchable failure history — the
+*why* behind each `AGENTS.md` rule — so they can recognise error patterns before PM has
+to intervene.
+
+**Scope**
+
+- Create `LESSONS_LEARNED.md` at repo root with entries for every managed error in the
+  PE-OC series to date (see Initial Entries below)
+- Update `AGENTS.md` Step 0 to include `LESSONS_LEARNED.md` as a required read
+- Update both agent workspace `AGENTS.md` files to reference `LESSONS_LEARNED.md` at Step 0
+
+**`LESSONS_LEARNED.md` format (one entry per error pattern)**
+
+```markdown
+## LL-<N> — <Short title>
+
+| Field | Value |
+|---|---|
+| First seen | PE-OC-XX |
+| Agent | CODEX / Claude Code |
+| AGENTS.md rule | §X.Y — <rule text> |
+
+**Error:** <what went wrong>
+**Root cause:** <why it happened>
+**Detection:** <how PM/Validator caught it>
+**Rule added:** <what rule prevents recurrence>
+```
+
+**Initial Entries (Implementer populates from PE-OC series history)**
+
+| ID | Title | First seen |
+|---|---|---|
+| LL-01 | PR opened before HANDOFF committed | PE-OC-08 |
+| LL-02 | Fabricated test counts — no pasted output | PE-OC-13 |
+| LL-03 | Duplicate YAML job key (last-wins silent drop) | PE-OC-13 |
+| LL-04 | Stale HANDOFF HEAD SHA | PE-OC-13 |
+| LL-05 | PE skipped in registry (PE-OC-14 gap) | PE-OC-13→14 |
+| LL-06 | New AGENTS.md rules not followed mid-session | PE-OC-14→15 |
+
+**Acceptance Criteria**
+
+1. `LESSONS_LEARNED.md` present at repo root with all 6 initial entries in correct format
+2. `AGENTS.md` Step 0 lists `LESSONS_LEARNED.md` as a required read (after `AGENTS.md`, before `HANDOFF.md`)
+3. Both agent workspace `AGENTS.md` files reference `LESSONS_LEARNED.md` at Step 0
+4. All existing tests pass (`python -m pytest tests/ --tb=no`)
+
+**Deliverables**
+
+- `LESSONS_LEARNED.md` — new file at repo root
+- `AGENTS.md` — Step 0 updated
+- `openclaw/workspaces/workspace-pm/AGENTS.md` — Step 0 updated
+- `openclaw/workspaces/workspace-slr/AGENTS.md` — Step 0 updated (if it exists)
+
+---
+
 ## 4. Build Schedule
 
 The PEs are sequenced to respect phase dependencies while allowing parallel execution with ongoing ELIS program and SLR work. The schedule assumes the current 2-agent model dedicates one PE slot per week to the OpenClaw build series.
@@ -794,7 +865,8 @@ The PEs are sequenced to respect phase dependencies while allowing parallel exec
 | 9 | PE-OC-13: Wire SLR Quality Gate to CI | Phase 5 | CODEX | 1–2h | OC-12 |
 | 10 | PE-OC-14: Status Reporter Domain Grouping | Phase 5 | Claude Code | 2–3h | OC-13 |
 | 11 | PE-OC-15: Make `openclaw doctor` Runnable in CI | Phase 5 | CODEX | 2–3h | OC-14 |
-| **Total** | **17 PEs** | **5 Phases + governance** | **CODEX×10 · Claude Code×7** | **57–75h** | **~9–11 wks** |
+| 12 | PE-OC-16: Agent Lessons-Learned Log | Phase 5 | Claude Code | 1–2h | OC-15 |
+| **Total** | **18 PEs** | **5 Phases + governance** | **CODEX×10 · Claude Code×8** | **58–77h** | **~9–11 wks** |
 
 > Effort hours reflect agent session time only, not wall-clock elapsed time. Phase 4 integration tests (PE-OC-09, OC-10, OC-11) must not begin until all Phase 3 PEs are merged to the base branch.
 
