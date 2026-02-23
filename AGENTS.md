@@ -64,6 +64,9 @@ Before starting any work on a PE, every agent MUST read:
 ### 2.4 Evidence‑first reporting (no "trust me")
 - Every agent update to the PM MUST include the **Status Packet** (Section 6).
 - If a claim is not supported by pasted command output, it is not considered done.
+- Within a session, each step in the agent's task list must be confirmed with pasted
+  command output before marking it complete. A step marked done without output evidence
+  is a workflow violation.
 
 ### 2.4.1 REVIEW file evidence requirement (hard)
 - Every `REVIEW_PE<N>.md` file MUST contain a `### Evidence` section with at least one
@@ -221,6 +224,17 @@ EOF
    git checkout -b feature/pe<N>-<scope> origin/$BASE
    ```
 3. Implement **only** the PE acceptance criteria (no unrelated changes).
+3a. **After your first implementation commit — open a draft PR immediately:**
+    ```bash
+    # BASE=$(grep "Base branch" CURRENT_PE.md | awk '{print $NF}')
+    git push -u origin <branch>
+    gh pr create --draft \
+      --head <branch> --base $BASE \
+      --title "WIP: feat(<pe-id>): <description>" \
+      --body "Draft — implementation in progress. Status Packet will be added in final HANDOFF commit."
+    ```
+    The draft PR creates a shared audit trail. PM and Validator can see commit-by-commit
+    progress without waiting for implementation to finish.
 4. **Pre-commit scope gate** (run before every `git commit`):
    ```bash
    # BASE=$(grep "Base branch" CURRENT_PE.md | awk '{print $NF}')
@@ -233,16 +247,23 @@ EOF
    python -m ruff check .
    python -m pytest tests/<pe-specific>.py -v
    ```
-6. Update `HANDOFF.md` with:
+6. **Post milestone PR comments** on the draft PR at each significant step:
+   - After implementation commit: `"feat commit <sha> — <brief summary of what changed>"`
+   - After quality gates pass: `"Quality gates green — black/ruff clean, pytest N passed"`
+   - After HANDOFF committed: `"HANDOFF committed — converting to ready for Validator"`
+7. Update `HANDOFF.md` with:
    - summary
    - complete changed-file list
    - design decisions
    - acceptance criteria checklist (PASS/FAIL for each)
    - exact validation commands and their output (pasted verbatim — not paraphrased)
-7. **Session-end check**: `git status -sb` must be clean before any push.
-8. Push branch + open PR to the base branch declared in `CURRENT_PE.md`. (`HANDOFF.md` must already be committed — see §2.7.)
-9. Deliver Status Packet to PM + explicitly ask PM to assign the Validator.
-   - Preferred channel: include/refresh the Status Packet in the PR body or PR comment.
+8. **Session-end check**: `git status -sb` must be clean before any push.
+9. Commit `HANDOFF.md` as the **last commit** on the branch (§2.7), then convert draft to ready:
+   ```bash
+   gh pr ready <PR_NUMBER>
+   ```
+10. Deliver Status Packet to PM + explicitly ask PM to assign the Validator.
+    - Preferred channel: include/refresh the Status Packet in the PR body or PR comment.
 
 > **PM gate:** PM receives Status Packet, reviews it, and explicitly assigns the Validator.
 > Validator does not start without this assignment.
@@ -260,8 +281,12 @@ for the full execution sequence.
 
 Rules:
 - Exactly one step may be `[→]` at any time.
-- Completed steps must be marked `[x]` immediately.
+- Completed steps must be marked `[x]` immediately, with pasted command output confirming the step.
 - If a step fails and is retried, keep it `[→]` until verification passes.
+
+**Tool note — Claude Code:** use the `TodoWrite` tool to maintain this list. Set status to
+`in_progress` before starting each step; set `completed` immediately after the step is
+verified with pasted output. Never batch completions.
 
 ---
 
@@ -277,6 +302,18 @@ Rules:
    ```
    Output must match the files declared in `HANDOFF.md`. Any mismatch is a blocking finding.
 4. Validate each acceptance criterion **verbatim** from `<plan-file>`. No substitutions.
+   For each AC, write and run a targeted spot-check command and paste the output verbatim
+   in `REVIEW_PE<N>.md` under the relevant AC entry:
+   ```bash
+   # Example: exercise a function directly
+   python -c "
+   from scripts.module import fn
+   result = fn(test_inputs)
+   assert 'expected' in result
+   print(result)
+   print('AC-N PASS')
+   "
+   ```
 5. Add adversarial tests covering:
    - schema rejection cases (missing fields, wrong types, boundary values)
    - determinism / idempotence
@@ -305,8 +342,12 @@ for the full validation sequence.
 
 Rules:
 - Exactly one step may be `[→]` at any time.
-- Completed steps must be marked `[x]` immediately.
+- Completed steps must be marked `[x]` immediately, with pasted command output confirming the step.
 - In re-validation rounds, restart Updated Todos from step 1 and include round ID.
+
+**Tool note — Claude Code:** use the `TodoWrite` tool to maintain this list. Set status to
+`in_progress` before starting each step; set `completed` immediately after the step is
+verified with pasted output. Never batch completions.
 
 ---
 
@@ -407,7 +448,9 @@ See `AUDITS.md` for the full audit spec and report templates.
 - Do not declare PASS without pasted gate outputs.
 - Do not leave uncommitted implementation files when ending a session.
 - Do not open a PR without running the pre-commit scope gate first.
-- Do not open a PR before `HANDOFF.md` is committed on the branch (§2.7).
+- Do not open a final (ready) PR before `HANDOFF.md` is committed on the branch (§2.7).
+- Do not convert a draft PR to ready before HANDOFF is the last commit on the branch.
+- Do not mark a task-list step as completed without pasting the verification output first.
 - Do not start on a PE without rebasing onto the current `origin/$BASE` (`BASE` from `CURRENT_PE.md`).
 - Do not self-start as Validator without explicit PM assignment (§2.8).
 - Do not paraphrase command output — paste it verbatim in the Status Packet.
