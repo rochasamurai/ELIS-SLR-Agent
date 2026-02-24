@@ -155,6 +155,21 @@ jobs:
       - name: Probe OpenClaw endpoint (non-blocking)
         run: python scripts/check_openclaw_health.py
 
+  openclaw-config-sync-check:
+    name: openclaw-config-sync-check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Check config sync (non-blocking — Docker unavailable in CI)
+        run: python scripts/check_openclaw_config_sync.py
+
   openclaw-doctor-check:
     name: openclaw-doctor-check
     needs:
