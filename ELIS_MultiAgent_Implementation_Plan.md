@@ -898,6 +898,50 @@ The `openclaw.json` Telegram binding uses placeholder `accountId: "po-channel"` 
 
 ---
 
+#### PE-OC-18 · CODEX Agent Registration in OpenClaw
+
+| Field | Value |
+|---|---|
+| Implementer | Claude Code (`prog-impl-claude`) |
+| Validator | CODEX (`prog-val-codex`) |
+| Effort | 2–3 hours |
+| Phase | 5 — Post-E2E Fixes |
+| Depends On | PE-OC-17 |
+
+**Background**
+
+The OpenClaw container is live and the PM Agent responds via Telegram (PE-OC-17). However, the four `prog-*` worker agents — `prog-impl-codex`, `prog-impl-claude`, `prog-val-codex`, `prog-val-claude` — are not yet registered in `openclaw/openclaw.json`. Their workspace volumes are already mounted in `docker-compose.yml` (PE-OC-04/05), but without agent entries the PM Agent cannot dispatch tasks to them. Additionally, OpenAI API access (`OPENAI_API_KEY`) is not yet injected into the container environment, so `gpt-5` model agents would fail to authenticate.
+
+**Pre-conditions (PM must complete before Claude Code starts)**
+
+1. **OpenAI API key** — PM stores `OPENAI_API_KEY=sk-...` in `%USERPROFILE%\.openclaw\.env` alongside `TELEGRAM_BOT_TOKEN`.
+
+**Scope**
+
+- Add 4 agent entries to `openclaw/openclaw.json`:
+  - `prog-impl-codex` → `workspace-prog-impl`, model `gpt-5`, `exec.ask: true`
+  - `prog-impl-claude` → `workspace-prog-impl`, model `claude-opus-4-6`, `exec.ask: true`
+  - `prog-val-codex` → `workspace-prog-val`, model `gpt-5`, `exec.ask: true`
+  - `prog-val-claude` → `workspace-prog-val`, model `claude-opus-4-6`, `exec.ask: true`
+- Add `OPENAI_API_KEY: ${OPENAI_API_KEY}` to the `environment` block in `docker-compose.yml`
+- Add `docs/openclaw/CODEX_AGENT_SETUP.md` — runbook for storing the OpenAI key and verifying agents are reachable
+- Verify `python scripts/check_openclaw_doctor.py` exits 0 after config changes
+
+**Acceptance Criteria**
+
+1. `openclaw/openclaw.json` contains all 4 `prog-*` agent entries with model `gpt-5` / `claude-opus-4-6` and `exec.ask: true`
+2. `docker-compose.yml` passes `OPENAI_API_KEY` via environment block (value from host `~/.openclaw/.env`)
+3. `python scripts/check_openclaw_doctor.py` exits 0
+4. `docs/openclaw/CODEX_AGENT_SETUP.md` documents key storage and agent verification steps
+
+**Deliverables**
+
+- `openclaw/openclaw.json` — 4 prog agent entries added
+- `docker-compose.yml` — `OPENAI_API_KEY` env var added
+- `docs/openclaw/CODEX_AGENT_SETUP.md` — new setup runbook
+
+---
+
 ## 4. Build Schedule
 
 The PEs are sequenced to respect phase dependencies while allowing parallel execution with ongoing ELIS program and SLR work. The schedule assumes the current 2-agent model dedicates one PE slot per week to the OpenClaw build series.
@@ -923,7 +967,8 @@ The PEs are sequenced to respect phase dependencies while allowing parallel exec
 | 11 | PE-OC-15: Make `openclaw doctor` Runnable in CI | Phase 5 | CODEX | 2–3h | OC-14 |
 | 12 | PE-OC-16: Agent Lessons-Learned Log | Phase 5 | Claude Code | 1–2h | OC-15 |
 | 13 | PE-OC-17: Live Telegram Integration | Phase 5 | CODEX | 2–3h | OC-16 |
-| **Total** | **19 PEs** | **5 Phases + governance** | **CODEX×11 · Claude Code×8** | **60–80h** | **~9–11 wks** |
+| 14 | PE-OC-18: CODEX Agent Registration | Phase 5 | Claude Code | 2–3h | OC-17 |
+| **Total** | **20 PEs** | **5 Phases + governance** | **CODEX×11 · Claude Code×9** | **62–83h** | **~9–11 wks** |
 
 > Effort hours reflect agent session time only, not wall-clock elapsed time. Phase 4 integration tests (PE-OC-09, OC-10, OC-11) must not begin until all Phase 3 PEs are merged to the base branch.
 
