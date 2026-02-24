@@ -5,7 +5,7 @@
       {
         "id": "pm",
         "workspace": "workspace-pm",
-        "model": "claude-opus-4-6",
+        "model": "openai/gpt-5.1-codex",
         "exec": {
           "ask": true
         }
@@ -13,7 +13,7 @@
       {
         "id": "slr-impl-codex",
         "workspace": "workspace-slr-impl",
-        "model": "gpt-5",
+        "model": "openai/gpt-5.1-codex",
         "exec": {
           "ask": true
         }
@@ -21,7 +21,8 @@
       {
         "id": "slr-impl-claude",
         "workspace": "workspace-slr-impl",
-        "model": "claude-opus-4-6",
+        "model": "anthropic/claude-sonnet-4-6",
+        "modelFallback": "anthropic/claude-opus-4-6",
         "exec": {
           "ask": true
         }
@@ -29,7 +30,7 @@
       {
         "id": "slr-val-codex",
         "workspace": "workspace-slr-val",
-        "model": "gpt-5",
+        "model": "openai/gpt-5.1-codex",
         "exec": {
           "ask": true
         }
@@ -37,7 +38,42 @@
       {
         "id": "slr-val-claude",
         "workspace": "workspace-slr-val",
-        "model": "claude-opus-4-6",
+        "model": "anthropic/claude-sonnet-4-6",
+        "modelFallback": "anthropic/claude-opus-4-6",
+        "exec": {
+          "ask": true
+        }
+      },
+      {
+        "id": "prog-impl-codex",
+        "workspace": "workspace-prog-impl",
+        "model": "openai/gpt-5.1-codex",
+        "exec": {
+          "ask": true
+        }
+      },
+      {
+        "id": "prog-impl-claude",
+        "workspace": "workspace-prog-impl",
+        "model": "anthropic/claude-sonnet-4-6",
+        "modelFallback": "anthropic/claude-opus-4-6",
+        "exec": {
+          "ask": true
+        }
+      },
+      {
+        "id": "prog-val-codex",
+        "workspace": "workspace-prog-val",
+        "model": "openai/gpt-5.1-codex",
+        "exec": {
+          "ask": true
+        }
+      },
+      {
+        "id": "prog-val-claude",
+        "workspace": "workspace-prog-val",
+        "model": "anthropic/claude-sonnet-4-6",
+        "modelFallback": "anthropic/claude-opus-4-6",
         "exec": {
           "ask": true
         }
@@ -58,5 +94,5 @@
       "autoInstall": false
     }
   },
-  "notes": "PE-OC-02/PE-OC-17: pm agent registered with Telegram binding. Replace '<PO_TELEGRAM_ACCOUNT_ID>' with the paired Telegram user ID after running 'openclaw pairing approve'. Worker agents added in PE-OC-03 through PE-OC-05."
+  "notes": "PE-OC-18: pm promoted to openai/gpt-5.1-codex; prog-impl/val agents registered; claude coding agents use anthropic/claude-sonnet-4-6 with anthropic/claude-opus-4-6 fallback. Model tier policy: PM+CODEX=openai/gpt-5.1-codex, Claude coding=anthropic/claude-sonnet-4-6."
 }
