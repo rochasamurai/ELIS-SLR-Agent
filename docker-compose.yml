@@ -6,11 +6,21 @@ services:
     container_name: openclaw
     restart: unless-stopped
     ports:
-      - "127.0.0.1:18789:3000"
+      - "127.0.0.1:18789:18789"
+    command:
+      - node
+      - openclaw.mjs
+      - gateway
+      - --allow-unconfigured
+      - --bind
+      - lan
     security_opt:
       - no-new-privileges:true
     tmpfs:
       - /tmp:rw,nosuid,noexec
+    environment:
+      OPENCLAW_STATE_DIR: /app/.openclaw
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
     cap_drop:
       - ALL
     cap_add:
