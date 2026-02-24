@@ -33,3 +33,6 @@ services:
       - ${HOME}/openclaw/workspace-prog-impl:/app/workspaces/workspace-prog-impl:ro
       - ${HOME}/openclaw/workspace-infra-impl:/app/workspaces/workspace-infra-impl:ro
       - ${HOME}/openclaw/workspace-prog-val:/app/workspaces/workspace-prog-val:ro
+      - ${HOME}/openclaw/workspace-infra-val:/app/workspaces/workspace-infra-val:ro
+      - ${HOME}/openclaw/workspace-slr-impl:/app/workspaces/workspace-slr-impl:ro
+      - ${HOME}/openclaw/workspace-slr-val:/app/workspaces/workspace-slr-val:ro

@@ -77,6 +77,40 @@
         "exec": {
           "ask": true
         }
+      },
+      {
+        "id": "infra-impl-codex",
+        "workspace": "workspace-infra-impl",
+        "model": "openai/gpt-5.1-codex",
+        "exec": {
+          "ask": true
+        }
+      },
+      {
+        "id": "infra-impl-claude",
+        "workspace": "workspace-infra-impl",
+        "model": "anthropic/claude-sonnet-4-6",
+        "modelFallback": "anthropic/claude-opus-4-6",
+        "exec": {
+          "ask": true
+        }
+      },
+      {
+        "id": "infra-val-codex",
+        "workspace": "workspace-infra-val",
+        "model": "openai/gpt-5.1-codex",
+        "exec": {
+          "ask": true
+        }
+      },
+      {
+        "id": "infra-val-claude",
+        "workspace": "workspace-infra-val",
+        "model": "anthropic/claude-sonnet-4-6",
+        "modelFallback": "anthropic/claude-opus-4-6",
+        "exec": {
+          "ask": true
+        }
       }
     ]
   },
