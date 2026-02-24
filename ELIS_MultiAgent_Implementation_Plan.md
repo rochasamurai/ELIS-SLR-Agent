@@ -912,6 +912,16 @@ The `openclaw.json` Telegram binding uses placeholder `accountId: "po-channel"` 
 
 The OpenClaw container is live and the PM Agent responds via Telegram (PE-OC-17). However, the four `prog-*` worker agents — `prog-impl-codex`, `prog-impl-claude`, `prog-val-codex`, `prog-val-claude` — are not yet registered in `openclaw/openclaw.json`. Their workspace volumes are already mounted in `docker-compose.yml` (PE-OC-04/05), but without agent entries the PM Agent cannot dispatch tasks to them. Additionally, OpenAI API access (`OPENAI_API_KEY`) is not yet injected into the container environment, so `gpt-5` model agents would fail to authenticate.
 
+**Model tier policy (established this PE)**
+
+| Role | Primary model | Fallback model |
+|---|---|---|
+| PM Agent (orchestration) | `claude-opus-4-6` | — |
+| Claude coding agents (`*-impl-claude`, `*-val-claude`) | `claude-sonnet-4-6` | `claude-opus-4-6` |
+| CODEX agents (`*-impl-codex`, `*-val-codex`) | `gpt-5` | — |
+
+Rationale: Sonnet 4.6 is faster and cheaper for implementation/validation tasks. Opus 4.6 is reserved for the PM Agent's complex multi-step orchestration and as fallback when Sonnet is unavailable.
+
 **Pre-conditions (PM must complete before Claude Code starts)**
 
 1. **OpenAI API key** — PM stores `OPENAI_API_KEY=sk-...` in `%USERPROFILE%\.openclaw\.env` alongside `TELEGRAM_BOT_TOKEN`.
@@ -920,25 +930,28 @@ The OpenClaw container is live and the PM Agent responds via Telegram (PE-OC-17)
 
 - Add 4 agent entries to `openclaw/openclaw.json`:
   - `prog-impl-codex` → `workspace-prog-impl`, model `gpt-5`, `exec.ask: true`
-  - `prog-impl-claude` → `workspace-prog-impl`, model `claude-opus-4-6`, `exec.ask: true`
+  - `prog-impl-claude` → `workspace-prog-impl`, model `claude-sonnet-4-6`, fallback `claude-opus-4-6`, `exec.ask: true`
   - `prog-val-codex` → `workspace-prog-val`, model `gpt-5`, `exec.ask: true`
-  - `prog-val-claude` → `workspace-prog-val`, model `claude-opus-4-6`, `exec.ask: true`
+  - `prog-val-claude` → `workspace-prog-val`, model `claude-sonnet-4-6`, fallback `claude-opus-4-6`, `exec.ask: true`
+- Update existing `slr-impl-claude` and `slr-val-claude` entries from `claude-opus-4-6` → `claude-sonnet-4-6` (with fallback `claude-opus-4-6`) for consistency with model tier policy
 - Add `OPENAI_API_KEY: ${OPENAI_API_KEY}` to the `environment` block in `docker-compose.yml`
-- Add `docs/openclaw/CODEX_AGENT_SETUP.md` — runbook for storing the OpenAI key and verifying agents are reachable
+- Add `ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}` to the `environment` block in `docker-compose.yml` (required for Sonnet agent authentication)
+- Add `docs/openclaw/CODEX_AGENT_SETUP.md` — runbook covering key storage, model tier policy, and agent verification steps
 - Verify `python scripts/check_openclaw_doctor.py` exits 0 after config changes
 
 **Acceptance Criteria**
 
-1. `openclaw/openclaw.json` contains all 4 `prog-*` agent entries with model `gpt-5` / `claude-opus-4-6` and `exec.ask: true`
-2. `docker-compose.yml` passes `OPENAI_API_KEY` via environment block (value from host `~/.openclaw/.env`)
-3. `python scripts/check_openclaw_doctor.py` exits 0
-4. `docs/openclaw/CODEX_AGENT_SETUP.md` documents key storage and agent verification steps
+1. `openclaw/openclaw.json` contains all 4 `prog-*` agent entries; claude coding agents use `claude-sonnet-4-6` with fallback `claude-opus-4-6`; codex agents use `gpt-5`; all `exec.ask: true`
+2. Existing `slr-impl-claude` and `slr-val-claude` updated to `claude-sonnet-4-6` with fallback
+3. `docker-compose.yml` passes both `OPENAI_API_KEY` and `ANTHROPIC_API_KEY` via environment block
+4. `python scripts/check_openclaw_doctor.py` exits 0
+5. `docs/openclaw/CODEX_AGENT_SETUP.md` documents key storage, model tier policy, and verification steps
 
 **Deliverables**
 
-- `openclaw/openclaw.json` — 4 prog agent entries added
-- `docker-compose.yml` — `OPENAI_API_KEY` env var added
-- `docs/openclaw/CODEX_AGENT_SETUP.md` — new setup runbook
+- `openclaw/openclaw.json` — 4 prog agent entries added; slr claude agents updated to Sonnet
+- `docker-compose.yml` — `OPENAI_API_KEY` and `ANTHROPIC_API_KEY` env vars added
+- `docs/openclaw/CODEX_AGENT_SETUP.md` — new setup and model-tier runbook
 
 ---
 
