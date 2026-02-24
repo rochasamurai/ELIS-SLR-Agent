@@ -916,11 +916,11 @@ The OpenClaw container is live and the PM Agent responds via Telegram (PE-OC-17)
 
 | Role | Primary model | Fallback model |
 |---|---|---|
-| PM Agent (orchestration) | `claude-opus-4-6` | — |
+| PM Agent (orchestration) | `gpt-5` | — |
 | Claude coding agents (`*-impl-claude`, `*-val-claude`) | `claude-sonnet-4-6` | `claude-opus-4-6` |
 | CODEX agents (`*-impl-codex`, `*-val-codex`) | `gpt-5` | — |
 
-Rationale: Sonnet 4.6 is faster and cheaper for implementation/validation tasks. Opus 4.6 is reserved for the PM Agent's complex multi-step orchestration and as fallback when Sonnet is unavailable.
+Rationale: `gpt-5` drives all CODEX roles including PM orchestration. `claude-sonnet-4-6` is the primary for Claude coding/validation tasks; `claude-opus-4-6` is its fallback only.
 
 **Pre-conditions (PM must complete before Claude Code starts)**
 
@@ -928,6 +928,7 @@ Rationale: Sonnet 4.6 is faster and cheaper for implementation/validation tasks.
 
 **Scope**
 
+- Update `pm` agent in `openclaw/openclaw.json` from `claude-opus-4-6` → `gpt-5`
 - Add 4 agent entries to `openclaw/openclaw.json`:
   - `prog-impl-codex` → `workspace-prog-impl`, model `gpt-5`, `exec.ask: true`
   - `prog-impl-claude` → `workspace-prog-impl`, model `claude-sonnet-4-6`, fallback `claude-opus-4-6`, `exec.ask: true`
@@ -941,15 +942,16 @@ Rationale: Sonnet 4.6 is faster and cheaper for implementation/validation tasks.
 
 **Acceptance Criteria**
 
-1. `openclaw/openclaw.json` contains all 4 `prog-*` agent entries; claude coding agents use `claude-sonnet-4-6` with fallback `claude-opus-4-6`; codex agents use `gpt-5`; all `exec.ask: true`
-2. Existing `slr-impl-claude` and `slr-val-claude` updated to `claude-sonnet-4-6` with fallback
-3. `docker-compose.yml` passes both `OPENAI_API_KEY` and `ANTHROPIC_API_KEY` via environment block
-4. `python scripts/check_openclaw_doctor.py` exits 0
-5. `docs/openclaw/CODEX_AGENT_SETUP.md` documents key storage, model tier policy, and verification steps
+1. `openclaw/openclaw.json` `pm` agent model is `gpt-5`
+2. `openclaw/openclaw.json` contains all 4 `prog-*` agent entries; claude coding agents use `claude-sonnet-4-6` with fallback `claude-opus-4-6`; codex agents use `gpt-5`; all `exec.ask: true`
+3. Existing `slr-impl-claude` and `slr-val-claude` updated to `claude-sonnet-4-6` with fallback
+4. `docker-compose.yml` passes both `OPENAI_API_KEY` and `ANTHROPIC_API_KEY` via environment block
+5. `python scripts/check_openclaw_doctor.py` exits 0
+6. `docs/openclaw/CODEX_AGENT_SETUP.md` documents key storage, model tier policy, and verification steps
 
 **Deliverables**
 
-- `openclaw/openclaw.json` — 4 prog agent entries added; slr claude agents updated to Sonnet
+- `openclaw/openclaw.json` — `pm` agent updated to `gpt-5`; 4 prog agent entries added; slr claude agents updated to Sonnet
 - `docker-compose.yml` — `OPENAI_API_KEY` and `ANTHROPIC_API_KEY` env vars added
 - `docs/openclaw/CODEX_AGENT_SETUP.md` — new setup and model-tier runbook
 
