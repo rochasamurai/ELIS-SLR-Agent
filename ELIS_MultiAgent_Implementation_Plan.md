@@ -957,6 +957,49 @@ Rationale: `gpt-5` drives all CODEX roles including PM orchestration. `claude-so
 
 ---
 
+#### PE-OC-19 · Infra Agent Registration in OpenClaw
+
+| Field | Value |
+|---|---|
+| Implementer | CODEX (`prog-impl-codex`) |
+| Validator | Claude Code (`prog-val-claude`) |
+| Effort | 2–3 hours |
+| Phase | 5 — Post-E2E Fixes |
+| Depends On | PE-OC-18 |
+
+**Background**
+
+The four `infra-*` agents (`infra-impl-codex`, `infra-impl-claude`, `infra-val-codex`, `infra-val-claude`) appear in the PE registry history but are not registered in `openclaw/openclaw.json`. The `workspace-infra-impl` volume is already mounted in `docker-compose.yml` (added in PE-OC-04), but `workspace-infra-val` is absent. Additionally, `workspace-slr-impl` and `workspace-slr-val` are also missing from `docker-compose.yml` despite the SLR agents being registered since PE-OC-05 — those agents would fail to load their workspace context at runtime.
+
+**Scope**
+
+- Add 4 infra agent entries to `openclaw/openclaw.json`:
+  - `infra-impl-codex` → `workspace-infra-impl`, model `openai/gpt-5.1-codex`, `exec.ask: true`
+  - `infra-impl-claude` → `workspace-infra-impl`, model `anthropic/claude-sonnet-4-6`, fallback `anthropic/claude-opus-4-6`, `exec.ask: true`
+  - `infra-val-codex` → `workspace-infra-val`, model `openai/gpt-5.1-codex`, `exec.ask: true`
+  - `infra-val-claude` → `workspace-infra-val`, model `anthropic/claude-sonnet-4-6`, fallback `anthropic/claude-opus-4-6`, `exec.ask: true`
+- Add 3 missing volume mounts to `docker-compose.yml`:
+  - `${HOME}/openclaw/workspace-infra-val:/app/workspaces/workspace-infra-val:ro`
+  - `${HOME}/openclaw/workspace-slr-impl:/app/workspaces/workspace-slr-impl:ro`
+  - `${HOME}/openclaw/workspace-slr-val:/app/workspaces/workspace-slr-val:ro`
+- Create `docs/openclaw/INFRA_AGENT_SETUP.md` — runbook for infra agent workspace structure and verification steps
+- Verify `python scripts/check_openclaw_doctor.py` exits 0 after changes
+
+**Acceptance Criteria**
+
+1. `openclaw/openclaw.json` contains all 4 `infra-*` agent entries with correct models and `exec.ask: true`
+2. `docker-compose.yml` has `workspace-infra-val`, `workspace-slr-impl`, and `workspace-slr-val` volume mounts
+3. `python scripts/check_openclaw_doctor.py` exits 0
+4. `docs/openclaw/INFRA_AGENT_SETUP.md` documents workspace layout and verification steps
+
+**Deliverables**
+
+- `openclaw/openclaw.json` — 4 infra agent entries added
+- `docker-compose.yml` — 3 volume mounts added
+- `docs/openclaw/INFRA_AGENT_SETUP.md` — new runbook
+
+---
+
 ## 4. Build Schedule
 
 The PEs are sequenced to respect phase dependencies while allowing parallel execution with ongoing ELIS program and SLR work. The schedule assumes the current 2-agent model dedicates one PE slot per week to the OpenClaw build series.
@@ -983,7 +1026,8 @@ The PEs are sequenced to respect phase dependencies while allowing parallel exec
 | 12 | PE-OC-16: Agent Lessons-Learned Log | Phase 5 | Claude Code | 1–2h | OC-15 |
 | 13 | PE-OC-17: Live Telegram Integration | Phase 5 | CODEX | 2–3h | OC-16 |
 | 14 | PE-OC-18: CODEX Agent Registration | Phase 5 | Claude Code | 2–3h | OC-17 |
-| **Total** | **20 PEs** | **5 Phases + governance** | **CODEX×11 · Claude Code×9** | **62–83h** | **~9–11 wks** |
+| 15 | PE-OC-19: Infra Agent Registration | Phase 5 | CODEX | 2–3h | OC-18 |
+| **Total** | **21 PEs** | **5 Phases + governance** | **CODEX×12 · Claude Code×9** | **64–86h** | **~10–12 wks** |
 
 > Effort hours reflect agent session time only, not wall-clock elapsed time. Phase 4 integration tests (PE-OC-09, OC-10, OC-11) must not begin until all Phase 3 PEs are merged to the base branch.
 

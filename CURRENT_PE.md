@@ -21,8 +21,8 @@
 
 | Field   | Value                                         |
 |---------|-----------------------------------------------|
-| PE      | PE-OC-18                                      |
-| Branch  | feature/pe-oc-18-codex-agent-registration     |
+| PE      | PE-OC-19                                      |
+| Branch  | feature/pe-oc-19-infra-agent-registration     |
 
 ---
 
@@ -30,8 +30,8 @@
 
 | Agent       | Role        |
 |-------------|-------------|
-| Claude Code | Implementer |
-| CODEX       | Validator   |
+| Claude Code | Validator   |
+| CODEX       | Implementer |
 
 ---
 
@@ -63,6 +63,7 @@
 | PE-OC-16    | openclaw-infra  | prog-impl-claude    | prog-val-codex    | feature/pe-oc-16-lessons-learned-log        | merged          | 2026-02-23   |
 | PE-OC-17    | openclaw-infra  | prog-impl-codex     | prog-val-claude   | feature/pe-oc-17-live-telegram-integration  | merged          | 2026-02-24   |
 | PE-OC-18    | openclaw-infra  | prog-impl-claude    | prog-val-codex    | feature/pe-oc-18-codex-agent-registration   | merged          | 2026-02-24   |
+| PE-OC-19    | openclaw-infra  | prog-impl-codex     | prog-val-claude   | feature/pe-oc-19-infra-agent-registration   | planning        | 2026-02-24   |
 
 Valid status values:
 - `planning`
