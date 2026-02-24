@@ -127,3 +127,68 @@ command:
 | AC-3 | PO sends `status`; PM Agent responds | PASS (HANDOFF evidence accepted) |
 | AC-4 | `openclaw.json` `accountId` = real PO Telegram ID | PASS (`8351383841` set) |
 | AC-5 | `check_openclaw_doctor.py` exits 0 | PASS |
+
+---
+
+## Re-validation — Round 2 — 2026-02-24
+
+### Verdict
+PASS
+
+### Fixes verified
+
+1. **HANDOFF.md "Files Changed" — RESOLVED.** `docs/openclaw/TELEGRAM_SETUP.md` entry now present: `(updated runbook + clarified security guidance)`.
+2. **TELEGRAM_SETUP.md security note contradiction — RESOLVED.** Note now reads: *"The bot token must stay on the host and **never** be committed. The paired Telegram account ID is safe to record inside `openclaw/openclaw.json` so the binding survives container restarts."* Consistent with AC-4 and `openclaw/openclaw.json`.
+
+### Gate results (re-run)
+black: PASS
+ruff: PASS
+pytest: 547 passed, 17 warnings (pre-existing — unchanged)
+
+### Scope (re-check)
+```
+M	HANDOFF.md
+A	REVIEW_PE_OC_17.md
+M	docker-compose.yml
+M	docs/openclaw/TELEGRAM_SETUP.md
+M	openclaw/openclaw.json
+M	scripts/check_openclaw_health.py
+```
+6 files. 5 implementation + 1 Validator-owned REVIEW. Correct.
+
+### Required fixes
+None.
+
+### Evidence
+
+```
+# Re-validation quality gates
+$ python -m black --check . && python -m ruff check .
+All done! ✨ 🍰 ✨
+116 files would be left unchanged.
+All checks passed!
+
+$ python -m pytest --tb=no 2>&1 | tail -2
+547 passed, 17 warnings in 7.76s
+
+# Fix #1 — HANDOFF Files Changed (updated, verbatim)
+## Files Changed
+- `docker-compose.yml` (port remap, lan bind, environment variables)
+- `scripts/check_openclaw_health.py` (WebSocket probe + formatting)
+- `openclaw/openclaw.json` (Telegram binding uses the real PO Telegram user ID, resaved by the agent update)
+- `docs/openclaw/TELEGRAM_SETUP.md` (updated runbook + clarified security guidance)
+
+# Fix #2 — TELEGRAM_SETUP.md Security notes (updated, verbatim)
+- The bot token must stay on the host and **never** be committed.
+  The paired Telegram account ID is safe to record inside openclaw/openclaw.json
+  so the binding survives container restarts.
+
+# Scope diff
+$ git diff --name-status origin/main..origin/feature/pe-oc-17-live-telegram-integration
+M       HANDOFF.md
+A       REVIEW_PE_OC_17.md
+M       docker-compose.yml
+M       docs/openclaw/TELEGRAM_SETUP.md
+M       openclaw/openclaw.json
+M       scripts/check_openclaw_health.py
+```
