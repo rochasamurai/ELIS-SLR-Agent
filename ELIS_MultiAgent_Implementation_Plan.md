@@ -1000,6 +1000,46 @@ The four `infra-*` agents (`infra-impl-codex`, `infra-impl-claude`, `infra-val-c
 
 ---
 
+#### PE-OC-20 · OpenClaw Config Deployment Pipeline
+
+| Field | Value |
+|---|---|
+| Implementer | Claude Code (`prog-impl-claude`) |
+| Validator | CODEX (`prog-val-codex`) |
+| Effort | 2–3 hours |
+| Phase | 5 — Post-E2E Fixes |
+| Depends On | PE-OC-19 |
+
+**Background**
+
+After every merge that touches `openclaw/openclaw.json`, the live container shows stale agent config until a manual copy is performed. `check_openclaw_doctor.py` and `check_openclaw_security.py` both validate the **repo copy** (`openclaw/openclaw.json`), not the **container's live state** (`~/.openclaw/openclaw.json`). The existing `deploy_openclaw_workspaces.sh` syncs workspace folders only — it never copies the config file. This gap allowed PE-OC-18 and PE-OC-19 agent registrations to pass all CI gates while the container remained stale (as evidenced by the PM Agent reporting only `main` after both PEs merged).
+
+**Scope**
+
+- Extend `scripts/deploy_openclaw_workspaces.sh` — after syncing workspaces, also copy `openclaw/openclaw.json` → `~/.openclaw/openclaw.json` and print a `docker compose down && docker compose up -d` restart reminder
+- Add `scripts/check_openclaw_config_sync.py` — parses agent IDs from `openclaw/openclaw.json` and compares them against the live container's agent list via `docker exec openclaw node /app/openclaw.mjs agents list`; exits 1 if any registered agent ID is absent from the live list; exits 0 if in sync or if Docker is unreachable (non-blocking, matches `check_openclaw_health.py` pattern)
+- Add CI job `openclaw-config-sync-check` — runs `check_openclaw_config_sync.py`; always exits 0 in CI (Docker daemon not available in GitHub Actions runners); serves as a local-dev gate when PM runs it on the host after deployment
+- Add `tests/test_check_openclaw_config_sync.py` — unit tests with mocked `subprocess.run` covering: in-sync, missing agents, Docker unreachable
+- Add `docs/openclaw/DEPLOYMENT.md` — runbook: when to run deploy script, what it does, two-step procedure (copy config + container restart), verification commands
+
+**Acceptance Criteria**
+
+1. `deploy_openclaw_workspaces.sh` copies `openclaw/openclaw.json` → `~/.openclaw/openclaw.json` and prints restart reminder
+2. `check_openclaw_config_sync.py` exits 1 when agent IDs in json are absent from live `agents list`; exits 0 when in sync; exits 0 when Docker is unreachable
+3. CI job `openclaw-config-sync-check` exits 0 in CI (non-blocking)
+4. `tests/test_check_openclaw_config_sync.py` passes — covers in-sync, missing-agent, Docker-unreachable cases
+5. `docs/openclaw/DEPLOYMENT.md` documents the full deploy + verify procedure
+
+**Deliverables**
+
+- `scripts/deploy_openclaw_workspaces.sh` — extended with config copy step
+- `scripts/check_openclaw_config_sync.py` — new sync verifier
+- `tests/test_check_openclaw_config_sync.py` — unit tests
+- `.github/workflows/` or existing CI — `openclaw-config-sync-check` job added
+- `docs/openclaw/DEPLOYMENT.md` — new deployment runbook
+
+---
+
 ## 4. Build Schedule
 
 The PEs are sequenced to respect phase dependencies while allowing parallel execution with ongoing ELIS program and SLR work. The schedule assumes the current 2-agent model dedicates one PE slot per week to the OpenClaw build series.
@@ -1027,7 +1067,8 @@ The PEs are sequenced to respect phase dependencies while allowing parallel exec
 | 13 | PE-OC-17: Live Telegram Integration | Phase 5 | CODEX | 2–3h | OC-16 |
 | 14 | PE-OC-18: CODEX Agent Registration | Phase 5 | Claude Code | 2–3h | OC-17 |
 | 15 | PE-OC-19: Infra Agent Registration | Phase 5 | CODEX | 2–3h | OC-18 |
-| **Total** | **21 PEs** | **5 Phases + governance** | **CODEX×12 · Claude Code×9** | **64–86h** | **~10–12 wks** |
+| 16 | PE-OC-20: Config Deployment Pipeline | Phase 5 | Claude Code | 2–3h | OC-19 |
+| **Total** | **22 PEs** | **5 Phases + governance** | **CODEX×12 · Claude Code×10** | **66–89h** | **~10–12 wks** |
 
 > Effort hours reflect agent session time only, not wall-clock elapsed time. Phase 4 integration tests (PE-OC-09, OC-10, OC-11) must not begin until all Phase 3 PEs are merged to the base branch.
 
