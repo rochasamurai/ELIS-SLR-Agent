@@ -110,7 +110,7 @@ This syncs `openclaw/workspaces/` → `~/openclaw/workspaces/` so the PM Agent s
 
 ## Security notes
 
-- The bot token and paired Telegram account ID must never be committed; they live only in host files.
+- The bot token must stay on the host and **never** be committed. The paired Telegram account ID is safe to record inside `openclaw/openclaw.json` so the binding survives container restarts.
 - Running the gateway with `--bind lan` exposes `ws://0.0.0.0:18789` inside the container; keep the host port bound to `127.0.0.1`.
 - `scripts/check_openclaw_health.py` now uses a WebSocket handshake. If it fails, restart the container before retrying pairing.
 - Re-run the pairing flow whenever the PO account or bot token changes.

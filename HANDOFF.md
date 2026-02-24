@@ -11,6 +11,7 @@
 - `docker-compose.yml` (port remap, lan bind, environment variables)
 - `scripts/check_openclaw_health.py` (WebSocket probe + formatting)
 - `openclaw/openclaw.json` (Telegram binding uses the real PO Telegram user ID, resaved by the agent update)
+- `docs/openclaw/TELEGRAM_SETUP.md` (updated runbook + clarified security guidance)
 
 ## Acceptance Criteria
 
@@ -57,4 +58,3 @@ tests/test_pipeline_screen.py::TestScreenMain::test_write_output
 - **Environment:** `feature/pe-oc-17-live-telegram-integration` updated from origin with Docker + health script + binding patches.
 - **Telegram health:** `status` now replies “Hey! I’m online and fresh…”, `ping` replies “Pong! 🏓”, proving the PM Agent is wired through Anthropic successfully.
 - **Gate evidence:** logging above plus the stable WebSocket handshake line ensure the CI check sees the correct behavior.
-
