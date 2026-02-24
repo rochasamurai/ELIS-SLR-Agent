@@ -28,7 +28,9 @@ def format_path(default_path: str, override_path: str | None) -> str:
     return path
 
 
-def websocket_ping(host: str, port: int, path: str, timeout: float, use_ssl: bool) -> bool:
+def websocket_ping(
+    host: str, port: int, path: str, timeout: float, use_ssl: bool
+) -> bool:
     key = base64.b64encode(os.urandom(16)).decode("ascii")
     request_lines = [
         f"GET {path} HTTP/1.1",
@@ -55,7 +57,9 @@ def websocket_ping(host: str, port: int, path: str, timeout: float, use_ssl: boo
         if not response:
             return False
         status_line = response[0]
-        return status_line.startswith("HTTP/1.1 101") or status_line.startswith("HTTP/1.0 101")
+        return status_line.startswith("HTTP/1.1 101") or status_line.startswith(
+            "HTTP/1.0 101"
+        )
 
 
 def main() -> int:

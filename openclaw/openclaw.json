@@ -49,7 +49,7 @@
       "agentId": "pm",
       "match": {
         "channel": "telegram",
-        "accountId": "<PO_TELEGRAM_ACCOUNT_ID>"
+        "accountId": "8351383841"
       }
     }
   ],

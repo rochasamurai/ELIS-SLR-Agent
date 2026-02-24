@@ -18,6 +18,9 @@ services:
       - no-new-privileges:true
     tmpfs:
       - /tmp:rw,nosuid,noexec
+    environment:
+      OPENCLAW_STATE_DIR: /app/.openclaw
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
     cap_drop:
       - ALL
     cap_add:
