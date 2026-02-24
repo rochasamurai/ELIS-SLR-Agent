@@ -17,3 +17,13 @@ else
 fi
 
 echo "OpenClaw workspaces deployed to: $TARGET_ROOT"
+
+# Deploy openclaw config to container state directory
+CONFIG_SRC="$ROOT_DIR/openclaw/openclaw.json"
+CONFIG_DEST="$HOME/.openclaw/openclaw.json"
+mkdir -p "$(dirname "$CONFIG_DEST")"
+cp "$CONFIG_SRC" "$CONFIG_DEST"
+echo "OpenClaw config deployed to: $CONFIG_DEST"
+echo ""
+echo "Restart the container to apply the new config:"
+echo "  docker compose down && docker compose up -d"
