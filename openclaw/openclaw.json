@@ -1,19 +1,117 @@
 {
+  "version": "0.3",
   "agents": {
     "list": [
-      { "id": "pm", "workspace": "workspace-pm", "model": "openai/gpt-5.1-codex" },
-      { "id": "slr-impl-codex", "workspace": "workspace-slr-impl", "model": "openai/gpt-5.1-codex" },
-      { "id": "slr-impl-claude", "workspace": "workspace-slr-impl", "model": "anthropic/claude-sonnet-4-6" },
-      { "id": "slr-val-codex", "workspace": "workspace-slr-val", "model": "openai/gpt-5.1-codex" },
-      { "id": "slr-val-claude", "workspace": "workspace-slr-val", "model": "anthropic/claude-sonnet-4-6" },
-      { "id": "prog-impl-codex", "workspace": "workspace-prog-impl", "model": "openai/gpt-5.1-codex" },
-      { "id": "prog-impl-claude", "workspace": "workspace-prog-impl", "model": "anthropic/claude-sonnet-4-6" },
-      { "id": "prog-val-codex", "workspace": "workspace-prog-val", "model": "openai/gpt-5.1-codex" },
-      { "id": "prog-val-claude", "workspace": "workspace-prog-val", "model": "anthropic/claude-sonnet-4-6" },
-      { "id": "infra-impl-codex", "workspace": "workspace-infra-impl", "model": "openai/gpt-5.1-codex" },
-      { "id": "infra-impl-claude", "workspace": "workspace-infra-impl", "model": "anthropic/claude-sonnet-4-6" },
-      { "id": "infra-val-codex", "workspace": "workspace-infra-val", "model": "openai/gpt-5.1-codex" },
-      { "id": "infra-val-claude", "workspace": "workspace-infra-val", "model": "anthropic/claude-sonnet-4-6" }
+      {
+        "id": "pm",
+        "workspace": "workspace-pm",
+        "model": "openai/gpt-5.1-codex",
+        "exec": {
+          "ask": true
+        }
+      },
+      {
+        "id": "slr-impl-codex",
+        "workspace": "workspace-slr-impl",
+        "model": "openai/gpt-5.1-codex",
+        "exec": {
+          "ask": true
+        }
+      },
+      {
+        "id": "slr-impl-claude",
+        "workspace": "workspace-slr-impl",
+        "model": "anthropic/claude-sonnet-4-6",
+        "modelFallback": "anthropic/claude-opus-4-6",
+        "exec": {
+          "ask": true
+        }
+      },
+      {
+        "id": "slr-val-codex",
+        "workspace": "workspace-slr-val",
+        "model": "openai/gpt-5.1-codex",
+        "exec": {
+          "ask": true
+        }
+      },
+      {
+        "id": "slr-val-claude",
+        "workspace": "workspace-slr-val",
+        "model": "anthropic/claude-sonnet-4-6",
+        "modelFallback": "anthropic/claude-opus-4-6",
+        "exec": {
+          "ask": true
+        }
+      },
+      {
+        "id": "prog-impl-codex",
+        "workspace": "workspace-prog-impl",
+        "model": "openai/gpt-5.1-codex",
+        "exec": {
+          "ask": true
+        }
+      },
+      {
+        "id": "prog-impl-claude",
+        "workspace": "workspace-prog-impl",
+        "model": "anthropic/claude-sonnet-4-6",
+        "modelFallback": "anthropic/claude-opus-4-6",
+        "exec": {
+          "ask": true
+        }
+      },
+      {
+        "id": "prog-val-codex",
+        "workspace": "workspace-prog-val",
+        "model": "openai/gpt-5.1-codex",
+        "exec": {
+          "ask": true
+        }
+      },
+      {
+        "id": "prog-val-claude",
+        "workspace": "workspace-prog-val",
+        "model": "anthropic/claude-sonnet-4-6",
+        "modelFallback": "anthropic/claude-opus-4-6",
+        "exec": {
+          "ask": true
+        }
+      },
+      {
+        "id": "infra-impl-codex",
+        "workspace": "workspace-infra-impl",
+        "model": "openai/gpt-5.1-codex",
+        "exec": {
+          "ask": true
+        }
+      },
+      {
+        "id": "infra-impl-claude",
+        "workspace": "workspace-infra-impl",
+        "model": "anthropic/claude-sonnet-4-6",
+        "modelFallback": "anthropic/claude-opus-4-6",
+        "exec": {
+          "ask": true
+        }
+      },
+      {
+        "id": "infra-val-codex",
+        "workspace": "workspace-infra-val",
+        "model": "openai/gpt-5.1-codex",
+        "exec": {
+          "ask": true
+        }
+      },
+      {
+        "id": "infra-val-claude",
+        "workspace": "workspace-infra-val",
+        "model": "anthropic/claude-sonnet-4-6",
+        "modelFallback": "anthropic/claude-opus-4-6",
+        "exec": {
+          "ask": true
+        }
+      }
     ]
   },
   "bindings": [
@@ -24,5 +122,11 @@
         "accountId": "8351383841"
       }
     }
-  ]
+  ],
+  "skills": {
+    "hub": {
+      "autoInstall": false
+    }
+  },
+  "notes": "PE-OC-18: pm promoted to openai/gpt-5.1-codex; prog-impl/val agents registered; claude coding agents use anthropic/claude-sonnet-4-6 with anthropic/claude-opus-4-6 fallback. Model tier policy: PM+CODEX=openai/gpt-5.1-codex, Claude coding=anthropic/claude-sonnet-4-6."
 }
