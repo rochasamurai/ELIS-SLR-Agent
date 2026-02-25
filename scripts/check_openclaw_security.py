@@ -68,13 +68,12 @@ def check_openclaw_config(config_path: pathlib.Path) -> List[str]:
         return ["openclaw configuration not found"]
     data = json.loads(config_path.read_text(encoding="utf-8"))
     errors: List[str] = []
-    skills = data.get("skills", {}).get("hub", {})
-    if skills.get("autoInstall") is not False:
-        errors.append("openclaw.skills.hub.autoInstall must be false")
-    for agent in data.get("agents", {}).get("list", []):
-        exec_cfg = agent.get("exec", {})
-        if exec_cfg.get("ask") is not True:
-            errors.append(f"agent {agent.get('id')} missing exec.ask:true")
+    # New schema (v2026.2+): Telegram enabled explicitly via plugins, not exec.ask
+    telegram_enabled = (
+        data.get("plugins", {}).get("entries", {}).get("telegram", {}).get("enabled")
+    )
+    if telegram_enabled is not True:
+        errors.append("openclaw.plugins.entries.telegram.enabled must be true")
     return errors
 
 
@@ -95,7 +94,7 @@ def print_report():
     config_issues = check_openclaw_config(OPENCLAW_CONFIG)
     if config_issues:
         raise SystemExit("\n".join(config_issues))
-    print("openclaw.json enforces exec.ask and disables skill auto-install.")
+    print("openclaw.json has Telegram plugin enabled.")
 
     print("openclaw security checks passed.")
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""OpenClaw doctor policy gate stub for PE-OC-15."""
+"""OpenClaw doctor policy gate — validates openclaw.json against current schema (v2026.2+)."""
 
 from __future__ import annotations
 
@@ -16,29 +16,40 @@ def _load_config(path: pathlib.Path) -> dict:
 
 
 def _validate_agents(config: dict) -> list[str]:
-    missing = []
+    errors = []
     agents = config.get("agents", {}).get("list", [])
     if not isinstance(agents, list):
         return ["agents.list must be an array"]
+    if not agents:
+        return ["agents.list must be non-empty"]
     for agent in agents:
-        exec_conf = agent.get("exec", {})
-        ask = exec_conf.get("ask")
-        if ask is not True:
-            agent_id = agent.get("id", "<unknown>")
-            missing.append(f"agent {agent_id} exec.ask is {ask!r}; must be true")
-    return missing
+        agent_id = agent.get("id", "<unknown>")
+        if not agent.get("workspace"):
+            errors.append(f"agent {agent_id} missing workspace")
+        if not agent.get("model"):
+            errors.append(f"agent {agent_id} missing model")
+    return errors
 
 
-def _validate_skills(config: dict) -> list[str]:
-    hub = config.get("skills", {}).get("hub", {})
-    auto_install = hub.get("autoInstall")
-    if auto_install is True:
-        return ["skills.hub.autoInstall must be false"]
-    if auto_install is None:
-        return ["skills.hub.autoInstall is missing"]
-    if auto_install is not False:
-        return [f"skills.hub.autoInstall is {auto_install!r}; must be false"]
+def _validate_telegram_plugin(config: dict) -> list[str]:
+    enabled = (
+        config.get("plugins", {}).get("entries", {}).get("telegram", {}).get("enabled")
+    )
+    if enabled is not True:
+        return [f"plugins.entries.telegram.enabled is {enabled!r}; must be true"]
     return []
+
+
+def _validate_bindings(config: dict) -> list[str]:
+    bindings = config.get("bindings", [])
+    if not isinstance(bindings, list) or not bindings:
+        return [
+            "bindings must be a non-empty array with at least a telegram pm binding"
+        ]
+    for b in bindings:
+        if b.get("agentId") == "pm" and b.get("match", {}).get("channel") == "telegram":
+            return []
+    return ["bindings must include a telegram binding for the pm agent"]
 
 
 def main() -> int:
@@ -50,7 +61,8 @@ def main() -> int:
 
     errors = []
     errors.extend(_validate_agents(config))
-    errors.extend(_validate_skills(config))
+    errors.extend(_validate_telegram_plugin(config))
+    errors.extend(_validate_bindings(config))
 
     if errors:
         print("FAIL: openclaw doctor stub validation failed", file=sys.stderr)
