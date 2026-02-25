@@ -64,7 +64,7 @@
 | PE-OC-17    | openclaw-infra  | prog-impl-codex     | prog-val-claude   | feature/pe-oc-17-live-telegram-integration  | merged          | 2026-02-24   |
 | PE-OC-18    | openclaw-infra  | prog-impl-claude    | prog-val-codex    | feature/pe-oc-18-codex-agent-registration   | merged          | 2026-02-24   |
 | PE-OC-19    | openclaw-infra  | prog-impl-codex     | prog-val-claude   | feature/pe-oc-19-infra-agent-registration   | merged          | 2026-02-24   |
-| PE-OC-20    | openclaw-infra  | prog-impl-claude    | prog-val-codex    | feature/pe-oc-20-config-deployment-pipeline | planning        | 2026-02-24   |
+| PE-OC-20    | openclaw-infra  | prog-impl-claude    | prog-val-codex    | feature/pe-oc-20-config-deployment-pipeline | merged          | 2026-02-25   |
 
 Valid status values:
 - `planning`

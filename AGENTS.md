@@ -497,6 +497,36 @@ YES / NO — reason if NO
 [who does what] → [next PE / action]
 ```
 
+## Agent update — PM / PE-OC-20 / 2026-02-24
+
+### Verdict
+PASS — operational follow-up complete
+
+### Branch / PR
+Branch: main  
+PR: #283 (merged)  
+Base: main
+
+### Gate results
+black: PASS (already recorded)  
+ruff: PASS  
+pytest: PASS — 556 passed, 0 failed (17 warnings about `datetime.utcnow` remaining)
+
+### Scope (diff vs main)
+M	openclaw/openclaw.json  
+M	docker-compose.yml
+
+### Summary of post-merge ops
+- Added `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, and `OPENCLAW_GATEWAY_TOKEN` to `~/.openclaw/.env` (host-only secret storage, not committed).  
+- Ran `bash scripts/deploy_openclaw_workspaces.sh`, then `docker compose down && docker compose up -d`, to copy the sanitized config into `/app/.openclaw/openclaw.json`.  
+- Verified with `python scripts/check_openclaw_config_sync.py` that all 13 declared agents are live and the container no longer rejects the schema.
+
+### Ready to merge
+N/A — already merged and this documents the operational handoff.
+
+### Next
+PM / Implementer → keep `~/.openclaw/.env` secrets protected and, once PE-OC-21 is assigned, follow the standard implementer/validator workflow with a fresh worktree, Status Packet, HANDOFF, and REVIEW.
+
 ---
 
 ## 10) Per-PE REVIEW files
