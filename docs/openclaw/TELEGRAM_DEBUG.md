@@ -47,9 +47,108 @@ This document records the live diagnostic steps taken when the ELIS PM Agent Tel
 
 ## 6. Status Packet references
 - Capture the successful commands/outputs so future reviews trace the exact steps:
-  - `docker exec openclaw /bin/sh -c "printenv | grep TELEGRAM_BOT_TOKEN"`  
-  - `curl https://api.telegram.org/bot<TOKEN>/getUpdates` showing the PO `/pair` messages  
-  - `node /app/openclaw.mjs pairing approve telegram <code>` output once it succeeds  
-  - Telegram chat showing the `status` reply  
+  - Verify token is SET (not its value): `MSYS_NO_PATHCONV=1 docker exec openclaw /bin/sh -c '[ -n "$(printenv TELEGRAM_BOT_TOKEN)" ] && echo set || echo unset'`
+  - `curl https://api.telegram.org/bot<TOKEN>/getUpdates` showing the PO `/pair` messages
+  - `node /app/openclaw.mjs pairing approve telegram <code>` output once it succeeds
+  - Telegram chat showing the `status` reply
 
 Documenting these steps ensures a durable log of the live-agent investigation for PE-OC-17.
+
+---
+
+## 7. Resolution (2026-02-26) — Five root causes identified and fixed
+
+After extended live debugging across PE-OC-17 and post-merge ops, the bot reached
+`enabled, configured, running, mode:polling, token:config`. The PO sent "Hello" and
+received a pairing code; after `pairing approve`, `/status` replied successfully.
+
+### Root cause 1 — `docker-compose.yml` environment block silenced `env_file`
+
+`environment:` listed `TELEGRAM_BOT_TOKEN`, `OPENAI_API_KEY`, and `ANTHROPIC_API_KEY`
+using `${VAR}`. Docker Compose expands these from the **host shell**, not from
+`env_file`. The host PowerShell session did not export those variables, so Compose
+substituted empty strings — silently overriding the valid values from `env_file`.
+
+**Fix:** Removed the three secret entries from `environment:`. `env_file` is now the
+sole source for all secrets. `OPENCLAW_STATE_DIR` (a non-secret constant) remains.
+
+### Root cause 2 — `deploy_openclaw_workspaces.sh` destroyed channel credentials
+
+The script used a plain `cp` to overwrite `~/.openclaw/openclaw.json` with the repo
+copy. The repo copy has no `channels` section, so every deployment erased the
+`channels.telegram.accounts.<BOT_ID>.botToken` that `channels add` had written.
+
+**Fix:** Replaced `cp` with a Python-based JSON merge that preserves the `channels`
+and `meta` keys from the live state dir while updating all other keys from the repo.
+
+### Root cause 3 — `gateway.mode` not set in config
+
+OpenClaw requires `gateway.mode` in the config to initialize channel plugins. Without
+it the gateway starts (`--allow-unconfigured`) but the Telegram plugin is never loaded.
+`OPENCLAW_GATEWAY_MODE=polling` controls how Telegram fetches updates (polling vs
+webhook) — it does **not** substitute for `gateway.mode`.
+
+**Fix:** `openclaw config set gateway.mode local` + `doctor --fix`.
+
+### Root cause 4 (primary) — `channels add` missing `--account <BOT_ID>`
+
+`channels add --channel telegram --token <TOKEN>` without `--account` stores the token
+under account name `"default"`. The gateway maps by the **accountId** from the binding.
+Without `--account 8508429120` the gateway found no matching account → `token:none`.
+
+**Fix:** `channels add --channel telegram --token <TOKEN> --account <BOT_ID>`
+where `BOT_ID` = the numeric prefix of the bot token (digits before the first colon).
+
+### Root cause 5 — binding `accountId` referenced PO's user ID instead of bot's ID
+
+The binding had `"accountId": "8351383841"` (the PO's Telegram user ID). OpenClaw
+bindings use `accountId` to identify the **channel account (the bot)**, not the sender.
+The bot's Telegram ID is the token prefix (e.g. `8508429120`).
+
+**Fix:** Updated `openclaw/openclaw.json` binding to `"accountId": "8508429120"`.
+
+### Correct one-time channel setup sequence
+
+```bash
+# 1. Register the bot token with the correct account ID
+#    BOT_ID = numeric prefix of the token (digits before the first colon)
+MSYS_NO_PATHCONV=1 docker exec openclaw /bin/sh -c \
+  'node /app/openclaw.mjs channels add --channel telegram \
+   --token "$(printenv TELEGRAM_BOT_TOKEN)" \
+   --account <BOT_ID>'
+
+# 2. Set gateway mode (one-time if not already set)
+MSYS_NO_PATHCONV=1 docker exec openclaw /bin/sh -c \
+  'node /app/openclaw.mjs config set gateway.mode local'
+
+# 3. Run doctor --fix to complete wizard metadata
+MSYS_NO_PATHCONV=1 docker exec openclaw /bin/sh -c \
+  'node /app/openclaw.mjs doctor --fix'
+
+# 4. Restart container — Telegram starts polling automatically
+docker compose down && docker compose up -d
+
+# 5. Verify: expect "enabled, configured, running, mode:polling, token:config"
+MSYS_NO_PATHCONV=1 docker exec openclaw /bin/sh -c \
+  'node /app/openclaw.mjs channels status'
+
+# 6. PO sends any plain message → bot replies with pairing code
+# 7. Approve pairing
+MSYS_NO_PATHCONV=1 docker exec openclaw /bin/sh -c \
+  'node /app/openclaw.mjs pairing approve telegram <CODE>'
+```
+
+### `channels status` field reference
+
+| Field | Healthy | Problem → fix |
+|---|---|---|
+| `token:` | `token:config` | `token:none` → missing `--account <BOT_ID>` in `channels add` |
+| configured | `configured` | `not configured` → token not loaded or `gateway.mode` unset |
+| running | `running` | `stopped` → restart container after fixing config |
+| `mode:` | `mode:polling` | `mode:webhook` → webhook requires a public URL |
+
+### Security note
+
+Never run `printenv` or filter env output to check secrets — even grep on printenv
+can expose values in logs. Use existence checks only:
+`[ -n "$(printenv VAR)" ] && echo set || echo unset`

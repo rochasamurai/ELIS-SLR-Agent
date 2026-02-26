@@ -1,127 +1,148 @@
-# Telegram Setup — PO Onboarding Guide (PE-OC-17)
+# Telegram Channel Setup — Authoritative Runbook
 
-> **Prerequisite:** PE-OC-01 through PE-OC-16 complete. OpenClaw Docker container is running with the gateway bound to the LAN interface (`--bind lan`). The host has your Telegram bot token and PO account ready.
-
-## Overview
-
-The PM Agent is the only agent exposed to Telegram. PO messages go to the PM Agent through the bot, and all worker agents remain isolated inside the container with `:ro` workspace mounts. This runbook documents the live pairing sequence for PE-OC-17.
+> **Replaces** the PE-OC-17 version of this document, which contained incorrect
+> procedures (wrong binding accountId concept, wrong pairing flow order, old schema
+> references).  Updated 2026-02-26 after live resolution of the `token:none` issue.
 
 ---
 
-## Step 0 — Confirm gateway binding and port mapping
+## Prerequisites
 
-1. `docker compose ps` → OpenClaw container must be `Up`.
-2. Inspect `docker-compose.yml`:
-   - Port mapping should read `127.0.0.1:18789:18789`.
-   - The service command should be `node openclaw.mjs gateway --allow-unconfigured --bind lan`.
-3. The gateway must expose a WebSocket endpoint on `ws://127.0.0.1:18789`.
-4. Run the WebSocket health check:
-
-   ```bash
-   python scripts/check_openclaw_health.py
-   ```
-
-   Success message: `OpenClaw WebSocket handshake succeeded (status 101).`
+- OpenClaw container running (`docker compose ps` → `Up`)
+- `TELEGRAM_BOT_TOKEN` in `~/.openclaw/.env` (format: `<BOT_ID>:<HASH>`)
+- `BOT_ID` = the numeric prefix before the first colon in the token
+- `openclaw/openclaw.json` binding has `"accountId": "<BOT_ID>"` (not PO's user ID)
 
 ---
 
-## Step 1 — Acquire the Telegram bot token
+## One-time channel registration (run once per bot token)
 
-1. On Telegram, open `@BotFather` and send `/newbot`.
-2. Follow the prompts to name and username the bot.
-3. Copy the token (`123456789:AAFxxxxx` style).
-4. Secure the token outside the repo:
+Run in order. Step 1 only needs re-running when the token is rotated.
 
-   ```bash
-   mkdir -p ~/.openclaw
-   chmod 700 ~/.openclaw
-   cat <<'EOF' >> ~/.openclaw/.env
-   TELEGRAM_BOT_TOKEN=<your-token-here>
-   EOF
-   ```
-
-   > /!\ Do **not** commit `.env`. The token must stay on the host.
-
----
-
-## Step 2 — Deploy workspaces (if not already present)
+### Step 1 — Register bot token with explicit account ID
 
 ```bash
-bash scripts/deploy_openclaw_workspaces.sh
+MSYS_NO_PATHCONV=1 docker exec openclaw /bin/sh -c \
+  'node /app/openclaw.mjs channels add --channel telegram \
+   --token "$(printenv TELEGRAM_BOT_TOKEN)" \
+   --account <BOT_ID>'
 ```
 
-This syncs `openclaw/workspaces/` → `~/openclaw/workspaces/` so the PM Agent sees the latest AGENTS, LESSONS, and SOUL files.
+Expected output: `Added Telegram account "<BOT_ID>".`
+
+> **Why `--account <BOT_ID>` is required:** OpenClaw stores the token under the
+> account ID you specify. The binding's `match.accountId` must equal this ID for the
+> gateway to find the token. Omitting `--account` stores the token as `"default"`,
+> which never matches a numeric accountId in the binding → `token:none`.
+
+### Step 2 — Set gateway mode (one-time)
+
+```bash
+MSYS_NO_PATHCONV=1 docker exec openclaw /bin/sh -c \
+  'node /app/openclaw.mjs config set gateway.mode local'
+```
+
+> Without `gateway.mode` set, the Telegram plugin never initializes even if the token
+> is present. The `--allow-unconfigured` flag only allows the gateway process to start;
+> it does not activate channel plugins.
+
+### Step 3 — Complete doctor wizard metadata
+
+```bash
+MSYS_NO_PATHCONV=1 docker exec openclaw /bin/sh -c \
+  'node /app/openclaw.mjs doctor --fix'
+```
+
+### Step 4 — Restart container
+
+```bash
+docker compose down && docker compose up -d
+```
+
+### Step 5 — Verify Telegram is running
+
+```bash
+MSYS_NO_PATHCONV=1 docker exec openclaw /bin/sh -c \
+  'node /app/openclaw.mjs channels status'
+```
+
+Expected: `Telegram <BOT_ID>: enabled, configured, running, mode:polling, token:config`
+
+If you see `token:none` or `not configured`, re-read `docs/openclaw/TELEGRAM_DEBUG.md §7`.
 
 ---
 
-## Step 3 — Pair the PO Telegram account
+## PO pairing (run once per PO account; survives restarts)
 
-1. Run inside the container:
+The bot's `dmPolicy: "pairing"` means every unknown sender is denied until explicitly
+paired. Pairing is stored in the state directory and persists across container restarts.
 
-   ```bash
-   docker exec openclaw node openclaw.mjs pairing approve
-   ```
+1. **PO sends any plain message** (e.g. "Hello") to the bot on Telegram.
+   - Do NOT send `/pair` — that is an admin CLI command, not a bot message.
+2. **Bot replies** with: `OpenClaw: access not configured. Pairing code: XXXXXXXX`
+3. **Admin approves** the code:
 
-2. The bot sends a pairing code to the PO’s Telegram account.
-3. From the PO account, reply to the bot with that code within five minutes.
-4. The gateway prints the paired Telegram user ID. Update `openclaw/openclaw.json` immediately:
+```bash
+MSYS_NO_PATHCONV=1 docker exec openclaw /bin/sh -c \
+  'node /app/openclaw.mjs pairing approve telegram <CODE>'
+```
 
-   ```json
-   "bindings": [
-     {
-       "agentId": "pm",
-       "match": {
-         "channel": "telegram",
-         "accountId": "<PAIRED_TELEGRAM_USER_ID>"
-       }
-     }
-   ]
-   ```
+Expected: `Approved telegram sender <PO_TELEGRAM_USER_ID>.`
 
-   Replace `<PAIRED_TELEGRAM_USER_ID>` with the actual numeric ID returned by the pairing command. Commit that change as part of this PE.
+4. **PO sends `/status`** — PM Agent replies with the Active PE Registry summary.
 
 ---
 
-## Step 4 — Verify PM Agent responds to `status`
+## Rotating the bot token
 
-1. From the PO Telegram account, send:
+When the bot token is revoked and replaced:
 
-   ```
-   status
-   ```
-
-2. Expect a reply within 30 seconds:
-
-   ```
-   Active PEs — YYYY-MM-DD HH:MM UTC
-   PE-OC-17 | planning | CODEX / Claude Code
-   ```
-
-3. If no reply arrives, inspect container logs and re-run the health check:
-
-   ```bash
-   docker compose logs openclaw --tail 50
-   python scripts/check_openclaw_health.py
-   ```
-
-4. Confirm `python scripts/check_openclaw_doctor.py` still exits 0 after the pairing (enforces `exec.ask` and `skills.hub.autoInstall` rules).
+1. Update `TELEGRAM_BOT_TOKEN` in `~/.openclaw/.env`
+2. Re-run Step 1 above with the new token and same `--account <BOT_ID>`
+3. Re-run Steps 3–5
+4. PO pairing is preserved (no re-pairing needed unless the PO's user ID changed)
 
 ---
 
-## Security notes
+## `openclaw/openclaw.json` binding — correct accountId
 
-- The bot token must stay on the host and **never** be committed. The paired Telegram account ID is safe to record inside `openclaw/openclaw.json` so the binding survives container restarts.
-- Running the gateway with `--bind lan` exposes `ws://0.0.0.0:18789` inside the container; keep the host port bound to `127.0.0.1`.
-- `scripts/check_openclaw_health.py` now uses a WebSocket handshake. If it fails, restart the container before retrying pairing.
-- Re-run the pairing flow whenever the PO account or bot token changes.
+The `bindings[].match.accountId` must equal the **bot's Telegram user ID** (the
+numeric prefix of the token), not the PO's personal Telegram user ID.
+
+```json
+"bindings": [
+  {
+    "agentId": "pm",
+    "match": {
+      "channel": "telegram",
+      "accountId": "<BOT_ID>"
+    }
+  }
+]
+```
+
+The PO's Telegram user ID appears in pairing output (`Approved telegram sender <ID>`)
+and in `Your Telegram user id: <ID>` from the bot's pairing message. It is stored in
+the state dir's pairing record, not in `openclaw/openclaw.json`.
 
 ---
 
-## Troubleshooting
+## Troubleshooting quick reference
 
-| Symptom | Action |
-|---|---|
-| No handshake success | Confirm `command` includes `--bind lan` and port mapping is `:18789`. |
-| Pairing code expires | Re-run `docker exec openclaw node openclaw.mjs pairing approve` and reply faster. |
-| PM Agent ignores `status` | Check `~/.openclaw/.env` for the bot token and confirm pairing succeeded. |
-| `openclaw doctor` warns | Adjust `openclaw/openclaw.json` so every agent slot has `exec.ask: true` and `skills.hub.autoInstall` remains `false`. |
+| Symptom | Cause | Fix |
+|---|---|---|
+| `token:none` | `channels add` used without `--account <BOT_ID>` | Re-run Step 1 with correct `--account` |
+| `not configured` | `gateway.mode` unset or token not loaded | Run Steps 2–4 |
+| `stopped` after restart | Config not reloaded | Restart container (Step 4) |
+| "You are not authorized" on any message | PO not paired | Run pairing flow above |
+| "/pair" → "You are not authorized" | `/pair` is a CLI admin command, not a bot message | PO should send a plain message, not `/pair` |
+| Token rotated → `token:none` | Old token registered; needs re-registration | Re-run Step 1 with new token |
+
+---
+
+## deploy_openclaw_workspaces.sh and channel credentials
+
+The deploy script merges repo config into the state dir, **preserving** the `channels`
+and `meta` keys. Running the deploy script will NOT destroy the registered bot token.
+However, if the state dir config is wiped (e.g. fresh container with new state dir
+mount), re-run Steps 1–5.
