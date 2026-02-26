@@ -16,11 +16,10 @@ services:
       - no-new-privileges:true
     tmpfs:
       - /tmp:rw,nosuid,noexec
+    env_file:
+      - ${HOME}/.openclaw/.env
     environment:
       OPENCLAW_STATE_DIR: /app/.openclaw
-      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
     cap_drop:
       - ALL
     cap_add:
