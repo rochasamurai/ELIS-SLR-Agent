@@ -1040,6 +1040,58 @@ After every merge that touches `openclaw/openclaw.json`, the live container show
 
 ---
 
+### Phase 6 — Gap Closure
+
+> **Goal:** Close the single open gap identified after Phase 5 completion — the
+> `workspace-infra-val` directory is absent from the repo, leaving `infra-val-codex`
+> and `infra-val-claude` declared in `openclaw.json` but inoperable.
+
+---
+
+#### PE-OC-21 · Infra Validator Workspace
+
+| Field | Value |
+|---|---|
+| Implementer | CODEX (`prog-impl-codex`) |
+| Validator | Claude Code (`prog-val-claude`) |
+| Effort | 1–2 hours |
+| Phase | 6 — Gap Closure |
+| Depends On | PE-OC-20 |
+
+**Background**
+
+`infra-val-codex` and `infra-val-claude` are registered in `openclaw/openclaw.json`
+but have no workspace files. `workspace-infra-val` does not exist in the repository,
+so these agents cannot receive assignments, load rules, or operate. This gap was
+identified in `docs/openclaw/AGENT_CATALOGUE.md` after all Phase 5 PEs merged.
+
+**Scope**
+
+- Create `openclaw/workspaces/workspace-infra-val/AGENTS.md` — Infra Validator rules:
+  two-stage comment protocol; infra-specific blocking findings (port bindings, container
+  isolation §5.4, inline secrets, shell script standards); REVIEW file format requirements
+- Create `openclaw/workspaces/workspace-infra-val/CLAUDE.md` — Claude-specific guidance
+  for infra validation sessions
+- Create `openclaw/workspaces/workspace-infra-val/CODEX.md` — CODEX-specific guidance
+  for infra validation sessions
+
+**Acceptance Criteria**
+
+1. `workspace-infra-val/AGENTS.md` defines at least 3 infra-specific blocking-finding
+   categories absent from the generic code validator rules: (a) external port bound to
+   `0.0.0.0`; (b) ELIS repo path mounted in container; (c) inline secret in CI workflow
+2. `workspace-infra-val/CLAUDE.md` and `CODEX.md` present with engine-specific guidance
+3. `scripts/deploy_openclaw_workspaces.sh` deploys the new workspace to host without error
+4. After deployment + container restart, `check_openclaw_config_sync.py` exits 0
+
+**Deliverables**
+
+- `openclaw/workspaces/workspace-infra-val/AGENTS.md`
+- `openclaw/workspaces/workspace-infra-val/CLAUDE.md`
+- `openclaw/workspaces/workspace-infra-val/CODEX.md`
+
+---
+
 ## 4. Build Schedule
 
 The PEs are sequenced to respect phase dependencies while allowing parallel execution with ongoing ELIS program and SLR work. The schedule assumes the current 2-agent model dedicates one PE slot per week to the OpenClaw build series.
@@ -1068,7 +1120,8 @@ The PEs are sequenced to respect phase dependencies while allowing parallel exec
 | 14 | PE-OC-18: CODEX Agent Registration | Phase 5 | Claude Code | 2–3h | OC-17 |
 | 15 | PE-OC-19: Infra Agent Registration | Phase 5 | CODEX | 2–3h | OC-18 |
 | 16 | PE-OC-20: Config Deployment Pipeline | Phase 5 | Claude Code | 2–3h | OC-19 |
-| **Total** | **22 PEs** | **5 Phases + governance** | **CODEX×12 · Claude Code×10** | **66–89h** | **~10–12 wks** |
+| 17 | PE-OC-21: Infra Validator Workspace | Phase 6 | CODEX | 1–2h | OC-20 |
+| **Total** | **23 PEs** | **6 Phases + governance** | **CODEX×13 · Claude Code×10** | **67–91h** | **~10–12 wks** |
 
 > Effort hours reflect agent session time only, not wall-clock elapsed time. Phase 4 integration tests (PE-OC-09, OC-10, OC-11) must not begin until all Phase 3 PEs are merged to the base branch.
 
