@@ -65,7 +65,7 @@
 | PE-OC-18    | openclaw-infra  | prog-impl-claude    | prog-val-codex    | feature/pe-oc-18-codex-agent-registration   | merged          | 2026-02-24   |
 | PE-OC-19    | openclaw-infra  | prog-impl-codex     | prog-val-claude   | feature/pe-oc-19-infra-agent-registration   | merged          | 2026-02-24   |
 | PE-OC-20    | openclaw-infra  | prog-impl-claude    | prog-val-codex    | feature/pe-oc-20-config-deployment-pipeline | merged          | 2026-02-25   |
-| PE-OC-21    | openclaw-infra  | prog-impl-codex     | prog-val-claude   | feature/pe-oc-21-infra-val-workspace        | planning        | 2026-02-26   |
+| PE-OC-21    | openclaw-infra  | prog-impl-codex     | prog-val-claude   | feature/pe-oc-21-infra-val-workspace        | merged          | 2026-02-26   |
 
 Valid status values:
 - `planning`
