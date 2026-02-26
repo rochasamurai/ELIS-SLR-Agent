@@ -215,3 +215,39 @@ or exposes secret values. Use existence checks only:
 
 Do not use `printenv`, `env`, `cat .env`, `Get-Content .env`, or any grep/filter on
 env output — even filtered output can expose values. Recorded in Claude Code memory.
+
+---
+
+## LL-11 — Token rotation requires `channels add` + second container restart
+
+| Field | Value |
+|---|---|
+| First seen | Secret rotation (2026-02-26) |
+| Agent | Claude Code |
+
+After rotating the Telegram bot token, restarting the container alone is not enough.
+The state dir's `channels.telegram.accounts.<BOT_ID>.botToken` still holds the old
+(revoked) token. The symptom is `token:config, error:Call to 'getMe' failed! (401: Unauthorized)`.
+
+**Root cause (two-step):**
+1. `channels add` must be re-run explicitly to update the channels section in
+   `~/.openclaw/openclaw.json` with the new token.
+2. After `channels add` rewrites the config file, the gateway process in memory still
+   holds the old token. A second restart (`docker compose restart`) flushes it.
+
+**Fix:**
+```
+1. Update ~/.openclaw/.env with new token
+2. docker compose down && docker compose up -d   ← loads new env
+3. channels add --channel telegram --token <NEW> --account <BOT_ID>  ← updates config file
+4. docker compose restart   ← flushes in-memory state
+5. channels status → enabled, configured, running, mode:polling, token:config
+```
+
+On Windows PowerShell, pass the token via a variable (never print it):
+```powershell
+$t = (Select-String '^TELEGRAM_BOT_TOKEN=' "$env:USERPROFILE\.openclaw\.env").Line -replace '^TELEGRAM_BOT_TOKEN=',''
+docker exec openclaw node openclaw.mjs channels add --channel telegram --token $t --account <BOT_ID>
+```
+
+PO pairing survives token rotation — no re-pairing is needed.

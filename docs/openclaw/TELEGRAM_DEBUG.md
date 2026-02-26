@@ -152,3 +152,50 @@ MSYS_NO_PATHCONV=1 docker exec openclaw /bin/sh -c \
 Never run `printenv` or filter env output to check secrets — even grep on printenv
 can expose values in logs. Use existence checks only:
 `[ -n "$(printenv VAR)" ] && echo set || echo unset`
+
+---
+
+## 8. Secret rotation recovery (2026-02-26)
+
+After OPENAI_API_KEY, ANTHROPIC_API_KEY, and TELEGRAM_BOT_TOKEN were rotated following
+a security incident, the Telegram channel required re-registration with the new bot token.
+
+### Symptom after rotation
+
+```
+Telegram 8508429120: enabled, configured, stopped, mode:polling, token:config,
+error:Call to 'getMe' failed! (401: Unauthorized)
+```
+
+`token:config` confirmed the new token was loaded from `openclaw.json`. The `401` meant
+Telegram was rejecting it — because the state dir's `channels` section still held the old
+(now-revoked) token from the previous `channels add`.
+
+### Root cause
+
+Two issues combined:
+
+1. **Stale channels section** — Rotating the token in `.env` and restarting the container
+   reloads the environment but does NOT update the `channels.telegram.accounts.<BOT_ID>.botToken`
+   field inside `~/.openclaw/openclaw.json`. `channels add` must be re-run explicitly.
+
+2. **In-memory state not flushed** — After `channels add` rewrites the config file, the
+   gateway process already running in memory still holds the old token. A second restart
+   (`docker compose restart`) is required to flush it.
+
+### Fix sequence (Windows PowerShell, secret-safe)
+
+```powershell
+# Step 1 — Re-register new token (reads from .env, never prints the value)
+$t = (Select-String '^TELEGRAM_BOT_TOKEN=' "$env:USERPROFILE\.openclaw\.env").Line -replace '^TELEGRAM_BOT_TOKEN=',''
+docker exec openclaw node openclaw.mjs channels add --channel telegram --token $t --account 8508429120
+
+# Step 2 — Flush in-memory state
+docker compose restart
+
+# Step 3 — Verify (wait ~10 s)
+docker exec openclaw node openclaw.mjs channels status
+# Expected: enabled, configured, running, mode:polling, token:config
+```
+
+PO pairing survived the rotation — no re-pairing was needed.

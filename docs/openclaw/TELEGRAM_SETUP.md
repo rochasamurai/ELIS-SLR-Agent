@@ -95,12 +95,48 @@ Expected: `Approved telegram sender <PO_TELEGRAM_USER_ID>.`
 
 ## Rotating the bot token
 
-When the bot token is revoked and replaced:
+When the bot token is revoked and replaced (e.g. after a security incident):
 
-1. Update `TELEGRAM_BOT_TOKEN` in `~/.openclaw/.env`
-2. Re-run Step 1 above with the new token and same `--account <BOT_ID>`
-3. Re-run Steps 3–5
-4. PO pairing is preserved (no re-pairing needed unless the PO's user ID changed)
+1. **Update `~/.openclaw/.env`** — replace `TELEGRAM_BOT_TOKEN` with the new value.
+
+2. **Restart the container** to load the new token from `env_file`:
+   ```bash
+   docker compose down && docker compose up -d
+   ```
+
+3. **Re-register the new token** — the state dir's `channels` section still holds the
+   old (revoked) token. Re-run `channels add` with the new token.
+
+   On **Windows PowerShell** (reads token from `.env` without printing it):
+   ```powershell
+   $t = (Select-String '^TELEGRAM_BOT_TOKEN=' "$env:USERPROFILE\.openclaw\.env").Line -replace '^TELEGRAM_BOT_TOKEN=',''
+   docker exec openclaw node openclaw.mjs channels add --channel telegram --token $t --account <BOT_ID>
+   ```
+
+   On **bash** (Git Bash / Linux / macOS):
+   ```bash
+   MSYS_NO_PATHCONV=1 docker exec openclaw /bin/sh -c \
+     'node /app/openclaw.mjs channels add --channel telegram \
+      --token "$(printenv TELEGRAM_BOT_TOKEN)" \
+      --account <BOT_ID>'
+   ```
+
+   Expected: `Added Telegram account "<BOT_ID>".`
+
+4. **Restart the container again** — `channels add` updates the config file on disk but
+   the gateway process keeps the old token in memory until restarted:
+   ```bash
+   docker compose restart
+   ```
+
+5. **Verify** (wait ~10 s for gateway to initialize):
+   ```bash
+   docker exec openclaw node openclaw.mjs channels status
+   ```
+   Expected: `enabled, configured, running, mode:polling, token:config` — no error.
+
+PO pairing survives token rotation. No re-pairing is needed unless the PO's Telegram
+user ID changed.
 
 ---
 
@@ -134,6 +170,7 @@ the state dir's pairing record, not in `openclaw/openclaw.json`.
 | `token:none` | `channels add` used without `--account <BOT_ID>` | Re-run Step 1 with correct `--account` |
 | `not configured` | `gateway.mode` unset or token not loaded | Run Steps 2–4 |
 | `stopped` after restart | Config not reloaded | Restart container (Step 4) |
+| `401: Unauthorized` after token rotation | `channels add` ran but container not restarted afterward; gateway still uses old token in memory | `docker compose restart`, then verify |
 | "You are not authorized" on any message | PO not paired | Run pairing flow above |
 | "/pair" → "You are not authorized" | `/pair` is a CLI admin command, not a bot message | PO should send a plain message, not `/pair` |
 | Token rotated → `token:none` | Old token registered; needs re-registration | Re-run Step 1 with new token |
