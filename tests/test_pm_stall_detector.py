@@ -294,7 +294,8 @@ def test_run_detection_invalid_registry_raises(tmp_path: Path) -> None:
 
 
 def test_main_no_stalls(tmp_path: Path, capsys) -> None:
-    p = _make_registry(_row("PE-OC-08", "implementing", "2026-02-22"), tmp_path)
+    today = datetime.date.today().isoformat()
+    p = _make_registry(_row("PE-OC-08", "implementing", today), tmp_path)
     old_argv = sys.argv
     sys.argv = [
         "pm_stall_detector.py",

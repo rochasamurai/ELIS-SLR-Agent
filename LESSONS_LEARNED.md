@@ -129,3 +129,89 @@ the rule added to prevent recurrence, and how it was detected.
 **Detection:** `where.exe docker` returned not found; `docker pull` timed out.
 
 **Rule added:** `docs/openclaw/DOCKER_SETUP.md` updated with explicit host prerequisites section. Discovery probes must verify tool availability before running.
+
+---
+
+## LL-08 — `channels add` without `--account <BOT_ID>` causes permanent token:none
+
+| Field | Value |
+|---|---|
+| First seen | PE-OC-17 post-merge ops (2026-02-26) |
+| Agent | CODEX (initial setup) + Claude Code (diagnosis) |
+| AGENTS.md rule | §3.4 — verify channel status after every config change |
+
+**Error:** `openclaw channels add --channel telegram --token <TOKEN>` was run without
+`--account <BOT_ID>`. The token was stored under account name `"default"`. The binding's
+`match.accountId` was a numeric Telegram bot ID. The gateway searched for an account
+matching the numeric ID and found none → `token:none` on every startup.
+
+**Root cause:** The `--account` flag is not documented prominently; omitting it silently
+creates a `"default"` account that never matches a numeric binding accountId. The
+gateway reports `token:none` rather than `account not found`, making the root cause hard
+to trace.
+
+**Detection:** `channels status` showed `token:none` despite `channels.telegram.botToken`
+being present in the config. Only after reading `channels add --help` was the `--account`
+flag discovered.
+
+**Rule added:** When registering a Telegram bot, always use:
+`channels add --channel telegram --token <TOKEN> --account <BOT_ID>`
+where `BOT_ID` = numeric prefix of the token (digits before the first colon).
+The binding's `match.accountId` must equal `BOT_ID`.
+
+---
+
+## LL-09 — Docker Compose `environment:` overrides `env_file:` with empty strings
+
+| Field | Value |
+|---|---|
+| First seen | PE-OC-17 post-merge ops (2026-02-26) |
+| Agent | CODEX (docker-compose.yml author) |
+| AGENTS.md rule | §3.4 — verify container env after every compose change |
+
+**Error:** `docker-compose.yml` listed `TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}` in
+the `environment:` block. The same variable was also supplied by `env_file`. Docker
+Compose resolves `${VAR}` in `environment:` from the **host shell**, not from
+`env_file`. Because the host PowerShell session did not export `TELEGRAM_BOT_TOKEN`,
+Compose substituted an empty string. The `environment:` entry then **overrode** the
+correct value from `env_file`, so the container received an empty token.
+
+**Root cause:** Docker Compose precedence: `environment:` > `env_file:`. Listing a
+variable in both places with a host-shell expansion in `environment:` silently wins
+with an empty value when the host shell has no export.
+
+**Detection:** `channels status` showed `token:none`. Checking container env (existence
+only, not value) confirmed `TELEGRAM_BOT_TOKEN` was set but the gateway rejected it.
+
+**Rule added:** Do not list secrets in both `env_file:` and `environment:`. Use
+`env_file:` exclusively for all secrets. Only non-secret, hardcoded constants (like
+`OPENCLAW_STATE_DIR`) belong in `environment:`.
+
+---
+
+## LL-10 — Agent must never run commands that print secret values
+
+| Field | Value |
+|---|---|
+| First seen | PE-OC-17 post-merge ops (2026-02-26) |
+| Agent | Claude Code |
+| AGENTS.md rule | §13 Secrets isolation |
+
+**Error:** Claude Code ran `docker exec openclaw printenv | grep -E 'TELEGRAM|OPENAI|ANTHROPIC'`
+as a diagnostic step. The command printed the full values of `TELEGRAM_BOT_TOKEN`,
+`OPENAI_API_KEY`, and `ANTHROPIC_API_KEY` into the conversation context.
+
+**Root cause:** The diagnostic intent was to verify that secrets were present in the
+container. A filtered `printenv` was chosen over a safe existence check. Even though
+the filter was narrow, the output contained full secret values.
+
+**Detection:** User interrupted the session and requested a hard rule be registered.
+
+**Rule added (user-mandated):** Agents must NEVER run any command that prints, reads,
+or exposes secret values. Use existence checks only:
+- Shell: `[ -n "$VAR" ] && echo set || echo unset`
+- Docker: `MSYS_NO_PATHCONV=1 docker exec <c> /bin/sh -c '[ -n "$(printenv VAR)" ] && echo set || echo unset'`
+- Python: `bool(os.environ.get("VAR"))`
+
+Do not use `printenv`, `env`, `cat .env`, `Get-Content .env`, or any grep/filter on
+env output — even filtered output can expose values. Recorded in Claude Code memory.
