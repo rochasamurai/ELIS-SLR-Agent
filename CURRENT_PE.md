@@ -21,8 +21,8 @@
 
 | Field   | Value                                         |
 |---------|-----------------------------------------------|
-| PE      | PE-VPS-01                                     |
-| Branch  | feature/pe-vps-01-manifest-validation-blocking |
+| PE      | PE-VPS-02                                     |
+| Branch  | feature/pe-vps-02-manifest-schema-extension   |
 
 ---
 
@@ -30,8 +30,8 @@
 
 | Agent       | Role        |
 |-------------|-------------|
-| Claude Code | Implementer |
-| CODEX       | Validator   |
+| CODEX       | Implementer |
+| Claude Code | Validator   |
 
 ---
 
@@ -67,7 +67,8 @@
 | PE-OC-20    | openclaw-infra  | prog-impl-claude     | prog-val-codex     | feature/pe-oc-20-config-deployment-pipeline       | merged          | 2026-02-25   |
 | PE-OC-21    | openclaw-infra  | prog-impl-codex      | prog-val-claude    | feature/pe-oc-21-infra-val-workspace              | merged          | 2026-02-26   |
 | PM-CHORE-01 | housekeeping    | —                    | —                  | main (direct)                                     | merged          | 2026-03-03   |
-| PE-VPS-01   | vps             | prog-impl-claude     | prog-val-codex     | feature/pe-vps-01-manifest-validation-blocking    | implementing    | 2026-03-03   |
+| PE-VPS-01   | vps             | prog-impl-claude     | prog-val-codex     | feature/pe-vps-01-manifest-validation-blocking    | merged          | 2026-03-06   |
+| PE-VPS-02   | vps             | prog-impl-codex      | prog-val-claude    | feature/pe-vps-02-manifest-schema-extension       | implementing    | 2026-03-06   |
 
 Valid status values:
 - `planning`
