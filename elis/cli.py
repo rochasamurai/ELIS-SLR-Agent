@@ -162,7 +162,7 @@ def _run_validate(args: argparse.Namespace) -> int:
                 finished_at=now_utc_iso(),
                 manifest_path=manifest_path_for_output(target_path),
             )
-        return 0
+        return 0 if is_valid else 1
 
     if schema_path or json_path:
         raise SystemExit("Provide both <schema_path> and <json_path>, or neither.")

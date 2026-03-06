@@ -87,10 +87,25 @@ jobs:
           pip install "jsonschema[format-nongpl]==4.23.0" || true
           pip install -e . --no-deps
 
-      - name: Validate artefacts (non-blocking)
+      - name: Validate artefacts (blocking manifest gate)
         run: |
           set -e
-          elis validate || true
+          tmp_dir="$(mktemp -d)"
+          valid_manifest="$tmp_dir/ci_generated_manifest.json"
+          invalid_manifest="$tmp_dir/ci_invalid_manifest.json"
+
+          # Generate a schema-valid run manifest fixture via runtime helper.
+          VALID_MANIFEST="$valid_manifest" python -c "import os; from elis.manifest import emit_run_manifest; emit_run_manifest(stage='validate', source='system', input_paths=['schemas/run_manifest.schema.json'], output_path='validation_reports/ci_validation_report.md', record_count=0, config_payload={'mode': 'ci-manifest-gate'}, manifest_path=os.environ['VALID_MANIFEST'])"
+
+          # Must pass for a valid generated manifest.
+          elis validate schemas/run_manifest.schema.json "$valid_manifest"
+
+          # Must fail for invalid payload; otherwise the gate is ineffective.
+          printf '{"incomplete": true}\n' > "$invalid_manifest"
+          if elis validate schemas/run_manifest.schema.json "$invalid_manifest"; then
+            echo "ERROR: invalid manifest unexpectedly passed validation."
+            exit 1
+          fi
 
   secrets-scope-check:
     name: secrets-scope-check
@@ -276,3 +291,4 @@ jobs:
         with:
           script: |
             core.notice('CI completed for PR #' + (context.payload.pull_request?.number ?? 'N/A'))
+
