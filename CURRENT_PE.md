@@ -12,7 +12,7 @@
 |----------------|----------------------------------------------------------------|
 | Release        | ELIS VPS Implementation Series                                 |
 | Base branch    | main                                                           |
-| Plan file      | ELIS_MultiAgent_Implementation_Plan_v1_1.md                   |
+| Plan file      | ELIS_MultiAgent_Implementation_Plan_v1_2.md                   |
 | Plan location  | repo root                                                      |
 
 ---
@@ -21,8 +21,8 @@
 
 | Field   | Value                                         |
 |---------|-----------------------------------------------|
-| PE      | PE-VPS-02                                     |
-| Branch  | feature/pe-vps-02-manifest-schema-extension   |
+| PE      | PE-VPS-00                                     |
+| Branch  | feature/pe-vps-00-hostinger-baseline          |
 
 ---
 
@@ -68,7 +68,8 @@
 | PE-OC-21    | openclaw-infra  | prog-impl-codex      | prog-val-claude    | feature/pe-oc-21-infra-val-workspace              | merged          | 2026-02-26   |
 | PM-CHORE-01 | housekeeping    | —                    | —                  | main (direct)                                     | merged          | 2026-03-03   |
 | PE-VPS-01   | vps             | prog-impl-claude     | prog-val-codex     | feature/pe-vps-01-manifest-validation-blocking    | merged          | 2026-03-06   |
-| PE-VPS-02   | vps             | prog-impl-codex      | prog-val-claude    | feature/pe-vps-02-manifest-schema-extension       | implementing    | 2026-03-06   |
+| PE-VPS-02   | vps             | prog-impl-codex      | prog-val-claude    | feature/pe-vps-02-manifest-schema-extension       | merged          | 2026-03-06   |
+| PE-VPS-00   | vps             | prog-impl-codex      | prog-val-claude    | feature/pe-vps-00-hostinger-baseline              | implementing    | 2026-03-06   |
 
 Valid status values:
 - `planning`
@@ -86,6 +87,7 @@ PM housekeeping entries (prefix `PM-CHORE-XX`):
 | Chore ID     | Description                                                                 | Date       |
 |--------------|-----------------------------------------------------------------------------|------------|
 | PM-CHORE-01  | Replaced `ELIS_MultiAgent_Implementation_Plan.md` (v1.0) with v1.1 at repo root. Archived v1.0 to `docs/_archive/2026-03/ELIS_MultiAgent_Implementation_Plan_v1_0.md`. Updated `CURRENT_PE.md` to reference v1.1 and open PE-VPS-01. | 2026-03-03 |
+| PM-CHORE-02  | Created `ELIS_MultiAgent_Implementation_Plan_v1_2.md` to add PE-VPS-00 (Hostinger baseline) as a prerequisite. Updated `CURRENT_PE.md` to reference v1.2 and open PE-VPS-00 with CODEX as Implementer. | 2026-03-06 |
 
 Alternation rule:
 - For consecutive PEs in the same domain, the implementer engine must alternate (`codex` <-> `claude`).
@@ -106,3 +108,5 @@ Alternation rule:
 - Step 0: read `Release context` to know the base branch and plan file for this session.
 - Never hardcode specific branch names or plan filenames — always resolve from this file.
 - If a field in this file is blank or missing, stop and notify PM.
+
+
