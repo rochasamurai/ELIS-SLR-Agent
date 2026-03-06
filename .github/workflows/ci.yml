@@ -95,20 +95,7 @@ jobs:
           invalid_manifest="$tmp_dir/ci_invalid_manifest.json"
 
           # Generate a schema-valid run manifest fixture via runtime helper.
-          VALID_MANIFEST="$valid_manifest" python - <<'"'"'PY'"'"'
-          import os
-          from elis.manifest import emit_run_manifest
-
-          emit_run_manifest(
-              stage="validate",
-              source="system",
-              input_paths=["schemas/run_manifest.schema.json"],
-              output_path="validation_reports/ci_validation_report.md",
-              record_count=0,
-              config_payload={"mode": "ci-manifest-gate"},
-              manifest_path=os.environ["VALID_MANIFEST"],
-          )
-          PY
+          VALID_MANIFEST="$valid_manifest" python -c "import os; from elis.manifest import emit_run_manifest; emit_run_manifest(stage='validate', source='system', input_paths=['schemas/run_manifest.schema.json'], output_path='validation_reports/ci_validation_report.md', record_count=0, config_payload={'mode': 'ci-manifest-gate'}, manifest_path=os.environ['VALID_MANIFEST'])"
 
           # Must pass for a valid generated manifest.
           elis validate schemas/run_manifest.schema.json "$valid_manifest"
