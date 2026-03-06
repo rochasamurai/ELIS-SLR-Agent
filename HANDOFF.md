@@ -1,144 +1,146 @@
-# HANDOFF — PE-VPS-01: Manifest Validation Blocking
+# HANDOFF — PE-VPS-02: Manifest Schema Extension (R1)
 
-**PE:** PE-VPS-01
-**Branch:** feature/pe-vps-01-manifest-validation-blocking
-**Implementer:** Claude Code (prog-impl-claude)
-**Validator:** CODEX (prog-val-codex)
+**PE:** PE-VPS-02  
+**Branch:** feature/pe-vps-02-manifest-schema-extension  
+**Implementer:** CODEX (prog-impl-codex)  
+**Validator:** Claude Code (prog-val-claude)  
 **Date:** 2026-03-06
 
 ---
 
 ## Summary
 
-PE-VPS-01 makes `elis validate` a blocking CI gate, addressing Gap 2 (FAIL) from the Implementation Alignment Audit (`docs/reviews/REVIEW_IMPLEMENTATION_ALIGNMENT_v1.md`).
-
-Prior to this PE, the CI pipeline contained `elis validate || true`, suppressing non-zero exit codes and allowing schema validation failures to pass silently. Additionally, `_run_validate()` in `cli.py` always returned exit code 0 even when validation found errors, and `validate_json.py:main()` always called `sys.exit(0)`.
-
----
-
-## Changes
-
-### `.github/workflows/ci.yml`
-
-Removed `|| true` from the `validate` job step. Manifest validation failures now block the pipeline.
-
-Before:
-```yaml
-- name: Validate artefacts (non-blocking)
-  run: |
-    set -e
-    elis validate || true
-```
-
-After:
-```yaml
-- name: Validate artefacts
-  run: |
-    set -e
-    elis validate
-```
-
-### `elis/cli.py`
-
-Fixed `_run_validate()` single-file mode to return exit code `1` on schema failure.
-
-```python
-# Before (line 165)
-return 0
-
-# After
-return 0 if is_valid else 1
-```
-
-### `scripts/_archive/validate_json.py`
-
-Fixed `main()` to exit with code `1` when any appendix fails validation.
-
-```python
-# Before
-sys.exit(0)
-
-# After
-has_errors = any(not valid for valid, _, _ in results.values())
-sys.exit(1 if has_errors else 0)
-```
-
-### `tests/test_elis_cli.py`
-
-Added `test_validate_exits_nonzero_on_invalid_manifest` — a regression guard confirming that `elis validate <schema> <invalid_json>` returns exit code 1 when the manifest fails schema validation.
+Implemented Remediation **R1 (Critical)** from `docs/reviews/REVIEW_IMPLEMENTATION_ALIGNMENT_v1.md`:
+- Upgraded `schemas/run_manifest.schema.json` to schema version `2.0`
+- Extended `elis/manifest.py:emit_run_manifest()` to populate required Architecture §3.1 fields
+- Kept backward-compatible `commit_sha` alias while adding required `repo_commit_sha`
+- Added `timestamp_utc` while retaining `started_at`/`finished_at`
+- Updated manifest-related tests to validate the new v2.0 contract
 
 ---
 
-## Acceptance Criteria Source
+## Files Changed
 
-**Authoritative AC source:** `docs/reviews/REVIEW_IMPLEMENTATION_ALIGNMENT_v1.md`, Remediation R2 (Gap 2 — High):
-
-> "In `.github/workflows/ci.yml`, change `elis validate || true` to `elis validate`. Additionally, implement a manifest schema validation step that explicitly validates generated `*_manifest.json` files against `schemas/run_manifest.schema.json` as a blocking gate."
-
-Note: `docs/ELIS_VPS_Implementation_Validation_Plan_v1.1.md` has no PE-VPS-01 entry (v1.0 had `PE-VPS-01: Secrets & Environment Management`, now superseded). The multi-agent plan (`ELIS_MultiAgent_Implementation_Plan_v1_1.md` line 1126) references "VPS Plan PE-VPS-01 enforces CI manifest gate" — this PE implements that referenced gate. The branch name in `CURRENT_PE.md` (`feature/pe-vps-01-manifest-validation-blocking`) confirms scope.
-
-## Acceptance Criteria Checklist
-
-- [x] `|| true` removed from `ci.yml` validate step
-- [x] `elis validate <schema> <json>` exits 1 on schema failure (CLI fix)
-- [x] `elis validate` (no-args / full mode) exits 1 when any appendix fails (legacy validator fix)
-- [x] Pytest test `test_validate_exits_nonzero_on_invalid_manifest` proves the gate is functional
-- [x] All existing tests pass (0 failures)
-- [x] Black: clean
-- [x] Ruff: clean
-- [x] Scope: 5 files (including HANDOFF.md), all within PE-VPS-01 scope
+- `elis/manifest.py`
+- `schemas/run_manifest.schema.json`
+- `tests/test_elis_cli.py`
+- `tests/test_manifest.py`
+- `tests/test_manifest_adversarial.py`
 
 ---
 
-## Architecture Invariants Addressed
+## Design Decisions
 
-- **Invariant 1**: "No AI output bypasses schema validation" — validation now blocks CI
-- **VPS PE-VPS-04**: "A run without valid manifest cannot PASS" — manifest validation is now a hard gate
+1. **Compatibility for commit SHA field:**
+   - Added required `repo_commit_sha`
+   - Retained `commit_sha` as optional/deprecated alias in schema and emitted payload for backward compatibility
+
+2. **Timestamp policy:**
+   - Added required `timestamp_utc`
+   - Continued emitting `started_at` and `finished_at` for temporal traceability
+
+3. **Nullable model fields with justification:**
+   - `model_family` and `model_identifier` are nullable
+   - Added `model_family_justification` and `model_identifier_justification`
+   - For deterministic stages default justifications are emitted
+
+4. **Adapter/package versioning:**
+   - `elis_package_version` resolved via `importlib.metadata.version("elis-slr-agent")` with fallback
+   - `adapter_versions` collected dynamically from registered adapters with safe fallbacks
 
 ---
 
-## Scope
+## Acceptance Criteria Checklist (R1)
 
-Files changed vs `origin/main`:
+Source: `docs/reviews/REVIEW_IMPLEMENTATION_ALIGNMENT_v1.md` lines 203–217.
 
-| File | Change |
-|---|---|
-| `.github/workflows/ci.yml` | Removed `\|\| true` from validate step |
-| `elis/cli.py` | Return 1 on schema failure in single-file validate mode |
-| `scripts/_archive/validate_json.py` | Exit 1 when any appendix fails full-mode validation |
-| `tests/test_elis_cli.py` | Added regression test for non-zero exit on invalid manifest |
-| `HANDOFF.md` | This handoff document |
+- [x] `schema_version` updated to `2.0`
+- [x] Added required fields: `model_family`, `model_identifier`, `model_version_snapshot`, `routing_policy_version`, `search_config_schema_version`, `elis_package_version`, `adapter_versions`
+- [x] `repo_commit_sha` added and populated; `commit_sha` alias retained
+- [x] `timestamp_utc` added and populated (kept `started_at`/`finished_at`)
+- [x] `emit_run_manifest()` populates all new required fields
+- [x] Manifest-related tests updated and passing
+- [x] Full repo quality gates passing
 
-Exact output of `git diff --name-status origin/main..HEAD` (post FAIL round 1):
+---
+
+## Validation Commands (verbatim output)
+
+### Working tree + scope
+
+```text
+git status -sb
+## feature/pe-vps-02-manifest-schema-extension...origin/feature/pe-vps-02-manifest-schema-extension
+
+
+git diff --name-status origin/main..HEAD
+M	elis/manifest.py
+M	schemas/run_manifest.schema.json
+M	tests/test_elis_cli.py
+M	tests/test_manifest.py
+M	tests/test_manifest_adversarial.py
+
+
+git diff --stat origin/main..HEAD
+ elis/manifest.py                   | 66 ++++++++++++++++++++++++++--
+ schemas/run_manifest.schema.json   | 88 ++++++++++++++++++++++++++++++++++++--
+ tests/test_elis_cli.py             | 87 ++++++++++++++++++-------------------
+ tests/test_manifest.py             | 23 +++++++---
+ tests/test_manifest_adversarial.py | 41 +++++++++++++-----
+ 5 files changed, 235 insertions(+), 70 deletions(-)
 ```
-M       .github/workflows/ci.yml
-M       HANDOFF.md
-A       REVIEW_PE_VPS_01.md
-M       elis/cli.py
-M       scripts/_archive/validate_json.py
-M       tests/test_elis_cli.py
+
+### Quality gates (full suite)
+
+```text
+python -m black --check .
+All done! ✨ 🍰 ✨
+118 files would be left unchanged.
+
+python -m ruff check .
+All checks passed!
+
+python -m pytest -q
+........................................................................ [ 12%]
+........................................................................ [ 25%]
+........................................................................ [ 38%]
+........................................................................ [ 50%]
+........................................................................ [ 63%]
+........................................................................ [ 76%]
+........................................................................ [ 89%]
+.............................................................            [100%]
+565 passed, 17 warnings in 19.46s
 ```
 
-Note: `REVIEW_PE_VPS_01.md` was added by CODEX (Validator) as the round-1 FAIL verdict artefact. It is not an implementer deliverable.
+### PE-specific tests
+
+```text
+python -m pytest tests/test_manifest.py tests/test_manifest_adversarial.py tests/test_elis_cli.py
+........................................................................ [ 67%]
+..................................                                       [100%]
+106 passed, 4 warnings in 9.80s
+```
+
+### PR evidence
+
+```text
+gh pr list --state open --base main
+289	WIP: feat(pe-vps-02): manifest schema v2.0 + manifest writer fields	feature/pe-vps-02-manifest-schema-extension	DRAFT	2026-03-06T15:21:03Z
+
+
+gh pr view 289
+title:	WIP: feat(pe-vps-02): manifest schema v2.0 + manifest writer fields
+state:	DRAFT
+author:	rochasamurai
+number:	289
+url:	https://github.com/rochasamurai/ELIS-SLR-Agent/pull/289
+additions:	235
+deletions:	70
+```
 
 ---
 
-## check_agent_scope.py Exit Code 1 — Pre-existing, PM-acknowledged
+## Notes
 
-`check_agent_scope.py` exits 1 and reports `.env` and `.claude/settings.local.json` as secret-pattern files. These files are permanent workspace fixtures that predate the VPS implementation series and are present on `main`. They were not introduced by this PE and contain no secret values in the tracked worktree.
-
-This condition is pre-existing and PM-acknowledged across all prior PEs (PE-OC-01 through PE-OC-21 and PM-CHORE-01). The warnings are informational: `.agentignore` correctly excludes these paths from agent context, and neither file is staged or committed. The CI `secrets-scope-check` job (which calls the same script) passes because the script's blocking condition is file-in-scope, not file-existence.
-
-Per AGENTS.md §2.9 checkpoint, this has been confirmed not to block the PE: no secret values were read, logged, or included in any output. PM has implicitly approved continuation across all prior PEs under identical conditions.
-
----
-
-## Validator Instructions
-
-1. Confirm `.github/workflows/ci.yml` — `elis validate` step has no `|| true`
-2. Confirm `elis/cli.py` line ~165 — returns `0 if is_valid else 1`
-3. Confirm `scripts/_archive/validate_json.py` — `main()` exits 1 on errors
-4. Run `pytest tests/test_elis_cli.py::test_validate_exits_nonzero_on_invalid_manifest -v` — must PASS
-5. Run full pytest suite — must be 0 failures
-6. Run `black --check .` and `ruff check .` — must be clean
-7. Confirm scope: 5 files changed vs `origin/main` (4 code/config files + HANDOFF.md)
+- `python scripts/check_agent_scope.py` reports pre-existing workspace files (`.env`, `.claude/settings.local.json`) and exits 1 in this environment. No secret-pattern files were opened during this PE.
+- Draft PR opened after first implementation commit as required: https://github.com/rochasamurai/ELIS-SLR-Agent/pull/289
