@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:elis:run-manifest:v1",
+  "$id": "urn:elis:run-manifest:v2",
   "title": "ELIS Run Manifest",
   "description": "Run-level sidecar manifest for ELIS pipeline stages.",
   "type": "object",
@@ -9,19 +9,27 @@
     "run_id",
     "stage",
     "source",
-    "commit_sha",
+    "repo_commit_sha",
     "config_hash",
     "started_at",
     "finished_at",
+    "timestamp_utc",
     "record_count",
     "input_paths",
     "output_path",
+    "model_family",
+    "model_identifier",
+    "model_version_snapshot",
+    "routing_policy_version",
+    "search_config_schema_version",
+    "elis_package_version",
+    "adapter_versions",
     "tool_versions"
   ],
   "properties": {
     "schema_version": {
       "type": "string",
-      "const": "1.0"
+      "const": "2.0"
     },
     "run_id": {
       "type": "string",
@@ -35,9 +43,14 @@
       "type": "string",
       "minLength": 1
     },
-    "commit_sha": {
+    "repo_commit_sha": {
       "type": "string",
       "minLength": 7
+    },
+    "commit_sha": {
+      "type": "string",
+      "minLength": 7,
+      "description": "Deprecated alias retained for backward compatibility."
     },
     "config_hash": {
       "type": "string",
@@ -48,6 +61,10 @@
       "format": "date-time"
     },
     "finished_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "timestamp_utc": {
       "type": "string",
       "format": "date-time"
     },
@@ -66,6 +83,43 @@
       "type": "string",
       "minLength": 1
     },
+    "model_family": {
+      "type": ["string", "null"]
+    },
+    "model_family_justification": {
+      "type": "string",
+      "minLength": 1
+    },
+    "model_identifier": {
+      "type": ["string", "null"]
+    },
+    "model_identifier_justification": {
+      "type": "string",
+      "minLength": 1
+    },
+    "model_version_snapshot": {
+      "type": ["string", "null"]
+    },
+    "routing_policy_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "search_config_schema_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "elis_package_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "adapter_versions": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
     "tool_versions": {
       "type": "object",
       "minProperties": 1,
@@ -74,5 +128,31 @@
       }
     }
   },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "model_family": {
+            "type": "null"
+          }
+        }
+      },
+      "then": {
+        "required": ["model_family_justification"]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "model_identifier": {
+            "type": "null"
+          }
+        }
+      },
+      "then": {
+        "required": ["model_identifier_justification"]
+      }
+    }
+  ],
   "additionalProperties": false
 }

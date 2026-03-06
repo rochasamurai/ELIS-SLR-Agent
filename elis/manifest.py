@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import hashlib
+import importlib
+import importlib.metadata
 import json
 import platform
 import subprocess
@@ -47,6 +49,37 @@ def short_commit_sha() -> str:
     return "unknown00"
 
 
+def _package_version() -> str:
+    """Return installed package version, with a safe fallback for local runs."""
+    try:
+        return importlib.metadata.version("elis-slr-agent")
+    except importlib.metadata.PackageNotFoundError:
+        return "0.0.0+unknown"
+
+
+def _collect_adapter_versions() -> dict[str, str]:
+    """Return adapter version mapping (source -> version string)."""
+    try:
+        from elis.sources import available_sources, get_adapter
+    except Exception:
+        return {"unknown": "unknown"}
+
+    versions: dict[str, str] = {}
+    for source in available_sources():
+        try:
+            adapter_cls = get_adapter(source)
+            module = importlib.import_module(adapter_cls.__module__)
+            version = (
+                getattr(module, "__version__", None)
+                or getattr(module, "ADAPTER_VERSION", None)
+                or "builtin"
+            )
+            versions[source] = str(version)
+        except Exception:
+            versions[source] = "unknown"
+    return versions or {"unknown": "unknown"}
+
+
 def sha256_json(payload: Mapping[str, Any]) -> str:
     """Hash a mapping with stable JSON serialisation."""
     encoded = json.dumps(
@@ -77,6 +110,14 @@ def emit_run_manifest(
     output_path: str,
     record_count: int,
     config_payload: Mapping[str, Any],
+    model_family: str | None = None,
+    model_family_justification: str = "No model used for this stage.",
+    model_identifier: str | None = None,
+    model_identifier_justification: str = "No model used for this stage.",
+    model_version_snapshot: str | None = None,
+    routing_policy_version: str = "unversioned",
+    search_config_schema_version: str = "unknown",
+    adapter_versions: Mapping[str, str] | None = None,
     run_id: str | None = None,
     started_at: str | None = None,
     finished_at: str | None = None,
@@ -87,18 +128,35 @@ def emit_run_manifest(
     target = (
         Path(manifest_path) if manifest_path else manifest_path_for_output(out_path)
     )
+
+    started = started_at or now_utc_iso()
+    finished = finished_at or now_utc_iso()
+    repo_sha = short_commit_sha()
+
     manifest = {
-        "schema_version": "1.0",
+        "schema_version": "2.0",
         "run_id": run_id or default_run_id(stage, source),
         "stage": stage,
         "source": source,
-        "commit_sha": short_commit_sha(),
+        "repo_commit_sha": repo_sha,
+        # Backward-compatible alias for older consumers.
+        "commit_sha": repo_sha,
         "config_hash": sha256_json(config_payload),
-        "started_at": started_at or now_utc_iso(),
-        "finished_at": finished_at or now_utc_iso(),
+        "started_at": started,
+        "finished_at": finished,
+        "timestamp_utc": finished,
         "record_count": int(record_count),
         "input_paths": list(input_paths),
         "output_path": str(out_path),
+        "model_family": model_family,
+        "model_family_justification": model_family_justification,
+        "model_identifier": model_identifier,
+        "model_identifier_justification": model_identifier_justification,
+        "model_version_snapshot": model_version_snapshot,
+        "routing_policy_version": routing_policy_version,
+        "search_config_schema_version": search_config_schema_version,
+        "elis_package_version": _package_version(),
+        "adapter_versions": dict(adapter_versions or _collect_adapter_versions()),
         "tool_versions": {"python": platform.python_version()},
     }
     return write_manifest(manifest, target)

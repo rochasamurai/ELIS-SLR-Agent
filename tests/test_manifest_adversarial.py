@@ -29,17 +29,28 @@ def _load_schema(name: str) -> dict:
 
 def _valid_manifest() -> dict:
     return {
-        "schema_version": "1.0",
+        "schema_version": "2.0",
         "run_id": "20260217_120000_scopus",
         "stage": "harvest",
         "source": "scopus",
+        "repo_commit_sha": "c81328e",
         "commit_sha": "c81328e",
         "config_hash": "sha256:abc123",
         "started_at": "2026-02-17T12:00:00Z",
         "finished_at": "2026-02-17T12:01:00Z",
+        "timestamp_utc": "2026-02-17T12:01:00Z",
         "record_count": 10,
         "input_paths": ["config/elis_search_queries.yml"],
         "output_path": "runs/20260217_120000_scopus/harvest/scopus.json",
+        "model_family": None,
+        "model_family_justification": "No model used for harvest stage.",
+        "model_identifier": None,
+        "model_identifier_justification": "No model used for harvest stage.",
+        "model_version_snapshot": None,
+        "routing_policy_version": "v1",
+        "search_config_schema_version": "v1",
+        "elis_package_version": "2.0.0",
+        "adapter_versions": {"scopus": "builtin"},
         "tool_versions": {"python": "3.11.9"},
     }
 
@@ -78,13 +89,21 @@ class TestRunManifestSchemaRejections:
             "run_id",
             "stage",
             "source",
-            "commit_sha",
+            "repo_commit_sha",
             "config_hash",
             "started_at",
             "finished_at",
+            "timestamp_utc",
             "record_count",
             "input_paths",
             "output_path",
+            "model_family",
+            "model_identifier",
+            "model_version_snapshot",
+            "routing_policy_version",
+            "search_config_schema_version",
+            "elis_package_version",
+            "adapter_versions",
             "tool_versions",
         ],
     )
@@ -102,7 +121,7 @@ class TestRunManifestSchemaRejections:
 
     def test_wrong_schema_version_rejected(self, schema) -> None:
         manifest = _valid_manifest()
-        manifest["schema_version"] = "2.0"
+        manifest["schema_version"] = "1.0"
         with pytest.raises(jsonschema.ValidationError):
             jsonschema.validate(instance=manifest, schema=schema)
 
@@ -134,9 +153,9 @@ class TestRunManifestSchemaRejections:
         with pytest.raises(jsonschema.ValidationError):
             jsonschema.validate(instance=manifest, schema=schema)
 
-    def test_short_commit_sha_rejected(self, schema) -> None:
+    def test_short_repo_commit_sha_rejected(self, schema) -> None:
         manifest = _valid_manifest()
-        manifest["commit_sha"] = "abc"  # less than 7 chars
+        manifest["repo_commit_sha"] = "abc"  # less than 7 chars
         with pytest.raises(jsonschema.ValidationError):
             jsonschema.validate(instance=manifest, schema=schema)
 
@@ -158,15 +177,15 @@ class TestRunManifestSchemaRejections:
         with pytest.raises(jsonschema.ValidationError):
             jsonschema.validate(instance=manifest, schema=schema)
 
-    def test_empty_tool_versions_rejected(self, schema) -> None:
+    def test_empty_adapter_versions_rejected(self, schema) -> None:
         manifest = _valid_manifest()
-        manifest["tool_versions"] = {}
+        manifest["adapter_versions"] = {}
         with pytest.raises(jsonschema.ValidationError):
             jsonschema.validate(instance=manifest, schema=schema)
 
-    def test_non_string_tool_version_rejected(self, schema) -> None:
+    def test_non_string_adapter_version_rejected(self, schema) -> None:
         manifest = _valid_manifest()
-        manifest["tool_versions"] = {"python": 311}
+        manifest["adapter_versions"] = {"scopus": 311}
         with pytest.raises(jsonschema.ValidationError):
             jsonschema.validate(instance=manifest, schema=schema)
 
@@ -215,9 +234,9 @@ class TestRunManifestSchemaAcceptance:
         manifest["input_paths"] = []
         jsonschema.validate(instance=manifest, schema=schema)
 
-    def test_full_commit_sha_accepted(self, schema) -> None:
+    def test_full_repo_commit_sha_accepted(self, schema) -> None:
         manifest = _valid_manifest()
-        manifest["commit_sha"] = "c81328e4f5a9b2d3e6f7a8b9c0d1e2f3a4b5c6d7"
+        manifest["repo_commit_sha"] = "c81328e4f5a9b2d3e6f7a8b9c0d1e2f3a4b5c6d7"
         jsonschema.validate(instance=manifest, schema=schema)
 
 

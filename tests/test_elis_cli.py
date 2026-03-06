@@ -19,6 +19,36 @@ def _assert_run_manifest(path: Path) -> None:
     jsonschema.validate(instance=payload, schema=schema)
 
 
+def _minimal_valid_run_manifest(
+    output_path: str, input_paths: list[str]
+) -> dict[str, object]:
+    return {
+        "schema_version": "2.0",
+        "run_id": "r1",
+        "stage": "harvest",
+        "source": "openalex",
+        "repo_commit_sha": "abc1234",
+        "commit_sha": "abc1234",
+        "config_hash": "sha256:abc",
+        "started_at": "2026-02-19T00:00:00Z",
+        "finished_at": "2026-02-19T00:00:01Z",
+        "timestamp_utc": "2026-02-19T00:00:01Z",
+        "record_count": 1,
+        "input_paths": input_paths,
+        "output_path": output_path,
+        "model_family": None,
+        "model_family_justification": "No model used for harvest stage.",
+        "model_identifier": None,
+        "model_identifier_justification": "No model used for harvest stage.",
+        "model_version_snapshot": None,
+        "routing_policy_version": "v1",
+        "search_config_schema_version": "v1",
+        "elis_package_version": "2.0.0",
+        "adapter_versions": {"openalex": "builtin"},
+        "tool_versions": {"python": "3.14.0"},
+    }
+
+
 def test_validate_without_paths_calls_legacy_main() -> None:
     """Wrapper mode should delegate to scripts._archive.validate_json.main."""
     with (
@@ -125,24 +155,13 @@ def test_merge_reads_inputs_from_manifest(tmp_path: Path) -> None:
     in_a.write_text("[]", encoding="utf-8")
     manifest.write_text(
         json.dumps(
-            {
-                "schema_version": "1.0",
-                "run_id": "r1",
-                "stage": "harvest",
-                "source": "openalex",
-                "commit_sha": "abc1234",
-                "config_hash": "sha256:abc",
-                "started_at": "2026-02-17T00:00:00Z",
-                "finished_at": "2026-02-17T00:00:01Z",
-                "record_count": 1,
-                "input_paths": [str(in_a)],
-                "output_path": str(in_a),
-                "tool_versions": {"python": "3.11.0"},
-            }
+            _minimal_valid_run_manifest(
+                output_path=str(in_a),
+                input_paths=[str(in_a)],
+            )
         ),
         encoding="utf-8",
     )
-
     with patch("elis.pipeline.merge.run_merge") as run_merge:
         code = cli.main(
             [
@@ -300,24 +319,13 @@ def test_validate_accepts_object_root_schema(tmp_path: Path) -> None:
     manifest_path = tmp_path / "openalex_manifest.json"
     manifest_path.write_text(
         json.dumps(
-            {
-                "schema_version": "1.0",
-                "run_id": "r1",
-                "stage": "harvest",
-                "source": "openalex",
-                "commit_sha": "abc1234",
-                "config_hash": "sha256:abc",
-                "started_at": "2026-02-19T00:00:00Z",
-                "finished_at": "2026-02-19T00:00:01Z",
-                "record_count": 1,
-                "input_paths": ["config/search.yml"],
-                "output_path": "runs/ft/harvest/openalex.json",
-                "tool_versions": {"python": "3.14.0"},
-            }
+            _minimal_valid_run_manifest(
+                output_path="runs/ft/harvest/openalex.json",
+                input_paths=["config/search.yml"],
+            )
         ),
         encoding="utf-8",
     )
-
     code = cli.main(["validate", str(schema_path), str(manifest_path)])
     assert code == 0
 
@@ -351,24 +359,13 @@ def test_validate_manifest_input_does_not_emit_double_manifest(tmp_path: Path) -
     manifest_path = tmp_path / "openalex_manifest.json"
     manifest_path.write_text(
         json.dumps(
-            {
-                "schema_version": "1.0",
-                "run_id": "r1",
-                "stage": "harvest",
-                "source": "openalex",
-                "commit_sha": "abc1234",
-                "config_hash": "sha256:abc",
-                "started_at": "2026-02-19T00:00:00Z",
-                "finished_at": "2026-02-19T00:00:01Z",
-                "record_count": 1,
-                "input_paths": ["config/search.yml"],
-                "output_path": "runs/ft/harvest/openalex.json",
-                "tool_versions": {"python": "3.14.0"},
-            }
+            _minimal_valid_run_manifest(
+                output_path="runs/ft/harvest/openalex.json",
+                input_paths=["config/search.yml"],
+            )
         ),
         encoding="utf-8",
     )
-
     code = cli.main(["validate", str(schema_path), str(manifest_path)])
     assert code == 0
     assert not (tmp_path / "openalex_manifest_manifest.json").exists()

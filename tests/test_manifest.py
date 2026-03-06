@@ -12,17 +12,28 @@ from elis.manifest import write_manifest
 
 def _sample_manifest() -> dict[str, object]:
     return {
-        "schema_version": "1.0",
+        "schema_version": "2.0",
         "run_id": "20260217_120000_scopus",
         "stage": "harvest",
         "source": "scopus",
+        "repo_commit_sha": "c81328e",
         "commit_sha": "c81328e",
         "config_hash": "sha256:abc123",
         "started_at": "2026-02-17T12:00:00Z",
         "finished_at": "2026-02-17T12:01:00Z",
+        "timestamp_utc": "2026-02-17T12:01:00Z",
         "record_count": 10,
         "input_paths": ["config/elis_search_queries.yml"],
         "output_path": "runs/20260217_120000_scopus/harvest/scopus.json",
+        "model_family": None,
+        "model_family_justification": "No model used for harvest stage.",
+        "model_identifier": None,
+        "model_identifier_justification": "No model used for harvest stage.",
+        "model_version_snapshot": None,
+        "routing_policy_version": "v1",
+        "search_config_schema_version": "v1",
+        "elis_package_version": "2.0.0",
+        "adapter_versions": {"scopus": "builtin"},
         "tool_versions": {"python": "3.11.9", "requests": "2.31.0"},
     }
 
@@ -150,17 +161,17 @@ def test_schema_rejects_additional_properties() -> None:
         )
 
 
-def test_schema_rejects_short_commit_sha() -> None:
-    """commit_sha must have minLength 7; a 6-char value must be rejected."""
+def test_schema_rejects_short_repo_commit_sha() -> None:
+    """repo_commit_sha must have minLength 7; a 6-char value must be rejected."""
     manifest = _sample_manifest()
-    manifest["commit_sha"] = "abc123"  # only 6 chars
+    manifest["repo_commit_sha"] = "abc123"  # only 6 chars
     try:
         jsonschema.validate(instance=manifest, schema=_schema())
     except jsonschema.ValidationError:
         pass
     else:
         raise AssertionError(
-            "Expected ValidationError for commit_sha shorter than 7 chars."
+            "Expected ValidationError for repo_commit_sha shorter than 7 chars."
         )
 
 
@@ -173,7 +184,7 @@ def test_manifest_path_for_output_stem_pattern(tmp_path: Path) -> None:
 
 
 def test_manifest_path_for_output_no_extension(tmp_path: Path) -> None:
-    """Output path with no extension → <name>_manifest.json."""
+    """Output path with no extension -> <name>_manifest.json."""
     from elis.manifest import manifest_path_for_output
 
     result = manifest_path_for_output(tmp_path / "report")
