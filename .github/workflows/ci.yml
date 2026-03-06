@@ -87,10 +87,10 @@ jobs:
           pip install "jsonschema[format-nongpl]==4.23.0" || true
           pip install -e . --no-deps
 
-      - name: Validate artefacts (non-blocking)
+      - name: Validate artefacts
         run: |
           set -e
-          elis validate || true
+          elis validate
 
   secrets-scope-check:
     name: secrets-scope-check

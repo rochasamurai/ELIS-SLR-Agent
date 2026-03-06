@@ -217,9 +217,9 @@ def main():
     print(f"  - Latest: {latest_report}")
     print(f"  - Timestamped: {timestamped_report}")
 
-    # Exit with appropriate code (but don't fail CI)
-    # We treat validation as informational, not blocking
-    sys.exit(0)
+    # Exit non-zero if any appendix failed validation (PE-VPS-01: blocking gate).
+    has_errors = any(not valid for valid, _, _ in results.values())
+    sys.exit(1 if has_errors else 0)
 
 
 if __name__ == "__main__":

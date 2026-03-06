@@ -322,6 +322,25 @@ def test_validate_accepts_object_root_schema(tmp_path: Path) -> None:
     assert code == 0
 
 
+def test_validate_exits_nonzero_on_invalid_manifest(tmp_path: Path) -> None:
+    """validate <schema> <json> must exit 1 when manifest fails schema validation.
+
+    Regression guard for PE-VPS-01: removing || true from CI is only meaningful
+    if the CLI itself exits non-zero on schema failure.
+    """
+    schema_path = tmp_path / "run_manifest.schema.json"
+    schema_path.write_text(
+        Path("schemas/run_manifest.schema.json").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+    # Manifest missing all required fields — guaranteed schema failure.
+    invalid_manifest = tmp_path / "bad_manifest.json"
+    invalid_manifest.write_text(json.dumps({"incomplete": True}), encoding="utf-8")
+
+    code = cli.main(["validate", str(schema_path), str(invalid_manifest)])
+    assert code == 1, f"Expected exit code 1 for invalid manifest, got {code}"
+
+
 def test_validate_manifest_input_does_not_emit_double_manifest(tmp_path: Path) -> None:
     """validate on *_manifest.json should not create *_manifest_manifest.json."""
     schema_path = tmp_path / "run_manifest.schema.json"
