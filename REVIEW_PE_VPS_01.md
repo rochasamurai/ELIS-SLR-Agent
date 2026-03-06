@@ -119,3 +119,91 @@ WARNING: The following secret-pattern files exist in the worktree:
   .env
 Agents must not read these files. Verify IDE context excludes them.
 ```
+
+---
+
+## Re-validation Round 2 — 2026-03-06
+
+### Verdict
+PASS
+
+### Gate results
+black: PASS
+ruff: PASS
+pytest: 557 passed, 0 failed (17 warnings; pre-existing `datetime.utcnow()` deprecations)
+PE-specific tests: PASS (new test present and covered by full-suite pass)
+
+### Scope
+
+```text
+git diff --name-status origin/main..HEAD
+
+M	.github/workflows/ci.yml
+M	HANDOFF.md
+A	REVIEW_PE_VPS_01.md
+M	elis/cli.py
+M	scripts/_archive/validate_json.py
+M	tests/test_elis_cli.py
+```
+
+Scope matches HANDOFF declaration for implementer-owned files; validator-owned `REVIEW_PE_VPS_01.md` remains expected.
+
+### Required fixes
+None.
+
+### Evidence
+
+```text
+rg -n "R2|elis validate \|\| true|blocking gate" docs/reviews/REVIEW_IMPLEMENTATION_ALIGNMENT_v1.md
+83:### Gap 2 — Manifest Validation Non-Blocking in CI
+219:### R2 — Make Manifest Validation Blocking (Gap 2) — High
+224:elis validate || true
+233:Additionally, implement a manifest schema validation step ... as a blocking gate.
+```
+
+```text
+rg -n "Acceptance Criteria Source|Scope: 5 files|REVIEW_PE_VPS_01" HANDOFF.md
+72:## Acceptance Criteria Source
+89:- [x] Scope: 5 files (including HANDOFF.md), all within PE-VPS-01 scope
+116:A       REVIEW_PE_VPS_01.md
+```
+
+```text
+rg -n "Validate artefacts|elis validate|\|\| true" .github/workflows/ci.yml
+90:      - name: Validate artefacts
+93:          elis validate
+```
+
+```text
+rg -n "return 0 if is_valid else 1" elis/cli.py
+165:        return 0 if is_valid else 1
+
+rg -n "has_errors = any\(|sys.exit\(1 if has_errors else 0\)" scripts/_archive/validate_json.py
+221:    has_errors = any(not valid for valid, _, _ in results.values())
+222:    sys.exit(1 if has_errors else 0)
+
+rg -n "test_validate_exits_nonzero_on_invalid_manifest" tests/test_elis_cli.py
+325:def test_validate_exits_nonzero_on_invalid_manifest(tmp_path: Path) -> None:
+```
+
+```text
+python -m black --check .
+All done! ✨ 🍰 ✨
+118 files would be left unchanged.
+
+python -m ruff check .
+All checks passed!
+
+python -m pytest -q
+557 passed, 17 warnings in 40.29s
+```
+
+```text
+python scripts/check_agent_scope.py
+WARNING: The following secret-pattern files exist in the worktree:
+  .claude\settings.local.json
+  .env
+Agents must not read these files. Verify IDE context excludes them.
+
+Assessment: pre-existing workspace condition; no secret-pattern files were opened by validator and no secret values were emitted.
+```
