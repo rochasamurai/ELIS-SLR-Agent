@@ -1,7 +1,7 @@
-# HANDOFF — PE-VPS-02: Manifest Schema Extension (R1)
+# HANDOFF - PE-VPS-00: Hostinger Baseline Provisioning
 
-**PE:** PE-VPS-02  
-**Branch:** feature/pe-vps-02-manifest-schema-extension  
+**PE:** PE-VPS-00  
+**Branch:** feature/pe-vps-00-hostinger-baseline  
 **Implementer:** CODEX (prog-impl-codex)  
 **Validator:** Claude Code (prog-val-claude)  
 **Date:** 2026-03-06
@@ -10,87 +10,107 @@
 
 ## Summary
 
-Implemented Remediation **R1 (Critical)** from `docs/reviews/REVIEW_IMPLEMENTATION_ALIGNMENT_v1.md`:
-- Upgraded `schemas/run_manifest.schema.json` to schema version `2.0`
-- Extended `elis/manifest.py:emit_run_manifest()` to populate required Architecture §3.1 fields
-- Kept backward-compatible `commit_sha` alias while adding required `repo_commit_sha`
-- Added `timestamp_utc` while retaining `started_at`/`finished_at`
-- Updated manifest-related tests to validate the new v2.0 contract
+Implemented repository-side PE-VPS-00 baseline package for Hostinger Ubuntu 24 LTS:
+- Added provisioning script for hardened host baseline
+- Added verification script mapping directly to PE-VPS-00 acceptance criteria
+- Added active runbook/evidence artifact for validator review
+- Opened draft PR and posted milestone progress comments per AGENTS
+
+Operational host execution is required to produce final runtime evidence for AC 1-5.
 
 ---
 
 ## Files Changed
 
-- `elis/manifest.py`
-- `schemas/run_manifest.schema.json`
-- `tests/test_elis_cli.py`
-- `tests/test_manifest.py`
-- `tests/test_manifest_adversarial.py`
+- `docs/_active/VPS_BASELINE.md`
+- `scripts/vps/provision_hostinger_baseline.sh`
+- `scripts/vps/verify_hostinger_baseline.sh`
+- `HANDOFF.md`
 
 ---
 
 ## Design Decisions
 
-1. **Compatibility for commit SHA field:**
-   - Added required `repo_commit_sha`
-   - Retained `commit_sha` as optional/deprecated alias in schema and emitted payload for backward compatibility
-
-2. **Timestamp policy:**
-   - Added required `timestamp_utc`
-   - Continued emitting `started_at` and `finished_at` for temporal traceability
-
-3. **Nullable model fields with justification:**
-   - `model_family` and `model_identifier` are nullable
-   - Added `model_family_justification` and `model_identifier_justification`
-   - For deterministic stages default justifications are emitted
-
-4. **Adapter/package versioning:**
-   - `elis_package_version` resolved via `importlib.metadata.version("elis-slr-agent")` with fallback
-   - `adapter_versions` collected dynamically from registered adapters with safe fallbacks
+1. Added executable baseline scripts so PE-VPS-00 is reproducible and idempotent on any Hostinger Ubuntu 24 host.
+2. Kept timezone default as `Europe/London` to align with VPS Plan v1.1 global timezone policy.
+3. Explicitly blocked public OpenClaw exposure by documenting and checking that port `18789` is not internet-bound.
+4. Kept all secret material out of repository artifacts; runbook uses command placeholders for host evidence capture.
 
 ---
 
-## Acceptance Criteria Checklist (R1)
+## Acceptance Criteria
 
-Source: `docs/reviews/REVIEW_IMPLEMENTATION_ALIGNMENT_v1.md` lines 203–217.
+Source: `ELIS_MultiAgent_Implementation_Plan_v1_2.md` (PE-VPS-00 section).
 
-- [x] `schema_version` updated to `2.0`
-- [x] Added required fields: `model_family`, `model_identifier`, `model_version_snapshot`, `routing_policy_version`, `search_config_schema_version`, `elis_package_version`, `adapter_versions`
-- [x] `repo_commit_sha` added and populated; `commit_sha` alias retained
-- [x] `timestamp_utc` added and populated (kept `started_at`/`finished_at`)
-- [x] `emit_run_manifest()` populates all new required fields
-- [x] Manifest-related tests updated and passing
-- [x] Full repo quality gates passing
+- [ ] AC1 - Host reachable via SSH key auth only; password auth disabled.  
+  Status: Pending host execution/verification (commands provided in `docs/_active/VPS_BASELINE.md` and `scripts/vps/verify_hostinger_baseline.sh`).
+- [ ] AC2 - UFW policy active with least-privilege ingress (22/80/443 only where required).  
+  Status: Pending host execution/verification.
+- [ ] AC3 - fail2ban jail active for SSH.  
+  Status: Pending host execution/verification.
+- [ ] AC4 - Docker + Compose installed and functional (`docker info`, `docker compose version`).  
+  Status: Pending host execution/verification.
+- [x] AC5 - Baseline verification artifact committed (`docs/_active/VPS_BASELINE.md`).
+
+Note: `REVIEW_PE_VPS_00.md` is validator-owned and intentionally not authored by Implementer.
 
 ---
 
-## Validation Commands (verbatim output)
+## Validation Commands
 
-### Working tree + scope
+### Working tree state
 
 ```text
 git status -sb
-## feature/pe-vps-02-manifest-schema-extension...origin/feature/pe-vps-02-manifest-schema-extension
+## feature/pe-vps-00-hostinger-baseline...origin/feature/pe-vps-00-hostinger-baseline
 
 
+git diff --name-status
+
+
+git diff --stat
+
+```
+
+### Repository state
+
+```text
+git fetch --all --prune
+
+
+git branch --show-current
+feature/pe-vps-00-hostinger-baseline
+
+
+git rev-parse HEAD
+7b847520c42860ed582035429829493d6016b0db
+
+
+git log -5 --oneline --decorate
+7b84752 (HEAD -> feature/pe-vps-00-hostinger-baseline, origin/feature/pe-vps-00-hostinger-baseline) feat(pe-vps-00): add Hostinger baseline provisioning artifacts
+5ed1a88 (origin/main, origin/HEAD, main) chore(plan): release v1.2 add PE-VPS-00 baseline
+cca746e Merge pull request #289 from rochasamurai/feature/pe-vps-02-manifest-schema-extension
+c290411 (feature/pe-vps-02-manifest-schema-extension) review(vps): PE-VPS-02 Validator PASS — manifest schema v2.0
+ec2749b docs(vps): add HANDOFF for PE-VPS-02 manifest schema extension
+```
+
+### Scope evidence vs main
+
+```text
 git diff --name-status origin/main..HEAD
-M	elis/manifest.py
-M	schemas/run_manifest.schema.json
-M	tests/test_elis_cli.py
-M	tests/test_manifest.py
-M	tests/test_manifest_adversarial.py
+A	docs/_active/VPS_BASELINE.md
+A	scripts/vps/provision_hostinger_baseline.sh
+A	scripts/vps/verify_hostinger_baseline.sh
 
 
 git diff --stat origin/main..HEAD
- elis/manifest.py                   | 66 ++++++++++++++++++++++++++--
- schemas/run_manifest.schema.json   | 88 ++++++++++++++++++++++++++++++++++++--
- tests/test_elis_cli.py             | 87 ++++++++++++++++++-------------------
- tests/test_manifest.py             | 23 +++++++---
- tests/test_manifest_adversarial.py | 41 +++++++++++++-----
- 5 files changed, 235 insertions(+), 70 deletions(-)
+ docs/_active/VPS_BASELINE.md                | 101 ++++++++++++++++++++++++++++
+ scripts/vps/provision_hostinger_baseline.sh | 100 +++++++++++++++++++++++++++
+ scripts/vps/verify_hostinger_baseline.sh    |  43 ++++++++++++
+ 3 files changed, 244 insertions(+)
 ```
 
-### Quality gates (full suite)
+### Quality gates
 
 ```text
 python -m black --check .
@@ -109,38 +129,45 @@ python -m pytest -q
 ........................................................................ [ 76%]
 ........................................................................ [ 89%]
 .............................................................            [100%]
-565 passed, 17 warnings in 19.46s
+565 passed, 17 warnings in 27.95s
 ```
 
-### PE-specific tests
+### Agent-scope gate
 
 ```text
-python -m pytest tests/test_manifest.py tests/test_manifest_adversarial.py tests/test_elis_cli.py
-........................................................................ [ 67%]
-..................................                                       [100%]
-106 passed, 4 warnings in 9.80s
+python scripts/check_agent_scope.py
+Agent scope clean — no secret-pattern files detected in worktree.
+```
+
+### PE-specific command checks
+
+```text
+bash -n scripts/vps/provision_hostinger_baseline.sh && bash -n scripts/vps/verify_hostinger_baseline.sh
+Access is denied.
+Error code: Bash/Service/CreateInstance/E_ACCESSDENIED
 ```
 
 ### PR evidence
 
 ```text
 gh pr list --state open --base main
-289	WIP: feat(pe-vps-02): manifest schema v2.0 + manifest writer fields	feature/pe-vps-02-manifest-schema-extension	DRAFT	2026-03-06T15:21:03Z
+290	WIP: feat(pe-vps-00): Hostinger baseline provisioning	feature/pe-vps-00-hostinger-baseline	DRAFT	2026-03-06T16:08:30Z
 
 
-gh pr view 289
-title:	WIP: feat(pe-vps-02): manifest schema v2.0 + manifest writer fields
+gh pr view 290
+title:	WIP: feat(pe-vps-00): Hostinger baseline provisioning
 state:	DRAFT
 author:	rochasamurai
-number:	289
-url:	https://github.com/rochasamurai/ELIS-SLR-Agent/pull/289
-additions:	235
-deletions:	70
+number:	290
+url:	https://github.com/rochasamurai/ELIS-SLR-Agent/pull/290
+additions:	244
+deletions:	0
 ```
 
 ---
 
-## Notes
+## Next
 
-- `python scripts/check_agent_scope.py` reports pre-existing workspace files (`.env`, `.claude/settings.local.json`) and exits 1 in this environment. No secret-pattern files were opened during this PE.
-- Draft PR opened after first implementation commit as required: https://github.com/rochasamurai/ELIS-SLR-Agent/pull/289
+1. Execute provisioning/verification commands on the actual Hostinger VPS.
+2. Paste host command outputs into `docs/_active/VPS_BASELINE.md` evidence blocks.
+3. Validator runs AC checks and issues `REVIEW_PE_VPS_00.md` verdict.
