@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# PE-VPS-00 verification script for Hostinger baseline controls.
+# PE-VPS-00 verification script for MiniServer baseline controls.
 
 DEPLOY_USER="${1:-elis}"
 FAIL=0
@@ -33,11 +33,12 @@ check "fail2ban sshd jail active" "fail2ban-client status sshd | grep -E 'Status
 check "Docker engine available" "sudo -u ${DEPLOY_USER} -H docker info >/dev/null"
 check "Docker Compose available" "sudo -u ${DEPLOY_USER} -H docker compose version"
 check "OpenClaw port not public" "! ss -lntp | grep -E ':(18789)\s' | grep -E '0\.0\.0\.0|\[::\]'"
-check "ELIS directory layout present" "test -d /opt/elis/config && test -d /opt/elis/secrets && test -d /opt/elis/data && test -d /opt/elis/logs"
+check "ELIS directory layout present" "test -d /opt/elis/config && test -d /opt/elis/secrets && test -d /opt/elis/data && test -d /opt/elis/logs && test -d /opt/elis/repo"
+check "ELIS CLI available" "sudo -u ${DEPLOY_USER} -H elis --help >/dev/null"
 
 if [[ "${FAIL}" -ne 0 ]]; then
-  echo "PE-VPS-00 baseline verification FAILED"
+  echo "PE-VPS-00 MiniServer baseline verification FAILED"
   exit 1
 fi
 
-echo "PE-VPS-00 baseline verification PASSED"
+echo "PE-VPS-00 MiniServer baseline verification PASSED"

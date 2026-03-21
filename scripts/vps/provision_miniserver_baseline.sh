@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# PE-VPS-00 baseline provisioning for Hostinger Ubuntu 24 LTS hosts.
+# PE-VPS-00 baseline provisioning for the ELIS MiniServer host.
 # This script hardens SSH, enables UFW/fail2ban, installs Docker/Compose,
 # and prepares /opt/elis directory layout.
 
 if [[ "${EUID}" -ne 0 ]]; then
-  echo "Run as root: sudo bash scripts/vps/provision_hostinger_baseline.sh <deploy_user> <ssh_pubkey_file>"
+  echo "Run as root: sudo bash scripts/vps/provision_miniserver_baseline.sh <deploy_user> <ssh_pubkey_file>"
   exit 1
 fi
 
@@ -93,8 +93,9 @@ install -d -m 750 -o "${DEPLOY_USER}" -g "${DEPLOY_USER}" /opt/elis/config
 install -d -m 700 -o "${DEPLOY_USER}" -g "${DEPLOY_USER}" /opt/elis/secrets
 install -d -m 750 -o "${DEPLOY_USER}" -g "${DEPLOY_USER}" /opt/elis/data
 install -d -m 750 -o "${DEPLOY_USER}" -g "${DEPLOY_USER}" /opt/elis/logs
+install -d -m 750 -o "${DEPLOY_USER}" -g "${DEPLOY_USER}" /opt/elis/repo
 
 echo
-echo "Baseline provisioning complete."
-echo "Next step: run scripts/vps/verify_hostinger_baseline.sh ${DEPLOY_USER}"
+echo "MiniServer baseline provisioning complete."
+echo "Next step: run scripts/vps/verify_miniserver_baseline.sh ${DEPLOY_USER}"
 echo "Note: keep OpenClaw gateway bound to localhost/Tailscale only; do not open port 18789 publicly."
