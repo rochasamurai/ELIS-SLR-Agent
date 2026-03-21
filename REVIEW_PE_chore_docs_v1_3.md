@@ -165,3 +165,87 @@ NO — the reference issue is resolved, but the PR still needs either scope clea
 ### Next
 
 Implementer / PM → either remove the unrelated branch changes from this PR, or formally widen the chore scope in `HANDOFF.md` and request re-validation on the updated scope.
+
+---
+
+## Final Re-validation — 2026-03-21
+
+### Evidence
+
+```text
+Updated branch tip:
+8373cf6 (HEAD -> chore/docs-plan-v1-3-architecture-v1-5, origin/chore/docs-plan-v1-3-architecture-v1-5) docs(handoff): widen scope declaration to match full branch diff
+
+Current scope gate:
+M	.gitignore
+A	ELIS_MultiAgent_Implementation_Plan_v1_3.md
+A	ELIS_SLR_AI_Platform_Conceptual_Architecture_v1_5.md
+M	HANDOFF.md
+A	REVIEW_PE_chore_docs_v1_3.md
+A	presentations/EISL_OneSlide_Pitch.html
+A	presentations/ELIS_MultiAI_Agent_Server_Architecture_Presentation.html
+
+HANDOFF scope declaration:
+- ELIS_MultiAgent_Implementation_Plan_v1_3.md
+- ELIS_SLR_AI_Platform_Conceptual_Architecture_v1_5.md
+- presentations/EISL_OneSlide_Pitch.html
+- presentations/ELIS_MultiAI_Agent_Server_Architecture_Presentation.html
+- .gitignore
+- HANDOFF.md
+
+Reference check:
+ELIS_MultiAgent_Implementation_Plan_v1_3.md:8:> **Governing Architecture:** `ELIS_SLR_AI_Platform_Conceptual_Architecture_v1_5.md`
+
+check_agent_scope.py:
+Agent scope clean — no secret-pattern files detected in worktree.
+
+black --check .:
+All done! 118 files would be left unchanged.
+
+ruff check .:
+All checks passed!
+
+pytest -q:
+565 passed, 17 warnings in 14.56s
+```
+
+### Verdict
+
+PASS
+
+### Gate results
+
+```text
+black --check .: PASS
+ruff check .: PASS
+pytest -q: PASS — 565 passed, 0 failed, 17 pre-existing warnings
+PE-specific checks: reference resolution PASS; scope-match check PASS; secret-scope check PASS
+```
+
+### Scope
+
+```text
+git diff --name-status origin/main..HEAD
+
+M	.gitignore
+A	ELIS_MultiAgent_Implementation_Plan_v1_3.md
+A	ELIS_SLR_AI_Platform_Conceptual_Architecture_v1_5.md
+M	HANDOFF.md
+A	REVIEW_PE_chore_docs_v1_3.md
+A	presentations/EISL_OneSlide_Pitch.html
+A	presentations/ELIS_MultiAI_Agent_Server_Architecture_Presentation.html
+```
+
+Current branch scope matches the revised `HANDOFF.md`, and the plan's governing-architecture reference resolves correctly.
+
+### Required fixes
+
+- None.
+
+### Ready to merge
+
+YES — validator blocking findings are closed and the current branch passes the documented checks.
+
+### Next
+
+PM / merge automation → proceed with Gate 2 handling for PR #291.
