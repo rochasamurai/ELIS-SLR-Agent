@@ -88,12 +88,17 @@ systemctl enable --now fail2ban
 echo "[8/9] Enabling unattended security upgrades..."
 dpkg-reconfigure -f noninteractive unattended-upgrades
 
-echo "[9/9] Preparing ELIS directories under /opt/elis..."
+echo "[9/10] Preparing ELIS directories under /opt/elis..."
 install -d -m 750 -o "${DEPLOY_USER}" -g "${DEPLOY_USER}" /opt/elis/config
 install -d -m 700 -o "${DEPLOY_USER}" -g "${DEPLOY_USER}" /opt/elis/secrets
 install -d -m 750 -o "${DEPLOY_USER}" -g "${DEPLOY_USER}" /opt/elis/data
 install -d -m 750 -o "${DEPLOY_USER}" -g "${DEPLOY_USER}" /opt/elis/logs
 install -d -m 750 -o "${DEPLOY_USER}" -g "${DEPLOY_USER}" /opt/elis/repo
+
+echo "[10/10] Fast-forwarding /opt/elis/repo when a git checkout already exists..."
+if [[ -d /opt/elis/repo/.git ]]; then
+  git -C /opt/elis/repo pull --ff-only || true
+fi
 
 echo
 echo "MiniServer baseline provisioning complete."

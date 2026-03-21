@@ -126,6 +126,41 @@ These checks are in scope for the MiniServer baseline but are not separate block
 - `/opt/elis/repo` exists
 - `elis --help` runs for deploy user `elis`
 
+### Repo sync evidence
+
+- Evidence command:
+```bash
+cd /opt/elis/repo && git pull --ff-only
+```
+- Evidence output:
+```text
+Updating 3e4b778..840ab65
+Fast-forward
+ .../MINISERVER_BASELINE_VALIDATION_RUNBOOK.md      | 209 +++++++++++++++++++++
+ 1 file changed, 209 insertions(+)
+ create mode 100644 docs/_active/MINISERVER_BASELINE_VALIDATION_RUNBOOK.md
+From https://github.com/rochasamurai/ELIS-SLR-Agent
+   3e4b778..840ab65  main       -> origin/main
+```
+
+### ELIS CLI resolution evidence
+
+- Evidence command:
+```bash
+command -v elis
+cd /opt/elis/repo && .venv/bin/elis --help | head -n 2
+```
+- Evidence output:
+```text
+/usr/local/bin/elis
+usage: elis [-h]
+            {validate,harvest,merge,dedup,screen,agentic,export-latest} ...
+```
+
+### Operator execution note
+
+Host hardening for SSH and UFW on `elis-server` was executed directly by the PM/operator during the live host session. The provisioning script is retained as the reproducibility artefact for future baseline rebuilds, but it was not the mechanism used to apply the already-live hardening in this PE.
+
 ## Security Notes
 
 - Do not expose OpenClaw gateway port `18789` on public interfaces.

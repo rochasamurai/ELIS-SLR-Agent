@@ -16,6 +16,7 @@ PE-VPS-00 has been rebuilt on top of current `origin/main` and rescoped from the
 - Renamed the host scripts to `scripts/vps/provision_miniserver_baseline.sh` and `scripts/vps/verify_miniserver_baseline.sh`
 - Updated those artefacts to target the ELIS MiniServer (`elis-server`, NUC8i7BEH, Ubuntu 24.04.4 LTS)
 - Extended the scripts to create `/opt/elis/repo` and verify `elis --help`
+- Added host evidence showing `/opt/elis/repo` is current on `elis-server` and that `elis` resolves via `/usr/local/bin/elis`
 
 Live host evidence from `elis-server` has now been supplied in the PR thread by the PM/operator and pasted verbatim into `docs/_active/MINISERVER_BASELINE.md`.
 
@@ -36,6 +37,8 @@ Live host evidence from `elis-server` has now been supplied in the PR thread by 
 2. Kept the `scripts/vps/` directory for continuity, but renamed the file stems from `hostinger` to `miniserver`.
 3. Added `/opt/elis/repo` and `elis --help` checks because they are part of the PE-VPS-00 MiniServer scope, even though the current validator FAIL focused primarily on AC1-AC5.
 4. Used the PM/operator's verbatim `elis-server` evidence from PR #290 rather than fabricating or paraphrasing host output.
+5. Documented explicitly that live SSH/UFW hardening on `elis-server` was performed directly by the PM/operator; the provision script remains a reproducibility artefact for future rebuilds.
+6. Updated the provision script to fast-forward `/opt/elis/repo` when a checkout already exists, matching the validator's operational finding.
 
 ---
 
@@ -111,6 +114,22 @@ Docker Compose version 2.37.1+ds1-0ubuntu2~24.04.1
 
 $ ss -lntp | grep 18789 || echo 'port 18789 not bound (expected)'
 port 18789 not bound (expected)
+
+$ cd /opt/elis/repo && git pull --ff-only
+Updating 3e4b778..840ab65
+Fast-forward
+ .../MINISERVER_BASELINE_VALIDATION_RUNBOOK.md      | 209 +++++++++++++++++++++
+ 1 file changed, 209 insertions(+)
+ create mode 100644 docs/_active/MINISERVER_BASELINE_VALIDATION_RUNBOOK.md
+From https://github.com/rochasamurai/ELIS-SLR-Agent
+   3e4b778..840ab65  main       -> origin/main
+
+$ command -v elis
+/usr/local/bin/elis
+
+$ cd /opt/elis/repo && .venv/bin/elis --help | head -n 2
+usage: elis [-h]
+            {validate,harvest,merge,dedup,screen,agentic,export-latest} ...
 ```
 
 ### Quality gates
