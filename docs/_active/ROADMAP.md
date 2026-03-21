@@ -1,7 +1,7 @@
 # ELIS Roadmap
 
 ## Phase 1 — CLI + OpenClaw (Current Stabilization)
-- VPS migration
+- MiniServer deployment (elis-server · NUC8i7BEH)
 - Run manifest enforcement
 - Model onboarding protocol
 - Governance hardening
@@ -17,7 +17,7 @@
 - Reviewer role separation
 
 ## Phase 3 — Multi-Model Expansion
-- OpenAI GPT onboarding (PE-VPS-09)
+- OpenAI GPT onboarding (PE-VPS-09 / MiniServer)
 - Comparative routing analytics
 - ASTA integration
 - Multi-database gateway
