@@ -11,7 +11,7 @@ services:
       - gateway
       - --allow-unconfigured
       - --bind
-      - lan
+      - localhost
     security_opt:
       - no-new-privileges:true
     tmpfs:
