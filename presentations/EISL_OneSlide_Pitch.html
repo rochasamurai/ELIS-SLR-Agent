@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elections Integrity Strategy Lab — Imperial College Business School</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Lato:wght@300;400;700&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --imperial-blue: #003E74;
+  --imperial-mid:  #005A9C;
+  --gold:          #D4A843;
+  --gold-lt:       #F2CA6B;
+  --gold-dim:      #9A7320;
+  --cream:         #FAF7F2;
+  --warm-white:    #FFFFFF;
+  --ink:           #0D1B2A;
+  --slate:         #4A5568;
+  --mist:          #8A96A8;
+  --red-accent:    #C0392B;
+  --green-accent:  #1A6B45;
+}
+
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  font-family: 'Lato', sans-serif;
+  background: var(--ink);
+}
+
+/* ── SLIDE CANVAS ── */
+.slide {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  min-height: 600px;
+  display: grid;
+  grid-template-columns: 42% 58%;
+  overflow: hidden;
+}
+
+/* ── LEFT PANEL — deep navy with texture ── */
+.left {
+  position: relative;
+  background: var(--imperial-blue);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 5vh 4vw 5vh 4vw;
+  z-index: 2;
+  overflow: hidden;
+}
+
+/* Subtle grid texture */
+.left::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+}
+
+/* Large decorative circle */
+.left::after {
+  content: '';
+  position: absolute;
+  bottom: -18vh; right: -12vw;
+  width: 55vh; height: 55vh;
+  border-radius: 50%;
+  border: 1px solid rgba(212,168,67,.12);
+  pointer-events: none;
+}
+
+.left-inner {
+  position: relative; z-index: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  justify-content: space-between;
+}
+
+/* Imperial logo row */
+.logo-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  opacity: 0;
+  animation: fadeUp .6s .1s cubic-bezier(.22,1,.36,1) forwards;
+}
+.imperial-mark {
+  width: 36px; height: 36px;
+  border: 2px solid rgba(212,168,67,.6);
+  border-radius: 50%;
+  display: flex; align-items:center; justify-content:center;
+}
+.imperial-mark svg { width: 18px; height: 18px; }
+.logo-text {
+  font-family: 'Lato', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.5);
+  line-height: 1.4;
+}
+.logo-text span { color: var(--gold-lt); display: block; }
+
+/* Headline */
+.headline-block {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 3vh 0;
+}
+.eyebrow {
+  font-family: 'Lato', sans-serif;
+  font-size: clamp(9px, 1vw, 11px);
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: clamp(12px, 2vh, 20px);
+  opacity: 0;
+  animation: fadeUp .6s .25s cubic-bezier(.22,1,.36,1) forwards;
+}
+.lab-name {
+  font-family: 'Playfair Display', serif;
+  font-weight: 900;
+  font-size: clamp(26px, 3.8vw, 52px);
+  line-height: 1.05;
+  color: var(--warm-white);
+  letter-spacing: -1px;
+  opacity: 0;
+  animation: fadeUp .7s .35s cubic-bezier(.22,1,.36,1) forwards;
+}
+.lab-name em {
+  display: block;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--gold-lt);
+  font-size: clamp(22px, 3.2vw, 44px);
+}
+.at-imperial {
+  margin-top: clamp(10px, 1.5vh, 16px);
+  font-family: 'Crimson Pro', serif;
+  font-size: clamp(13px, 1.4vw, 18px);
+  font-weight: 300;
+  color: rgba(255,255,255,.45);
+  letter-spacing: .5px;
+  opacity: 0;
+  animation: fadeUp .6s .45s cubic-bezier(.22,1,.36,1) forwards;
+}
+
+/* Divider line */
+.divider {
+  width: 48px; height: 2px;
+  background: linear-gradient(90deg, var(--gold), transparent);
+  margin: clamp(12px, 2vh, 22px) 0;
+  opacity: 0;
+  animation: fadeIn .6s .55s forwards;
+}
+
+/* Tagline */
+.tagline {
+  font-family: 'Crimson Pro', serif;
+  font-size: clamp(13px, 1.5vw, 18px);
+  font-style: italic;
+  font-weight: 300;
+  color: rgba(255,255,255,.65);
+  line-height: 1.55;
+  max-width: 340px;
+  opacity: 0;
+  animation: fadeUp .6s .6s cubic-bezier(.22,1,.36,1) forwards;
+}
+
+/* Seed statement */
+.seed-statement {
+  background: rgba(212,168,67,.1);
+  border: 1px solid rgba(212,168,67,.2);
+  border-radius: 8px;
+  padding: clamp(10px, 1.5vh, 16px) clamp(12px, 1.5vw, 18px);
+  opacity: 0;
+  animation: fadeUp .6s .75s cubic-bezier(.22,1,.36,1) forwards;
+}
+.seed-statement p {
+  font-family: 'Lato', sans-serif;
+  font-size: clamp(10px, 1vw, 12px);
+  font-weight: 400;
+  color: var(--gold-lt);
+  line-height: 1.6;
+}
+.seed-statement strong {
+  font-weight: 700;
+  color: var(--warm-white);
+}
+
+/* PI row */
+.pi-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-top: clamp(8px, 1.5vh, 16px);
+  border-top: 1px solid rgba(255,255,255,.08);
+  opacity: 0;
+  animation: fadeUp .6s .9s cubic-bezier(.22,1,.36,1) forwards;
+}
+.pi-avatar {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--imperial-mid), var(--imperial-blue));
+  border: 1.5px solid rgba(212,168,67,.4);
+  display: flex; align-items:center; justify-content:center;
+  font-family: 'Playfair Display', serif;
+  font-size: 13px; font-weight: 700;
+  color: var(--gold-lt);
+  flex-shrink: 0;
+}
+.pi-info { flex: 1; }
+.pi-name {
+  font-size: 12px; font-weight: 700;
+  color: rgba(255,255,255,.85); letter-spacing: .3px;
+}
+.pi-title {
+  font-size: 10px; color: rgba(255,255,255,.4);
+  letter-spacing: .3px; margin-top: 1px;
+}
+.pi-date {
+  font-size: 10px; color: rgba(255,255,255,.3);
+  letter-spacing: 1.5px; text-transform: uppercase;
+  font-weight: 300;
+}
+
+/* ── RIGHT PANEL — cream ── */
+.right {
+  position: relative;
+  background: var(--cream);
+  display: flex;
+  flex-direction: column;
+  padding: 5vh 4vw 5vh 3.5vw;
+  overflow: hidden;
+  z-index: 1;
+}
+
+/* Large decorative number watermark */
+.right::before {
+  content: '25';
+  position: absolute;
+  top: -4vh; right: -2vw;
+  font-family: 'Playfair Display', serif;
+  font-size: 28vw;
+  font-weight: 900;
+  color: rgba(0,62,116,.04);
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Section header */
+.section-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: clamp(16px, 3vh, 28px);
+  opacity: 0;
+  animation: fadeIn .5s .5s forwards;
+}
+.section-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--imperial-blue);
+}
+.section-rule {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(0,62,116,.2), transparent);
+}
+
+/* Three-column grid for pillars */
+.pillars {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(10px, 1.5vw, 18px);
+  margin-bottom: clamp(14px, 2.5vh, 24px);
+}
+.pillar {
+  background: white;
+  border-radius: 10px;
+  padding: clamp(12px, 1.8vh, 18px) clamp(10px, 1.2vw, 14px);
+  border: 1px solid rgba(0,62,116,.07);
+  box-shadow: 0 2px 12px rgba(0,62,116,.06);
+  opacity: 0;
+  transform: translateY(16px);
+  transition: transform .2s, box-shadow .2s;
+}
+.pillar:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(0,62,116,.1);
+}
+.pillar.anim-1 { animation: fadeUp .55s .6s cubic-bezier(.22,1,.36,1) forwards; }
+.pillar.anim-2 { animation: fadeUp .55s .72s cubic-bezier(.22,1,.36,1) forwards; }
+.pillar.anim-3 { animation: fadeUp .55s .84s cubic-bezier(.22,1,.36,1) forwards; }
+
+.pillar-icon {
+  width: 32px; height: 32px;
+  border-radius: 7px;
+  display: flex; align-items:center; justify-content:center;
+  font-size: 15px;
+  margin-bottom: clamp(8px, 1.2vh, 12px);
+}
+.icon-research { background: rgba(0,62,116,.08); }
+.icon-infra    { background: rgba(212,168,67,.12); }
+.icon-impact   { background: rgba(26,107,69,.08); }
+
+.pillar h4 {
+  font-family: 'Lato', sans-serif;
+  font-size: clamp(10px, 1.1vw, 13px);
+  font-weight: 700;
+  color: var(--imperial-blue);
+  margin-bottom: 5px;
+  letter-spacing: .2px;
+}
+.pillar p {
+  font-size: clamp(9px, .95vw, 11.5px);
+  color: var(--slate);
+  line-height: 1.55;
+}
+
+/* Bottom two-column: evidence + funding */
+.bottom-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(10px, 1.5vw, 18px);
+  flex: 1;
+}
+
+/* Evidence panel */
+.evidence-panel {
+  background: var(--imperial-blue);
+  border-radius: 10px;
+  padding: clamp(12px, 1.8vh, 18px) clamp(12px, 1.4vw, 16px);
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  animation: fadeUp .55s .96s cubic-bezier(.22,1,.36,1) forwards;
+}
+.panel-eyebrow {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: clamp(8px, 1.2vh, 12px);
+}
+.evidence-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  flex: 1;
+}
+.stat {
+  background: rgba(255,255,255,.06);
+  border-radius: 6px;
+  padding: 8px 10px;
+  border: 1px solid rgba(255,255,255,.06);
+}
+.stat .big {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(18px, 2.2vw, 28px);
+  font-weight: 700;
+  color: var(--gold-lt);
+  line-height: 1;
+}
+.stat .label {
+  font-size: clamp(8px, .8vw, 10px);
+  color: rgba(255,255,255,.4);
+  margin-top: 3px;
+  line-height: 1.35;
+}
+.evidence-note {
+  margin-top: clamp(8px, 1.2vh, 12px);
+  font-size: clamp(9px, .85vw, 10.5px);
+  color: rgba(255,255,255,.4);
+  line-height: 1.5;
+  font-style: italic;
+}
+
+/* Funding panel */
+.funding-panel {
+  background: white;
+  border-radius: 10px;
+  padding: clamp(12px, 1.8vh, 18px) clamp(12px, 1.4vw, 16px);
+  border: 1px solid rgba(0,62,116,.07);
+  box-shadow: 0 2px 12px rgba(0,62,116,.06);
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  animation: fadeUp .55s 1.08s cubic-bezier(.22,1,.36,1) forwards;
+}
+.funding-targets {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+.funder {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: clamp(6px, .8vh, 9px) 10px;
+  border-radius: 6px;
+  background: var(--cream);
+  border: 1px solid rgba(0,62,116,.06);
+  transition: background .2s;
+}
+.funder:hover { background: rgba(0,62,116,.05); }
+.funder-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.dot-nvidia  { background: #76B900; }
+.dot-ukri    { background: var(--imperial-blue); }
+.dot-ec      { background: #003399; }
+.dot-ivl     { background: var(--gold-dim); }
+.funder-name {
+  font-size: clamp(9px, .95vw, 11px);
+  font-weight: 700;
+  color: var(--ink);
+  flex: 1;
+}
+.funder-desc {
+  font-size: clamp(8px, .8vw, 9.5px);
+  color: var(--mist);
+}
+
+/* Ask row */
+.ask-row {
+  margin-top: clamp(12px, 2vh, 20px);
+  background: linear-gradient(135deg, rgba(0,62,116,.05), rgba(212,168,67,.06));
+  border: 1px solid rgba(0,62,116,.1);
+  border-radius: 8px;
+  padding: clamp(10px, 1.5vh, 14px) clamp(12px, 1.5vw, 16px);
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  opacity: 0;
+  animation: fadeUp .55s 1.2s cubic-bezier(.22,1,.36,1) forwards;
+}
+.ask-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.ask-text {
+  font-size: clamp(9px, .95vw, 11.5px);
+  color: var(--slate);
+  line-height: 1.6;
+}
+.ask-text strong {
+  font-weight: 700;
+  color: var(--imperial-blue);
+  display: block;
+  margin-bottom: 2px;
+  font-size: clamp(10px, 1vw, 12px);
+}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── RESPONSIVE — allow scrolling on very small screens ── */
+@media (max-height: 500px), (max-width: 700px) {
+  html, body { overflow: auto; }
+  .slide {
+    grid-template-columns: 1fr;
+    height: auto; min-height: 100vh;
+  }
+  .left { min-height: 50vh; }
+  .right::before { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="slide">
+
+  <!-- ══ LEFT PANEL ══ -->
+  <div class="left">
+    <div class="left-inner">
+
+      <!-- Logo -->
+      <div class="logo-row">
+        <div class="imperial-mark">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L2 7v10l10 5 10-5V7L12 2z" stroke="#D4A843" stroke-width="1.5" stroke-linejoin="round"/>
+            <path d="M12 2v20M2 7l10 5 10-5" stroke="#D4A843" stroke-width="1" stroke-linejoin="round" opacity=".5"/>
+          </svg>
+        </div>
+        <div class="logo-text">
+          Imperial College London
+          <span>Business School</span>
+        </div>
+      </div>
+
+      <!-- Main headline -->
+      <div class="headline-block">
+        <div class="eyebrow">Proposed Research Centre</div>
+        <h1 class="lab-name">
+          Elections
+          <em>Integrity Strategy</em>
+          Lab
+        </h1>
+        <div class="at-imperial">at Imperial College Business School</div>
+        <div class="divider"></div>
+        <p class="tagline">
+          A governed, AI-augmented research infrastructure for evidence-based electoral integrity strategy — the first of its kind in a global business school.
+        </p>
+      </div>
+
+      <!-- Seed statement -->
+      <div class="seed-statement">
+        <p>
+          <strong>The seed exists.</strong> The ELIS SLR pipeline — 13 specialised AI agents, governed 2-agent protocol, reproducible evidence architecture — is already operational. The lab is the institutional wrapper around working infrastructure.
+        </p>
+      </div>
+
+      <!-- PI -->
+      <div class="pi-row">
+        <div class="pi-avatar">CR</div>
+        <div class="pi-info">
+          <div class="pi-name">Carlos Rocha</div>
+          <div class="pi-title">Visiting Researcher · Principal Investigator</div>
+        </div>
+        <div class="pi-date">March 2026</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══ RIGHT PANEL ══ -->
+  <div class="right">
+
+    <!-- Section header -->
+    <div class="section-header">
+      <span class="section-label">The Proposition</span>
+      <div class="section-rule"></div>
+    </div>
+
+    <!-- Three pillars -->
+    <div class="pillars">
+
+      <div class="pillar anim-1">
+        <div class="pillar-icon icon-research">🔬</div>
+        <h4>Research Gap</h4>
+        <p>No business school globally hosts a dedicated electoral integrity research centre. ICBS governs a unique intersection: institutions, AI governance, and democratic market function.</p>
+      </div>
+
+      <div class="pillar anim-2">
+        <div class="pillar-icon icon-infra">⚙️</div>
+        <h4>Live Infrastructure</h4>
+        <p>ELIS v2.0 is not a proposal — it is running. 35 years of evidence (1990–2025), 8 database APIs, CI-enforced governance, PRISMA 2020 compliant. Ready to scale under a lab umbrella.</p>
+      </div>
+
+      <div class="pillar anim-3">
+        <div class="pillar-icon icon-impact">🌍</div>
+        <h4>Global Relevance</h4>
+        <p>70+ elections in 2024 alone. AI-generated disinformation, contested results, institutional erosion. Evidence-based strategy is the missing layer between academic research and policy action.</p>
+      </div>
+
+    </div>
+
+    <!-- Bottom grid -->
+    <div class="bottom-grid">
+
+      <!-- Evidence panel -->
+      <div class="evidence-panel">
+        <div class="panel-eyebrow">What Already Exists</div>
+        <div class="evidence-stats">
+          <div class="stat">
+            <div class="big">786</div>
+            <div class="label">GitHub commits — governed pipeline</div>
+          </div>
+          <div class="stat">
+            <div class="big">13</div>
+            <div class="label">AI agents in production</div>
+          </div>
+          <div class="stat">
+            <div class="big">35</div>
+            <div class="label">Years evidence scope</div>
+          </div>
+          <div class="stat">
+            <div class="big">v2.0</div>
+            <div class="label">Protocol — OSF-ready</div>
+          </div>
+        </div>
+        <div class="evidence-note">Reproducible · Auditable · Institution-ready</div>
+      </div>
+
+      <!-- Funding panel -->
+      <div class="funding-panel">
+        <div class="panel-eyebrow" style="color:var(--imperial-blue);">Funding Targets</div>
+        <div class="funding-targets">
+          <div class="funder">
+            <div class="funder-dot dot-nvidia"></div>
+            <div class="funder-name">NVIDIA</div>
+            <div class="funder-desc">AI infrastructure · Social Good</div>
+          </div>
+          <div class="funder">
+            <div class="funder-dot dot-ukri"></div>
+            <div class="funder-name">UKRI / ESRC</div>
+            <div class="funder-desc">Democratic resilience programme</div>
+          </div>
+          <div class="funder">
+            <div class="funder-dot dot-ec"></div>
+            <div class="funder-name">Electoral Commission</div>
+            <div class="funder-desc">UK Cabinet Office · applied research</div>
+          </div>
+          <div class="funder">
+            <div class="funder-dot dot-ivl"></div>
+            <div class="funder-name">Instituto Voto Legal</div>
+            <div class="funder-desc">Brazil · existing co-sponsor</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Ask row -->
+    <div class="ask-row">
+      <div class="ask-icon">🎯</div>
+      <div class="ask-text">
+        <strong>The Ask — Two Steps</strong>
+        1. Faculty endorsement to bring this proposal to the ICBS Research &amp; Innovation office. &nbsp;·&nbsp;
+        2. Introduction to ICBS leadership and the Imperial funding team to initiate a NVIDIA Academic Partnership approach — GPU infrastructure for a responsible AI showcase at the world's most important research challenge.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
