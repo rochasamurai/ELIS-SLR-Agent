@@ -75,6 +75,9 @@ logs/
 
 runs/
 
+# Git worktrees
+.worktrees/
+
 # Local elis run output artifacts (not for commit)
 dedup/
 *_manifest.json
