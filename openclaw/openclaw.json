@@ -75,6 +75,13 @@
         "channel": "telegram",
         "accountId": "8508429120"
       }
+    },
+    {
+      "agentId": "pm",
+      "match": {
+        "channel": "discord",
+        "accountId": "1484943999470141702"
+      }
     }
   ],
   "commands": {
@@ -84,6 +91,9 @@
   "plugins": {
     "entries": {
       "telegram": {
+        "enabled": true
+      },
+      "discord": {
         "enabled": true
       }
     }
