@@ -3,6 +3,12 @@
 > **When to use this runbook:** after any merge that touches `openclaw/openclaw.json`
 > or `docker-compose.yml`, run the deploy script to sync the live container.
 
+> **Host boundary (2026-03-21):** `docker-compose.yml` must only be run on
+> **elis-server** (NUC8i7BEH · `ssh elis-server`). This notebook is SSH-only.
+> The local `~/.openclaw` state has been retired to `~/.openclaw_notebook_retired`
+> and `~/openclaw/` workspaces have been removed. Do not run `docker compose up`
+> from this notebook.
+
 ---
 
 ## Why manual deployment is required

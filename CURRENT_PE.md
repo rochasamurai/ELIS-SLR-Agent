@@ -21,7 +21,7 @@
 
 | Field   | Value                                         |
 |---------|-----------------------------------------------|
-| PE      | PM-CHORE-05                                   |
+| PE      | PM-CHORE-06                                   |
 | Branch  | main                                          |
 
 ---
@@ -91,6 +91,7 @@ PM housekeeping entries (prefix `PM-CHORE-XX`):
 | PM-CHORE-03  | Added `ELIS_MultiAgent_Implementation_Plan_v1_3.md` and `ELIS_SLR_AI_Platform_Conceptual_Architecture_v1_5.md` via PR #291. Updated `CURRENT_PE.md` release name to "ELIS MiniServer Implementation Series" and plan file reference to v1.3. Updated `ROADMAP.md` Phase 1 entry. | 2026-03-21 |
 | PM-CHORE-04  | Aligned PE-VPS-00 metadata to plan v1.3: branch renamed from Hostinger baseline to MiniServer baseline, and agent registry roles updated to `infra-impl-codex` / `infra-val-claude` for the `elis-server` target. | 2026-03-21 |
 | PM-CHORE-05  | Closed PE-VPS-00 as merged after PR #290 landed on `main`. Set the current branch context back to `main` pending PM assignment of the next MiniServer functional PE. | 2026-03-21 |
+| PM-CHORE-06  | Confirmed that plan v1.3 does not yet define a post-baseline MiniServer functional PE. Kept the project on `main` and marked the next step as PM planning/update of the authoritative plan before any new PE assignment. | 2026-03-21 |
 
 Alternation rule:
 - For consecutive PEs in the same domain, the implementer engine must alternate (`codex` <-> `claude`).
