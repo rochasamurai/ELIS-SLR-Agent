@@ -5,7 +5,7 @@
 > **Built By:** 2-Agent Model (CODEX + Claude Code)  
 > **Delivers:** 19-Agent Model + OpenClaw PM Orchestration  
 > **Phases:** 6 Phases + Gap Closure + MiniServer Corrective Baseline · 24 PEs  
-> **Governing Architecture:** `docs/ELIS_SLR_AI_Platform_Conceptual_Architecture_v1.5.md`  
+> **Governing Architecture:** `ELIS_SLR_AI_Platform_Conceptual_Architecture_v1_5.md`  
 > **Host:** ELIS MiniServer — NUC8i7BEH · Ubuntu 24.04.4 LTS · `elis-server`
 
 ---
