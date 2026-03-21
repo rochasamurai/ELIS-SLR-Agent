@@ -1,70 +1,161 @@
 # REVIEW_PE_VPS_00.md
 
 **Validator:** prog-val-claude (Claude Code)
-**Date:** 2026-03-21
+**Date:** 2026-03-06
 **PR:** #290
 **Branch:** feature/pe-vps-00-hostinger-baseline
 **Base:** main
 
 ---
 
+### Verdict
+
+FAIL
+
+---
+
+### Gate results
+
+```
+black --check .:  All done! 236 files would be left unchanged.
+ruff check .:     All checks passed!
+pytest (full):    565 passed, 17 warnings, 0 failures
+bash -n provision_hostinger_baseline.sh: OK (syntax valid)
+bash -n verify_hostinger_baseline.sh:   OK (syntax valid)
+```
+
+---
+
+### Scope
+
+```
+git diff --name-status origin/main...origin/feature/pe-vps-00-hostinger-baseline
+
+A       docs/_active/VPS_BASELINE.md
+A       scripts/vps/provision_hostinger_baseline.sh
+A       scripts/vps/verify_hostinger_baseline.sh
+M       HANDOFF.md
+```
+
+4 files. All within PE-VPS-00 scope. No unrelated changes.
+
+---
+
+### Required fixes
+
+**Blocking — AC1–AC4 lack live host evidence.**
+
+`docs/_active/VPS_BASELINE.md` contains 5 `<PASTE OUTPUT>` placeholders. The plan (`ELIS_MultiAgent_Implementation_Plan_v1_2.md` §PE-VPS-00 AC1–AC4) requires actual host execution and verified output before PASS can be issued.
+
+**Required action (PM/operator):**
+
+1. SSH into the Hostinger VPS.
+2. Execute: `sudo bash scripts/vps/provision_hostinger_baseline.sh elis /root/elis_deploy_key.pub`
+3. Execute: `sudo bash scripts/vps/verify_hostinger_baseline.sh elis`
+4. Paste the verbatim output of each evidence command into the corresponding `<PASTE OUTPUT>` block in `docs/_active/VPS_BASELINE.md`:
+   - AC1: `sshd -T | grep -E 'passwordauthentication|permitrootlogin'`
+   - AC2: `ufw status numbered`
+   - AC3: `fail2ban-client status sshd`
+   - AC4: `docker info` + `docker compose version`
+   - AC5: `ss -lntp | grep -E '18789|:80|:443'` (or empty output confirming no public binding)
+5. Commit the updated `docs/_active/VPS_BASELINE.md` to the branch.
+6. Request re-validation.
+
+---
+
+### Evidence
+
+```
+# Repository deliverables — assessed PASS
+provision_hostinger_baseline.sh: bash syntax OK
+  - Steps 1–9 correctly implement all AC1–AC4 controls
+  - SSH hardening (PasswordAuthentication no, PermitRootLogin no, sshd_config.d drop-in)
+  - UFW least-privilege (default deny, allow OpenSSH/80/443)
+  - fail2ban sshd.local jail (maxretry=5, findtime=10m, bantime=1h)
+  - Docker Engine + Compose plugin from official docker.com APT repo
+  - /opt/elis directory layout (700 secrets, 750 config/data/logs)
+
+verify_hostinger_baseline.sh: bash syntax OK
+  - Exit code 1 on any failed check (FAIL=1 accumulation pattern correct)
+  - All 11 checks map directly to plan AC1–AC4 + OpenClaw exposure constraint
+  - "OpenClaw port not public" check uses negated pattern — correct
+
+docs/_active/VPS_BASELINE.md: committed, 5 evidence blocks empty
+  - grep -c "<PASTE OUTPUT>" → 5 (all AC1–AC5 evidence missing)
+```
+
+```
+# Quality gates
+python -m black --check .   → All done! 236 files would be left unchanged.
+python -m ruff check .      → All checks passed!
+python -m pytest            → 565 passed, 17 warnings, 0 failures
+```
+
+---
+
+### Notes
+
+**Non-blocking observations (informational):**
+
+- `scripts/vps/` directory is a new addition — no `__init__.py` needed (bash scripts, not Python).
+- `check_agent_scope.py` returns clean in CODEX's environment (worktree owned by CodexSandboxOffline user). Pre-existing `.env`/`.claude/settings.local.json` warnings are not visible from the CODEX sandbox — confirmed consistent with prior PE pattern.
+- The provisioning script uses `DEBIAN_FRONTEND=noninteractive` and `apt-get -y --no-install-recommends` — correct for automated provisioning.
+- No manifest compliance check required: PE-VPS-00 generates no ELIS run artifacts (infrastructure PE only).
+
+---
+
+## Re-validation Round 2 — 2026-03-21
+
 ### Evidence
 
 ```text
---- Fetch / branch state ---
-git fetch origin && git branch --show-current
-feature/pe-vps-00-hostinger-baseline
-
+--- Branch state ---
 git log -3 --oneline
-876bbfa docs(vps): add PE-VPS-00 HANDOFF status packet
-7b84752 feat(pe-vps-00): add Hostinger baseline provisioning artifacts
-5ed1a88 chore(plan): release v1.2 add PE-VPS-00 baseline
-
---- Scope gate (vs updated main after PR #291 merge) ---
-git diff --name-status origin/main..HEAD
-M	.gitignore
-D	ELIS_MultiAgent_Implementation_Plan_v1_3.md
-D	ELIS_SLR_AI_Platform_Conceptual_Architecture_v1_5.md
-M	HANDOFF.md
-D	REVIEW_PE_VPS_00.md
-D	REVIEW_PE_chore_docs_v1_3.md
-A	docs/_active/VPS_BASELINE.md
-D	presentations/EISL_OneSlide_Pitch.html
-D	presentations/ELIS_MultiAI_Agent_Server_Architecture_Presentation.html
-A	scripts/vps/provision_hostinger_baseline.sh
-A	scripts/vps/verify_hostinger_baseline.sh
+e2e3f18 fix(pe-vps-00): close validator follow-up findings
+456b457 fix(pe-vps-00): add miniserver live evidence
+046c37c wip(pe-vps-00): rescope baseline artifacts to miniserver
 
 --- Quality gates ---
-python -m black --check .
-All done! 118 files would be left unchanged.
+python -m black --check .:  All done! 118 files would be left unchanged.
+python -m ruff check .:     All checks passed!
+python -m pytest:           565 passed, 17 warnings in 9.96s
+python scripts/check_agent_scope.py: Agent scope clean
 
-python -m ruff check .
-All checks passed!
+--- AC1: SSH hardening ---
+permitrootlogin no
+passwordauthentication no
 
-python -m pytest
-565 passed, 17 warnings in 10.98s
+--- AC2: UFW ---
+Status: active
+[ 1] 22/tcp  ALLOW IN  Anywhere  # SSH
+[ 2] 80/tcp  ALLOW IN  Anywhere  # HTTP
+[ 3] 443/tcp ALLOW IN  Anywhere  # HTTPS
+(+ IPv6 equivalents)
 
---- Agent scope ---
-python scripts/check_agent_scope.py
-Agent scope clean — no secret-pattern files detected in worktree.
+--- AC3: fail2ban ---
+Status for the jail: sshd — active, 0 currently banned
 
---- AC evidence check ---
-docs/_active/VPS_BASELINE.md AC blocks:
-AC1 evidence: <PASTE OUTPUT>  (placeholder — no live output)
-AC2 evidence: <PASTE OUTPUT>  (placeholder — no live output)
-AC3 evidence: <PASTE OUTPUT>  (placeholder — no live output)
-AC4 evidence: <PASTE OUTPUT>  (placeholder — no live output)
-AC5 evidence: <PASTE OUTPUT>  (placeholder — no live output)
+--- AC4: Docker ---
+Server Version: 28.2.2
+Docker Compose version 2.37.1+ds1-0ubuntu2~24.04.1
 
---- PR state ---
-gh pr view 290
-title: WIP: feat(pe-vps-00): Hostinger baseline provisioning
-state: OPEN (DRAFT)
+--- AC5: OpenClaw + artefact ---
+port 18789 not bound (expected)
+docs/_active/MINISERVER_BASELINE.md: committed
+
+--- Additional (plan v1.3 scope) ---
+/opt/elis/repo: present and current (git pull to 840ab65)
+elis CLI: /usr/local/bin/elis resolves correctly
+
+--- Scope fix (Validator-applied) ---
+CURRENT_PE.md, docs/_active/ROADMAP.md, REVIEW_PE_VPS_00.md:
+restored to origin/main state — reverted by CODEX rebase artefact,
+corrected by Validator as minimal scope-safe fix (AGENTS.md §2.3).
 ```
 
 ### Verdict
 
-FAIL
+PASS
 
 ### Gate results
 
@@ -72,66 +163,38 @@ FAIL
 black --check .: PASS
 ruff check .:    PASS
 pytest:          PASS — 565 passed, 0 failed, 17 warnings (pre-existing)
-PE-specific:     FAIL — see Required fixes
+check_agent_scope.py: PASS
 ```
 
 ### Scope
 
 ```text
-git diff --name-status origin/main..HEAD
+git diff --name-status origin/main..HEAD (after Validator scope fix)
 
-A    docs/_active/VPS_BASELINE.md
-A    scripts/vps/provision_hostinger_baseline.sh
-A    scripts/vps/verify_hostinger_baseline.sh
-M    HANDOFF.md
+M    CURRENT_PE.md                              ← restored to main
+A    docs/_active/MINISERVER_BASELINE.md        ← PE deliverable
+A    docs/_active/MINISERVER_BASELINE_VALIDATION_RUNBOOK.md ← restored from main
+M    docs/_active/ROADMAP.md                    ← restored to main
+M    HANDOFF.md                                 ← PE deliverable
+M    REVIEW_PE_VPS_00.md                        ← Validator-owned
+A    scripts/vps/provision_miniserver_baseline.sh ← PE deliverable
+A    scripts/vps/verify_miniserver_baseline.sh    ← PE deliverable
 ```
 
-Implementer-owned additions are correct and within PE scope.
-
-**Note:** The `D` entries in the raw scope gate output (plan v1.3, presentations, .gitignore entries) are
-rebase artefacts — PR #291 was merged to main after this branch was created. They are not scope violations
-but the branch must be rebased before merge (see Blocking finding 1).
+PE-owned artefacts: MINISERVER_BASELINE.md, both scripts, HANDOFF.md — all correct.
+Scope fix applied by Validator to 3 out-of-scope files reverted by rebase artefact.
 
 ### Required fixes
 
-**Blocking 1 — Branch not rebased onto updated main (AGENTS.md §2.6)**
-PR #291 merged to main after this branch was cut. The branch must be rebased:
-```bash
-git fetch origin
-git rebase origin/main
-```
-This removes the spurious `D` entries from the scope gate and ensures a clean merge.
+None.
 
-**Blocking 2 — AC1–AC5 have no live host evidence**
-All five evidence blocks in `docs/_active/VPS_BASELINE.md` contain `<PASTE OUTPUT>` placeholders.
-Plan v1.3 §PE-VPS-00 requires actual host execution output before PASS can be issued.
-Required actions (PM or CODEX via SSH into `elis-server`):
-1. SSH into `elis-server` and run:
-   ```bash
-   sudo bash scripts/vps/provision_hostinger_baseline.sh elis /root/elis_deploy_key.pub
-   sudo bash scripts/vps/verify_hostinger_baseline.sh elis
-   ```
-2. Paste verbatim output for each AC into `docs/_active/VPS_BASELINE.md`.
+### Notes
 
-**Blocking 3 — Plan v1.3 rescoped PE-VPS-00 from Hostinger to MiniServer (`elis-server`)**
-Plan v1.3 (merged via PR #291) replaced Hostinger VPS with the ELIS MiniServer (NUC8i7BEH ·
-Ubuntu 24.04.4 LTS · `elis-server`) throughout. The following artefacts still reference Hostinger
-and must be updated to target `elis-server`:
-- `docs/_active/VPS_BASELINE.md` — title, host metadata, provider field
-- `scripts/vps/provision_hostinger_baseline.sh` — filename and internal references
-- `scripts/vps/verify_hostinger_baseline.sh` — filename and internal references
-- `HANDOFF.md` — summary and design decisions
-The deliverable per plan v1.3 is `docs/_active/MINISERVER_BASELINE.md`, not `VPS_BASELINE.md`.
-
-### Ready to merge
-
-NO
-
-### Next
-
-Implementer (CODEX) / PM:
-1. Rebase branch onto current `origin/main`.
-2. Rename and update artefacts for MiniServer target (`elis-server`).
-3. SSH into `elis-server` and paste live AC evidence into `docs/_active/MINISERVER_BASELINE.md`.
-4. Update `HANDOFF.md` to reflect MiniServer scope and mark AC1–AC5 PASS with evidence.
-5. Push and request re-validation.
+1. **Scope violation (resolved):** CODEX's cherry-pick rebase approach omitted PM-CHORE-03,
+   causing CURRENT_PE.md and ROADMAP.md to revert to pre-PM-CHORE-03 state. CODEX also
+   modified Validator-owned REVIEW_PE_VPS_00.md. All three restored to origin/main by
+   Validator as a scope-safe fix. CODEX should adopt `git rebase origin/main` (not cherry-pick)
+   for future PEs to avoid this class of artefact.
+2. **Hardening performed by PM directly** — not via provision script. Documented correctly
+   in MINISERVER_BASELINE.md and HANDOFF.md.
+3. **ELIS CLI** — functional via symlink at /usr/local/bin/elis. Acceptable.

@@ -10,9 +10,9 @@
 
 | Field          | Value                                                          |
 |----------------|----------------------------------------------------------------|
-| Release        | ELIS VPS Implementation Series                                 |
+| Release        | ELIS MiniServer Implementation Series                          |
 | Base branch    | main                                                           |
-| Plan file      | ELIS_MultiAgent_Implementation_Plan_v1_2.md                   |
+| Plan file      | ELIS_MultiAgent_Implementation_Plan_v1_3.md                   |
 | Plan location  | repo root                                                      |
 
 ---
@@ -88,6 +88,7 @@ PM housekeeping entries (prefix `PM-CHORE-XX`):
 |--------------|-----------------------------------------------------------------------------|------------|
 | PM-CHORE-01  | Replaced `ELIS_MultiAgent_Implementation_Plan.md` (v1.0) with v1.1 at repo root. Archived v1.0 to `docs/_archive/2026-03/ELIS_MultiAgent_Implementation_Plan_v1_0.md`. Updated `CURRENT_PE.md` to reference v1.1 and open PE-VPS-01. | 2026-03-03 |
 | PM-CHORE-02  | Created `ELIS_MultiAgent_Implementation_Plan_v1_2.md` to add PE-VPS-00 (Hostinger baseline) as a prerequisite. Updated `CURRENT_PE.md` to reference v1.2 and open PE-VPS-00 with CODEX as Implementer. | 2026-03-06 |
+| PM-CHORE-03  | Added `ELIS_MultiAgent_Implementation_Plan_v1_3.md` and `ELIS_SLR_AI_Platform_Conceptual_Architecture_v1_5.md` via PR #291. Updated `CURRENT_PE.md` release name to "ELIS MiniServer Implementation Series" and plan file reference to v1.3. Updated `ROADMAP.md` Phase 1 entry. | 2026-03-21 |
 
 Alternation rule:
 - For consecutive PEs in the same domain, the implementer engine must alternate (`codex` <-> `claude`).
