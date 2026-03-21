@@ -18,9 +18,9 @@ Controls covered:
 - Hardware: NUC8i7BEH
 - OS target: Ubuntu 24.04.4 LTS
 - Hostname: `elis-server`
-- Public IPv4: `<fill-from-host>`
-- Operator: `<fill-during-execution>`
-- Execution date (UTC): `<fill-during-execution>`
+- Public IPv4: `<not recorded in PR comment>`
+- Operator: `rochasamurai (PM/operator)`
+- Execution date (UTC): `2026-03-21`
 
 ## Provisioning Procedure
 
@@ -47,7 +47,9 @@ sshd -T | grep -E 'passwordauthentication|permitrootlogin'
 ```
 - Evidence output:
 ```text
-<PASTE OUTPUT>
+$ sudo sshd -T | grep -E 'passwordauthentication|permitrootlogin'
+permitrootlogin no
+passwordauthentication no
 ```
 
 2. UFW active with least-privilege ingress (22/80/443 only where required).
@@ -57,7 +59,17 @@ ufw status numbered
 ```
 - Evidence output:
 ```text
-<PASTE OUTPUT>
+$ sudo ufw status numbered
+Status: active
+
+     To                         Action      From
+     --                         ------      ----
+[ 1] 22/tcp                     ALLOW IN    Anywhere                   # SSH
+[ 2] 80/tcp                     ALLOW IN    Anywhere                   # HTTP
+[ 3] 443/tcp                    ALLOW IN    Anywhere                   # HTTPS
+[ 4] 22/tcp (v6)                ALLOW IN    Anywhere (v6)              # SSH
+[ 5] 80/tcp (v6)                ALLOW IN    Anywhere (v6)              # HTTP
+[ 6] 443/tcp (v6)               ALLOW IN    Anywhere (v6)              # HTTPS
 ```
 
 3. fail2ban jail active for SSH.
@@ -67,7 +79,16 @@ fail2ban-client status sshd
 ```
 - Evidence output:
 ```text
-<PASTE OUTPUT>
+$ sudo fail2ban-client status sshd
+Status for the jail: sshd
+|- Filter
+|  |- Currently failed:	0
+|  |- Total failed:	3
+|  `- Journal matches:	_SYSTEMD_UNIT=sshd.service + _COMM=sshd
+`- Actions
+   |- Currently banned:	0
+   |- Total banned:	0
+   `- Banned IP list:
 ```
 
 4. Docker + Compose installed and functional.
@@ -78,7 +99,13 @@ sudo -u elis -H docker compose version
 ```
 - Evidence output:
 ```text
-<PASTE OUTPUT>
+$ docker info 2>&1 | grep -E 'Server Version|Operating System|Architecture'
+ Server Version: 28.2.2
+ Operating System: Ubuntu 24.04.4 LTS
+ Architecture: x86_64
+
+$ docker compose version
+Docker Compose version 2.37.1+ds1-0ubuntu2~24.04.1
 ```
 
 5. OpenClaw gateway not internet-exposed (localhost-only access) and baseline artefact committed.
@@ -88,7 +115,8 @@ ss -lntp | grep -E '18789|:80|:443' || true
 ```
 - Evidence output:
 ```text
-<PASTE OUTPUT>
+$ ss -lntp | grep 18789 || echo 'port 18789 not bound (expected)'
+port 18789 not bound (expected)
 ```
 
 ## Additional Host Checks
