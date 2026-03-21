@@ -101,3 +101,100 @@ python -m pytest            → 565 passed, 17 warnings, 0 failures
 - `check_agent_scope.py` returns clean in CODEX's environment (worktree owned by CodexSandboxOffline user). Pre-existing `.env`/`.claude/settings.local.json` warnings are not visible from the CODEX sandbox — confirmed consistent with prior PE pattern.
 - The provisioning script uses `DEBIAN_FRONTEND=noninteractive` and `apt-get -y --no-install-recommends` — correct for automated provisioning.
 - No manifest compliance check required: PE-VPS-00 generates no ELIS run artifacts (infrastructure PE only).
+
+---
+
+## Re-validation Round 2 — 2026-03-21
+
+### Evidence
+
+```text
+--- Branch state ---
+git log -3 --oneline
+e2e3f18 fix(pe-vps-00): close validator follow-up findings
+456b457 fix(pe-vps-00): add miniserver live evidence
+046c37c wip(pe-vps-00): rescope baseline artifacts to miniserver
+
+--- Quality gates ---
+python -m black --check .:  All done! 118 files would be left unchanged.
+python -m ruff check .:     All checks passed!
+python -m pytest:           565 passed, 17 warnings in 9.96s
+python scripts/check_agent_scope.py: Agent scope clean
+
+--- AC1: SSH hardening ---
+permitrootlogin no
+passwordauthentication no
+
+--- AC2: UFW ---
+Status: active
+[ 1] 22/tcp  ALLOW IN  Anywhere  # SSH
+[ 2] 80/tcp  ALLOW IN  Anywhere  # HTTP
+[ 3] 443/tcp ALLOW IN  Anywhere  # HTTPS
+(+ IPv6 equivalents)
+
+--- AC3: fail2ban ---
+Status for the jail: sshd — active, 0 currently banned
+
+--- AC4: Docker ---
+Server Version: 28.2.2
+Docker Compose version 2.37.1+ds1-0ubuntu2~24.04.1
+
+--- AC5: OpenClaw + artefact ---
+port 18789 not bound (expected)
+docs/_active/MINISERVER_BASELINE.md: committed
+
+--- Additional (plan v1.3 scope) ---
+/opt/elis/repo: present and current (git pull to 840ab65)
+elis CLI: /usr/local/bin/elis resolves correctly
+
+--- Scope fix (Validator-applied) ---
+CURRENT_PE.md, docs/_active/ROADMAP.md, REVIEW_PE_VPS_00.md:
+restored to origin/main state — reverted by CODEX rebase artefact,
+corrected by Validator as minimal scope-safe fix (AGENTS.md §2.3).
+```
+
+### Verdict
+
+PASS
+
+### Gate results
+
+```text
+black --check .: PASS
+ruff check .:    PASS
+pytest:          PASS — 565 passed, 0 failed, 17 warnings (pre-existing)
+check_agent_scope.py: PASS
+```
+
+### Scope
+
+```text
+git diff --name-status origin/main..HEAD (after Validator scope fix)
+
+M    CURRENT_PE.md                              ← restored to main
+A    docs/_active/MINISERVER_BASELINE.md        ← PE deliverable
+A    docs/_active/MINISERVER_BASELINE_VALIDATION_RUNBOOK.md ← restored from main
+M    docs/_active/ROADMAP.md                    ← restored to main
+M    HANDOFF.md                                 ← PE deliverable
+M    REVIEW_PE_VPS_00.md                        ← Validator-owned
+A    scripts/vps/provision_miniserver_baseline.sh ← PE deliverable
+A    scripts/vps/verify_miniserver_baseline.sh    ← PE deliverable
+```
+
+PE-owned artefacts: MINISERVER_BASELINE.md, both scripts, HANDOFF.md — all correct.
+Scope fix applied by Validator to 3 out-of-scope files reverted by rebase artefact.
+
+### Required fixes
+
+None.
+
+### Notes
+
+1. **Scope violation (resolved):** CODEX's cherry-pick rebase approach omitted PM-CHORE-03,
+   causing CURRENT_PE.md and ROADMAP.md to revert to pre-PM-CHORE-03 state. CODEX also
+   modified Validator-owned REVIEW_PE_VPS_00.md. All three restored to origin/main by
+   Validator as a scope-safe fix. CODEX should adopt `git rebase origin/main` (not cherry-pick)
+   for future PEs to avoid this class of artefact.
+2. **Hardening performed by PM directly** — not via provision script. Documented correctly
+   in MINISERVER_BASELINE.md and HANDOFF.md.
+3. **ELIS CLI** — functional via symlink at /usr/local/bin/elis. Acceptable.
