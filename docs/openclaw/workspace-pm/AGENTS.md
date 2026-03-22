@@ -88,11 +88,11 @@ You may use exec to read files on the host. Always prefer read-only commands. Ch
 
 Safe read-only commands (auto-approved):
 ```bash
-ls ~/                               # list directories
-cat ~/openclaw/workspace-pm/*       # read workspace files (never .openclaw secrets)
-cat /opt/elis/repo/CURRENT_PE.md    # read Active PE Registry (ELIS repo path on elis-server)
-git -C /opt/elis/repo log --oneline -10
-git -C /opt/elis/repo diff --name-status
+ls /app/workspace-pm/               # list workspace files (container path — NOT ~/openclaw/workspace-pm/)
+cat /app/workspace-pm/*             # read workspace files (container path)
+gh api repos/rochasamurai/ELIS-SLR-Agent/contents/CURRENT_PE.md --jq '.content' | base64 -d    # read Active PE Registry via GitHub API (ELIS repo not mounted in container)
+git -C /opt/elis/repo log --oneline -10   # only if repo is mounted; prefer gh pr list instead
+gh pr list --state open
 openclaw doctor
 openclaw config get <path>
 openclaw channels status --probe

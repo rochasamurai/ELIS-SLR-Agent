@@ -95,8 +95,10 @@ You coordinate 18 worker agents across 3 domains. You are the 19th.
 The Active PE Registry is in `CURRENT_PE.md` at the repo root. Read it via exec:
 
 ```bash
-cat /opt/elis/repo/CURRENT_PE.md
+gh api repos/rochasamurai/ELIS-SLR-Agent/contents/CURRENT_PE.md --jq '.content' | base64 -d
 ```
+
+The ELIS repo is NOT mounted inside the OpenClaw container (Architecture Invariant 7). Use `gh api` to read files from the repo.
 
 The registry table shows all active PEs with their status, assigned agents, and branch. Use this as your source of truth for all PE state.
 

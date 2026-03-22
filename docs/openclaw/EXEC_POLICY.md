@@ -10,7 +10,11 @@
 
 The PM Agent (`pm`) can execute shell commands on elis-server via OpenClaw's exec tool. This policy defines which commands are auto-approved, which require operator confirmation, and which are permanently blocked.
 
-The exec policy is configured in `~/.openclaw/openclaw.json` under `agents.exec` and enforced by OpenClaw at runtime.
+The exec policy has two layers:
+1. **Channel exec enable** — `channels.<channel>.execApprovals.enabled: true` must be set for each channel (Discord, Telegram) where exec commands will originate. Without this, all exec is blocked at the channel gate before the allowlist is checked.
+2. **Allowlist** — `~/.openclaw/exec-approvals.json` defines which command patterns are auto-approved without operator confirmation.
+
+Both layers must be configured. Allowlist patterns have no effect if `execApprovals.enabled` is not set for the channel.
 
 ---
 
@@ -29,8 +33,8 @@ These commands are read-only and safe to run without confirmation:
 | Pattern | Purpose |
 |---|---|
 | `ls *` | List directory contents |
-| `cat ~/openclaw/workspace-pm/*` | Read PM Agent workspace files |
-| `cat /opt/elis/repo/CURRENT_PE.md` | Read Active PE Registry (ELIS repo on elis-server) |
+| `cat /app/workspace-pm/*` | Read PM Agent workspace files (container path) |
+| `gh api repos/rochasamurai/ELIS-SLR-Agent/contents/CURRENT_PE.md*` | Read Active PE Registry via GitHub API |
 | `git * log *` | Read git log |
 | `git * status *` | Read git status |
 | `git * diff *` | Read git diff |
@@ -98,13 +102,23 @@ The block list follows the ELIS secrets isolation policy (`AGENTS.md` §13) and 
 
 ## Applying This Policy
 
-The allowlist is configured via the OpenClaw CLI on elis-server (applied during PE-MS-01):
+### Step 1 — Enable exec on Discord channel (required before allowlist takes effect)
+
+```bash
+# Enable exec approvals gate for Discord
+docker exec openclaw openclaw config set channels.discord.execApprovals '{"enabled": true}'
+docker restart openclaw
+```
+
+Without this, all exec commands from Discord are blocked before the allowlist is consulted.
+
+### Step 2 — Configure the allowlist
 
 ```bash
 # Add auto-approved read-only patterns for the pm agent
 openclaw approvals allowlist add --agent pm 'ls *'
-openclaw approvals allowlist add --agent pm 'cat ~/openclaw/workspace-pm/*'
-openclaw approvals allowlist add --agent pm 'cat /opt/elis/repo/CURRENT_PE.md'
+openclaw approvals allowlist add --agent pm 'cat /app/workspace-pm/*'
+openclaw approvals allowlist add --agent pm 'gh api repos/rochasamurai/ELIS-SLR-Agent/contents/CURRENT_PE.md*'
 openclaw approvals allowlist add --agent pm 'git * log *'
 openclaw approvals allowlist add --agent pm 'git * status *'
 openclaw approvals allowlist add --agent pm 'git * diff *'
@@ -117,12 +131,20 @@ openclaw approvals allowlist add --agent pm 'gh pr view*'
 openclaw approvals allowlist add --agent pm 'gh issue list*'
 
 # Verify
-openclaw approvals get
+openclaw approvals get --gateway
 ```
+
+**Note — exec runs inside the container:** All paths in exec commands must use container-internal paths:
+- Workspace files: `/app/workspace-pm/` (not `~/openclaw/workspace-pm/`)
+- ELIS repo is NOT mounted inside the container — use `gh api` to read repo files
+- ELIS repo on host: `/opt/elis/repo/` — inaccessible from inside the container
 
 To verify the applied policy on elis-server:
 ```bash
-docker exec openclaw openclaw approvals get
+docker exec openclaw openclaw config get channels.discord.execApprovals
+# Expected: {"enabled": true}
+
+docker exec openclaw openclaw approvals get --gateway
 # Expected: Agents=1, Allowlist=13, all patterns listed under agent pm
 ```
 
