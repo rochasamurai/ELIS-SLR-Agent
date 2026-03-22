@@ -12,7 +12,7 @@
 |----------------|----------------------------------------------------------------|
 | Release        | ELIS MiniServer Implementation Series                          |
 | Base branch    | main                                                           |
-| Plan file      | ELIS_MultiAgent_Implementation_Plan_v1_3.md                   |
+| Plan file      | ELIS_MultiAgent_Implementation_Plan_v1_4.md                   |
 | Plan location  | repo root                                                      |
 
 ---
@@ -21,8 +21,8 @@
 
 | Field   | Value                                         |
 |---------|-----------------------------------------------|
-| PE      | PM-CHORE-06                                   |
-| Branch  | main                                          |
+| PE      | PE-MS-01                                      |
+| Branch  | feature/pe-ms-01-pm-agent-identity            |
 
 ---
 
@@ -30,8 +30,8 @@
 
 | Agent       | Role        |
 |-------------|-------------|
-| CODEX       | Implementer |
-| Claude Code | Validator   |
+| Claude Code | Implementer |
+| CODEX       | Validator   |
 
 ---
 
@@ -70,6 +70,7 @@
 | PE-VPS-01   | vps             | prog-impl-claude     | prog-val-codex     | feature/pe-vps-01-manifest-validation-blocking    | merged          | 2026-03-06   |
 | PE-VPS-02   | vps             | prog-impl-codex      | prog-val-claude    | feature/pe-vps-02-manifest-schema-extension       | merged          | 2026-03-06   |
 | PE-VPS-00   | vps             | infra-impl-codex     | infra-val-claude   | feature/pe-vps-00-miniserver-baseline             | merged          | 2026-03-21   |
+| PE-MS-01    | infra           | infra-impl-claude    | infra-val-codex    | feature/pe-ms-01-pm-agent-identity                | planning        | 2026-03-22   |
 
 Valid status values:
 - `planning`
@@ -92,6 +93,7 @@ PM housekeeping entries (prefix `PM-CHORE-XX`):
 | PM-CHORE-04  | Aligned PE-VPS-00 metadata to plan v1.3: branch renamed from Hostinger baseline to MiniServer baseline, and agent registry roles updated to `infra-impl-codex` / `infra-val-claude` for the `elis-server` target. | 2026-03-21 |
 | PM-CHORE-05  | Closed PE-VPS-00 as merged after PR #290 landed on `main`. Set the current branch context back to `main` pending PM assignment of the next MiniServer functional PE. | 2026-03-21 |
 | PM-CHORE-06  | Confirmed that plan v1.3 does not yet define a post-baseline MiniServer functional PE. Kept the project on `main` and marked the next step as PM planning/update of the authoritative plan before any new PE assignment. | 2026-03-21 |
+| PM-CHORE-07  | Drafted `ELIS_MultiAgent_Implementation_Plan_v1_4.md` — 7-PE MiniServer functional series (PE-MS-01 to PE-MS-07) targeting production-ready PM Agent orchestration. Updated `CURRENT_PE.md` plan file reference to v1.4 and opened PE-MS-01 with `infra-impl-claude` as Implementer and `infra-val-codex` as Validator per alternation rule. | 2026-03-22 |
 
 Alternation rule:
 - For consecutive PEs in the same domain, the implementer engine must alternate (`codex` <-> `claude`).
