@@ -111,10 +111,11 @@ All 7 PEs follow the 2-agent governance model. Domain is `infra` for all PEs in 
 
 1. PO sends `"Who are you?"` via Discord DM — PM Agent responds with ELIS PM Agent identity (project, role, authority)
 2. PO sends `"What are the current PEs?"` — PM Agent reads `CURRENT_PE.md` via exec and responds with Active PE Registry
-3. `openclaw approvals get` shows Allowlist ≥ 13 patterns for agent `pm`, including `cat /opt/elis/repo/CURRENT_PE.md`
-4. Any exec command not on the allowlist triggers an operator confirmation prompt before execution (no silent auto-execution)
+3. `openclaw approvals get --gateway` shows Allowlist ≥ 14 patterns for agent `pm`, including `cat /opt/elis/repo/CURRENT_PE.md`
+4. Any exec command not on the allowlist is held in the operator approval queue — no silent auto-execution. (OpenClaw has no config-level block tier; the allowlist IS the security boundary. Non-allowlisted commands route to the approval queue and are effectively blocked when no operator is attending.)
 5. `workspace-pm/SOUL.md` and `workspace-pm/AGENTS.md` committed to repo under `docs/openclaw/workspace-pm/`
-6. `openclaw doctor` exits 0 after configuration changes
+6. `openclaw doctor` exits clean and `openclaw channels status` shows Discord `connected`
+7. OpenClaw runs as native systemd user service (`openclaw-gateway.service`) — Docker container removed
 
 **Deliverables**
 
