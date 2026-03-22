@@ -30,6 +30,7 @@ These commands are read-only and safe to run without confirmation:
 |---|---|
 | `ls *` | List directory contents |
 | `cat ~/openclaw/workspace-pm/*` | Read PM Agent workspace files |
+| `cat /opt/elis/repo/CURRENT_PE.md` | Read Active PE Registry (ELIS repo on elis-server) |
 | `git * log *` | Read git log |
 | `git * status *` | Read git status |
 | `git * diff *` | Read git diff |
@@ -103,6 +104,7 @@ The allowlist is configured via the OpenClaw CLI on elis-server (applied during 
 # Add auto-approved read-only patterns for the pm agent
 openclaw approvals allowlist add --agent pm 'ls *'
 openclaw approvals allowlist add --agent pm 'cat ~/openclaw/workspace-pm/*'
+openclaw approvals allowlist add --agent pm 'cat /opt/elis/repo/CURRENT_PE.md'
 openclaw approvals allowlist add --agent pm 'git * log *'
 openclaw approvals allowlist add --agent pm 'git * status *'
 openclaw approvals allowlist add --agent pm 'git * diff *'
@@ -121,7 +123,7 @@ openclaw approvals get
 To verify the applied policy on elis-server:
 ```bash
 docker exec openclaw openclaw approvals get
-# Expected: Agents=1, Allowlist=12, all patterns listed under agent pm
+# Expected: Agents=1, Allowlist=13, all patterns listed under agent pm
 ```
 
 ---

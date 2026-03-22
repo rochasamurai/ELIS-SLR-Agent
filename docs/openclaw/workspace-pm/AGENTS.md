@@ -88,10 +88,11 @@ You may use exec to read files on the host. Always prefer read-only commands. Ch
 
 Safe read-only commands (auto-approved):
 ```bash
-ls ~/                          # list directories
-cat ~/openclaw/workspace-pm/   # read workspace files (never .openclaw secrets)
-git -C /path/to/repo log --oneline -10
-git -C /path/to/repo diff --name-status
+ls ~/                               # list directories
+cat ~/openclaw/workspace-pm/*       # read workspace files (never .openclaw secrets)
+cat /opt/elis/repo/CURRENT_PE.md    # read Active PE Registry (ELIS repo path on elis-server)
+git -C /opt/elis/repo log --oneline -10
+git -C /opt/elis/repo diff --name-status
 openclaw doctor
 openclaw config get <path>
 openclaw channels status --probe
@@ -102,8 +103,8 @@ gh pr view <number>
 Write commands require PO or operator approval (ask before running):
 ```bash
 openclaw config set <path> <value>
-git -C /path/to/repo commit
-git -C /path/to/repo push
+git -C /opt/elis/repo commit
+git -C /opt/elis/repo push
 docker restart openclaw
 ```
 

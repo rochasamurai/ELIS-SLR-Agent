@@ -99,10 +99,11 @@ All 7 PEs follow the 2-agent governance model. Domain is `infra` for all PEs in 
 - Copy governance source documents into `workspace-pm/` so PM Agent can reference them without repo access (Architecture Invariant 7):
   - `AGENTS.md` → `workspace-pm/docs/AGENTS.md`
   - `ELIS_MultiAgent_Implementation_Plan_v1_4.md` → `workspace-pm/docs/PLAN_v1_4.md`
-- Configure exec approval policy in `openclaw.json`:
-  - `exec.autoApprove`: safe read-only commands (`ls`, `cat`, `git log`, `openclaw doctor`, `openclaw config get`)
-  - `exec.ask`: write/destructive commands (`git commit`, `git push`, `openclaw config set`, `docker restart`)
-  - `exec.block`: never-allow list (`rm -rf`, `chmod`, `docker rm`, credential reads)
+- Configure exec approval policy via `openclaw approvals allowlist add --agent pm`:
+  - Auto-approved patterns (allowlist): safe read-only commands (`ls *`, `cat ~/openclaw/workspace-pm/*`, `cat /opt/elis/repo/CURRENT_PE.md`, `git * log *`, `openclaw doctor*`, etc.)
+  - Not allowlisted (requires operator confirmation prompt): write/destructive commands (`git * commit*`, `git * push*`, `openclaw config set*`, `docker restart*`)
+  - Never-run guidance (operator must refuse): `rm *`, `chmod *`, `docker rm*`, credential reads (`cat .env*`, `printenv*`, etc.)
+  - Note: OpenClaw uses an allowlist model — there is no `exec.autoApprove`/`exec.ask`/`exec.block` config key. The `~/.openclaw/exec-approvals.json` managed by `openclaw approvals allowlist` is the authoritative exec policy mechanism.
 - Verify PM Agent retains ELIS context across Discord DM sessions (session persistence)
 - Commit source-controlled copies of workspace-pm documents to repo under `docs/openclaw/workspace-pm/`
 
@@ -110,8 +111,8 @@ All 7 PEs follow the 2-agent governance model. Domain is `infra` for all PEs in 
 
 1. PO sends `"Who are you?"` via Discord DM — PM Agent responds with ELIS PM Agent identity (project, role, authority)
 2. PO sends `"What are the current PEs?"` — PM Agent reads `CURRENT_PE.md` via exec and responds with Active PE Registry
-3. `openclaw config get exec` shows `autoApprove`, `ask`, and `block` lists non-empty
-4. PM Agent exec attempt for a blocked command returns rejection without operator approval prompt
+3. `openclaw approvals get` shows Allowlist ≥ 13 patterns for agent `pm`, including `cat /opt/elis/repo/CURRENT_PE.md`
+4. Any exec command not on the allowlist triggers an operator confirmation prompt before execution (no silent auto-execution)
 5. `workspace-pm/SOUL.md` and `workspace-pm/AGENTS.md` committed to repo under `docs/openclaw/workspace-pm/`
 6. `openclaw doctor` exits 0 after configuration changes
 
@@ -421,7 +422,7 @@ Every file written to elis-server under `~/openclaw/` must also be committed to 
 
 ### 5.4 Secrets and Exec Policy
 
-The exec block list from PE-MS-01 applies throughout this series. No PE may include commands that print, log, or expose secret values. `python scripts/check_agent_scope.py` runs at every commit.
+The exec allowlist policy from PE-MS-01 applies throughout this series. No PE may include commands that print, log, or expose secret values. `python scripts/check_agent_scope.py` runs at every commit. Commands not on the PM Agent's allowlist require operator confirmation — never-run commands (credential reads, `rm *`, `chmod *`) must be refused by the operator.
 
 ### 5.5 Architecture Invariant 7
 
@@ -439,7 +440,7 @@ Architecture v1.5 §3.1 Invariant 6 applies. Any PE generating ELIS run artifact
 |---|---|---|---|
 | R-01 | CODEX agents (`*-impl-codex`, `*-val-codex`) use `gpt-5` which is rate-limited | **High** | Set all CODEX agent models to `openai/gpt-4o` in PE-MS-02. `gpt-5` can be updated when quota is restored. |
 | R-02 | PM Agent session context lost between Discord DMs — SOUL.md not loaded on reconnect | Medium | PE-MS-01 acceptance criterion 4 explicitly tests cross-session persistence. Health-monitor restart must not clear agent session. |
-| R-03 | Exec auto-approve policy too permissive — PM Agent runs unintended write commands | Medium | Block list in `exec.block` is validated by Validator in PE-MS-01. Any command not explicitly in `autoApprove` requires operator prompt. |
+| R-03 | Exec auto-approve policy too permissive — PM Agent runs unintended write commands | Medium | Allowlist validated in PE-MS-01 (`openclaw approvals get` Allowlist=13). Any command not on the allowlist requires operator confirmation prompt before execution. |
 | R-04 | workspace-prog-impl or workspace-infra-impl contain stale rules from v1.3 that conflict with 19-agent model | Low | PE-MS-03 audit scope explicitly targets this. Validator must diff against Architecture v1.5 §4 agent roster. |
 | R-05 | SLR phase workspaces lack sufficient domain specificity — agents cannot produce correct SLR output | Medium | Each workspace AGENTS.md must reference the corresponding Architecture v1.5 SLR phase specification. PO reviews workspace content before PE-MS-04 and PE-MS-05 are merged. |
 | R-06 | PM Agent E2E test (PE-MS-06) reveals orchestration gap requiring plan revision | Low | If >2 iteration cycles fail to produce a passing E2E test, PM escalates and plan v1.5 is issued before proceeding. |
