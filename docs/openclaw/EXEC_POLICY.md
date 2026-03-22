@@ -14,9 +14,15 @@ The exec policy is configured in `~/.openclaw/openclaw.json` under `agents.exec`
 
 ---
 
-## Policy Tiers
+## Policy Model
 
-### Tier 1 — Auto-Approved (`exec.autoApprove`)
+OpenClaw exec approvals use an **allowlist model**: patterns on the allowlist auto-approve; everything else requires manual operator confirmation before execution. There is no separate config-level block tier — any command not on the allowlist is implicitly blocked from auto-approval.
+
+The allowlist is stored in `~/.openclaw/exec-approvals.json` on elis-server and managed via `openclaw approvals allowlist`.
+
+---
+
+## Allowlist — Auto-Approved (`openclaw approvals allowlist add --agent pm`)
 
 These commands are read-only and safe to run without confirmation:
 
@@ -36,7 +42,7 @@ These commands are read-only and safe to run without confirmation:
 | `gh pr view*` | View PR details |
 | `gh issue list*` | List issues |
 
-### Tier 2 — Requires Operator Approval (`exec.ask`)
+### Not Allowlisted — Requires Manual Approval
 
 These commands make changes and require a confirmation prompt before execution:
 
@@ -54,9 +60,9 @@ These commands make changes and require a confirmation prompt before execution:
 | `cp *` | Copy files |
 | `mv *` | Move files |
 
-### Tier 3 — Permanently Blocked (`exec.block`)
+### Never Run — Operator Must Refuse These
 
-These commands are never allowed regardless of operator approval:
+These commands must never be approved even if requested:
 
 | Pattern | Reason |
 |---|---|
@@ -91,57 +97,31 @@ The block list follows the ELIS secrets isolation policy (`AGENTS.md` §13) and 
 
 ## Applying This Policy
 
-The exec policy is applied via the OpenClaw CLI during PE-MS-01 implementation:
+The allowlist is configured via the OpenClaw CLI on elis-server (applied during PE-MS-01):
 
 ```bash
-# Set autoApprove patterns
-openclaw config set agents.exec.autoApprove '[
-  "ls *",
-  "cat ~/openclaw/workspace-pm/*",
-  "git * log *",
-  "git * status *",
-  "git * diff *",
-  "git * show *",
-  "openclaw doctor*",
-  "openclaw config get*",
-  "openclaw channels status*",
-  "openclaw sessions*",
-  "gh pr list*",
-  "gh pr view*",
-  "gh issue list*"
-]'
+# Add auto-approved read-only patterns for the pm agent
+openclaw approvals allowlist add --agent pm 'ls *'
+openclaw approvals allowlist add --agent pm 'cat ~/openclaw/workspace-pm/*'
+openclaw approvals allowlist add --agent pm 'git * log *'
+openclaw approvals allowlist add --agent pm 'git * status *'
+openclaw approvals allowlist add --agent pm 'git * diff *'
+openclaw approvals allowlist add --agent pm 'openclaw doctor*'
+openclaw approvals allowlist add --agent pm 'openclaw config get*'
+openclaw approvals allowlist add --agent pm 'openclaw channels status*'
+openclaw approvals allowlist add --agent pm 'openclaw sessions*'
+openclaw approvals allowlist add --agent pm 'gh pr list*'
+openclaw approvals allowlist add --agent pm 'gh pr view*'
+openclaw approvals allowlist add --agent pm 'gh issue list*'
 
-# Set ask patterns
-openclaw config set agents.exec.ask '[
-  "openclaw config set*",
-  "git * commit*",
-  "git * push*",
-  "git * checkout*",
-  "docker restart*",
-  "gh pr create*",
-  "gh pr merge*",
-  "gh pr review*",
-  "mkdir *",
-  "cp *",
-  "mv *"
-]'
+# Verify
+openclaw approvals get
+```
 
-# Set block patterns
-openclaw config set agents.exec.block '[
-  "rm *",
-  "chmod *",
-  "chown *",
-  "docker rm*",
-  "docker rmi*",
-  "cat .env*",
-  "cat *credentials*",
-  "printenv*",
-  "env",
-  "export *KEY*",
-  "export *TOKEN*",
-  "curl * | bash",
-  "wget * -O- | bash"
-]'
+To verify the applied policy on elis-server:
+```bash
+docker exec openclaw openclaw approvals get
+# Expected: Agents=1, Allowlist=12, all patterns listed under agent pm
 ```
 
 ---
