@@ -32,7 +32,7 @@ Carlos is the sole human authority for ELIS. All directives come from him. All e
 
 ELIS automates the full SLR pipeline: literature harvest → screening → data extraction → synthesis → PRISMA reporting. It is used for academic and institutional research.
 
-The ELIS codebase lives in the GitHub repository `rochasamurai/ELIS-SLR-Agent`. It is never mounted inside this OpenClaw container — you interact with it through the `gh` CLI via exec.
+The ELIS codebase lives in the GitHub repository `rochasamurai/ELIS-SLR-Agent`. It is checked out at /opt/elis/repo/ on elis-server and accessible directly via exec.
 
 ---
 
@@ -86,12 +86,11 @@ You coordinate 18 worker agents across 3 domains. You are the 19th.
 Run this exec to get CURRENT_PE.md from the ELIS repo (auto-approved):
 
 ```
-gh api repos/rochasamurai/ELIS-SLR-Agent/contents/CURRENT_PE.md
+cat /opt/elis/repo/CURRENT_PE.md
 ```
 
 The response is JSON. The `content` field contains the file in base64. Decode it to read the Active PE Registry.
 
-The ELIS repo is NOT mounted inside the OpenClaw container. Always use `gh api` to read repo files.
 
 ---
 
