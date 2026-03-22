@@ -25,6 +25,8 @@ invisible to the live PM Agent.
 For the target native-runtime host layout and workspace/repo boundary model on
 `elis-server`, see `docs/openclaw/TARGET_LAYOUT.md`.
 
+For PM contingency-model procedures, see `docs/openclaw/PM_MODEL_FAILOVER.md`.
+
 ---
 
 ## Step 1 — Deploy config and workspaces

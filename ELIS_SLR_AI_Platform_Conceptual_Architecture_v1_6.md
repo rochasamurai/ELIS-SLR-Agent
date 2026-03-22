@@ -203,11 +203,17 @@ The ELIS platform operates a 19-agent OpenClaw architecture across Programs, Inf
 
 | Role | Primary Model | Fallback |
 |---|---|---|
-| PM Agent | `anthropic/claude-opus-4-6` | `anthropic/claude-sonnet-4-6` |
+| PM Agent | `anthropic/claude-opus-4-6` | `openai/gpt-5.4` |
 | GPT-family coding agents | provider-approved GPT coding tier | lower-cost approved GPT tier |
 | Claude Programs / Infra agents | `claude-sonnet-4-6` | `claude-opus-4-6` |
 | Claude Screen / Extraction / Synthesis agents | `claude-opus-4-6` | `claude-sonnet-4-6` |
 | Claude Harvest / PRISMA agents | `claude-sonnet-4-6` | `claude-opus-4-6` |
+
+PM-specific policy note:
+
+- The PM Agent's contingency model is `openai/gpt-5.4` when the primary Anthropic model is unavailable due to provider outage, billing failure, or auth failure.
+- Until PM-only automatic fallback is explicitly validated on the installed OpenClaw build, failover is operationally manual and must be logged.
+- When contingency mode is activated, the PM Agent should be treated as running in degraded mode and operators should record the model switch in the operational log or handoff note.
 
 ---
 

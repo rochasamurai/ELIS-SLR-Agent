@@ -45,6 +45,7 @@ Plan v1.4 established the MiniServer functional series, but it still carried con
 - native `systemd` is the runtime contract, not Docker
 - governance files must resolve from the canonical platform repo, not stale copied mirrors
 - PM Agent requires read access across repo, workspaces, and project stores, but narrow write authority
+- PM Agent needs a documented contingency model when Anthropic access is unavailable
 - worker workspaces must remain segmented by role and domain
 - SLR outputs must move toward project-specific stores under `/opt/elis/projects`
 
@@ -71,6 +72,7 @@ All of the following must be true before continuing the PE-MS series under v1.5:
 | Docker and Docker Compose removed from production host | `docker` and `docker compose` are absent on `elis-server` |
 | PM Agent reachable on Discord | `openclaw channels status --probe` reports Discord works |
 | PM Agent model set to Claude Opus | `openclaw config get agents.list` confirms |
+| PM contingency model documented | `GPT-5.4` approved as manual failover in architecture and OpenClaw docs |
 | Base branch remains `main` | All PE-MS PEs target `main` |
 | Canonical host layout documented | `docs/openclaw/TARGET_LAYOUT.md` present in repo |
 
@@ -108,6 +110,7 @@ All PEs remain in the `infra` domain because they govern server runtime, workspa
   - identity response
   - current PE registry response
   - blocked command rejection
+- document PM contingency model procedure (`anthropic/claude-opus-4-6` -> `openai/gpt-5.4`)
 - document native exec policy in repo
 
 **Acceptance Criteria**
@@ -117,6 +120,7 @@ All PEs remain in the `infra` domain because they govern server runtime, workspa
 3. PM Agent does not depend on stale copied governance files
 4. `openclaw doctor` passes after configuration changes
 5. repo contains source-controlled PM workspace docs and exec policy docs
+6. PM contingency model procedure is documented for operator use
 
 **Deliverables**
 
@@ -345,6 +349,13 @@ PM and worker agents must prefer canonical repo reads over copied governance mir
 No PE in this series may define Docker as the production runtime for `elis-server`.
 Historical Docker artifacts may remain in archive only.
 
+### 5.6 PM Contingency Model Rule
+
+- PM primary model remains `anthropic/claude-opus-4-6`.
+- PM approved contingency model is `openai/gpt-5.4`.
+- Until PM-only automatic fallback is proven safe in the installed OpenClaw build, the switch to `gpt-5.4` is a manual operational action.
+- Any temporary switch to the contingency model must be recorded in the runbook or operational handoff.
+
 ---
 
 ## 6. Risks and Mitigations
@@ -356,6 +367,7 @@ Historical Docker artifacts may remain in archive only.
 | R-03 | Native runtime docs drift from host reality | Medium | validate commands directly on `elis-server` during PE-MS-07 |
 | R-04 | SLR outputs leak into platform/runtime paths | Medium | enforce `/opt/elis/projects/<review-id>` layout |
 | R-05 | PM operational behavior is healthy but status evidence is incomplete | Medium | capture E2E evidence in PE-MS-06 |
+| R-06 | Anthropic billing or provider failure prevents PM responses | Medium | document and test manual failover to `openai/gpt-5.4` |
 
 ---
 

@@ -312,6 +312,19 @@ The PM Agent should:
 - never require full shell access to answer routine status questions
 - remain read-mostly, with elevated actions explicitly gated
 
+### 5.5 PM model contingency
+
+Recommended PM model policy:
+
+- primary: `anthropic/claude-opus-4-6`
+- contingency: `openai/gpt-5.4`
+
+Best-practice rule:
+
+- do not enable automatic fallback unless the installed OpenClaw build is verified to scope fallback safely for PM
+- until that is proven, treat `GPT-5.4` as a manual operator failover for PM only
+- record the switch as degraded mode in the operational log or handoff
+
 ---
 
 ## 6. Worker Agent Access Model
