@@ -22,6 +22,9 @@ validate the *repo* copy only.
 Without running the deploy step, agent registrations committed to the repo remain
 invisible to the live PM Agent.
 
+For the target native-runtime host layout and workspace/repo boundary model on
+`elis-server`, see `docs/openclaw/TARGET_LAYOUT.md`.
+
 ---
 
 ## Step 1 — Deploy config and workspaces

@@ -12,7 +12,7 @@
 |----------------|----------------------------------------------------------------|
 | Release        | ELIS MiniServer Implementation Series                          |
 | Base branch    | main                                                           |
-| Plan file      | ELIS_MultiAgent_Implementation_Plan_v1_4.md                   |
+| Plan file      | ELIS_MultiAgent_Implementation_Plan_v1_5.md                   |
 | Plan location  | repo root                                                      |
 
 ---
@@ -94,6 +94,7 @@ PM housekeeping entries (prefix `PM-CHORE-XX`):
 | PM-CHORE-05  | Closed PE-VPS-00 as merged after PR #290 landed on `main`. Set the current branch context back to `main` pending PM assignment of the next MiniServer functional PE. | 2026-03-21 |
 | PM-CHORE-06  | Confirmed that plan v1.3 does not yet define a post-baseline MiniServer functional PE. Kept the project on `main` and marked the next step as PM planning/update of the authoritative plan before any new PE assignment. | 2026-03-21 |
 | PM-CHORE-07  | Drafted `ELIS_MultiAgent_Implementation_Plan_v1_4.md` — 7-PE MiniServer functional series (PE-MS-01 to PE-MS-07) targeting production-ready PM Agent orchestration. Updated `CURRENT_PE.md` plan file reference to v1.4 and opened PE-MS-01 with `infra-impl-claude` as Implementer and `infra-val-codex` as Validator per alternation rule. | 2026-03-22 |
+| PM-CHORE-08  | Replaced `ELIS_SLR_AI_Platform_Conceptual_Architecture_v1_5.md` with `ELIS_SLR_AI_Platform_Conceptual_Architecture_v1_6.md` and `ELIS_MultiAgent_Implementation_Plan_v1_4.md` with `ELIS_MultiAgent_Implementation_Plan_v1_5.md`. Archived the superseded versions to `docs/_archive/2026-03/`. Updated `CURRENT_PE.md` plan file reference to v1.5 while keeping PE-MS-01 active. | 2026-03-22 |
 
 Alternation rule:
 - For consecutive PEs in the same domain, the implementer engine must alternate (`codex` <-> `claude`).
