@@ -17,7 +17,7 @@ The allowlist is stored in `~/.openclaw/exec-approvals.json` and managed via `op
 
 **Runtime note:** OpenClaw runs natively on elis-server as the `samurai` user under `systemd --user`. Exec commands therefore operate on host paths directly; use host paths consistently in all PM Agent instructions and allowlist patterns.
 
-**Workspace-entrypoint rule:** PM reads governance state through workspace entrypoints (`~/openclaw/workspace-pm/CURRENT_PE.md`, `~/openclaw/workspace-pm/docs/AGENTS.md`, `~/openclaw/workspace-pm/docs/PLAN_v1_5.md`). These are symlinks to the canonical repo files. Reading via workspace entrypoints avoids Discord elevated-exec approval timeouts.
+**Workspace-entrypoint rule:** PM reads governance state through workspace entrypoints (`~/openclaw/workspace-pm/CURRENT_PE.md`, `~/openclaw/workspace-pm/MEMORY.md`, `~/openclaw/workspace-pm/docs/PLAN_CURRENT.md`). These entrypoints resolve the current release state without hardcoding an obsolete plan version and avoid Discord elevated-exec approval timeouts.
 
 **Elevated exec — disabled for `pm`:** The `pm` agent has `agents.list[id=pm].tools.elevated.enabled: false` in `openclaw.json`. This prevents read-only PM commands from being routed as elevated Discord execs (which would enter the approval queue and time out after 120 s). All PM read operations must be expressible as non-elevated allowlist patterns.
 
@@ -32,7 +32,8 @@ These commands are read-only and safe to run without confirmation:
 | `ls *` | List directory contents |
 | `cat ~/openclaw/workspace-pm/*` | Read PM workspace root files |
 | `cat ~/openclaw/workspace-pm/CURRENT_PE.md` | Read Active PE Registry via workspace symlink |
-| `cat ~/openclaw/workspace-pm/docs/*` | Read PM workspace docs (AGENTS.md, PLAN_v1_5.md) |
+| `cat ~/openclaw/workspace-pm/MEMORY.md` | Read PM durable operating memory |
+| `cat ~/openclaw/workspace-pm/docs/*` | Read PM workspace docs (including `PLAN_CURRENT.md`) |
 | `cat /opt/elis/repo/CURRENT_PE.md` | Read Active PE Registry (fallback — direct repo path) |
 | `git * log *` | Read git log |
 | `git * status *` | Read git status |
@@ -87,6 +88,7 @@ systemctl --user restart openclaw-gateway
 openclaw approvals allowlist add --agent pm 'ls *'
 openclaw approvals allowlist add --agent pm 'cat ~/openclaw/workspace-pm/*'
 openclaw approvals allowlist add --agent pm 'cat ~/openclaw/workspace-pm/CURRENT_PE.md'
+openclaw approvals allowlist add --agent pm 'cat ~/openclaw/workspace-pm/MEMORY.md'
 openclaw approvals allowlist add --agent pm 'cat ~/openclaw/workspace-pm/docs/*'
 openclaw approvals allowlist add --agent pm 'cat /opt/elis/repo/CURRENT_PE.md'
 openclaw approvals allowlist add --agent pm 'git * log *'
@@ -108,7 +110,7 @@ openclaw approvals allowlist add --agent pm 'gh issue list*'
 ```bash
 openclaw approvals get --gateway
 # Expected: Agents=1, Allowlist≥17, all patterns listed for agent pm
-# Including: cat ~/openclaw/workspace-pm/docs/* and git * worktree list*
+# Including: cat ~/openclaw/workspace-pm/MEMORY.md, cat ~/openclaw/workspace-pm/docs/*, and git * worktree list*
 openclaw config get agents.list
 # Expected: pm workspace = ~/openclaw/workspace-pm, elevated.enabled = false
 ```

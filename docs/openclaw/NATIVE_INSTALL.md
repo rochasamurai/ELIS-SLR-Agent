@@ -54,7 +54,7 @@ Expected end state:
 
 - PM Agent instructions must use host paths, not `/app/...` container paths.
 - Runtime docs must reference `systemctl --user` service management, not `docker compose`.
-- PM reads governance state through workspace entrypoints (`~/openclaw/workspace-pm/CURRENT_PE.md`, `~/openclaw/workspace-pm/docs/AGENTS.md`, `~/openclaw/workspace-pm/docs/PLAN_v1_5.md`). These are symlinks to the canonical repo files and avoid Discord elevated-exec approval timeouts.
+- PM reads governance state through workspace entrypoints (`~/openclaw/workspace-pm/CURRENT_PE.md`, `~/openclaw/workspace-pm/MEMORY.md`, `~/openclaw/workspace-pm/docs/PLAN_CURRENT.md`). These entrypoints resolve the active release state without hardcoding an obsolete plan version and avoid Discord elevated-exec approval timeouts.
 - Do not instruct the PM Agent to read `/opt/elis/repo/...` directly in Discord sessions.
 - SLR review artifacts belong under `/opt/elis/projects/<review-id>/`, not in OpenClaw runtime state.
 

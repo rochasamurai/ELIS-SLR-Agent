@@ -1,91 +1,64 @@
 # OpenClaw Deployment Runbook
 
-> **When to use this runbook:** after any merge that touches `openclaw/openclaw.json`
-> or `docker-compose.yml`, run the deploy script to sync the live container.
-
-> **Host boundary (2026-03-21):** `docker-compose.yml` must only be run on
-> **elis-server** (NUC8i7BEH · `ssh elis-server`). This notebook is SSH-only.
-> The local `~/.openclaw` state has been retired to `~/.openclaw_notebook_retired`
-> and `~/openclaw/` workspaces have been removed. Do not run `docker compose up`
-> from this notebook.
+> Use this runbook after any merge that changes OpenClaw workspace files or runtime config.
+> Production runtime on `elis-server` is native `systemd --user`, not Docker.
 
 ---
 
-## Why manual deployment is required
+## Step 1 — Deploy workspaces and config
 
-The OpenClaw container reads its config from `~/.openclaw/openclaw.json` (the state
-directory on the host, mounted as `/app/.openclaw`).  The repository copy at
-`openclaw/openclaw.json` is the source of truth, but it is **not** automatically
-synced on merge.  CI checks (`check_openclaw_doctor.py`, `check_openclaw_security.py`)
-validate the *repo* copy only.
-
-Without running the deploy step, agent registrations committed to the repo remain
-invisible to the live PM Agent.
-
-For the target native-runtime host layout and workspace/repo boundary model on
-`elis-server`, see `docs/openclaw/TARGET_LAYOUT.md`.
-
-For PM contingency-model procedures, see `docs/openclaw/PM_MODEL_FAILOVER.md`.
-
----
-
-## Step 1 — Deploy config and workspaces
-
-Run from the repo root:
+Run from the repo root on `elis-server`:
 
 ```bash
 bash scripts/deploy_openclaw_workspaces.sh
 ```
 
-This script:
-1. Syncs `openclaw/workspaces/` → `~/openclaw/` (workspace AGENTS.md files)
-2. Copies `openclaw/openclaw.json` → `~/.openclaw/openclaw.json`
-3. Prints a restart reminder
+This deploys:
+
+1. `openclaw/workspaces/` → `~/openclaw/`
+2. `openclaw/openclaw.json` → `~/.openclaw/openclaw.json`
+3. PM workspace entrypoints:
+   - `~/openclaw/workspace-pm/CURRENT_PE.md`
+   - `~/openclaw/workspace-pm/docs/AGENTS.md`
+   - `~/openclaw/workspace-pm/docs/PLAN_CURRENT.md`
 
 ---
 
-## Step 2 — Restart the container
+## Step 2 — Restart native service
 
 ```bash
-docker compose down
-docker compose up -d
-docker compose ps
+systemctl --user restart openclaw-gateway
+systemctl --user status openclaw-gateway
 ```
-
-The container must be restarted for the new config to take effect.
 
 ---
 
-## Step 3 — Verify sync
-
-Run the sync verifier on the host (Docker must be running):
+## Step 3 — Verify runtime health
 
 ```bash
-python scripts/check_openclaw_config_sync.py
+openclaw doctor
+openclaw channels status --probe
+openclaw approvals get --gateway
+ls -l ~/openclaw/workspace-pm
+ls -l ~/openclaw/workspace-pm/docs
 ```
 
-Expected output when in sync:
+Expected:
 
-```
-Declared agents (13): pm, slr-impl-codex, slr-impl-claude, ...
-Live agents (13): pm, slr-impl-codex, slr-impl-claude, ...
-OK: all declared agents are present in the live container.
-```
-
-If agents are missing, re-run Step 1 and Step 2.
+- gateway service active
+- `doctor` healthy
+- channels probe healthy
+- PM workspace entrypoints present
 
 ---
 
-## Step 4 — Confirm PM Agent responds
+## Step 4 — Reset PM session if prompt files changed
 
-Send `status` from the PO Telegram account.  The PM Agent should reply with the
-Active PE Registry summary.
+If `SOUL.md`, `AGENTS.md`, `MEMORY.md`, or PM exec-policy rules changed, use:
 
-If no response within 30 seconds:
+- [PM_SESSION_RESET.md](c:\Users\carlo\ELIS-SLR-Agent\.worktrees\pe-ms-02\docs\openclaw\PM_SESSION_RESET.md)
 
-```bash
-docker compose logs openclaw --tail=50
-```
+Do not treat validation evidence as current until a fresh PM session has started.
 
 ---
 
@@ -93,16 +66,11 @@ docker compose logs openclaw --tail=50
 
 | Symptom | Action |
 |---|---|
-| `check_openclaw_config_sync.py` reports missing agents after deploy | Re-run `bash scripts/deploy_openclaw_workspaces.sh` and restart container |
-| PM Agent reports only `main` after merge | Config not deployed — run the deploy script |
-| `~/.openclaw/openclaw.json` not updated | Confirm deploy script ran from repo root; check file mtime |
-| Container fails to start after config update | Check `openclaw.json` is valid JSON: `python -c "import json; json.load(open('openclaw/openclaw.json'))"` |
+| PM still answers with old behavior | deploy again, restart service, then reset PM session |
+| `PLAN_CURRENT.md` missing | check `CURRENT_PE.md` and rerun deploy script |
+| PM cannot read `CURRENT_PE.md` | verify workspace entrypoint symlink and allowlist |
+| runtime health differs from repo docs | update repo docs and rerun validation before merge |
 
 ---
 
-## CI behaviour
-
-`check_openclaw_config_sync.py` runs in CI as the `openclaw-config-sync-check` job.
-It always exits 0 in CI because the Docker daemon is not available in GitHub Actions
-runners — this is intentional and non-blocking.  The script only gates on the host
-where Docker is reachable.
+*OpenClaw Deployment Runbook · Native runtime · 2026-03-23*
