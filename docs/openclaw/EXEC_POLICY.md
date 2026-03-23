@@ -30,8 +30,9 @@ These commands are read-only and safe to run without confirmation:
 | Pattern | Purpose |
 |---|---|
 | `ls *` | List directory contents |
-| `cat ~/openclaw/workspace-pm/*` | Read PM workspace files (primary entrypoint) |
+| `cat ~/openclaw/workspace-pm/*` | Read PM workspace root files |
 | `cat ~/openclaw/workspace-pm/CURRENT_PE.md` | Read Active PE Registry via workspace symlink |
+| `cat ~/openclaw/workspace-pm/docs/*` | Read PM workspace docs (AGENTS.md, PLAN_v1_5.md) |
 | `cat /opt/elis/repo/CURRENT_PE.md` | Read Active PE Registry (fallback — direct repo path) |
 | `git * log *` | Read git log |
 | `git * status *` | Read git status |
@@ -86,6 +87,7 @@ systemctl --user restart openclaw-gateway
 openclaw approvals allowlist add --agent pm 'ls *'
 openclaw approvals allowlist add --agent pm 'cat ~/openclaw/workspace-pm/*'
 openclaw approvals allowlist add --agent pm 'cat ~/openclaw/workspace-pm/CURRENT_PE.md'
+openclaw approvals allowlist add --agent pm 'cat ~/openclaw/workspace-pm/docs/*'
 openclaw approvals allowlist add --agent pm 'cat /opt/elis/repo/CURRENT_PE.md'
 openclaw approvals allowlist add --agent pm 'git * log *'
 openclaw approvals allowlist add --agent pm 'git * status *'
@@ -105,7 +107,8 @@ openclaw approvals allowlist add --agent pm 'gh issue list*'
 
 ```bash
 openclaw approvals get --gateway
-# Expected: Agents=1, Allowlist≥16, all patterns listed for agent pm
+# Expected: Agents=1, Allowlist≥17, all patterns listed for agent pm
+# Including: cat ~/openclaw/workspace-pm/docs/* and git * worktree list*
 openclaw config get agents.list
 # Expected: pm workspace = ~/openclaw/workspace-pm, elevated.enabled = false
 ```
