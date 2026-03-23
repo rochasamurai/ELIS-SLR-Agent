@@ -1,12 +1,12 @@
 # ELIS SLR Agent - Multi-Agent Development Environment with OpenClaw Orchestration
 ## Implementation Plan - Version 1.6 - March 2026
 
-> **Status:** Draft - Pending Validator Review  
-> **Built By:** 2-Agent Model (CODEX + Claude Code)  
-> **Delivers:** PM Agent stabilization and completion of the native OpenClaw installation on `elis-server`  
-> **Phases:** 4 Phases · 8 PEs  
-> **Governing Architecture:** `ELIS_SLR_AI_Platform_Conceptual_Architecture_v1_6.md`  
-> **Host:** ELIS MiniServer - NUC8i7BEH · Ubuntu 24.04.4 LTS · `elis-server`  
+> **Status:** Active
+> **Built By:** 2-Agent Model (CODEX + Claude Code)
+> **Delivers:** PM Agent stabilization and completion of the native OpenClaw installation on `elis-server`
+> **Phases:** 4 Phases · 8 PEs
+> **Governing Architecture:** `ELIS_SLR_AI_Platform_Conceptual_Architecture_v1_6.md`
+> **Host:** ELIS MiniServer - NUC8i7BEH · Ubuntu 24.04.4 LTS · `elis-server`
 > **Supersedes:** `ELIS_MultiAgent_Implementation_Plan_v1_5.md`
 
 ---
@@ -66,13 +66,10 @@ All of the following must be true before continuing the PE-MS series under v1.6:
 | Pre-condition | Evidence |
 |---|---|
 | PE-VPS-00 merged with PASS verdict | PR #290 merged, review artifact committed |
+| PE-MS-01 merged with PASS verdict | PR #292 merged, review artifact committed |
 | Native OpenClaw service active on `elis-server` | `systemctl --user status openclaw-gateway` shows active |
-| Docker and Docker Compose removed from production host | `docker` and `docker compose` are absent on `elis-server` |
-| PM Agent can answer identity and PE-status questions in controlled validation | Local validated runs completed on `elis-server` |
-| PM Discord approval timeout root cause identified | PM elevated exec mode on Discord was disabled |
+| PM Agent can answer identity and PE-status questions | Live Discord test confirmed 2026-03-23 |
 | Base branch remains `main` | All PE-MS PEs target `main` |
-| Canonical host layout documented | `docs/openclaw/TARGET_LAYOUT.md` present in repo |
-| Cutover history documented | `docs/_active/OPENCLAW_NATIVE_CUTOVER_AND_PM_STABILIZATION_REPORT_2026-03-23.md` present |
 
 ---
 
@@ -91,32 +88,11 @@ surfaces on `elis-server`.
 |---|---|
 | Implementer | Claude Code (`infra-impl-claude`) |
 | Validator | CODEX (`infra-val-codex`) |
-| Effort | 3-4 hours |
 | Phase | 1 |
 | Depends On | PE-VPS-00 |
-| Status | In progress |
+| Status | Merged |
 
-**Scope**
-
-- write PM identity files in `~/openclaw/workspace-pm/`
-- update PM orchestration rules in `~/openclaw/workspace-pm/AGENTS.md`
-- replace copied governance references with canonical repo reads or symlink-based references
-- define PM read-only allowlist and narrow approval-gated write list
-- validate PM Agent Discord behavior for:
-  - identity response
-  - current PE registry response
-  - blocked command rejection
-- document PM contingency model procedure
-- document native exec policy in repo
-
-**Acceptance Criteria**
-
-1. PM Agent answers `"Who are you?"` with ELIS-specific identity and authority boundaries
-2. PM Agent answers `"What are the current PEs?"` using the canonical `CURRENT_PE.md`
-3. PM Agent does not depend on stale copied governance files
-4. `openclaw doctor` passes after configuration changes
-5. repo contains source-controlled PM workspace docs and exec policy docs
-6. PM contingency model procedure is documented for operator use
+**Scope:** PM identity files, exec allowlist (29 patterns), workspace-entrypoint rule, elevated=false, systemd native runtime.
 
 #### PE-MS-02 · PM Prompt Unification and Session Reset Discipline
 
@@ -131,11 +107,7 @@ surfaces on `elis-server`.
 
 **Scope**
 
-- unify PM prompt behavior across:
-  - `AGENTS.md`
-  - `SOUL.md`
-  - `MEMORY.md`
-  - any injected helper files that influence PM behavior
+- unify PM prompt behavior across AGENTS.md, SOUL.md, MEMORY.md, and any injected helper files
 - eliminate conflicting instructions about canonical source paths
 - document when PM session state must be reset after prompt changes
 - add a lightweight PM session reset runbook
@@ -162,11 +134,8 @@ surfaces on `elis-server`.
 
 - constrain PM reporting rules for Discord
 - prevent freehand rendering of large registry tables that can break formatting
-- require source-specific answers:
-  - PE state from `CURRENT_PE.md`
-  - worktrees from `git worktree list`
-  - PR state from `gh pr`
-- add explicit “do not infer worktrees from branches” guidance
+- require source-specific answers: PE state from CURRENT_PE.md, worktrees from `git worktree list`, PR state from `gh pr`
+- add explicit "do not infer worktrees from branches" guidance
 
 **Acceptance Criteria**
 
@@ -194,7 +163,6 @@ surfaces on `elis-server`.
 
 - audit `openclaw.json` against Architecture v1.6 agent roster
 - verify each agent points to the correct canonical workspace path on host
-- confirm PM agent points to `~/openclaw/workspace-pm`
 - confirm no runtime config assumes Docker-only paths
 - commit sanitized runtime-config reference to repo
 
@@ -275,16 +243,16 @@ surfaces on `elis-server`.
 
 ## 4. Build Schedule
 
-| Week | PE | Phase | Implementer | Effort | Depends On | Status |
-|---|---|---|---|---|---|---|
-| 1 | PE-MS-01: PM identity and native exec config | 1 | Claude Code | 3-4h | PE-VPS-00 | In progress |
-| 1 | PE-MS-02: PM prompt unification and session reset | 1 | CODEX | 2-3h | PE-MS-01 | Planned |
-| 1-2 | PE-MS-03: PM Discord reporting hardening | 1 | Claude Code | 2-3h | PE-MS-02 | Planned |
-| 2 | PE-MS-04: Agent registry and canonical paths | 2 | CODEX | 2-3h | PE-MS-03 | Planned |
-| 3 | PE-MS-05: Existing workspace audit | 3 | Claude Code | 3-4h | PE-MS-04 | Planned |
-| 3-4 | PE-MS-06: SLR phase workspaces | 3 | CODEX | 4-5h | PE-MS-05 | Planned |
-| 4 | PE-MS-07: Project-store layout and PM visibility | 3 | Claude Code | 3-4h | PE-MS-06 | Planned |
-| 5 | PE-MS-08: E2E validation and native runbooks | 4 | CODEX | 5-6h | PE-MS-07 | Planned |
+| Week | PE | Phase | Implementer | Effort | Status |
+|---|---|---|---|---|---|
+| 1 | PE-MS-01: PM identity and native exec config | 1 | Claude Code | — | Merged |
+| 1 | PE-MS-02: PM prompt unification and session reset | 1 | CODEX | 2-3h | Planned |
+| 1-2 | PE-MS-03: PM Discord reporting hardening | 1 | Claude Code | 2-3h | Planned |
+| 2 | PE-MS-04: Agent registry and canonical paths | 2 | CODEX | 2-3h | Planned |
+| 3 | PE-MS-05: Existing workspace audit | 3 | Claude Code | 3-4h | Planned |
+| 3-4 | PE-MS-06: SLR phase workspaces | 3 | CODEX | 4-5h | Planned |
+| 4 | PE-MS-07: Project-store layout and PM visibility | 3 | Claude Code | 3-4h | Planned |
+| 5 | PE-MS-08: E2E validation and native runbooks | 4 | CODEX | 5-6h | Planned |
 
 ---
 
@@ -314,7 +282,7 @@ PM and worker agents must prefer canonical repo truth through approved workspace
 - PE state comes from `CURRENT_PE.md`
 - worktree state comes from `git worktree list`
 - PR state comes from `gh pr`
-- runtime health comes from `openclaw doctor` and `openclaw channels status --probe`
+- runtime health comes from `openclaw doctor` and `openclaw channels status`
 
 PM must not infer one category from another.
 
@@ -337,7 +305,6 @@ No PE in this series may define Docker as the production runtime for `elis-serve
 | R-03 | Discord formatting breaks large governance tables | Medium | PE-MS-03 adds Discord-safe reporting constraints |
 | R-04 | Native runtime docs drift from host reality | Medium | PE-MS-08 validates runbooks directly on `elis-server` |
 | R-05 | Workspace permissions are too broad | Medium | PE-MS-05 and PE-MS-07 validate least-privilege access |
-| R-06 | Provider billing/rate limits disrupt PM responses | Medium | maintain documented manual contingency model and test it during PE-MS-08 |
 
 ---
 
