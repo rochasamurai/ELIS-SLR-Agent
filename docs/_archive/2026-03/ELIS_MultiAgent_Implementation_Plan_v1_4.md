@@ -60,7 +60,7 @@ All of the following must be true before PE-MS-01 begins. Validated as of 2026-0
 | Pre-condition | Evidence |
 |---|---|
 | PE-VPS-00 merged with PASS verdict | PR #290 merged, `REVIEW_PE_VPS_00.md` committed |
-| OpenClaw container running on elis-server | `docker ps` shows `openclaw` — Up, health: healthy |
+| OpenClaw native service running on elis-server | `systemctl --user status openclaw-gateway` → `active (running)` |
 | PM Agent connected on Discord (allowlist-only) | `channels status --probe`: `works` (carlosrocha_elis ID bound) |
 | PM Agent connected on Telegram (allowlist-only) | `doctor`: `Telegram: ok (@elis_pm_agent_bot)` |
 | PM Agent model: `anthropic/claude-opus-4-6` | `openclaw config get agents.list` confirms |
@@ -99,21 +99,24 @@ All 7 PEs follow the 2-agent governance model. Domain is `infra` for all PEs in 
 - Copy governance source documents into `workspace-pm/` so PM Agent can reference them without repo access (Architecture Invariant 7):
   - `AGENTS.md` → `workspace-pm/docs/AGENTS.md`
   - `ELIS_MultiAgent_Implementation_Plan_v1_4.md` → `workspace-pm/docs/PLAN_v1_4.md`
-- Configure exec approval policy in `openclaw.json`:
-  - `exec.autoApprove`: safe read-only commands (`ls`, `cat`, `git log`, `openclaw doctor`, `openclaw config get`)
-  - `exec.ask`: write/destructive commands (`git commit`, `git push`, `openclaw config set`, `docker restart`)
-  - `exec.block`: never-allow list (`rm -rf`, `chmod`, `docker rm`, credential reads)
+- Configure exec approval policy via `openclaw approvals allowlist add --agent pm`:
+  - Auto-approved patterns (allowlist): safe read-only commands (`ls *`, `cat ~/openclaw/workspace-pm/*`, `cat /opt/elis/repo/CURRENT_PE.md`, `git * log *`, `openclaw doctor*`, etc.)
+  - Not allowlisted (requires operator confirmation prompt): write/destructive commands (`git * commit*`, `git * push*`, `openclaw config set*`, `systemctl --user restart openclaw-gateway`)
+  - Never-run guidance (operator must refuse): `rm *`, `chmod *`, `chown *`, credential reads (`cat .env*`, `printenv*`, etc.)
+  - Note: OpenClaw uses an allowlist model — there is no `exec.autoApprove`/`exec.ask`/`exec.block` config key. The `~/.openclaw/exec-approvals.json` managed by `openclaw approvals allowlist` is the authoritative exec policy mechanism.
 - Verify PM Agent retains ELIS context across Discord DM sessions (session persistence)
+- Decommission the legacy Docker runtime on `elis-server` after native verification (`docker` engine, Compose plugin, and any stopped `openclaw` container)
 - Commit source-controlled copies of workspace-pm documents to repo under `docs/openclaw/workspace-pm/`
 
 **Acceptance Criteria**
 
 1. PO sends `"Who are you?"` via Discord DM — PM Agent responds with ELIS PM Agent identity (project, role, authority)
 2. PO sends `"What are the current PEs?"` — PM Agent reads `CURRENT_PE.md` via exec and responds with Active PE Registry
-3. `openclaw config get exec` shows `autoApprove`, `ask`, and `block` lists non-empty
-4. PM Agent exec attempt for a blocked command returns rejection without operator approval prompt
+3. `openclaw approvals get --gateway` shows Allowlist ≥ 14 patterns for agent `pm`, including `cat /opt/elis/repo/CURRENT_PE.md`
+4. Any exec command not on the allowlist is held in the operator approval queue — no silent auto-execution. (OpenClaw has no config-level block tier; the allowlist IS the security boundary. Non-allowlisted commands route to the approval queue and are effectively blocked when no operator is attending.)
 5. `workspace-pm/SOUL.md` and `workspace-pm/AGENTS.md` committed to repo under `docs/openclaw/workspace-pm/`
-6. `openclaw doctor` exits 0 after configuration changes
+6. `openclaw doctor` exits clean and `openclaw channels status` shows Discord `connected`
+7. OpenClaw runs as native systemd user service (`openclaw-gateway.service`) and the legacy Docker/Compose runtime has been removed from `elis-server`
 
 **Deliverables**
 
@@ -124,6 +127,7 @@ All 7 PEs follow the 2-agent governance model. Domain is `infra` for all PEs in 
 - `docs/openclaw/workspace-pm/SOUL.md` (source-controlled copy)
 - `docs/openclaw/workspace-pm/AGENTS.md` (source-controlled copy)
 - `docs/openclaw/EXEC_POLICY.md` — exec approval policy documentation
+- `docs/openclaw/NATIVE_INSTALL.md` — native runtime and Docker decommission notes
 
 ---
 
@@ -154,7 +158,7 @@ All 7 PEs follow the 2-agent governance model. Domain is `infra` for all PEs in 
 
 1. `openclaw config get agents.list` returns all 19 agent IDs
 2. Each agent's `model` field matches Architecture v1.5 §2.3 policy
-3. Each agent's `workspace` path resolves to an existing directory inside the container
+3. Each agent's `workspace` path resolves to an existing directory on elis-server
 4. `openclaw doctor` exits 0 with `Agents:` line listing all 19 IDs
 5. `docs/openclaw/openclaw_sanitised.json` committed to repo with all token/secret values replaced by `"__REDACTED__"`
 
@@ -167,7 +171,7 @@ All 7 PEs follow the 2-agent governance model. Domain is `infra` for all PEs in 
 
 ### Phase 2 — Workspace Provisioning
 
-> **Goal:** Provision all missing SLR phase-specialized workspaces and audit the existing Programs/Infrastructure workspaces against Architecture v1.5. At the end of Phase 2, all 11 workspace variants exist on elis-server with role-correct AGENTS.md files, all are mounted in `docker-compose.yml`, and `openclaw doctor` confirms all agents are workspace-ready.
+> **Goal:** Provision all missing SLR phase-specialized workspaces and audit the existing Programs/Infrastructure workspaces against Architecture v1.5. At the end of Phase 2, all 11 workspace variants exist on elis-server with role-correct AGENTS.md files, all are referenced by the native OpenClaw configuration, and `openclaw doctor` confirms all agents are workspace-ready.
 
 ---
 
@@ -191,14 +195,14 @@ All 7 PEs follow the 2-agent governance model. Domain is `infra` for all PEs in 
   - `workspace-infra-val` (created PE-OC-21)
 - For each workspace: verify `AGENTS.md` references correct agent IDs, domain, model tier, and governance rules per `AGENTS.md` §2
 - Update any section that references outdated agent IDs, model names, or plan versions
-- Verify `docker-compose.yml` mounts all four workspaces as `:ro` volumes
+- Verify `openclaw.json` points the existing Programs/Infrastructure agents at the correct host workspace directories
 - Commit updated workspace files to repo under `openclaw/workspaces/`
 
 **Acceptance Criteria**
 
 1. All four workspace `AGENTS.md` files reference only agent IDs valid in the v1.5 19-agent roster
 2. No workspace contains rules belonging to the opposite role (Implementer rules in a Validator workspace or vice versa)
-3. All four workspaces mounted as `:ro` in `docker-compose.yml` — `docker compose config` confirms
+3. All four workspace paths are defined correctly in `openclaw.json` and resolve on elis-server
 4. `openclaw doctor` shows `prog-impl-codex`, `prog-impl-claude`, `prog-val-claude`, `prog-val-codex`, `infra-impl-codex`, `infra-impl-claude`, `infra-val-claude`, `infra-val-codex` all listed without workspace errors
 5. Updated files committed to `openclaw/workspaces/` in repo
 
@@ -208,7 +212,7 @@ All 7 PEs follow the 2-agent governance model. Domain is `infra` for all PEs in 
 - `openclaw/workspaces/workspace-prog-val/AGENTS.md` (audited/updated)
 - `openclaw/workspaces/workspace-infra-impl/AGENTS.md` (audited/updated)
 - `openclaw/workspaces/workspace-infra-val/AGENTS.md` (audited/updated)
-- `docker-compose.yml` (confirmed or updated volume mounts)
+- `docs/openclaw/NATIVE_INSTALL.md` (updated if path or service management changes)
 
 ---
 
@@ -231,14 +235,13 @@ All 7 PEs follow the 2-agent governance model. Domain is `infra` for all PEs in 
 - Create `workspace-slr-screen/` on elis-server and in repo:
   - `AGENTS.md` — Screen domain rules: inclusion/exclusion criteria application, PRISMA eligibility tracking, screen evidence requirements
   - Role split: `screen-impl-claude` (Implementer) and `screen-val-codex` (Validator)
-- Update `docker-compose.yml`: add both workspaces as `:ro` volume mounts
 - Update `openclaw.json`: confirm both workspace paths are set for the four affected agents
 
 **Acceptance Criteria**
 
 1. `workspace-slr-harvest/AGENTS.md` exists on elis-server and in repo — contains zero Programs or Infrastructure domain rules
 2. `workspace-slr-screen/AGENTS.md` exists on elis-server and in repo — contains zero Programs or Infrastructure domain rules
-3. `docker-compose.yml` mounts both workspaces as `:ro` — `docker compose config` confirms
+3. `openclaw.json` points both workspaces to valid host directories for the four affected agents
 4. `openclaw doctor` lists `harvest-impl-codex`, `harvest-val-claude`, `screen-impl-claude`, `screen-val-codex` without workspace errors
 5. Run manifest compliance note present in both `AGENTS.md` files (Architecture v1.5 §3.1)
 
@@ -246,7 +249,7 @@ All 7 PEs follow the 2-agent governance model. Domain is `infra` for all PEs in 
 
 - `openclaw/workspaces/workspace-slr-harvest/AGENTS.md`
 - `openclaw/workspaces/workspace-slr-screen/AGENTS.md`
-- `docker-compose.yml` (updated)
+- `docs/openclaw/NATIVE_INSTALL.md` (updated if new workspaces require deployment guidance)
 
 ---
 
@@ -269,13 +272,12 @@ All 7 PEs follow the 2-agent governance model. Domain is `infra` for all PEs in 
   - Role split: `synth-impl-claude` (Implementer), `synth-val-codex` (Validator)
 - Create `workspace-slr-prisma/` — PRISMA domain rules: PRISMA 2020 flow diagram generation, checklist compliance, appendix formatting
   - Role split: `prisma-impl-claude` (Implementer), `prisma-val-codex` (Validator)
-- Update `docker-compose.yml`: add all three workspaces as `:ro` volume mounts
 - Run `openclaw doctor` — all 19 agents must show workspace-ready
 
 **Acceptance Criteria**
 
 1. `workspace-slr-extract/AGENTS.md`, `workspace-slr-synth/AGENTS.md`, `workspace-slr-prisma/AGENTS.md` exist on elis-server and in repo
-2. `docker-compose.yml` mounts all 11 workspaces (4 existing + 2 from PE-MS-04 + 3 new) as `:ro` — `docker compose config` confirms
+2. `openclaw.json` points all 11 workspaces (4 existing + 2 from PE-MS-04 + 3 new) to valid host directories
 3. `openclaw doctor` `Agents:` line lists all 19 agent IDs without workspace or model errors
 4. All three `AGENTS.md` files contain run manifest compliance notes (Architecture v1.5 §3.1)
 5. No workspace file contains rules from a different SLR phase (e.g., no harvest rules in synthesis workspace)
@@ -285,7 +287,7 @@ All 7 PEs follow the 2-agent governance model. Domain is `infra` for all PEs in 
 - `openclaw/workspaces/workspace-slr-extract/AGENTS.md`
 - `openclaw/workspaces/workspace-slr-synth/AGENTS.md`
 - `openclaw/workspaces/workspace-slr-prisma/AGENTS.md`
-- `docker-compose.yml` (final — all 11 workspaces mounted)
+- `docs/openclaw/NATIVE_INSTALL.md` (final workspace deployment notes)
 
 ---
 
@@ -349,7 +351,7 @@ All 7 PEs follow the 2-agent governance model. Domain is `infra` for all PEs in 
 **Scope**
 
 - Write `docs/openclaw/OPS_RUNBOOK.md` covering:
-  - Container start / stop / restart procedures
+  - Native service start / stop / restart procedures
   - Config change procedure (edit → validate → restart → verify)
   - Log inspection commands
   - Channel health check procedure (`openclaw channels status --probe`)
@@ -357,7 +359,7 @@ All 7 PEs follow the 2-agent governance model. Domain is `infra` for all PEs in 
   - Credential rotation procedure (bot token, API keys)
   - Security audit procedure (`openclaw security audit --deep`)
 - Write `docs/openclaw/RESTORE_RUNBOOK.md` covering:
-  - Full container rebuild from `docker-compose.yml`
+  - Full native OpenClaw rebuild from `/opt/openclaw/` + `~/.config/systemd/user/openclaw-gateway.service`
   - Restoring `~/.openclaw/` from backup
   - Re-registering channel credentials after restore
   - Verification checklist post-restore
@@ -421,11 +423,11 @@ Every file written to elis-server under `~/openclaw/` must also be committed to 
 
 ### 5.4 Secrets and Exec Policy
 
-The exec block list from PE-MS-01 applies throughout this series. No PE may include commands that print, log, or expose secret values. `python scripts/check_agent_scope.py` runs at every commit.
+The exec allowlist policy from PE-MS-01 applies throughout this series. No PE may include commands that print, log, or expose secret values. `python scripts/check_agent_scope.py` runs at every commit. Commands not on the PM Agent's allowlist require operator confirmation — never-run commands (credential reads, `rm *`, `chmod *`) must be refused by the operator.
 
 ### 5.5 Architecture Invariant 7
 
-The ELIS repository must never be mounted as a Docker volume. All PE work that involves copying governance documents into `workspace-pm` does so via SSH from outside the container, not by mounting the repo path.
+The ELIS repository must never be mounted into OpenClaw runtime state. All PE work that involves copying governance documents into `workspace-pm` does so via SSH onto elis-server, not by sharing the repo into the running service.
 
 ### 5.6 Run Manifest Compliance
 
@@ -439,7 +441,7 @@ Architecture v1.5 §3.1 Invariant 6 applies. Any PE generating ELIS run artifact
 |---|---|---|---|
 | R-01 | CODEX agents (`*-impl-codex`, `*-val-codex`) use `gpt-5` which is rate-limited | **High** | Set all CODEX agent models to `openai/gpt-4o` in PE-MS-02. `gpt-5` can be updated when quota is restored. |
 | R-02 | PM Agent session context lost between Discord DMs — SOUL.md not loaded on reconnect | Medium | PE-MS-01 acceptance criterion 4 explicitly tests cross-session persistence. Health-monitor restart must not clear agent session. |
-| R-03 | Exec auto-approve policy too permissive — PM Agent runs unintended write commands | Medium | Block list in `exec.block` is validated by Validator in PE-MS-01. Any command not explicitly in `autoApprove` requires operator prompt. |
+| R-03 | Exec auto-approve policy too permissive — PM Agent runs unintended write commands | Medium | Allowlist validated in PE-MS-01 (`openclaw approvals get` Allowlist=13). Any command not on the allowlist requires operator confirmation prompt before execution. |
 | R-04 | workspace-prog-impl or workspace-infra-impl contain stale rules from v1.3 that conflict with 19-agent model | Low | PE-MS-03 audit scope explicitly targets this. Validator must diff against Architecture v1.5 §4 agent roster. |
 | R-05 | SLR phase workspaces lack sufficient domain specificity — agents cannot produce correct SLR output | Medium | Each workspace AGENTS.md must reference the corresponding Architecture v1.5 SLR phase specification. PO reviews workspace content before PE-MS-04 and PE-MS-05 are merged. |
 | R-06 | PM Agent E2E test (PE-MS-06) reveals orchestration gap requiring plan revision | Low | If >2 iteration cycles fail to produce a passing E2E test, PM escalates and plan v1.5 is issued before proceeding. |
@@ -452,7 +454,7 @@ Architecture v1.5 §3.1 Invariant 6 applies. Any PE generating ELIS run artifact
 The implementation is considered complete when **all** of the following conditions are met simultaneously:
 
 1. All 7 PE-MS-XX PEs merged to `main` with PASS verdicts
-2. `openclaw doctor` exits 0 on the production container with all 19 agents listed and no workspace errors
+2. `openclaw doctor` exits 0 on the production native service with all 19 agents listed and no workspace errors
 3. All 11 workspace `AGENTS.md` files committed to repo under `openclaw/workspaces/`
 4. PM Agent correctly identifies itself as the ELIS PM Agent when queried by PO via Discord DM
 5. PM Agent E2E test evidence committed to `docs/openclaw/PM_AGENT_E2E_TEST.md` — alternation rule exercised and verified

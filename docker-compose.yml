@@ -1,17 +1,27 @@
+# OpenClaw is no longer run from this Compose file on elis-server.
+# It is installed natively and managed as a systemd user service.
+# Keep this file only as a migration artifact until native runbooks fully replace it.
+#
+# Migration completed in PE-MS-01 (2026-03-22).
+# Reason: Docker's loopback binding prevented Web UI access and caused
+# path isolation issues with exec commands and the memory system.
+#
+# To manage the native service:
+#   systemctl --user status openclaw-gateway
+#   systemctl --user restart openclaw-gateway
+#   journalctl --user -u openclaw-gateway -f
+#
+# Service file: ~/.config/systemd/user/openclaw-gateway.service
+# Web UI: http://localhost:18789  (token: openclaw dashboard --no-open)
+
 services:
   openclaw:
     image: ghcr.io/openclaw/openclaw:latest
     container_name: openclaw
     restart: unless-stopped
-    ports:
-      - "127.0.0.1:18789:18789"
-    command:
-      - node
-      - openclaw.mjs
-      - gateway
-      - --allow-unconfigured
-      - --bind
-      - loopback
+    # DISABLED — replaced by native systemd service (PE-MS-01)
+    profiles:
+      - docker-disabled
     security_opt:
       - no-new-privileges:true
     tmpfs:
@@ -27,6 +37,7 @@ services:
     volumes:
       - ${HOME}/.openclaw:/app/.openclaw:rw
       - ${HOME}/openclaw/workspace-pm:/app/workspaces/workspace-pm:rw
+      - ${HOME}/openclaw/workspace-pm:/app/workspace-pm:rw
       - ${HOME}/openclaw/workspace-prog-impl:/app/workspaces/workspace-prog-impl:ro
       - ${HOME}/openclaw/workspace-infra-impl:/app/workspaces/workspace-infra-impl:ro
       - ${HOME}/openclaw/workspace-prog-val:/app/workspaces/workspace-prog-val:ro
