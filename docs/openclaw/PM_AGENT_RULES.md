@@ -59,4 +59,23 @@ Deployment is native, not Docker-based:
 
 ---
 
+## Discord Reporting Rules
+
+These rules prevent malformed or oversized output in Discord (2000-character limit).
+
+| Situation | Required format |
+|---|---|
+| PE status (default) | bullet list, non-merged PEs only |
+| Full registry (explicit PO request) | compact single-line-per-PE bullet list |
+| Worktree state | bullet list from `git worktree list` output |
+| PR state | one line per PR |
+| Any table > 5 rows | switch to bullet list |
+| Full 7-column registry table | **never** in Discord |
+
+**Worktree vs registry distinction:** registry entries record branch names; they do not prove a worktree exists. Always verify with `git -C /opt/elis/repo worktree list`.
+
+Full rules in `openclaw/workspaces/workspace-pm/AGENTS.md` §5.1–5.3 and §8.
+
+---
+
 *ELIS PM Agent · Rules Reference · 2026-03-23*
