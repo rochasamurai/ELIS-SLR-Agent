@@ -275,7 +275,7 @@ A	docs/openclaw/workspace-pm/SOUL.md
 ```bash
 systemctl --user status openclaw-gateway    # AC-7: active (running)
 openclaw channels status                    # AC-6: Discord connected
-openclaw approvals get --gateway            # AC-3: Allowlist=27 (≥14 required)
+openclaw approvals get --gateway            # AC-3: Allowlist=29 (≥29 required)
 cat ~/openclaw/workspace-pm/SOUL.md | head -5    # AC-5: identity loaded
 ```
 
