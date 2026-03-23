@@ -5,8 +5,13 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SRC_DIR="$ROOT_DIR/openclaw/workspaces"
 TARGET_ROOT="$HOME/openclaw"
 TARGET_PM="$TARGET_ROOT/workspace-pm"
+REPO_ROOT="/opt/elis/repo"
+CURRENT_PE_SRC="$REPO_ROOT/CURRENT_PE.md"
+CURRENT_PE_LINK="$TARGET_PM/CURRENT_PE.md"
+TARGET_PM_DOCS="$TARGET_PM/docs"
 
 mkdir -p "$TARGET_PM"
+mkdir -p "$TARGET_PM_DOCS"
 
 if command -v rsync >/dev/null 2>&1; then
   rsync -av --delete "$SRC_DIR/" "$TARGET_ROOT/"
@@ -17,6 +22,16 @@ else
 fi
 
 echo "OpenClaw workspaces deployed to: $TARGET_ROOT"
+
+# Provision PM workspace entrypoints that resolve to canonical repo files.
+if [[ -f "$CURRENT_PE_SRC" ]]; then
+  ln -sfn "$CURRENT_PE_SRC" "$CURRENT_PE_LINK"
+  ln -sfn "$REPO_ROOT/AGENTS.md" "$TARGET_PM_DOCS/AGENTS.md"
+  PLAN_FILE="$(awk -F'|' '/Plan file/ {gsub(/^[ \t]+|[ \t]+$/, "", $3); print $3}' "$CURRENT_PE_SRC")"
+  if [[ -n "${PLAN_FILE:-}" && -f "$REPO_ROOT/$PLAN_FILE" ]]; then
+    ln -sfn "$REPO_ROOT/$PLAN_FILE" "$TARGET_PM_DOCS/PLAN_CURRENT.md"
+  fi
+fi
 
 # Deploy openclaw config to container state directory.
 # Merges repo config (agents, bindings, commands, plugins) with the live state dir config,
@@ -47,5 +62,5 @@ dest.write_text(json.dumps(repo_cfg, indent=2) + "\n", encoding="utf-8")
 PYEOF
 echo "OpenClaw config deployed to: $CONFIG_DEST (channels/meta preserved)"
 echo ""
-echo "Restart the container to apply the new config:"
-echo "  docker compose down && docker compose up -d"
+echo "Restart the native service to apply the new config:"
+echo "  systemctl --user restart openclaw-gateway"

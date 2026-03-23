@@ -1,39 +1,62 @@
 # PM Agent Rules — Source-Controlled Reference
 
-> **Source:** `openclaw/workspaces/workspace-pm/AGENTS.md`
-> **Deployed to:** `~/openclaw/workspace-pm/AGENTS.md` (via `scripts/deploy_openclaw_workspaces.sh`)
-> **Last updated:** PE-OC-02
+> **Canonical deploy source:** `openclaw/workspaces/workspace-pm/`
+> **Deployed to:** `~/openclaw/workspace-pm/` via `scripts/deploy_openclaw_workspaces.sh`
+> **Mirrored docs copy:** `docs/openclaw/workspace-pm/`
+> **Runtime:** native `systemd --user` service on `elis-server`
 
-This file is the source-controlled reference copy of the PM Agent orchestration rules.
-The canonical file is `openclaw/workspaces/workspace-pm/AGENTS.md`. Any edit to PM Agent
-rules must go through a PE, be reviewed by CODEX, and be merged to main before deployment.
+This document explains where the PM prompt set lives and how it should be maintained.
 
 ---
 
-## Summary of PM Agent Authority
+## Canonical Prompt Set
 
-| Authority | Autonomous | Requires PO |
-|---|---|---|
-| Assign PEs (alternation rule enforced) | Yes | No |
-| Gate 1 approval | Yes (conditions met) | No |
-| Gate 2 merge | Yes (PASS + green CI) | No |
-| Escalation to PO | Yes (auto-triggers) | — |
-| Scope changes | No | Yes |
-| Rollback merged PEs | No | Yes |
-| Security findings | No | Yes |
-| Install ClawHub skills | Never | Never |
+The PM prompt stack is the deployable workspace tree:
 
-## Key Rules Reference
+- `openclaw/workspaces/workspace-pm/SOUL.md`
+- `openclaw/workspaces/workspace-pm/AGENTS.md`
+- `openclaw/workspaces/workspace-pm/MEMORY.md`
 
-- Implementer alternates engines on consecutive same-domain PEs (CODEX ↔ Claude Code)
-- Validator is always the engine opposite to the Implementer
-- Gate 1 requires: CI green + HANDOFF.md present + Status Packet complete
-- Gate 2 requires: REVIEW verdict = PASS + CI green + no `pm-review-required` label
-- Stall threshold: 48 hours in same status triggers auto-escalation
-- Iteration threshold: > 2 validator rounds triggers PO escalation
-- `exec.ask: on` enforced — PM Agent confirms before executing shell commands
-- `skills.hub.autoInstall: false` — no ClawHub skills permitted
+The docs mirror:
 
-## Full Rules
+- `docs/openclaw/workspace-pm/SOUL.md`
+- `docs/openclaw/workspace-pm/AGENTS.md`
+- `docs/openclaw/workspace-pm/MEMORY.md`
 
-See `openclaw/workspaces/workspace-pm/AGENTS.md` for the complete rule set.
+must remain byte-aligned with the deploy source.
+
+---
+
+## Workspace Entrypoints On Host
+
+After deployment, the PM workspace must expose:
+
+- `~/openclaw/workspace-pm/CURRENT_PE.md`
+- `~/openclaw/workspace-pm/docs/AGENTS.md`
+- `~/openclaw/workspace-pm/docs/PLAN_CURRENT.md`
+
+These are host entrypoints to canonical repo truth and are part of the PM runtime contract.
+
+---
+
+## Maintenance Rules
+
+- edit the deploy source under `openclaw/workspaces/workspace-pm/`
+- keep the docs mirror aligned in the same PR
+- if prompt or exec-policy files change, reset the PM session before taking validation evidence
+- use `docs/openclaw/PM_SESSION_RESET.md` for the reset procedure
+
+---
+
+## Deployment Rule
+
+Deployment is native, not Docker-based:
+
+1. run `bash scripts/deploy_openclaw_workspaces.sh`
+2. restart `openclaw-gateway.service`
+3. verify PM entrypoints and health
+4. reset the PM session if prompt files changed
+
+---
+
+*ELIS PM Agent · Rules Reference · 2026-03-23*
