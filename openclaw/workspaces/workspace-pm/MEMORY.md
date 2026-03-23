@@ -12,7 +12,7 @@ This file records the durable corrections that must survive session drift.
 - Worktrees must be reported only from `git -C /opt/elis/repo worktree list`.
 - PR status must be reported only from `gh pr`.
 - Registry branch names do not prove worktrees exist — always verify with `git worktree list`.
-- Full PE registry in Discord: compact bullet format (one line per PE), never the raw 7-column table.
+- Full PE registry in Discord: compact bullet format (one line per PE), max 25 entries per message, labeled (1/N). Never the raw 7-column table.
 
 ---
 
