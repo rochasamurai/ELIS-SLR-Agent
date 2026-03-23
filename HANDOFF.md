@@ -4,9 +4,9 @@
 **Implementer:** Claude Code (`infra-impl-claude`)
 **Validator:** CODEX (`infra-val-codex`)
 **Branch:** `feature/pe-ms-01-pm-agent-identity`
-**Date:** 2026-03-23 (Round 3 — AC-1/AC-2 live evidence added)
+**Date:** 2026-03-23 (Round 4 — workspace-entrypoint alignment, elevated fix documented)
 **Plan:** `ELIS_MultiAgent_Implementation_Plan_v1_5.md`
-**Round:** 3 (Round 1 = initial submission; Round 2 = post-FAIL, Docker→native migration; Round 3 = AC-1/AC-2 live evidence)
+**Round:** 4 (Round 1 = initial; Round 2 = Docker→native; Round 3 = AC-1/AC-2 live evidence; Round 4 = workspace-entrypoint alignment)
 
 ---
 
@@ -56,11 +56,26 @@ Branch rebased onto current `origin/main`. Scope gate now clean.
 
 After Round 1 analysis, Docker was identified as the root cause of multiple issues: loopback-bound ports preventing Web UI access, path isolation breaking exec allowlist, `*` glob not matching exec arguments with spaces. Migration to native systemd resolved all of these simultaneously.
 
-### Additional — v1.5 canonical-source alignment
+### Round 3 — AC-1/AC-2 live evidence
 
-- `CURRENT_PE.md` should be read from the canonical platform repo at `/opt/elis/repo/CURRENT_PE.md`
-- PM governance reads should prefer `/opt/elis/repo/AGENTS.md` and `/opt/elis/repo/ELIS_MultiAgent_Implementation_Plan_v1_5.md`
-- workspace-local files remain valid for PM identity and operating rules, but copied governance snapshots are no longer the preferred source of truth
+PO confirmed both ACs in Discord on 2026-03-23:
+- AC-1 PASS: bot responded with full ELIS identity from SOUL.md
+- AC-2 PASS: bot read `~/openclaw/workspace-pm/CURRENT_PE.md` and returned Active PE Registry with source citation
+
+### Round 4 — Workspace-entrypoint alignment (post CODEX Round 3 FAIL)
+
+**Root cause of remaining CODEX finding:** Branch docs still referenced `/opt/elis/repo/...` as the primary PM exec path. The live working configuration uses workspace entrypoints (symlinks) and has `elevated.enabled: false`. Docs were out of sync with live behavior.
+
+**Server-side fixes applied (by CODEX in prior session):**
+- `openclaw.json` pm agent workspace set to `/home/samurai/openclaw/workspace-pm` (absolute path)
+- `agents.list[id=pm].tools.elevated.enabled: false` — prevents PM read-only execs from routing as elevated Discord commands (which time out after 120 s)
+- `~/workspace-pm` symlink created → `~/openclaw/workspace-pm` (resolves native CWD path ambiguity)
+- SOUL.md on server updated to v1.3 using workspace entrypoints
+
+**Repo deliverables updated in Round 4:**
+- `docs/openclaw/workspace-pm/AGENTS.md` v1.2 — workspace entrypoints in §1, §4 (source-specific reporting table), §5, §8
+- `docs/openclaw/workspace-pm/SOUL.md` v1.3 — workspace entrypoints for exec; model-agnostic identity
+- `docs/openclaw/EXEC_POLICY.md` — elevated.enabled=false documented; workspace entrypoints as primary allowlist; 3-step apply runbook
 
 ---
 

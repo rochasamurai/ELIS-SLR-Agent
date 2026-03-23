@@ -1,6 +1,6 @@
 # OpenClaw Exec Approval Policy — ELIS PM Agent
 
-**Date:** 2026-03-22
+**Date:** 2026-03-23 (updated — Round 4)
 **PE:** PE-MS-01
 **Host:** elis-server (NUC8i7BEH · Ubuntu 24.04.4 LTS)
 **Runtime:** Native (systemd user service — not Docker)
@@ -17,7 +17,9 @@ The allowlist is stored in `~/.openclaw/exec-approvals.json` and managed via `op
 
 **Runtime note:** OpenClaw runs natively on elis-server as the `samurai` user under `systemd --user`. Exec commands therefore operate on host paths directly; use host paths consistently in all PM Agent instructions and allowlist patterns.
 
-**Canonical-source note:** The PM Agent should read governance state from the canonical platform repo at `/opt/elis/repo` whenever possible. Workspace-local files are for PM identity and operating behavior, not as the preferred source of truth for `CURRENT_PE.md`, repo `AGENTS.md`, or the active implementation plan.
+**Workspace-entrypoint rule:** PM reads governance state through workspace entrypoints (`~/openclaw/workspace-pm/CURRENT_PE.md`, `~/openclaw/workspace-pm/docs/AGENTS.md`, `~/openclaw/workspace-pm/docs/PLAN_v1_5.md`). These are symlinks to the canonical repo files. Reading via workspace entrypoints avoids Discord elevated-exec approval timeouts.
+
+**Elevated exec — disabled for `pm`:** The `pm` agent has `agents.list[id=pm].tools.elevated.enabled: false` in `openclaw.json`. This prevents read-only PM commands from being routed as elevated Discord execs (which would enter the approval queue and time out after 120 s). All PM read operations must be expressible as non-elevated allowlist patterns.
 
 ---
 
@@ -28,13 +30,13 @@ These commands are read-only and safe to run without confirmation:
 | Pattern | Purpose |
 |---|---|
 | `ls *` | List directory contents |
-| `cat ~/openclaw/workspace-pm/*` | Read PM Agent workspace files |
-| `cat /opt/elis/repo/CURRENT_PE.md` | Read Active PE Registry (direct file access) |
-| `cat /opt/elis/repo/AGENTS.md` | Read governed workflow rules |
-| `cat /opt/elis/repo/ELIS_MultiAgent_Implementation_Plan_v1_5.md` | Read active implementation plan |
+| `cat ~/openclaw/workspace-pm/*` | Read PM workspace files (primary entrypoint) |
+| `cat ~/openclaw/workspace-pm/CURRENT_PE.md` | Read Active PE Registry via workspace symlink |
+| `cat /opt/elis/repo/CURRENT_PE.md` | Read Active PE Registry (fallback — direct repo path) |
 | `git * log *` | Read git log |
 | `git * status *` | Read git status |
 | `git * diff *` | Read git diff |
+| `git * worktree list*` | List active worktrees (required for worktree queries) |
 | `openclaw doctor*` | Run health check |
 | `openclaw config get*` | Read OpenClaw config |
 | `openclaw channels status*` | Check channel connectivity |
@@ -62,17 +64,33 @@ These commands are read-only and safe to run without confirmation:
 
 ## Applying This Policy
 
-### Step 1 — Rebuild the allowlist (run as samurai on elis-server)
+### Step 1 — Disable elevated exec for pm (run once)
+
+```bash
+openclaw config set agents.list[id=pm].tools.elevated.enabled false
+systemctl --user restart openclaw-gateway
+```
+
+This prevents PM read-only commands from entering the Discord elevated approval queue.
+
+### Step 2 — Set workspace path (run once)
+
+```bash
+openclaw config set agents.list[id=pm].workspace ~/openclaw/workspace-pm
+systemctl --user restart openclaw-gateway
+```
+
+### Step 3 — Rebuild the allowlist
 
 ```bash
 openclaw approvals allowlist add --agent pm 'ls *'
 openclaw approvals allowlist add --agent pm 'cat ~/openclaw/workspace-pm/*'
+openclaw approvals allowlist add --agent pm 'cat ~/openclaw/workspace-pm/CURRENT_PE.md'
 openclaw approvals allowlist add --agent pm 'cat /opt/elis/repo/CURRENT_PE.md'
-openclaw approvals allowlist add --agent pm 'cat /opt/elis/repo/AGENTS.md'
-openclaw approvals allowlist add --agent pm 'cat /opt/elis/repo/ELIS_MultiAgent_Implementation_Plan_v1_5.md'
 openclaw approvals allowlist add --agent pm 'git * log *'
 openclaw approvals allowlist add --agent pm 'git * status *'
 openclaw approvals allowlist add --agent pm 'git * diff *'
+openclaw approvals allowlist add --agent pm 'git * worktree list*'
 openclaw approvals allowlist add --agent pm 'openclaw doctor*'
 openclaw approvals allowlist add --agent pm 'openclaw config get*'
 openclaw approvals allowlist add --agent pm 'openclaw channels status*'
@@ -83,11 +101,13 @@ openclaw approvals allowlist add --agent pm 'gh pr view*'
 openclaw approvals allowlist add --agent pm 'gh issue list*'
 ```
 
-### Step 2 — Verify
+### Step 4 — Verify
 
 ```bash
 openclaw approvals get --gateway
-# Expected: Agents=1, Allowlist=14, all patterns listed for agent pm
+# Expected: Agents=1, Allowlist≥16, all patterns listed for agent pm
+openclaw config get agents.list
+# Expected: pm workspace = ~/openclaw/workspace-pm, elevated.enabled = false
 ```
 
 ---
@@ -103,4 +123,4 @@ Approval requests time out after 120 seconds if not acted on.
 
 ---
 
-*ELIS PM Agent · Exec Policy · PE-MS-01 · 2026-03-22 · Native runtime*
+*ELIS PM Agent · Exec Policy · PE-MS-01 · 2026-03-23 · Native runtime*

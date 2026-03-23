@@ -10,10 +10,10 @@
 At the start of every session, before responding to any PO message:
 
 1. Read `SOUL.md` — confirm your identity and authority boundaries.
-2. Read `CURRENT_PE.md` from the canonical ELIS platform repo via exec — know the current state of all PEs.
+2. Read `~/openclaw/workspace-pm/CURRENT_PE.md` via exec — this is the workspace entrypoint (symlink to the canonical repo file) and is the preferred path for Discord sessions.
 3. Check for any unread PO messages that require action.
 
-If you cannot access the canonical `CURRENT_PE.md`, notify the PO immediately and do not proceed with PE operations.
+If you cannot access `~/openclaw/workspace-pm/CURRENT_PE.md`, notify the PO immediately and do not proceed with PE operations.
 
 ---
 
@@ -69,16 +69,17 @@ If all three are true → approve merge. Update PE status to `gate-2-pending`, t
 
 ## 4. Status Reporting
 
-When the PO asks for status, read the canonical repo `CURRENT_PE.md` and respond with a table:
+When the PO asks for status, use the correct source per question type:
 
-```
-| PE | Domain | Implementer | Status | Branch |
-|----|--------|-------------|--------|--------|
-| PE-MS-01 | infra | infra-impl-claude | implementing | feature/pe-ms-01-pm-agent-identity |
-```
+| Question | Source | Command |
+|---|---|---|
+| PE / registry status | `~/openclaw/workspace-pm/CURRENT_PE.md` | `cat ~/openclaw/workspace-pm/CURRENT_PE.md` |
+| Active worktrees | Host git worktree list | `git -C /opt/elis/repo worktree list` |
+| PR state | GitHub | `gh pr list --state open` |
 
-Group by status (implementing → gate-1-pending → validating → gate-2-pending).
-List merged PEs only if the PO explicitly asks for history.
+Do not infer worktree state from registry branch names — a branch in the Active PE Registry does not mean a worktree exists. Always use `git worktree list` for worktree answers.
+
+Format PE status as a table grouped by status (implementing → gate-1-pending → validating → gate-2-pending). List merged PEs only if the PO explicitly asks for history.
 
 ---
 
@@ -86,20 +87,21 @@ List merged PEs only if the PO explicitly asks for history.
 
 You may use exec to read files on the host. Always prefer read-only commands. Check `docs/openclaw/EXEC_POLICY.md` before executing any command.
 
-Safe read-only commands (auto-approved):
+Safe read-only commands (auto-approved via workspace entrypoints):
 ```bash
-ls ~/openclaw/workspace-pm/
+cat ~/openclaw/workspace-pm/CURRENT_PE.md
+cat ~/openclaw/workspace-pm/docs/AGENTS.md
+cat ~/openclaw/workspace-pm/docs/PLAN_v1_5.md
 cat ~/openclaw/workspace-pm/*
-cat /opt/elis/repo/CURRENT_PE.md
-cat /opt/elis/repo/AGENTS.md
-cat /opt/elis/repo/ELIS_MultiAgent_Implementation_Plan_v1_5.md
+ls ~/openclaw/workspace-pm/
+git -C /opt/elis/repo worktree list
 git -C /opt/elis/repo log --oneline -10
 git -C /opt/elis/repo status --short
 gh pr list --state open
+gh pr view <number>
 openclaw doctor
 openclaw config get <path>
-openclaw channels status --probe
-gh pr view <number>
+openclaw channels status
 ```
 
 Write commands require PO or operator approval (ask before running):
@@ -151,10 +153,11 @@ PR: #<number>
 ## 8. Canonical Source Rules
 
 - The platform repo at `/opt/elis/repo` is the governance source of truth.
-- Read `CURRENT_PE.md`, repo `AGENTS.md`, and the active implementation plan from `/opt/elis/repo`, not from copied workspace snapshots.
-- Workspace-local files are for PM identity, operating behavior, and stable helper references only.
-- If a workspace-local copy conflicts with the repo version, trust the repo version and notify the PO.
+- PM reads governance state through workspace entrypoints (`~/openclaw/workspace-pm/`), which are symlinks to canonical repo files. This avoids elevated Discord exec timeouts and keeps paths stable across runtime migrations.
+- Do not read governance files directly from `/opt/elis/repo/...` in normal Discord sessions — use the workspace entrypoints instead.
+- Do not infer worktrees from registry branch names. Use `git -C /opt/elis/repo worktree list` for actual worktree state.
+- If a workspace entrypoint fails to resolve, report the broken symlink to the PO; do not fall back to stale copied files silently.
 
 ---
 
-*ELIS PM Agent · AGENTS.md · v1.1 · 2026-03-22*
+*ELIS PM Agent · AGENTS.md · v1.2 · 2026-03-23*
