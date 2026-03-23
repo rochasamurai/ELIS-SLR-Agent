@@ -112,7 +112,7 @@ PO confirmed both ACs in Discord on 2026-03-23:
 |---|---|---|---|
 | AC-1 | PO sends "Who are you?" — PM Agent responds with ELIS identity | **PASS** | See AC-1 evidence below |
 | AC-2 | PO sends "What are the current PEs?" — PM Agent reads CURRENT_PE.md via exec | **PASS** | See AC-2 evidence below |
-| AC-3 | `openclaw approvals get --gateway` shows Allowlist ≥ 14 patterns for pm, including `cat /opt/elis/repo/CURRENT_PE.md` | **PASS** | See validation commands below (Allowlist=27) |
+| AC-3 | `openclaw approvals get --gateway` shows Allowlist ≥ 29 patterns for pm, including workspace-entrypoint and worktree patterns | **PASS** | See validation commands below (Allowlist=29, Target=gateway) |
 | AC-4 | Non-allowlisted exec routes to operator approval queue — no silent auto-execution | **PASS** | `elevated.enabled: false` set; allowlist model enforced |
 | AC-5 | SOUL.md and AGENTS.md committed under `docs/openclaw/workspace-pm/` | **PASS** | Both files present on this branch |
 | AC-6 | `openclaw channels status` shows Discord `connected` | **PASS** | See validation commands below |
@@ -160,44 +160,44 @@ Source: ~/openclaw/workspace-pm/CURRENT_PE.md (Active PE Registry)
 
 Session info: `✅ New session started · model: openai/gpt-5-mini`
 
-### AC-3 — Exec allowlist (native — 2026-03-23 Round 6)
+### AC-3 — Exec allowlist (gateway — 2026-03-23 Round 6)
 
 ```
 $ openclaw approvals get --gateway
 
-Target    local
+Target    gateway
 Agents    1
 Allowlist 29
 
-│ local │ pm │ ls *                                          │
-│ local │ pm │ cat ~/openclaw/workspace-pm/*                 │
-│ local │ pm │ cat /opt/elis/repo/CURRENT_PE.md              │
-│ local │ pm │ git * log *                                   │
-│ local │ pm │ git * status *                                │
-│ local │ pm │ git * diff *                                  │
-│ local │ pm │ openclaw doctor*                              │
-│ local │ pm │ openclaw config get*                          │
-│ local │ pm │ openclaw channels status*                     │
-│ local │ pm │ openclaw sessions*                            │
-│ local │ pm │ openclaw approvals get*                       │
-│ local │ pm │ gh pr list*                                   │
-│ local │ pm │ gh pr view*                                   │
-│ local │ pm │ gh issue list*                                │
-│ local │ pm │ cat ~/workspace-pm/*                          │
-│ local │ pm │ ls ~/workspace-pm/*                           │
-│ local │ pm │ cat ~/workspace-pm/memory/*                   │
-│ local │ pm │ ls ~/workspace-pm/memory/*                    │
-│ local │ pm │ cat ~/openclaw/workspace-pm/*                 │
-│ local │ pm │ ls ~/openclaw/workspace-pm/*                  │
-│ local │ pm │ cat ~/openclaw/workspace-pm/memory/*          │
-│ local │ pm │ ls ~/openclaw/workspace-pm/memory/*           │
-│ local │ pm │ cat ~/openclaw/workspace-pm/CURRENT_PE.md     │
-│ local │ pm │ cat ~/openclaw/workspace-pm/CURRENT_PE.md     │
-│ local │ pm │ cat ~/workspace-pm/CURRENT_PE.md              │
-│ local │ pm │ cat /opt/elis/repo/AGENTS.md                  │
-│ local │ pm │ cat /opt/elis/repo/ELIS_MultiAgent_..._v1_5.md│
-│ local │ pm │ cat ~/openclaw/workspace-pm/docs/*            │ ← added Round 6
-│ local │ pm │ git * worktree list*                          │ ← added Round 6
+│ gateway │ pm │ ls *                                                                │
+│ gateway │ pm │ cat ~/openclaw/workspace-pm/*                                       │
+│ gateway │ pm │ cat /opt/elis/repo/CURRENT_PE.md                                    │
+│ gateway │ pm │ git * log *                                                         │
+│ gateway │ pm │ git * status *                                                      │
+│ gateway │ pm │ git * diff *                                                        │
+│ gateway │ pm │ openclaw doctor*                                                    │
+│ gateway │ pm │ openclaw config get*                                                │
+│ gateway │ pm │ openclaw channels status*                                           │
+│ gateway │ pm │ openclaw sessions*                                                  │
+│ gateway │ pm │ openclaw approvals get*                                             │
+│ gateway │ pm │ gh pr list*                                                         │
+│ gateway │ pm │ gh pr view*                                                         │
+│ gateway │ pm │ gh issue list*                                                      │
+│ gateway │ pm │ cat ~/workspace-pm/*                                                │
+│ gateway │ pm │ ls ~/workspace-pm/*                                                 │
+│ gateway │ pm │ cat ~/workspace-pm/memory/*                                         │
+│ gateway │ pm │ ls ~/workspace-pm/memory/*                                          │
+│ gateway │ pm │ cat ~/openclaw/workspace-pm/*                                       │
+│ gateway │ pm │ ls ~/openclaw/workspace-pm/*                                        │
+│ gateway │ pm │ cat ~/openclaw/workspace-pm/memory/*                                │
+│ gateway │ pm │ ls ~/openclaw/workspace-pm/memory/*                                 │
+│ gateway │ pm │ cat ~/openclaw/workspace-pm/CURRENT_PE.md                           │
+│ gateway │ pm │ cat ~/openclaw/workspace-pm/CURRENT_PE.md                           │
+│ gateway │ pm │ cat ~/workspace-pm/CURRENT_PE.md                                    │
+│ gateway │ pm │ cat /opt/elis/repo/AGENTS.md                                        │
+│ gateway │ pm │ cat /opt/elis/repo/ELIS_MultiAgent_Implementation_Plan_v1_5.md      │
+│ gateway │ pm │ cat ~/openclaw/workspace-pm/docs/*                                  │
+│ gateway │ pm │ git * worktree list*                                                 │
 ```
 
 Key patterns for documented PM behavior:
