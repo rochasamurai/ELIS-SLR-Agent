@@ -5,13 +5,13 @@
 **Validator:** CODEX (`infra-val-codex`)
 **Branch:** `feature/pe-ms-01-pm-agent-identity`
 **Date:** 2026-03-22 (Round 2 — post FAIL verdict)
-**Plan:** `ELIS_MultiAgent_Implementation_Plan_v1_4.md`
+**Plan:** `ELIS_MultiAgent_Implementation_Plan_v1_5.md`
 
 ---
 
 ## Summary
 
-Activated the ELIS PM Agent with persistent identity (SOUL.md), orchestration rules (AGENTS.md), and exec approval policy. In Round 2, OpenClaw was migrated from Docker to a native systemd user service on elis-server, resolving all Docker-related blockers (gateway cycling, exec path isolation, Web UI inaccessibility).
+Activated the ELIS PM Agent with persistent identity (SOUL.md), orchestration rules (AGENTS.md), and exec approval policy. In Round 2, OpenClaw was migrated from Docker to a native systemd user service on elis-server, resolving Docker-related blockers and aligning the host to the new architecture baseline: one canonical platform repo, native runtime, and PM canonical-source reads from `/opt/elis/repo`.
 
 ---
 
@@ -55,6 +55,12 @@ Branch rebased onto current `origin/main`. Scope gate now clean.
 
 After Round 1 analysis, Docker was identified as the root cause of multiple issues: loopback-bound ports preventing Web UI access, path isolation breaking exec allowlist, `*` glob not matching exec arguments with spaces. Migration to native systemd resolved all of these simultaneously.
 
+### Additional — v1.5 canonical-source alignment
+
+- `CURRENT_PE.md` should be read from the canonical platform repo at `/opt/elis/repo/CURRENT_PE.md`
+- PM governance reads should prefer `/opt/elis/repo/AGENTS.md` and `/opt/elis/repo/ELIS_MultiAgent_Implementation_Plan_v1_5.md`
+- workspace-local files remain valid for PM identity and operating rules, but copied governance snapshots are no longer the preferred source of truth
+
 ---
 
 ## Files Changed
@@ -66,19 +72,21 @@ After Round 1 analysis, Docker was identified as the root cause of multiple issu
 | `docs/openclaw/workspace-pm/SOUL.md` | Created + updated | PM Agent ELIS identity — real CURRENT_PE.md path, PE terminology |
 | `docs/openclaw/workspace-pm/AGENTS.md` | Created | Orchestration rules — PE lifecycle, gate management |
 | `docs/openclaw/EXEC_POLICY.md` | Created + rewritten | Native exec policy — 14 patterns, non-allowlist approval flow |
+| `docs/openclaw/NATIVE_INSTALL.md` | Created | Native runtime layout, service commands, Docker decommission checklist |
 | `docker-compose.yml` | Updated | openclaw service disabled (migrated to native systemd) |
-| `ELIS_MultiAgent_Implementation_Plan_v1_4.md` | Updated | AC-3/AC-4/AC-7 aligned with native runtime and allowlist model |
+| `ELIS_MultiAgent_Implementation_Plan_v1_4.md` | Updated | Branch-local plan copy reflects native-runtime alignment work pending rebase onto v1.5 |
 
 ### Server deliverables (applied to elis-server via SSH)
 
 | Path on elis-server | Action |
 |---|---|
-| `~/openclaw/workspace-pm/SOUL.md` | Updated — native paths, PE terminology, correct exec command |
+| `~/openclaw/workspace-pm/SOUL.md` | Updated — native paths, PE terminology, canonical repo reads |
 | `~/openclaw/workspace-pm/AGENTS.md` | Present from Round 1 |
 | `~/.openclaw/exec-approvals.json` | Rebuilt — 14 patterns for `pm` agent (native paths) |
 | `~/.config/systemd/user/openclaw-gateway.service` | Created — native systemd service |
 | `/opt/openclaw/` | Created — OpenClaw app files (copied from container) |
 | `/usr/local/bin/openclaw` | Created — symlink to `/opt/openclaw/openclaw.mjs` |
+| Docker engine + Compose plugin | **Pending removal after live native verification** |
 
 ---
 
@@ -92,7 +100,17 @@ After Round 1 analysis, Docker was identified as the root cause of multiple issu
 | AC-4 | Non-allowlisted exec routes to operator approval queue — no silent auto-execution | **PASS** | OpenClaw allowlist model: non-listed commands held for approval |
 | AC-5 | SOUL.md and AGENTS.md committed under `docs/openclaw/workspace-pm/` | **PASS** | Both files present on this branch |
 | AC-6 | `openclaw channels status` shows Discord `connected` | **PASS** | See validation commands below |
-| AC-7 | OpenClaw runs as native systemd user service | **PASS** | `systemctl --user status openclaw-gateway` active (running) |
+| AC-7 | OpenClaw runs as native systemd user service and Docker/Compose are removed from `elis-server` | **PARTIAL** | Native service verified; Docker/Compose removal still requires live host execution |
+
+---
+
+## v1.5 Alignment Note
+
+This handoff now aligns to the architecture/plan direction adopted after the original branch opened:
+
+- native `systemd` is the production runtime contract
+- PM must read governance state from the canonical repo
+- copied governance files are no longer the preferred operational model
 
 ---
 
@@ -143,6 +161,19 @@ $ systemctl --user status openclaw-gateway
    Main PID: 97733 (openclaw-gatewa)
 ```
 
+### AC-7 follow-up — Docker / Compose removal
+
+```bash
+# Run on elis-server after confirming native service is healthy
+sudo systemctl stop docker
+sudo apt-get remove -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+sudo apt-get autoremove -y
+docker --version
+docker compose version
+```
+
+Expected result: both version commands fail with "command not found" or equivalent, while `systemctl --user status openclaw-gateway` remains active.
+
 ### Quality gates
 
 ```
@@ -188,6 +219,8 @@ systemctl --user status openclaw-gateway    # AC-7: active (running)
 openclaw channels status                    # AC-6: Discord connected
 openclaw approvals get --gateway            # AC-3: Allowlist=14
 cat ~/openclaw/workspace-pm/SOUL.md | head -10   # AC-5: identity loaded
+docker --version                            # should fail after decommission
+docker compose version                      # should fail after decommission
 ```
 
 **Web UI (for exec approval monitoring):**

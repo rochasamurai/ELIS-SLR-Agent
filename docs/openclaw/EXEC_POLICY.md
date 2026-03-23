@@ -15,7 +15,9 @@ OpenClaw exec approvals use an **allowlist model**: patterns on the allowlist au
 
 The allowlist is stored in `~/.openclaw/exec-approvals.json` and managed via `openclaw approvals allowlist`.
 
-**Note on Docker vs native:** When running natively (systemd), exec commands run as the `samurai` user with direct access to all host paths. When running in Docker, exec runs inside the container where only volume-mounted paths are accessible. PE-MS-01 migrated from Docker to native to resolve path isolation issues.
+**Runtime note:** OpenClaw runs natively on elis-server as the `samurai` user under `systemd --user`. Exec commands therefore operate on host paths directly; use host paths consistently in all PM Agent instructions and allowlist patterns.
+
+**Canonical-source note:** The PM Agent should read governance state from the canonical platform repo at `/opt/elis/repo` whenever possible. Workspace-local files are for PM identity and operating behavior, not as the preferred source of truth for `CURRENT_PE.md`, repo `AGENTS.md`, or the active implementation plan.
 
 ---
 
@@ -28,6 +30,8 @@ These commands are read-only and safe to run without confirmation:
 | `ls *` | List directory contents |
 | `cat ~/openclaw/workspace-pm/*` | Read PM Agent workspace files |
 | `cat /opt/elis/repo/CURRENT_PE.md` | Read Active PE Registry (direct file access) |
+| `cat /opt/elis/repo/AGENTS.md` | Read governed workflow rules |
+| `cat /opt/elis/repo/ELIS_MultiAgent_Implementation_Plan_v1_5.md` | Read active implementation plan |
 | `git * log *` | Read git log |
 | `git * status *` | Read git status |
 | `git * diff *` | Read git diff |
@@ -64,6 +68,8 @@ These commands are read-only and safe to run without confirmation:
 openclaw approvals allowlist add --agent pm 'ls *'
 openclaw approvals allowlist add --agent pm 'cat ~/openclaw/workspace-pm/*'
 openclaw approvals allowlist add --agent pm 'cat /opt/elis/repo/CURRENT_PE.md'
+openclaw approvals allowlist add --agent pm 'cat /opt/elis/repo/AGENTS.md'
+openclaw approvals allowlist add --agent pm 'cat /opt/elis/repo/ELIS_MultiAgent_Implementation_Plan_v1_5.md'
 openclaw approvals allowlist add --agent pm 'git * log *'
 openclaw approvals allowlist add --agent pm 'git * status *'
 openclaw approvals allowlist add --agent pm 'git * diff *'

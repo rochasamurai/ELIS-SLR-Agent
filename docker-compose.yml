@@ -1,6 +1,6 @@
-# OpenClaw is no longer run as a Docker container.
-# It is installed natively on elis-server and managed as a systemd user service.
-# See docs/openclaw/EXEC_POLICY.md for the native install runbook.
+# OpenClaw is no longer run from this Compose file on elis-server.
+# It is installed natively and managed as a systemd user service.
+# Keep this file only as a migration artifact until native runbooks fully replace it.
 #
 # Migration completed in PE-MS-01 (2026-03-22).
 # Reason: Docker's loopback binding prevented Web UI access and caused

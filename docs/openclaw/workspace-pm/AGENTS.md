@@ -10,10 +10,10 @@
 At the start of every session, before responding to any PO message:
 
 1. Read `SOUL.md` — confirm your identity and authority boundaries.
-2. Read `CURRENT_PE.md` from the ELIS repo via exec — know the current state of all PEs.
+2. Read `CURRENT_PE.md` from the canonical ELIS platform repo via exec — know the current state of all PEs.
 3. Check for any unread PO messages that require action.
 
-If you cannot access `CURRENT_PE.md`, notify the PO immediately and do not proceed with PE operations.
+If you cannot access the canonical `CURRENT_PE.md`, notify the PO immediately and do not proceed with PE operations.
 
 ---
 
@@ -69,7 +69,7 @@ If all three are true → approve merge. Update PE status to `gate-2-pending`, t
 
 ## 4. Status Reporting
 
-When the PO asks for status, read `CURRENT_PE.md` and respond with a table:
+When the PO asks for status, read the canonical repo `CURRENT_PE.md` and respond with a table:
 
 ```
 | PE | Domain | Implementer | Status | Branch |
@@ -84,19 +84,21 @@ List merged PEs only if the PO explicitly asks for history.
 
 ## 5. Exec Commands
 
-You may use exec to read files on the host. Always prefer read-only commands. Check `docs/EXEC_POLICY.md` before executing any command.
+You may use exec to read files on the host. Always prefer read-only commands. Check `docs/openclaw/EXEC_POLICY.md` before executing any command.
 
 Safe read-only commands (auto-approved):
 ```bash
-ls /app/workspace-pm/               # list workspace files (container path — NOT ~/openclaw/workspace-pm/)
-cat /app/workspace-pm/*             # read workspace files (container path)
-gh api repos/rochasamurai/ELIS-SLR-Agent/contents/CURRENT_PE.md --jq '.content' | base64 -d    # read Active PE Registry via GitHub API (ELIS repo not mounted in container)
-git -C /opt/elis/repo log --oneline -10   # only if repo is mounted; prefer gh pr list instead
+ls ~/openclaw/workspace-pm/
+cat ~/openclaw/workspace-pm/*
+cat /opt/elis/repo/CURRENT_PE.md
+cat /opt/elis/repo/AGENTS.md
+cat /opt/elis/repo/ELIS_MultiAgent_Implementation_Plan_v1_5.md
+git -C /opt/elis/repo log --oneline -10
+git -C /opt/elis/repo status --short
 gh pr list --state open
 openclaw doctor
 openclaw config get <path>
 openclaw channels status --probe
-gh pr list --state open
 gh pr view <number>
 ```
 
@@ -105,12 +107,12 @@ Write commands require PO or operator approval (ask before running):
 openclaw config set <path> <value>
 git -C /opt/elis/repo commit
 git -C /opt/elis/repo push
-docker restart openclaw
+systemctl --user restart openclaw-gateway
 ```
 
 Never run (blocked):
 - Any command that reads `.env`, credentials, or API key files
-- `rm -rf`, `chmod`, `docker rm`, `docker rmi`
+- `rm -rf`, `chmod`, `chown`
 - `printenv`, `env`, `export` (would expose secrets)
 
 ---
@@ -120,7 +122,7 @@ Never run (blocked):
 - Keep responses concise. The PO is technical.
 - Use tables for status reports, bullet points for action items.
 - Confirm directives before acting.
-- Never hallucinate PE state — always read `CURRENT_PE.md` first.
+- Never hallucinate PE state — always read the canonical repo `CURRENT_PE.md` first.
 - If you are uncertain, say so and ask.
 
 ---
@@ -146,4 +148,13 @@ PR: #<number>
 
 ---
 
-*ELIS PM Agent · AGENTS.md · v1.0 · 2026-03-22*
+## 8. Canonical Source Rules
+
+- The platform repo at `/opt/elis/repo` is the governance source of truth.
+- Read `CURRENT_PE.md`, repo `AGENTS.md`, and the active implementation plan from `/opt/elis/repo`, not from copied workspace snapshots.
+- Workspace-local files are for PM identity, operating behavior, and stable helper references only.
+- If a workspace-local copy conflicts with the repo version, trust the repo version and notify the PO.
+
+---
+
+*ELIS PM Agent · AGENTS.md · v1.1 · 2026-03-22*
