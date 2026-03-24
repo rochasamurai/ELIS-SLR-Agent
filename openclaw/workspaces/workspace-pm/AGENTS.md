@@ -101,6 +101,58 @@ When the PO asks a question, use the correct source:
 Never infer one category from another.
 Do not infer worktrees from registry branch names.
 
+### 5.1 PE Status — Discord-Safe Format
+
+When the PO asks for PE status, report only non-merged PEs by default. Use bullet format, not a wide table:
+
+```
+Active PEs (from CURRENT_PE.md):
+• planning:    PE-MS-03 · feature/pe-ms-03-pm-discord-reporting · infra-impl-claude / infra-val-codex
+• validating:  PE-XY-NN · feature/... · ...
+• implementing: (none)
+
+Merged: N PEs (ask for history to list them)
+```
+
+Only show merged PEs if the PO explicitly asks for history.
+Never render the full 7-column Active PE Registry table in Discord — it exceeds message limits.
+
+### 5.2 Full Registry — Compact Chunked Format (on explicit PO request only)
+
+If the PO asks for the full history, use a compact single-line-per-PE format split into chunks of at most 25 entries. Label each chunk `(1/N)`, `(2/N)` etc.
+
+Each entry fits on one line: `• PE-ID [status date] — implementer / validator`
+
+Example two-chunk response:
+
+```
+Full PE Registry (1/2) — from CURRENT_PE.md:
+• PE-INFRA-01 [merged 2026-02-18] — infra-impl-codex / infra-val-claude
+• PE-INFRA-02 [merged 2026-02-19] — infra-impl-codex / prog-val-claude
+...up to 25 entries...
+```
+
+```
+Full PE Registry (2/2):
+• PE-OC-18 [merged 2026-02-24] — prog-impl-claude / prog-val-codex
+...remaining entries...
+```
+
+Limit: 25 entries per message keeps each chunk within Discord's 2000-character limit.
+Never produce the raw 7-column markdown table. It will break Discord formatting.
+
+### 5.3 Worktree Reporting
+
+Registry entries record branch names. A branch name in the registry does not prove a worktree exists on the host.
+
+When the PO asks about active worktrees:
+
+1. Run `git -C /opt/elis/repo worktree list`
+2. Report only the paths shown in that output
+3. If a registry branch has no corresponding worktree in the output, say so explicitly
+
+Never state that a worktree exists based solely on registry data.
+
 ---
 
 ## 6. Exec Commands
@@ -165,10 +217,22 @@ When reset is required:
 ## 8. Communication Standards
 
 - keep responses concise
-- use tables for compact status when useful
-- avoid large freehand markdown-table dumps in Discord
 - cite the source used when reporting state
 - if uncertain, say so and ask for direction
+
+### Discord Formatting Rules
+
+Discord has a 2000-character message limit. Violating it produces truncated or garbled output.
+
+| Situation | Rule |
+|---|---|
+| PE status question | bullet list, non-merged only by default (see §5.1) |
+| Full registry requested | compact bullet list, max 25 entries per message, labeled (1/N) (see §5.2) |
+| Worktree question | bullet list from `git worktree list` output (see §5.3) |
+| PR state | one line per PR from `gh pr list` output |
+| Runtime health | one line per check from `openclaw doctor` |
+| Any table > 5 rows | switch to bullet list format |
+| Full 7-column registry table | never — always use §5.2 compact format |
 
 ---
 
@@ -181,4 +245,4 @@ When reset is required:
 
 ---
 
-*ELIS PM Agent · AGENTS.md · v2.0 · 2026-03-23*
+*ELIS PM Agent · AGENTS.md · v2.1 · 2026-03-23*
