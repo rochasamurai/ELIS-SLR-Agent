@@ -10,7 +10,7 @@
             "enabled": false,
             "allowFrom": {
               "discord": [
-                "1485180911619408014"
+                "__REDACTED__"
               ]
             }
           }
@@ -83,14 +83,14 @@
       "agentId": "pm",
       "match": {
         "channel": "telegram",
-        "accountId": "8508429120"
+        "accountId": "__REDACTED__"
       }
     },
     {
       "agentId": "pm",
       "match": {
         "channel": "discord",
-        "accountId": "1484943999470141702"
+        "accountId": "__REDACTED__"
       }
     }
   ],

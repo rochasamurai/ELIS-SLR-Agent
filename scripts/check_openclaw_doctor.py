@@ -22,34 +22,53 @@ def _validate_agents(config: dict) -> list[str]:
         return ["agents.list must be an array"]
     if not agents:
         return ["agents.list must be non-empty"]
+    if not any(agent.get("id") == "pm" for agent in agents):
+        errors.append("agents.list must include the pm agent")
     for agent in agents:
         agent_id = agent.get("id", "<unknown>")
-        if not agent.get("workspace"):
+        workspace = agent.get("workspace")
+        if not workspace:
             errors.append(f"agent {agent_id} missing workspace")
+        elif "/app/" in workspace:
+            errors.append(
+                f"agent {agent_id} uses container-only workspace path {workspace}"
+            )
+        elif not workspace.startswith("/home/samurai/openclaw/"):
+            errors.append(
+                f"agent {agent_id} workspace {workspace!r} must use canonical host path"
+            )
         if not agent.get("model"):
             errors.append(f"agent {agent_id} missing model")
     return errors
 
 
-def _validate_telegram_plugin(config: dict) -> list[str]:
-    enabled = (
-        config.get("plugins", {}).get("entries", {}).get("telegram", {}).get("enabled")
-    )
-    if enabled is not True:
-        return [f"plugins.entries.telegram.enabled is {enabled!r}; must be true"]
-    return []
+def _validate_plugins(config: dict) -> list[str]:
+    entries = config.get("plugins", {}).get("entries", {})
+    errors = []
+    for name in ("telegram", "discord"):
+        enabled = entries.get(name, {}).get("enabled")
+        if enabled is not True:
+            errors.append(
+                f"plugins.entries.{name}.enabled is {enabled!r}; must be true"
+            )
+    return errors
 
 
 def _validate_bindings(config: dict) -> list[str]:
     bindings = config.get("bindings", [])
     if not isinstance(bindings, list) or not bindings:
-        return [
-            "bindings must be a non-empty array with at least a telegram pm binding"
-        ]
-    for b in bindings:
-        if b.get("agentId") == "pm" and b.get("match", {}).get("channel") == "telegram":
-            return []
-    return ["bindings must include a telegram binding for the pm agent"]
+        return ["bindings must be a non-empty array with pm channel bindings"]
+    seen = set()
+    for binding in bindings:
+        if binding.get("agentId") == "pm":
+            channel = binding.get("match", {}).get("channel")
+            if channel:
+                seen.add(channel)
+    errors = []
+    for channel in ("telegram", "discord"):
+        if channel not in seen:
+            errors.append(f"bindings must include a {channel} binding for the pm agent")
+    return errors
 
 
 def main() -> int:
@@ -61,7 +80,7 @@ def main() -> int:
 
     errors = []
     errors.extend(_validate_agents(config))
-    errors.extend(_validate_telegram_plugin(config))
+    errors.extend(_validate_plugins(config))
     errors.extend(_validate_bindings(config))
 
     if errors:
