@@ -112,3 +112,57 @@ Full PE Registry (from CURRENT_PE.md):
 Total lines=35
 Total chars=2342
 ```
+
+---
+
+## Re-validation — 2026-03-24
+
+### Verdict
+
+FAIL
+
+### Gate results
+
+```text
+PR diff inspected at current head.
+Round 2 addresses the original overflow issue in the PM prompt stack, but two blocking validation issues remain.
+```
+
+### Scope
+
+Still in scope. Round 2 remains limited to:
+
+- `HANDOFF.md`
+- `docs/openclaw/PM_AGENT_RULES.md`
+- `docs/openclaw/workspace-pm/AGENTS.md`
+- `docs/openclaw/workspace-pm/MEMORY.md`
+- `openclaw/workspaces/workspace-pm/AGENTS.md`
+- `openclaw/workspaces/workspace-pm/MEMORY.md`
+
+### Required fixes
+
+- Align `docs/openclaw/PM_AGENT_RULES.md` with the new chunked full-registry rule. It still tells operators to use a single compact bullet-list response for the full registry and does not document the 25-entry limit or `(1/N)` chunk labeling.
+- Replace "Expected output" in `HANDOFF.md` with actual pasted validation output for the new chunk verification. Right now the branch asserts AC-4 with a static sample plus expected output, which is not evidence-first validation.
+
+### Evidence
+
+#### PM rules reference still conflicts with the prompt stack
+
+```text
+docs/openclaw/PM_AGENT_RULES.md:68:| PE status (default) | bullet list, non-merged PEs only |
+docs/openclaw/PM_AGENT_RULES.md:69:| Full registry (explicit PO request) | compact single-line-per-PE bullet list |
+docs/openclaw/PM_AGENT_RULES.md:70:| Worktree state | bullet list from `git worktree list` output |
+docs/openclaw/workspace-pm/AGENTS.md:120:### 5.2 Full Registry — Compact Chunked Format (on explicit PO request only)
+docs/openclaw/workspace-pm/AGENTS.md:122:If the PO asks for the full history, use a compact single-line-per-PE format split into chunks of at most 25 entries. Label each chunk `(1/N)`, `(2/N)` etc.
+docs/openclaw/workspace-pm/AGENTS.md:141:Limit: 25 entries per message keeps each chunk within Discord's 2000-character limit.
+```
+
+#### HANDOFF still uses expected output instead of actual output for the new AC-4 proof
+
+```text
+HANDOFF.md:128:python3 -c "
+HANDOFF.md:172:Expected output:
+HANDOFF.md:174:chunk1: 1755 chars (limit 2000)
+HANDOFF.md:175:chunk2: 586 chars (limit 2000)
+HANDOFF.md:176:PASS
+```
