@@ -166,3 +166,54 @@ HANDOFF.md:174:chunk1: 1755 chars (limit 2000)
 HANDOFF.md:175:chunk2: 586 chars (limit 2000)
 HANDOFF.md:176:PASS
 ```
+
+---
+
+## Re-validation — 2026-03-24 (Round 3)
+
+### Verdict
+
+PASS
+
+### Gate results
+
+```text
+PR diff inspected at current head.
+PM_AGENT_RULES aligned: PASS
+chunk1=1755
+chunk2=565
+```
+
+### Scope
+
+Still in scope. The branch remains limited to PE-MS-03 reporting hardening files:
+
+- `HANDOFF.md`
+- `docs/openclaw/PM_AGENT_RULES.md`
+- `docs/openclaw/workspace-pm/AGENTS.md`
+- `docs/openclaw/workspace-pm/MEMORY.md`
+- `openclaw/workspaces/workspace-pm/AGENTS.md`
+- `openclaw/workspaces/workspace-pm/MEMORY.md`
+- `REVIEW_PE_MS_03.md`
+
+### Required fixes
+
+None.
+
+### Evidence
+
+#### PM rules reference now matches the chunked reporting contract
+
+```text
+PM_AGENT_RULES aligned: PASS
+docs/openclaw/PM_AGENT_RULES.md now specifies:
+| Full registry (explicit PO request) | compact bullet list, max 25 entries per message, labeled (1/N) |
+```
+
+#### HANDOFF now includes actual chunk-size output, not just expected output
+
+```text
+chunk1=1755
+chunk2=565
+Both chunks are within Discord's 2000-character limit.
+```
