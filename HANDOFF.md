@@ -86,7 +86,7 @@ Built from current `CURRENT_PE.md` (33 entries). Split at 25 entries per §5.2.
 • PE-OC-19 [merged 2026-02-24] — prog-impl-codex / prog-val-claude
 ```
 
-### Chunk 2/2 — 8 entries — **586 chars** (limit: 2000)
+### Chunk 2/2 — 8 entries — **565 chars** (limit: 2000)
 
 ```
 **Full PE Registry (2/2)**:
@@ -169,10 +169,10 @@ print('PASS')
 "
 ```
 
-Expected output:
+Actual output:
 ```
 chunk1: 1755 chars (limit 2000)
-chunk2: 586 chars (limit 2000)
+chunk2: 565 chars (limit 2000)
 PASS
 ```
 

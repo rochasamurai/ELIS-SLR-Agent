@@ -66,7 +66,7 @@ These rules prevent malformed or oversized output in Discord (2000-character lim
 | Situation | Required format |
 |---|---|
 | PE status (default) | bullet list, non-merged PEs only |
-| Full registry (explicit PO request) | compact single-line-per-PE bullet list |
+| Full registry (explicit PO request) | compact bullet list, max 25 entries per message, labeled (1/N) |
 | Worktree state | bullet list from `git worktree list` output |
 | PR state | one line per PR |
 | Any table > 5 rows | switch to bullet list |
