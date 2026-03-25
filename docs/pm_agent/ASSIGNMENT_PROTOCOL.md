@@ -209,5 +209,13 @@ Status: planning
 | `infra` | `infra` | `infra-impl-codex`, `infra-val-claude` |
 | `openclaw-infra` | `prog` | `prog-impl-claude`, `prog-val-codex` |
 | `programs` | `prog` | `prog-impl-codex`, `prog-val-claude` |
-| `slr` | `slr` | `slr-impl-codex`, `slr-val-claude` |
+| `slr` | phase-specific | `harvest-impl-codex`, `screen-impl-claude`, `extract-impl-codex`, `synth-impl-claude`, `prisma-impl-claude` |
 | `<other>` | first segment before `-` | `custom-impl-codex`, ... |
+
+For the `slr` domain, the PM must now choose the correct phase-specific prefix based on protocol phase:
+
+- `harvest`
+- `screen`
+- `extract`
+- `synth`
+- `prisma`
