@@ -173,3 +173,125 @@ Why this blocks:
 ---
 
 *ELIS SLR Agent · REVIEW_PE_MS_07.md · infra-val-codex · 2026-03-25*
+
+---
+
+## Re-validation Round 2 — 2026-03-25
+
+### Verdict
+
+PASS
+
+---
+
+### Gate results
+
+```text
+python -m black --check .
+All done! ✨ 🍰 ✨
+124 files would be left unchanged.
+
+python -m ruff check .
+All checks passed!
+
+python -m pytest -q
+598 passed, 17 warnings in 15.83s
+```
+
+---
+
+### Scope
+
+The remediation stays within the original PE-MS-07 scope and directly addresses the two blocking findings:
+
+```text
+M	HANDOFF.md
+A	REVIEW_PE_MS_07.md
+A	docs/openclaw/SLR_PROJECT_STORE_LAYOUT.md
+M	docs/openclaw/workspace-pm/AGENTS.md
+M	openclaw/workspaces/workspace-pm/AGENTS.md
+M	openclaw/workspaces/workspace-slr-extract/AGENTS.md
+M	openclaw/workspaces/workspace-slr-harvest/AGENTS.md
+M	openclaw/workspaces/workspace-slr-prisma/AGENTS.md
+M	openclaw/workspaces/workspace-slr-screen/AGENTS.md
+M	openclaw/workspaces/workspace-slr-synth/AGENTS.md
+A	scripts/check_project_store_layout.py
+A	scripts/setup_project_store.py
+A	tests/test_setup_project_store.py
+```
+
+---
+
+### Required fixes
+
+None.
+
+---
+
+### Evidence
+
+#### Finding 1 resolved — lowercase-only `review-id` rule is now enforced
+
+The implementation now matches the documented lowercase slug contract:
+
+```text
+scripts/setup_project_store.py
+67:     slug = review_id.replace("-", "")
+68:     if not review_id or not slug.isalnum() or not slug.islower():
+69:         print(
+70:             f"ERROR: review-id '{review_id}' must be lowercase alphanumeric with hyphens only",
+```
+
+And the missing adversarial coverage was added:
+
+```text
+tests/test_setup_project_store.py
+59: def test_create_rejects_uppercase_review_id(tmp_path):
+60:     rc = sps.create_project_store("My-Review", "Title", "TBD", tmp_path)
+61:     assert rc == 1
+
+64: def test_create_rejects_mixed_case_review_id(tmp_path):
+65:     rc = sps.create_project_store("SLR2026", "Title", "TBD", tmp_path)
+66:     assert rc == 1
+```
+
+#### Finding 2 resolved — PM docs mirror is now aligned with the deploy source
+
+The mirrored PM prompt file now includes the same project-store read commands and `§6.1 Project Store Visibility` section as the deploy source:
+
+```text
+docs/openclaw/workspace-pm/AGENTS.md
+179: ls /opt/elis/projects/
+180: ls /opt/elis/projects/<review-id>/
+181: cat /opt/elis/projects/<review-id>/MANIFEST.md
+184: ### 6.1 Project Store Visibility
+186: The PM Agent has read visibility over `/opt/elis/projects/*` per Architecture §5.6.
+263: *ELIS PM Agent · AGENTS.md · v2.2 · 2026-03-25*
+```
+
+That now matches the deploy source:
+
+```text
+openclaw/workspaces/workspace-pm/AGENTS.md
+179: ls /opt/elis/projects/
+180: ls /opt/elis/projects/<review-id>/
+181: cat /opt/elis/projects/<review-id>/MANIFEST.md
+184: ### 6.1 Project Store Visibility
+186: The PM Agent has read visibility over `/opt/elis/projects/*` per Architecture §5.6.
+263: *ELIS PM Agent · AGENTS.md · v2.2 · 2026-03-25*
+```
+
+#### AC assessment after remediation
+
+| # | Criterion | Verdict | Notes |
+|---|---|---|---|
+| AC-1 | `docs/openclaw/SLR_PROJECT_STORE_LAYOUT.md` present with per-phase access policy and PM visibility rules | PASS | unchanged |
+| AC-2 | `scripts/setup_project_store.py` creates canonical layout idempotently; exits 0/1 | PASS | lowercase slug rule now enforced |
+| AC-3 | `scripts/check_project_store_layout.py` validates layout; exits 0/1 | PASS | unchanged |
+| AC-4 | `tests/test_setup_project_store.py` — 12 tests covering both scripts | PASS | now 14 tests in file; full suite at 598 passed |
+| AC-5 | `workspace-pm/AGENTS.md` §6.1 Project Store Visibility — PM read-only rules | PASS | docs mirror and deploy source aligned |
+| AC-6 | All 5 SLR phase AGENTS.md files updated with §6 Project Store Access | PASS | unchanged |
+
+---
+
+*ELIS SLR Agent · REVIEW_PE_MS_07.md · infra-val-codex · re-validation round 2 · 2026-03-25*
