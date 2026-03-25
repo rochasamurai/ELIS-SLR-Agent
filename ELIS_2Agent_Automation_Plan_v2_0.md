@@ -35,6 +35,12 @@ autônomo** onde:
 O plano é dividido em **5 fases** (Fase 0 + Fases A–D), totalizando **12 PEs** de automação mais
 um PE futuro de SLR.
 
+> **Estado atual vs. estado-alvo:** Tudo descrito a partir da Fase B (loop autônomo) é um
+> **estado-alvo futuro**, não o modelo de governança atual. O `AGENTS.md` permanece
+> **autoritativo** até que cada PE de automação seja mergeado e explicitamente adotado.
+> As Fases A–D não substituem nem conflituam com o workflow atual — elas o estendem
+> progressivamente após validação.
+
 ---
 
 ## Estrutura do Plano
@@ -75,7 +81,7 @@ Total                              12 PEs automação + 1 PE SLR (futuro)
 | `"$schema": "https://docs.openclaw.ai/schema/openclaw.json"` | URL inexistente |
 | Estrutura `agents.defaults.model.primary` + `agents.defaults.models` | Incompatível com `openclaw.json` real (`agents.list[]`) |
 | `openai-codex/gpt-5.4` como ID de modelo | O repo usa `openai/gpt-5.1-codex` |
-| `openai/gpt-5-mini` | Model ID inexistente |
+| `openai/gpt-5-mini` | Model ID não confirmado no runtime ELIS (não presente em `openclaw.json`) |
 | `"context1m": false` | Parâmetro fictício da API Anthropic |
 
 ### Problema arquitetural central
@@ -138,9 +144,15 @@ na Fase 0 de autenticação.
 | Validator | `infra-val-codex` |
 
 **Contexto:** O `codex auth login` abre um browser para o redirect OAuth. Em um runner
-headless, o flow interativo não é aplicável. A solução é um **offline token extraction**:
+headless, o flow interativo não é aplicável. A solução proposta é um **offline token extraction**:
 o PO faz `codex auth login` uma vez na máquina local; o token persistido é extraído e
 armazenado como GitHub Secret.
+
+> **⚠️ Mecanismo a validar — não assumir como fundação até PE-AUTH-01 concluído:**
+> A portabilidade do token gerado pelo `codex auth login` entre máquinas, e o suporte oficial
+> para reuso headless, não estão documentados publicamente. A Pré-verificação abaixo é
+> **pré-requisito bloqueante** — o mecanismo exato só fica determinado após execução real.
+> Fases posteriores (PE-AUTO-04 em diante) dependem do resultado desta validação.
 
 **Pré-verificação obrigatória antes de implementar:**
 
@@ -189,7 +201,8 @@ print("OK: codex auth valid")
 
 - Sujeito a limites de uso do ChatGPT Plus — não equivalente a throughput de API
 - Token expira — renovação obrigatória antes de cada série longa de PEs
-- PM Agent monitora quota via `codex auth status --quota` após cada PE
+- [A VALIDAR] Monitoramento de quota: verificar se `codex auth status` expõe informação
+  de cota/expiração antes de incluir no PM Agent loop (flag `--quota` não confirmado)
 
 ---
 
@@ -415,16 +428,22 @@ repos:
 
 ```
 handoffs/
-  HANDOFF_PE-MS-06.md    ← PE ativo
-  HANDOFF_PE-MS-05.md    ← histórico imutável (migrado do root)
+  HANDOFF_PE-MS-06.md    ← histórico imutável (migrado do root)
+  HANDOFF_PE-MS-05.md
   HANDOFF_PE-MS-04.md
   ...
-HANDOFF.md               ← symlink → handoffs/HANDOFF_{PE_ATIVO}.md
-                           (mantido para compatibilidade com scripts existentes)
+HANDOFF.md               ← cópia gerada por script do PE ativo
+                           (NOT symlink — symlinks são frágeis no Windows/git)
 ```
 
-`check_handoff.py` atualizado para resolver via symlink e aceitar ambas as formas durante
-o período de migração.
+O `pe_sequencer.py` escreve a cópia de `handoffs/HANDOFF_{PE_ATIVO}.md` para o root
+`HANDOFF.md` a cada avanço de PE. Não utilizar symlinks — comportamento inconsistente
+entre Windows (core.symlinks=false por padrão) e Linux.
+
+`check_handoff.py` atualizado para:
+- Aceitar root `HANDOFF.md` (forma atual) durante migração
+- Após migração completa: verificar também `handoffs/HANDOFF_{PE_ID}.md` com base no
+  `CURRENT_PE.md`
 
 **Acceptance Criteria:**
 
@@ -432,8 +451,8 @@ o período de migração.
 |---|---|
 | AC-1 | `pre-commit run --all-files` exits 0 no estado atual do repo |
 | AC-2 | `git commit` com black error é bloqueado localmente (pre-commit hook ativo) |
-| AC-3 | HANDOFFs históricos migrados para `handoffs/` — root `HANDOFF.md` é symlink |
-| AC-4 | `check_handoff.py` exits 0 resolvendo via symlink |
+| AC-3 | HANDOFFs históricos migrados para `handoffs/` — root `HANDOFF.md` é cópia gerada por script (não symlink) |
+| AC-4 | `check_handoff.py` exits 0 resolvendo via root `HANDOFF.md` e via `handoffs/HANDOFF_{PE_ID}.md` |
 | AC-5 | Documentação de onboarding atualizada com instrução de `pre-commit install` |
 
 ---
@@ -873,7 +892,7 @@ PE-AUTH-02 Claude token PE-AUTO-02 CurrentPE CI  PE-AUTO-05 Val runner   PE-AUTO
 
 | Risco | Prob. | Impacto | Mitigação |
 |---|---|---|---|
-| Token OAuth Codex expira durante série longa | Alta | Alto | PM Agent monitora quota/expiry após cada PE; `!pe auth-check` on-demand; alerta a 80% do limite |
+| Token OAuth Codex expira durante série longa | Alta | Alto | [A VALIDAR em PE-AUTH-01] Renovação manual obrigatória; `!pe auth-check` on-demand; mecanismo de monitoramento de quota a ser determinado após validação do token |
 | Agente implementer em loop de commits | Média | Alto | `MAX_COMMITS=20` e timeout 4h no runner; exit 1 automático |
 | PM Agent toma decisão de arbitragem errada | Média | Médio | Todo arbiramento registrado em PR comment auditável; PO pode rever e usar `!pe override` |
 | GitHub rate limit por uso de bot accounts | Baixa | Alto | Fine-grained PATs com escopo mínimo; `elis-pm-bot` separa operações de merge das de código |
@@ -889,7 +908,7 @@ PE-AUTH-02 Claude token PE-AUTO-02 CurrentPE CI  PE-AUTO-05 Val runner   PE-AUTO
 |---|---|
 | `openclaw models auth login/paste-token` | Comando não existe no OpenClaw real |
 | Formato JSON `agents.defaults.model.primary` | Incompatível com `openclaw.json` real do projeto |
-| `openai-codex/gpt-5.4` / `openai/gpt-5-mini` | Model IDs inexistentes — repo usa `openai/gpt-5.1-codex` |
+| `openai-codex/gpt-5.4` / `openai/gpt-5-mini` | Model IDs não confirmados no runtime ELIS — repo usa `openai/gpt-5.1-codex` |
 | `"context1m": false` | Parâmetro fictício da API Anthropic |
 | `agent-browser` como substituto de API key | Tecnicamente incompatível — browser cookies ≠ API keys |
 
