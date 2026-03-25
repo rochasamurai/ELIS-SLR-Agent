@@ -1,6 +1,6 @@
 # ELIS — Plano de Aperfeiçoamento do Modelo 2-Agents Autônomo
 
-**Versão:** 2.0
+**Versão:** 3.0
 **Data:** 2026-03-25
 **Autor:** PM (Carlo) + Claude Code (análise e redação)
 **Base:** Avaliação do modelo 2-Agents de 2026-03-25 · AGENTS.md v2.0 · ELIS_MultiAgent_Implementation_Plan_v1_6.md
@@ -13,6 +13,7 @@
 |---|---|---|
 | v1.0 | 2026-03-25 | Plano inicial — avaliação de gaps e 4 fases de automação (Fases A–D, 10 PEs) |
 | v2.0 | 2026-03-25 | Adição da Fase 0 (auth sem API keys) com PE-AUTH-01 e PE-AUTH-02; avaliação e descarte de `agent-browser` para auth; adição de PE-SLR-HARVEST-WEB como PE futuro de SLR |
+| v3.0 | 2026-03-25 | Adição do Modelo de Paralelismo de Tracks (§ Paralelismo) com PE-AUTO-11 (Parallel Track Scheduler); extensão de CURRENT_PE.md para suporte a Track B; diretrizes de authoring para PEs paralelizáveis; roadmap atualizado com diagrama de trilhas paralelas |
 
 ---
 
@@ -50,10 +51,178 @@ Fase 0  Auth sem API keys           2 PEs   (pré-bloqueante)
 Fase A  Fundação — gaps estruturais 3 PEs   (pré-requisito para B)
 Fase B  Loop autônomo               3 PEs   (pré-requisito para C)
 Fase C  PM Agent árbitro            2 PEs   (pré-requisito para D)
-Fase D  Operação completa           2 PEs
+Fase D  Operação completa           3 PEs   (+PE-AUTO-11 Parallel Scheduler)
                                    ──────
-Total                              12 PEs automação + 1 PE SLR (futuro)
+Total                              13 PEs automação + 1 PE SLR (futuro)
 ```
+
+**Capacidade transversal (v3.0):** Paralelismo de Tracks — PEs independentes executados
+simultaneamente por ambos os agentes. Aplicável em todas as fases onde PEs não têm
+dependência entre si. Ver seção [Modelo de Paralelismo de Tracks](#modelo-de-paralelismo-de-tracks).
+
+---
+
+## Modelo de Paralelismo de Tracks
+
+### Origem da observação
+
+Durante a execução da série PE-MS (MiniServer), dois workstreams independentes correram
+simultaneamente:
+
+| Track | PE | Branch | Agente implementer |
+|---|---|---|---|
+| A | PE-MS-07 (project store layout) | `feature/pe-ms-07-slr-project-store` | `infra-impl-claude` |
+| B | Review do Plano v2.0 (PR #299) | `chore/review-2agent-automation-plan` | `infra-val-codex` |
+
+Enquanto Claude Code implementava PE-MS-07, CODEX revisava o plano em outra branch — sem
+conflito de arquivos, sem dependência sequencial. Quando Track A ficou pronto para validação,
+CODEX (agora livre de Track B) validou PE-MS-07, e Claude Code respondeu ao review do plano.
+
+**Conclusão empírica:** o modelo 2-Agents suporta naturalmente paralelismo quando os PEs
+são independentes. O gap atual é a ausência de formalização e de suporte do sequencer
+para dispatch simultâneo.
+
+---
+
+### Definição de Track Paralelo
+
+**Track** = um workstream de PE completo (branch + implementer + validator) correndo
+independentemente de outro track em paralelo.
+
+O modelo 2-Agents admite no máximo **2 tracks simultâneos** (um por agente-engine):
+
+```
+Track A: Claude Code implementa → CODEX valida
+Track B: CODEX implementa       → Claude Code valida
+```
+
+Os dois tracks podem estar em fases diferentes do ciclo:
+
+```
+Tempo →
+
+Track A:  [impl]──────[val]──[merge]
+Track B:     [impl]──────────[val]──[merge]
+```
+
+Enquanto Track A está em validação, Track B pode ainda estar em implementação.
+Quando Track A fecha, o agente liberado pode iniciar Track B's validation — exatamente
+o padrão observado em PE-MS-07 / PR #299.
+
+---
+
+### Critérios de Elegibilidade para Paralelismo
+
+Um par de PEs pode correr em tracks paralelos **somente se** todos os critérios forem
+satisfeitos:
+
+| Critério | Verificação |
+|---|---|
+| **Sem dependência mútua** | Nenhum dos dois tem o outro em `depends_on` (direta ou transitiva) |
+| **Sem sobreposição de arquivos** | Os escopos de arquivo não se intersectam (verificado por `check_agent_scope.py` de cada branch) |
+| **Mesmo base branch** | Ambos partem do mesmo `origin/$BASE` |
+| **Engines diferentes** | Track A usa Claude Code, Track B usa CODEX (ou vice-versa) — garante que cada agente tem um papel claro |
+| **Sem recurso compartilhado** | Nenhum arquivo de coordenação único (ex: `CURRENT_PE.md`) é modificado por ambos simultaneamente |
+
+Se qualquer critério falhar, o par deve ser executado sequencialmente.
+
+---
+
+### Diretrizes de Authoring de Plano com Paralelismo
+
+Ao escrever um novo plano de PEs, o PM deve:
+
+**1. Mapear o DAG de dependências**
+
+```
+PE-A ──depends──> PE-C
+PE-B              PE-D ──depends──> PE-E
+                  PE-B
+```
+
+PEs sem aresta entre si no DAG são candidatos a paralelismo.
+
+**2. Identificar cohorts paralelos**
+
+Um **cohort paralelo** é um conjunto de PEs que podem ser iniciados simultaneamente
+porque todas as suas dependências já estão satisfeitas.
+
+```yaml
+# Exemplo de cohort no formato de plano
+parallel_cohort_1:
+  - PE-AUTH-01   # engine: claude
+  - PE-AUTH-02   # engine: codex
+  # Critério: nenhum depende do outro; arquivos distintos
+```
+
+**3. Marcar PEs com `parallel_eligible`**
+
+Cada PE no plano deve ter:
+```yaml
+parallel_eligible: true   # pode correr em track paralelo se cohort disponível
+parallel_eligible: false  # deve esperar conclusão de dependências antes de iniciar
+```
+
+**4. Respeitar o limite de 2 tracks ativos**
+
+Com apenas 2 engine-agents (Claude Code + CODEX), o máximo de tracks simultâneos é 2.
+Cohorts com >2 PEs elegíveis devem ser particionados em sub-rodadas.
+
+**5. Preferir paralelos em cohorts de mesma fase**
+
+PEs de fases diferentes raramente são bons candidatos a paralelismo porque tendem a ter
+dependência transitiva entre fases. Priorizar paralelismo dentro da mesma fase.
+
+---
+
+### Extensão do CURRENT_PE.md para Track B
+
+O `CURRENT_PE.md` atual suporta um único PE ativo. Para paralelismo, a estrutura é
+estendida com um campo Track B (opcional):
+
+```markdown
+## Track A — PE Primário
+
+| Campo  | Valor                              |
+|--------|------------------------------------|
+| PE     | PE-AUTO-04                         |
+| Branch | feature/pe-auto-04-impl-runner     |
+
+## Track B — PE Paralelo (opcional)
+
+| Campo  | Valor                              |
+|--------|------------------------------------|
+| PE     | PE-AUTO-03                         |
+| Branch | feature/pe-auto-03-precommit       |
+| Status | implementing                       |
+| Nota   | Paralelo a Track A — sem dependência mútua confirmada |
+```
+
+**Regras:**
+- Track B só pode ser populado se o critério de elegibilidade for satisfeito
+- `check_current_pe.py` valida que Track A e Track B não têm dependência entre si
+- Quando Track B fecha (merge), o campo é removido — Track A permanece como primário
+- O PM popula Track B manualmente (ou o Sequencer via PE-AUTO-11)
+
+---
+
+### Padrão de Validação Cruzada
+
+O paralelismo cria uma oportunidade adicional: quando um track fecha,
+o agente liberado pode validar o outro track enquanto este ainda está em andamento.
+
+**Padrão "Cross-Validate":**
+
+```
+Track A:  [impl: Claude]──[PASS]──[merge]
+                                ↘
+Track B:       [impl: CODEX]────────[val: Claude]──[PASS]──[merge]
+```
+
+Isso maximiza o throughput: nenhum agente fica idle entre tracks.
+
+**Regra:** O agente que acabou de implementar Track A NÃO pode ser o validator de
+Track A (regra existente). Mas pode e deve ser o validator de Track B.
 
 ---
 
@@ -820,6 +989,80 @@ Postado no canal Discord `#pe-status` a cada hora via PM Agent cron.
 
 ---
 
+### PE-AUTO-11 · Parallel Track Scheduler
+
+| Campo | Valor |
+|---|---|
+| Domínio | infra |
+| Depends On | PE-AUTO-06 (Sequencer), PE-AUTO-09 (Plan Loader) |
+| Implementer | `infra-impl-claude` |
+| Validator | `infra-val-codex` |
+
+**Objetivo:** Estender o `pe_sequencer.py` e o `check_current_pe.py` para suportar dispatch
+simultâneo de dois PEs independentes (Track A + Track B).
+
+**Entregáveis:**
+
+- `scripts/pe_sequencer.py` — extensão do módulo existente:
+  - Ao avançar após um merge, verificar se há ≥2 PEs independentes prontos no DAG
+  - Se sim: dispatch Track A **e** Track B simultaneamente via `workflow_dispatch`
+  - Atribuir engines alternados: Track A = engine-atual, Track B = engine-oposto
+  - Registrar ambos os tracks ativos no `CURRENT_PE.md`
+
+- `scripts/check_current_pe.py` — extensão:
+  - Aceitar a estrutura `Track A / Track B` opcional
+  - Validar que Track A e Track B não têm dependência mútua (direta ou transitiva)
+  - Validar que os escopos de arquivo dos dois tracks não se intersectam
+  - Rejeitar Track B se `parallel_eligible: false` no plano
+
+- `scripts/check_parallel_eligibility.py` — novo script:
+  - Recebe dois PE IDs e o arquivo de plano
+  - Retorna `ELIGIBLE` ou lista de critérios falhados (sem dependência, sem sobreposição de arquivo, engines diferentes)
+  - Usado pelo sequencer e pelo PM manualmente
+
+- `docs/openclaw/PARALLEL_TRACK_GUIDE.md` — guia operacional:
+  - Como identificar cohorts paralelos num plano
+  - Como popular `CURRENT_PE.md` Track B manualmente
+  - Como o sequencer decide sobre paralelismo automaticamente
+
+**Lógica de decisão do sequencer:**
+
+```python
+def next_dispatch(dag, merged_set, current_engine):
+    ready = [pe for pe in dag if all(d in merged_set for d in pe.depends_on)]
+    if len(ready) == 0:
+        notify_discord("No PEs ready — waiting")
+        return
+    if len(ready) == 1 or not can_parallelize(ready[0], ready[1], dag):
+        dispatch_single(ready[0], engine=current_engine)
+        return
+    # Two independent PEs available — parallel dispatch
+    track_a, track_b = ready[0], ready[1]
+    dispatch_track(track_a, engine=current_engine)
+    dispatch_track(track_b, engine=opposite(current_engine))
+    update_current_pe_dual_track(track_a, track_b)
+
+def can_parallelize(pe_a, pe_b, dag):
+    return (
+        not has_dependency(pe_a, pe_b, dag) and
+        not has_dependency(pe_b, pe_a, dag) and
+        not scopes_overlap(pe_a, pe_b)
+    )
+```
+
+**Acceptance Criteria:**
+
+| # | Critério |
+|---|---|
+| AC-1 | `check_parallel_eligibility.py` retorna `ELIGIBLE` para PE-AUTH-01 + PE-AUTH-02 (caso empírico confirmado) |
+| AC-2 | `check_parallel_eligibility.py` retorna `INELIGIBLE` para PE com dependência entre si |
+| AC-3 | Sequencer faz dispatch duplo quando DAG tem ≥2 PEs prontos e elegíveis |
+| AC-4 | `check_current_pe.py` valida estrutura Track A + Track B e rejeita estado inválido |
+| AC-5 | Quando Track A fecha: Track B permanece ativo; agente de Track A transita para validação de Track B |
+| AC-6 | `PARALLEL_TRACK_GUIDE.md` cobre os 5 critérios de elegibilidade com exemplos |
+
+---
+
 ## PE Futuro — SLR Harvest Web
 
 ### PE-SLR-HARVEST-WEB · agent-browser para Fontes sem API Pública
@@ -865,26 +1108,67 @@ instâncias paralelas de Chrome no NUC8i7BEH.
 
 ## Roadmap e Dependências
 
+### Diagrama sequencial por fase
+
 ```
 Fase 0 (auth)           Fase A (fundação)       Fase B (loop)           Fase C/D (árbitro+full)
 ━━━━━━━━━━━━━━━━━━━━━━  ━━━━━━━━━━━━━━━━━━━━━━  ━━━━━━━━━━━━━━━━━━━━━━  ━━━━━━━━━━━━━━━━━━━━━━━
 PE-AUTH-01 Codex OAuth  PE-AUTO-01 Bot accounts  PE-AUTO-04 Impl runner  PE-AUTO-07 Arbitragem
 PE-AUTH-02 Claude token PE-AUTO-02 CurrentPE CI  PE-AUTO-05 Val runner   PE-AUTO-08 Discord loop
-(paralelos)             PE-AUTO-03 pre-commit     PE-AUTO-06 Sequencer   PE-AUTO-09 Plan loader
+(paralelos ◀)           PE-AUTO-03 pre-commit     PE-AUTO-06 Sequencer   PE-AUTO-09 Plan loader
                                                                           PE-AUTO-10 Dashboard
+                                                                          PE-AUTO-11 Parallel ◀
 [ pré-verificação ]     [ exige Fase 0 ]          [ exige Fase A ]       [ exige Fase B ]
-~3–5 dias               ~1 semana                 ~2 semanas             ~1 semana
 ```
 
-**Dependências críticas:**
+### Diagrama de trilhas paralelas (v3.0)
+
+Mostra como o paralelismo de tracks opera **dentro de cada fase**:
+
+```
+Tempo →──────────────────────────────────────────────────────────────────────>
+
+FASE 0 (exemplo com PE-AUTH-01 ∥ PE-AUTH-02 — paralelos confirmados empiricamente):
+
+Track A │[PE-AUTH-01: impl-claude]──────[val-codex]──[merge]│
+Track B │  [PE-AUTH-02: impl-codex]────────────[val-claude]──[merge]│
+
+         ◀──────── ~3–5 dias, ambos em paralelo ────────▶
+
+FASE A (PE-AUTO-02 ∥ PE-AUTO-03 — independentes, podem ser paralelos):
+
+Track A │[PE-AUTO-01: impl-codex]──[val-claude]──[merge]│
+Track B │                               [PE-AUTO-02: impl-claude]──[val-codex]──[merge]│
+Track A │                                                       [PE-AUTO-03: impl-codex]──...│
+
+         ◀─── PE-AUTO-01 primeiro (depende de Fase 0) ───▶◀── paralelos após ──▶
+
+FASE D (PE-AUTO-11 expande o sequencer para dispatch automático):
+
+Track A │[PE-AUTO-09]──[merge]──────────[val-codex]──[merge]│
+Track B │              [PE-AUTO-10]──────────────[val-claude]──[merge]│
+                       ↑ dispatch paralelo via PE-AUTO-11
+```
+
+### Dependências críticas
 
 | PE | Depende de | Motivo |
 |---|---|---|
 | PE-AUTO-01 | PE-AUTH-01 + PE-AUTH-02 | Runners precisam de tokens antes de usar os bots |
 | PE-AUTO-04 | PE-AUTH-01/02 + PE-AUTO-01 | Engine + identidade GitHub separados |
 | PE-AUTO-06 | PE-AUTO-02 | Sequencer só avança após validação de CURRENT_PE.md |
+| PE-AUTO-11 | PE-AUTO-06 + PE-AUTO-09 | Parallel scheduler exige sequencer e plan loader funcionais |
 | PE-AUTH-02 Context B | Pré-verificação manual | Resultado determina se ANTHROPIC_API_KEY permanece no elis-server |
 | PE-SLR-HARVEST-WEB | PE-MS-06 | Workspaces de harvest phase devem existir |
+
+### Oportunidades de paralelismo identificadas no plano atual
+
+| Cohort | PEs | Critério de elegibilidade |
+|---|---|---|
+| Fase 0 | PE-AUTH-01 + PE-AUTH-02 | Sem dependência mútua; arquivos distintos; engines opostos ✓ |
+| Fase A (pós PE-AUTO-01) | PE-AUTO-02 + PE-AUTO-03 | PE-AUTO-02 não depende de PE-AUTO-03 e vice-versa ✓ |
+| Fase D | PE-AUTO-09 + PE-AUTO-10 | Dashboard não depende do Plan Loader diretamente ✓ |
+| Fase D | PE-AUTO-10 + PE-AUTO-11 | Parallel scheduler não depende do dashboard ✓ |
 
 ---
 
@@ -899,6 +1183,9 @@ PE-AUTH-02 Claude token PE-AUTO-02 CurrentPE CI  PE-AUTO-05 Val runner   PE-AUTO
 | CURRENT_PE.md corrompido pelo sequencer | Baixa | Alto | `check_current_pe.py` bloqueia estado inválido antes de dispatch; git history preserva estado |
 | Chrome headless consome memória excessiva | Média (harvest) | Médio | `maxConcurrent: 1` para agentes com agent-browser; monitoramento via PM Agent |
 | OpenClaw não suporta setup-token em Context B | Alta | Baixo | Documentado em AC-5 de PE-AUTH-02; ANTHROPIC_API_KEY permanece no elis-server com plano de revisão |
+| Conflito de arquivo entre tracks paralelos | Baixa | Alto | `check_parallel_eligibility.py` valida ausência de sobreposição antes do dispatch; tracks com sobreposição são bloqueados e executados sequencialmente |
+| Estado inconsistente em CURRENT_PE.md dual-track | Baixa | Alto | `check_current_pe.py` valida estrutura Track A + B; sequencer só grava estado válido; git history preserva estado anterior |
+| Agente inicia Track B antes de Track A fechar (race condition) | Baixa | Médio | Sequencer controla dispatch; cada track tem branch isolada — não há shared state entre tracks ativos |
 
 ---
 
@@ -914,4 +1201,4 @@ PE-AUTH-02 Claude token PE-AUTO-02 CurrentPE CI  PE-AUTO-05 Val runner   PE-AUTO
 
 ---
 
-*ELIS 2-Agent Automation Plan v2.0 · 2026-03-25*
+*ELIS 2-Agent Automation Plan v3.0 · 2026-03-25*
