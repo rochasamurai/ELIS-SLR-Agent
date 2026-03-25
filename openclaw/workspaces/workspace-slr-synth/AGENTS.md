@@ -50,3 +50,16 @@ Every synthesis PE must record:
 - no screening decision authoring in this workspace
 - no extraction schema changes in this workspace
 - no PRISMA appendix rendering in this workspace
+
+---
+
+## 6. Project Store Access
+
+**Writes to:** `<project-store>/synth/`
+**Reads from:** `<project-store>/harvest/` · `<project-store>/screen/` · `<project-store>/extract/`
+**Must not write to:** `prisma/`
+
+Narrative and tabular synthesis artifacts are written to `<project-store>/synth/`.
+All upstream phases are consumed read-only.
+
+Read `MANIFEST.md` to confirm review identity. Do not modify `MANIFEST.md` without PM approval.

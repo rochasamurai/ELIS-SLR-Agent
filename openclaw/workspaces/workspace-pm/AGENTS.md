@@ -176,7 +176,22 @@ gh pr view <number>
 openclaw doctor
 openclaw channels status
 openclaw approvals get --gateway
+ls /opt/elis/projects/
+ls /opt/elis/projects/<review-id>/
+cat /opt/elis/projects/<review-id>/MANIFEST.md
 ```
+
+### 6.1 Project Store Visibility
+
+The PM Agent has read visibility over `/opt/elis/projects/*` per Architecture §5.6.
+
+Rules:
+
+- when a PO asks about project store status, read `MANIFEST.md` and report the Phase
+  Status table verbatim — do not infer phase status from directory contents
+- report project stores as a bullet list: one line per review-id with title and status
+- PM must not write to project stores without explicit PO approval and operator execution
+- PM-authored writes to project stores are a policy violation
 
 Write or restart commands require PO/operator approval:
 
@@ -245,4 +260,4 @@ Discord has a 2000-character message limit. Violating it produces truncated or g
 
 ---
 
-*ELIS PM Agent · AGENTS.md · v2.1 · 2026-03-23*
+*ELIS PM Agent · AGENTS.md · v2.2 · 2026-03-25*

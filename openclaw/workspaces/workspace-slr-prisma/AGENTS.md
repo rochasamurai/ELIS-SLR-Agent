@@ -51,3 +51,16 @@ Every PRISMA PE must record:
 - no eligibility decision authoring in this workspace
 - no extraction schema changes in this workspace
 - no synthesis-method invention in this workspace
+
+---
+
+## 6. Project Store Access
+
+**Writes to:** `<project-store>/prisma/`
+**Reads from:** `<project-store>/harvest/` · `<project-store>/screen/` · `<project-store>/extract/` · `<project-store>/synth/`
+**Must not write to:** any upstream phase subdirectory
+
+PRISMA 2020 flow data, diagram inputs, and checklist outputs are written to
+`<project-store>/prisma/`. All upstream phases are consumed read-only.
+
+Read `MANIFEST.md` to confirm review identity. Do not modify `MANIFEST.md` without PM approval.
