@@ -81,7 +81,7 @@ Total                              12 PEs automação + 1 PE SLR (futuro)
 | `"$schema": "https://docs.openclaw.ai/schema/openclaw.json"` | URL inexistente |
 | Estrutura `agents.defaults.model.primary` + `agents.defaults.models` | Incompatível com `openclaw.json` real (`agents.list[]`) |
 | `openai-codex/gpt-5.4` como ID de modelo | O repo usa `openai/gpt-5.1-codex` |
-| `openai/gpt-5-mini` | Model ID não confirmado no runtime ELIS (não presente em `openclaw.json`) |
+| `openai/gpt-5-mini` | Model ID não confirmado no runtime/config ELIS atual |
 | `"context1m": false` | Parâmetro fictício da API Anthropic |
 
 ### Problema arquitetural central
