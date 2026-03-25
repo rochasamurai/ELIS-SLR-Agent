@@ -21,8 +21,8 @@
 
 | Field   | Value                                         |
 |---------|-----------------------------------------------|
-| PE      | PE-MS-05                                      |
-| Branch  | feature/pe-ms-05-workspace-audit              |
+| PE      | PE-MS-06                                      |
+| Branch  | feature/pe-ms-06-slr-phase-workspaces         |
 
 ---
 
@@ -30,8 +30,8 @@
 
 | Agent       | Role        |
 |-------------|-------------|
-| Claude Code | Implementer |
-| CODEX       | Validator   |
+| CODEX       | Implementer |
+| Claude Code | Validator   |
 
 ---
 
@@ -74,7 +74,8 @@
 | PE-MS-02    | infra           | infra-impl-codex     | infra-val-claude   | feature/pe-ms-02-pm-prompt-unification            | merged          | 2026-03-23   |
 | PE-MS-03    | infra           | infra-impl-claude    | infra-val-codex    | feature/pe-ms-03-pm-discord-reporting             | merged          | 2026-03-24   |
 | PE-MS-04    | infra           | infra-impl-codex     | infra-val-claude   | feature/pe-ms-04-agent-registry-alignment         | merged          | 2026-03-25   |
-| PE-MS-05    | infra           | infra-impl-claude    | infra-val-codex    | feature/pe-ms-05-workspace-audit                  | planning        | 2026-03-25   |
+| PE-MS-05    | infra           | infra-impl-claude    | infra-val-codex    | feature/pe-ms-05-workspace-audit                  | merged          | 2026-03-25   |
+| PE-MS-06    | infra           | infra-impl-codex     | infra-val-claude   | feature/pe-ms-06-slr-phase-workspaces             | planning        | 2026-03-25   |
 
 Valid status values:
 - `planning`
@@ -103,6 +104,7 @@ PM housekeeping entries (prefix `PM-CHORE-XX`):
 | PM-CHORE-10  | Closed PE-MS-02 as merged (PR #294, PASS verdict). Opened PE-MS-03 with `infra-impl-claude` as Implementer and `infra-val-codex` as Validator per alternation rule. | 2026-03-23 |
 | PM-CHORE-11  | Closed PE-MS-03 as merged (PR #295, PASS verdict). Opened PE-MS-04 with `infra-impl-codex` as Implementer and `infra-val-claude` as Validator per alternation rule. | 2026-03-24 |
 | PM-CHORE-12  | Closed PE-MS-04 as merged (PR #296, PASS verdict). Opened PE-MS-05 with `infra-impl-claude` as Implementer and `infra-val-codex` as Validator per alternation rule. | 2026-03-25 |
+| PM-CHORE-13  | Closed PE-MS-05 as merged (PR #297, PASS verdict). Opened PE-MS-06 with `infra-impl-codex` as Implementer and `infra-val-claude` as Validator per alternation rule. | 2026-03-25 |
 
 Alternation rule:
 - For consecutive PEs in the same domain, the implementer engine must alternate (`codex` <-> `claude`).
