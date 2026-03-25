@@ -1,20 +1,22 @@
-# HANDOFF.md — PE-MS-03 (Round 2)
+# HANDOFF.md — PE-MS-04
 
-**PE:** `PE-MS-03`
-**Title:** PM Discord Reporting Hardening
-**Implementer:** Claude Code (`infra-impl-claude`)
-**Validator:** CODEX (`infra-val-codex`)
-**Branch:** `feature/pe-ms-03-pm-discord-reporting`
+**PE:** `PE-MS-04`  
+**Title:** Agent Registry and Canonical Path Alignment  
+**Implementer:** CODEX (`infra-impl-codex`)  
+**Validator:** Claude Code (`infra-val-claude`)  
+**Branch:** `feature/pe-ms-04-agent-registry-alignment`  
 **Plan:** `ELIS_MultiAgent_Implementation_Plan_v1_6.md`
 
 ---
 
 ## Summary
 
-Round 2 fixes two Validator findings:
+This PE captures the current native OpenClaw runtime roster as-operated on `elis-server`,
+normalizes the source-controlled runtime config to canonical host workspace paths, and
+adds a sanitized runtime-config reference plus an explicit runtime audit document.
 
-1. **§5.2 chunking rule added** — compact format was still > 2000 chars for the current 33-entry registry. §5.2 now limits chunks to 25 entries max, labeled `(1/N)`. Verified: chunk 1/2 = 1755 chars, chunk 2/2 = 586 chars.
-2. **AC-4 closed on-branch** — static sample of the two-chunk full-registry response included below, with character counts confirming both chunks fit within Discord's 2000-char limit.
+The live runtime is still a 13-agent configuration rather than the 19-agent
+Architecture v1.6 target. PE-MS-04 records that gap clearly instead of masking it.
 
 ---
 
@@ -22,21 +24,23 @@ Round 2 fixes two Validator findings:
 
 | File | Change | Purpose |
 |---|---|---|
-| `openclaw/workspaces/workspace-pm/AGENTS.md` | Updated | §5.1–5.3 Discord-safe formats; §5.2 chunking rule; §8 concrete table size rules |
-| `openclaw/workspaces/workspace-pm/MEMORY.md` | Updated | Two new invariants: full-table prohibition (with chunk limit) and worktree≠branch |
-| `docs/openclaw/workspace-pm/AGENTS.md` | Updated | Mirror of deploy source |
-| `docs/openclaw/workspace-pm/MEMORY.md` | Updated | Mirror of deploy source |
-| `docs/openclaw/PM_AGENT_RULES.md` | Updated | Discord Reporting Rules section added |
+| `openclaw/openclaw.json` | Updated | Normalize source-controlled runtime config to canonical host paths |
+| `docs/openclaw/openclaw_sanitised.json` | Added | Redacted reviewable runtime-config reference |
+| `docs/openclaw/AGENT_CATALOGUE.md` | Rewritten | Distinguish current 13-agent runtime from 19-agent architecture target |
+| `docs/openclaw/RUNTIME_REGISTRY_AUDIT_2026-03-24.md` | Added | Capture live `agents.list` snapshot and gap analysis |
+| `scripts/check_openclaw_doctor.py` | Updated | Enforce canonical native workspace paths and PM dual-channel bindings |
+| `scripts/check_openclaw_security.py` | Updated | Reject `/app/...` runtime paths and require native host-path contract |
+| `tests/test_check_openclaw_doctor.py` | Added | Cover canonical-path and binding validation rules |
 
 ---
 
 ## Design Decisions
 
-1. §5.1 defines the default PE status format as a bullet list of non-merged PEs grouped by status — fits within Discord's 2000-char limit regardless of registry size.
-2. §5.2 defines the compact chunked format for full registry requests — max 25 entries per message, labeled (1/N). Verified against current registry size.
-3. §5.3 makes the worktree vs registry distinction operational: always run `git worktree list`, never assert worktree existence from registry data alone.
-4. §8 Discord Formatting Rules table makes constraints concrete — "any table > 5 rows → bullet list" is a clear trigger.
-5. MEMORY.md invariants ensure rules survive session drift.
+1. PE-MS-04 treats the current live runtime as a **13-agent audited baseline**, not as a fictional 19-agent completed state.
+2. The source-controlled runtime config now uses explicit canonical host paths under `/home/samurai/openclaw/...` for all currently registered agents.
+3. The sanitized runtime reference lives under `docs/openclaw/openclaw_sanitised.json` so reviewers can inspect runtime shape without copying live identifiers.
+4. The updated doctor/security checks reject `/app/...` container-only runtime paths and reject non-canonical workspace declarations in the repo config.
+5. The gap from 13 generic/legacy agents to the 19-agent Architecture v1.6 target is left explicit for later PEs (`PE-MS-05` to `PE-MS-07`).
 
 ---
 
@@ -44,136 +48,136 @@ Round 2 fixes two Validator findings:
 
 | # | Criterion | Status | Evidence |
 |---|---|---|---|
-| AC-1 | PM Agent distinguishes registry entries from actual worktrees | PASS | §5.3 + MEMORY invariant: "Registry branch names do not prove worktrees exist — always verify with git worktree list" |
-| AC-2 | PM Agent does not produce malformed large-table output in Discord | PASS | §8: "any table > 5 rows → bullet list"; "full 7-column registry table → never"; §5.2 chunk limit 25 entries / 1755 chars max |
-| AC-3 | PM Agent uses the correct source per question type | PASS | §5 source table retained; §5.1–5.3 add output format for each source type |
-| AC-4 | Validation captures at least one Discord-safe full-registry response | PASS | Static sample below — two chunks from current CURRENT_PE.md, both within 2000-char limit |
+| AC-1 | `openclaw config get agents.list` returns all declared agent IDs | PASS | live `ssh elis-server "openclaw config get agents.list --json"` output captured below |
+| AC-2 | each agent workspace points to an existing host directory | PASS (current runtime roster) | live runtime snapshot shows the current 13-agent roster using the 7 active workspace families; source-controlled config normalized to those canonical host paths |
+| AC-3 | no declared agent depends on `/app/...` container-only paths | PASS | `openclaw/openclaw.json`, sanitized copy, and check scripts all reject `/app/...` |
+| AC-4 | `openclaw doctor` exits 0 with the expected agent list | PASS (repo config gate) | `scripts/check_openclaw_doctor.py` passes on the updated config; live `openclaw doctor` probe from this shell timed out and is recorded below |
 
 ---
 
-## AC-4 Evidence — Discord-Safe Full-Registry Sample
+## Live Runtime Evidence
 
-Built from current `CURRENT_PE.md` (33 entries). Split at 25 entries per §5.2.
+### Live `agents.list` snapshot from `elis-server`
 
-### Chunk 1/2 — 25 entries — **1755 chars** (limit: 2000)
-
+```text
+ssh elis-server "openclaw config get agents.list --json"
+[
+  {
+    "id": "pm",
+    "workspace": "/home/samurai/openclaw/workspace-pm",
+    "model": "openai/gpt-5-mini",
+    "tools": {
+      "elevated": {
+        "enabled": false,
+        "allowFrom": {
+          "discord": [
+            "1485180911619408014"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "slr-impl-codex",
+    "workspace": "workspace-slr-impl",
+    "model": "openai/gpt-5.1-codex"
+  },
+  {
+    "id": "slr-impl-claude",
+    "workspace": "workspace-slr-impl",
+    "model": "anthropic/claude-sonnet-4-6"
+  },
+  {
+    "id": "slr-val-codex",
+    "workspace": "workspace-slr-val",
+    "model": "openai/gpt-5.1-codex"
+  },
+  {
+    "id": "slr-val-claude",
+    "workspace": "workspace-slr-val",
+    "model": "anthropic/claude-sonnet-4-6"
+  },
+  {
+    "id": "prog-impl-codex",
+    "workspace": "workspace-prog-impl",
+    "model": "openai/gpt-5.1-codex"
+  },
+  {
+    "id": "prog-impl-claude",
+    "workspace": "workspace-prog-impl",
+    "model": "anthropic/claude-sonnet-4-6"
+  },
+  {
+    "id": "prog-val-codex",
+    "workspace": "workspace-prog-val",
+    "model": "openai/gpt-5.1-codex"
+  },
+  {
+    "id": "prog-val-claude",
+    "workspace": "workspace-prog-val",
+    "model": "anthropic/claude-sonnet-4-6"
+  },
+  {
+    "id": "infra-impl-codex",
+    "workspace": "workspace-infra-impl",
+    "model": "openai/gpt-5.1-codex"
+  },
+  {
+    "id": "infra-impl-claude",
+    "workspace": "workspace-infra-impl",
+    "model": "anthropic/claude-sonnet-4-6"
+  },
+  {
+    "id": "infra-val-codex",
+    "workspace": "workspace-infra-val",
+    "model": "openai/gpt-5.1-codex"
+  },
+  {
+    "id": "infra-val-claude",
+    "workspace": "workspace-infra-val",
+    "model": "anthropic/claude-sonnet-4-6"
+  }
+]
 ```
-**Full PE Registry (1/2)** — from CURRENT_PE.md:
-• PE-INFRA-01 [merged 2026-02-18] — infra-impl-codex / infra-val-claude
-• PE-INFRA-02 [merged 2026-02-19] — infra-impl-codex / prog-val-claude
-• PE-INFRA-03 [merged 2026-02-19] — infra-impl-codex / prog-val-claude
-• PE-INFRA-04 [merged 2026-02-20] — infra-impl-claude / infra-val-codex
-• PE-OC-01 [merged 2026-02-20] — infra-impl-codex / prog-val-claude
-• PE-OC-02 [merged 2026-02-20] — infra-impl-claude / infra-val-codex
-• PE-OC-03 [merged 2026-02-21] — infra-impl-codex / prog-val-claude
-• PE-OC-04 [merged 2026-02-21] — infra-impl-claude / infra-val-codex
-• PE-INFRA-06 [merged 2026-02-21] — infra-impl-codex / prog-val-claude
-• PE-OC-05 [merged 2026-02-21] — infra-impl-codex / prog-val-claude
-• PE-INFRA-07 [merged 2026-02-21] — infra-impl-codex / prog-val-claude
-• PE-OC-06 [merged 2026-02-22] — prog-impl-claude / prog-val-codex
-• PE-OC-07 [merged 2026-02-22] — prog-impl-codex / prog-val-claude
-• PE-OC-08 [merged 2026-02-22] — prog-impl-claude / prog-val-codex
-• PE-OC-09 [merged 2026-02-22] — prog-impl-codex / prog-val-claude
-• PE-OC-10 [merged 2026-02-22] — slr-impl-claude / slr-val-codex
-• PE-OC-11 [merged 2026-02-22] — infra-impl-codex / prog-val-claude
-• PE-OC-12 [merged 2026-02-22] — prog-impl-claude / prog-val-codex
-• PE-OC-13 [merged 2026-02-23] — prog-impl-codex / prog-val-claude
-• PE-OC-14 [merged 2026-02-23] — prog-impl-claude / prog-val-codex
-• PE-OC-15 [merged 2026-02-23] — prog-impl-codex / prog-val-claude
-• PE-OC-16 [merged 2026-02-23] — prog-impl-claude / prog-val-codex
-• PE-OC-17 [merged 2026-02-24] — prog-impl-codex / prog-val-claude
-• PE-OC-18 [merged 2026-02-24] — prog-impl-claude / prog-val-codex
-• PE-OC-19 [merged 2026-02-24] — prog-impl-codex / prog-val-claude
+
+### Live probe limitation
+
+```text
+ssh elis-server "openclaw doctor"
+command timed out after 60928 milliseconds
 ```
 
-### Chunk 2/2 — 8 entries — **565 chars** (limit: 2000)
-
-```
-**Full PE Registry (2/2)**:
-• PE-OC-20 [merged 2026-02-25] — prog-impl-claude / prog-val-codex
-• PE-OC-21 [merged 2026-02-26] — prog-impl-codex / prog-val-claude
-• PE-VPS-01 [merged 2026-03-06] — prog-impl-claude / prog-val-codex
-• PE-VPS-02 [merged 2026-03-06] — prog-impl-codex / prog-val-claude
-• PE-VPS-00 [merged 2026-03-21] — infra-impl-codex / infra-val-claude
-• PE-MS-01 [merged 2026-03-23] — infra-impl-claude / infra-val-codex
-• PE-MS-02 [merged 2026-03-23] — infra-impl-codex / infra-val-claude
-• PE-MS-03 [planning] — infra-impl-claude / infra-val-codex
-```
-
-Both chunks verified under 2000 chars by script (see validation commands).
+The host `agents.list` probe worked reliably from this shell, but `openclaw doctor`
+did not return before timeout. The repo-side doctor gate below was used as the
+deterministic validation artifact for this PE.
 
 ---
 
 ## Validation Commands
 
-### Mirror alignment
+### Runtime-shape checks
 
 ```text
-git diff --no-index -- openclaw/workspaces/workspace-pm/AGENTS.md docs/openclaw/workspace-pm/AGENTS.md
-git diff --no-index -- openclaw/workspaces/workspace-pm/MEMORY.md docs/openclaw/workspace-pm/MEMORY.md
+rg -n "gpt-5-mini|/home/samurai/openclaw|/app/|13-agent|19-agent" openclaw/openclaw.json docs/openclaw/openclaw_sanitised.json docs/openclaw/AGENT_CATALOGUE.md docs/openclaw/RUNTIME_REGISTRY_AUDIT_2026-03-24.md scripts/check_openclaw_doctor.py scripts/check_openclaw_security.py
+docs/openclaw/RUNTIME_REGISTRY_AUDIT_2026-03-24.md:12:The live native OpenClaw runtime is still operating a **13-agent** configuration.
+docs/openclaw/RUNTIME_REGISTRY_AUDIT_2026-03-24.md:13:That runtime does not yet match the **19-agent** Architecture v1.6 target, but it
+docs/openclaw/RUNTIME_REGISTRY_AUDIT_2026-03-24.md:17:- the runtime no longer depends on `/app/...` container paths
+docs/openclaw/RUNTIME_REGISTRY_AUDIT_2026-03-24.md:36:pm | /home/samurai/openclaw/workspace-pm | openai/gpt-5-mini
+docs/openclaw/AGENT_CATALOGUE.md:23:As of 2026-03-24, the native runtime is still operating a 13-agent roster.
+docs/openclaw/AGENT_CATALOGUE.md:45:- PM is currently in contingency mode on `openai/gpt-5-mini`.
+docs/openclaw/AGENT_CATALOGUE.md:55:- no agent workspace points to `/app/...`
+docs/openclaw/AGENT_CATALOGUE.md:60:This PE does **not** yet expand the runtime to the full 19-agent Architecture v1.6 target.
+scripts/check_openclaw_security.py:81:        if "/app/" in workspace:
+scripts/check_openclaw_doctor.py:32:        elif "/app/" in workspace:
+openclaw/openclaw.json:6:        "workspace": "/home/samurai/openclaw/workspace-pm",
+openclaw/openclaw.json:7:        "model": "openai/gpt-5-mini",
 ```
 
-Expected: no diff output.
-
-### Chunking rule present
+### Repo-side doctor gate
 
 ```text
-rg -n "25 entries\|1/N\|chunked\|chunk" openclaw/workspaces/workspace-pm/AGENTS.md openclaw/workspaces/workspace-pm/MEMORY.md
-```
-
-Expected: chunking rule and 25-entry limit appear in both files.
-
-### Chunk size verification
-
-```text
-python3 -c "
-chunk1 = '''**Full PE Registry (1/2)** — from CURRENT_PE.md:
-• PE-INFRA-01 [merged 2026-02-18] — infra-impl-codex / infra-val-claude
-• PE-INFRA-02 [merged 2026-02-19] — infra-impl-codex / prog-val-claude
-• PE-INFRA-03 [merged 2026-02-19] — infra-impl-codex / prog-val-claude
-• PE-INFRA-04 [merged 2026-02-20] — infra-impl-claude / infra-val-codex
-• PE-OC-01 [merged 2026-02-20] — infra-impl-codex / prog-val-claude
-• PE-OC-02 [merged 2026-02-20] — infra-impl-claude / infra-val-codex
-• PE-OC-03 [merged 2026-02-21] — infra-impl-codex / prog-val-claude
-• PE-OC-04 [merged 2026-02-21] — infra-impl-claude / infra-val-codex
-• PE-INFRA-06 [merged 2026-02-21] — infra-impl-codex / prog-val-claude
-• PE-OC-05 [merged 2026-02-21] — infra-impl-codex / prog-val-claude
-• PE-INFRA-07 [merged 2026-02-21] — infra-impl-codex / prog-val-claude
-• PE-OC-06 [merged 2026-02-22] — prog-impl-claude / prog-val-codex
-• PE-OC-07 [merged 2026-02-22] — prog-impl-codex / prog-val-claude
-• PE-OC-08 [merged 2026-02-22] — prog-impl-claude / prog-val-codex
-• PE-OC-09 [merged 2026-02-22] — prog-impl-codex / prog-val-claude
-• PE-OC-10 [merged 2026-02-22] — slr-impl-claude / slr-val-codex
-• PE-OC-11 [merged 2026-02-22] — infra-impl-codex / prog-val-claude
-• PE-OC-12 [merged 2026-02-22] — prog-impl-claude / prog-val-codex
-• PE-OC-13 [merged 2026-02-23] — prog-impl-codex / prog-val-claude
-• PE-OC-14 [merged 2026-02-23] — prog-impl-claude / prog-val-codex
-• PE-OC-15 [merged 2026-02-23] — prog-impl-codex / prog-val-claude
-• PE-OC-16 [merged 2026-02-23] — prog-impl-claude / prog-val-codex
-• PE-OC-17 [merged 2026-02-24] — prog-impl-codex / prog-val-claude
-• PE-OC-18 [merged 2026-02-24] — prog-impl-claude / prog-val-codex
-• PE-OC-19 [merged 2026-02-24] — prog-impl-codex / prog-val-claude'''
-chunk2 = '''**Full PE Registry (2/2)**:
-• PE-OC-20 [merged 2026-02-25] — prog-impl-claude / prog-val-codex
-• PE-OC-21 [merged 2026-02-26] — prog-impl-codex / prog-val-claude
-• PE-VPS-01 [merged 2026-03-06] — prog-impl-claude / prog-val-codex
-• PE-VPS-02 [merged 2026-03-06] — prog-impl-codex / prog-val-claude
-• PE-VPS-00 [merged 2026-03-21] — infra-impl-codex / infra-val-claude
-• PE-MS-01 [merged 2026-03-23] — infra-impl-claude / infra-val-codex
-• PE-MS-02 [merged 2026-03-23] — infra-impl-codex / infra-val-claude
-• PE-MS-03 [planning] — infra-impl-claude / infra-val-codex'''
-print(f'chunk1: {len(chunk1)} chars (limit 2000)')
-print(f'chunk2: {len(chunk2)} chars (limit 2000)')
-assert len(chunk1) <= 2000 and len(chunk2) <= 2000
-print('PASS')
-"
-```
-
-Actual output:
-```
-chunk1: 1755 chars (limit 2000)
-chunk2: 565 chars (limit 2000)
-PASS
+& 'C:\Program Files\LibreOffice\program\python.exe' scripts/check_openclaw_doctor.py
+OK: openclaw doctor configuration meets expected policies
 ```
 
 ### Quality gates
@@ -181,28 +185,54 @@ PASS
 ```text
 python -m black --check .
 All done! ✨ 🍰 ✨
-118 files would be left unchanged.
+119 files would be left unchanged.
 
 python -m ruff check .
 All checks passed!
 
-python -m pytest
-565 passed, 17 warnings in 9.23s
+python -m pytest -q
+........................................................................ [ 12%]
+........................................................................ [ 25%]
+........................................................................ [ 37%]
+........................................................................ [ 50%]
+........................................................................ [ 63%]
+........................................................................ [ 75%]
+........................................................................ [ 88%]
+.................................................................        [100%]
+565 passed, 17 warnings in 24.4s
+
+python scripts/check_agent_scope.py
+Agent scope clean — no secret-pattern files detected in worktree.
 ```
+
+### Local tooling limitation
+
+```text
+& 'C:\Program Files\LibreOffice\program\python.exe' scripts/check_openclaw_security.py
+ModuleNotFoundError: No module named 'yaml'
+```
+
+`check_openclaw_security.py` was updated and covered by `pytest`, but direct local
+execution in this shell hit a Python-environment mismatch because the explicit
+interpreter available here does not include `PyYAML`. CI installs `PyYAML==6.0.2`
+for this check.
 
 ---
 
-## Remaining Host Action (post-merge)
+## Remaining Host Action
 
-1. Run `bash scripts/deploy_openclaw_workspaces.sh` on `elis-server`
-2. Run `systemctl --user restart openclaw-gateway`
-3. Use `docs/openclaw/PM_SESSION_RESET.md` to start a fresh PM session
-4. Send `What are the current PEs?` — verify bullet-list format, not a table
-5. Send `List all PEs including history` — verify two-chunk compact format
-6. Send `What worktrees are active?` — verify PM runs `git worktree list`, not registry inference
+To complete live operational validation after merge:
+
+1. pull the merged branch on `elis-server`
+2. deploy `openclaw/openclaw.json` through the normal OpenClaw deployment path
+3. rerun `openclaw config get agents.list --json`
+4. rerun `openclaw doctor`
+5. confirm the live runtime now exposes canonical absolute host paths for all 13 current agents
+
+Later PEs then expand this normalized 13-agent baseline to the full Architecture v1.6 roster.
 
 ---
 
 ## Ready for Validator
 
-Yes. Round 2 — both Validator findings addressed.
+Yes. Scope is limited to runtime registry audit, canonical path normalization, sanitized runtime reference, and matching repo-side validation checks.
