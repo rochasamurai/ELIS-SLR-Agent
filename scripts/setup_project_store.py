@@ -64,9 +64,10 @@ def create_project_store(
     protocol_ref: str,
     base_path: pathlib.Path,
 ) -> int:
-    if not review_id or not review_id.replace("-", "").isalnum():
+    slug = review_id.replace("-", "")
+    if not review_id or not slug.isalnum() or not slug.islower():
         print(
-            f"ERROR: review-id '{review_id}' must be alphanumeric with hyphens only",
+            f"ERROR: review-id '{review_id}' must be lowercase alphanumeric with hyphens only",
             file=sys.stderr,
         )
         return 1

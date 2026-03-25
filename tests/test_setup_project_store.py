@@ -56,6 +56,16 @@ def test_create_rejects_invalid_review_id(tmp_path):
     assert rc == 1
 
 
+def test_create_rejects_uppercase_review_id(tmp_path):
+    rc = sps.create_project_store("My-Review", "Title", "TBD", tmp_path)
+    assert rc == 1
+
+
+def test_create_rejects_mixed_case_review_id(tmp_path):
+    rc = sps.create_project_store("SLR2026", "Title", "TBD", tmp_path)
+    assert rc == 1
+
+
 def test_create_all_five_phase_subdirs(tmp_path):
     sps.create_project_store("phase-check", "Title", "TBD", tmp_path)
     store = tmp_path / "phase-check"
