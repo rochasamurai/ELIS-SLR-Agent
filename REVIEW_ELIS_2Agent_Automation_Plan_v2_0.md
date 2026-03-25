@@ -3,9 +3,48 @@
 **Date:** 2026-03-25  
 **Reviewer:** CODEX
 
-## Verdict
+### Verdict
 
-FAIL
+PASS
+
+### Gate results
+
+```text
+PR #299 re-validation completed against the current branch diff.
+
+Original review findings:
+- 3 blocking
+- 2 medium
+
+Current status after plan remediation:
+- Finding 1: resolved
+- Finding 2: resolved
+- Finding 3: resolved
+- Finding 4: resolved
+- Finding 5: resolved
+```
+
+### Scope
+
+```text
+M	ELIS_2Agent_Automation_Plan_v2_0.md
+A	REVIEW_ELIS_2Agent_Automation_Plan_v2_0.md
+```
+
+### Required fixes
+
+None.
+
+### Evidence
+
+```text
+Resolved in ELIS_2Agent_Automation_Plan_v2_0.md:
+- target-state disclaimer added for Fases B–D
+- `openai/gpt-5-mini` reclassified to "não confirmado no runtime/config ELIS atual"
+- PE-AUTH-01 now marks token portability as a blocking validation prerequisite
+- HANDOFF symlink strategy replaced with generated-copy approach
+- quota/monitoring claims marked as [A VALIDAR]
+```
 
 ## Findings
 
@@ -104,3 +143,51 @@ Recommended fix:
 ## Overall Comment
 
 The document is well organized and the phased decomposition is strong, but it currently mixes validated facts with speculative operating assumptions in a few critical places. The main issue is not the direction of the plan; it is that the auth and autonomy foundations are written as more settled than they appear to be. Correcting those assumptions would make the plan much safer to execute.
+
+---
+
+## Re-validation Round 2 — 2026-03-25
+
+### Verdict
+
+PASS
+
+### Gate results
+
+```text
+PR #299 current diff against main:
+- plan file remediation is present
+- review artifact remains in branch
+- no original blocking or medium findings remain open
+```
+
+### Scope
+
+```text
+M	ELIS_2Agent_Automation_Plan_v2_0.md
+A	REVIEW_ELIS_2Agent_Automation_Plan_v2_0.md
+```
+
+### Required fixes
+
+None.
+
+### Evidence
+
+```text
+ELIS_2Agent_Automation_Plan_v2_0.md
+- executive summary now labels Fase B+ as future target state and keeps AGENTS.md authoritative
+- `openai/gpt-5-mini` now described as "Model ID não confirmado no runtime/config ELIS atual"
+- PE-AUTH-01 adds a blocking validation warning for token portability
+- HANDOFF strategy now uses generated copy instead of symlink
+- quota monitoring is marked [A VALIDAR]
+```
+
+```text
+Final re-validation status:
+- Finding 1: PASS
+- Finding 2: PASS
+- Finding 3: PASS
+- Finding 4: PASS
+- Finding 5: PASS
+```
