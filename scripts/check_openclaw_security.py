@@ -68,12 +68,20 @@ def check_openclaw_config(config_path: pathlib.Path) -> List[str]:
         return ["openclaw configuration not found"]
     data = json.loads(config_path.read_text(encoding="utf-8"))
     errors: List[str] = []
-    # New schema (v2026.2+): Telegram enabled explicitly via plugins, not exec.ask
-    telegram_enabled = (
-        data.get("plugins", {}).get("entries", {}).get("telegram", {}).get("enabled")
-    )
-    if telegram_enabled is not True:
-        errors.append("openclaw.plugins.entries.telegram.enabled must be true")
+    entries = data.get("plugins", {}).get("entries", {})
+    for name in ("telegram", "discord"):
+        enabled = entries.get(name, {}).get("enabled")
+        if enabled is not True:
+            errors.append(f"openclaw.plugins.entries.{name}.enabled must be true")
+
+    agents = data.get("agents", {}).get("list", [])
+    for agent in agents:
+        workspace = agent.get("workspace", "")
+        agent_id = agent.get("id", "<unknown>")
+        if "/app/" in workspace:
+            errors.append(f"agent {agent_id} uses container-only workspace path")
+        elif workspace and not workspace.startswith("/home/samurai/openclaw/"):
+            errors.append(f"agent {agent_id} workspace must use canonical host path")
     return errors
 
 
@@ -94,7 +102,7 @@ def print_report():
     config_issues = check_openclaw_config(OPENCLAW_CONFIG)
     if config_issues:
         raise SystemExit("\n".join(config_issues))
-    print("openclaw.json has Telegram plugin enabled.")
+    print("openclaw.json uses canonical native workspace paths and enabled channels.")
 
     print("openclaw security checks passed.")
 
