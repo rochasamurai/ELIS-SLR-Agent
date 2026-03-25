@@ -119,7 +119,7 @@ satisfeitos:
 | Critério | Verificação |
 |---|---|
 | **Sem dependência mútua** | Nenhum dos dois tem o outro em `depends_on` (direta ou transitiva) |
-| **Sem sobreposição de arquivos** | Os escopos de arquivo não se intersectam (verificado por `check_agent_scope.py` de cada branch) |
+| **Sem sobreposição de arquivos** | Os escopos de arquivo não se intersectam (verificado por `check_parallel_eligibility.py` — compara `git diff --name-only origin/$BASE..HEAD` dos dois branches) |
 | **Mesmo base branch** | Ambos partem do mesmo `origin/$BASE` |
 | **Engines diferentes** | Track A usa Claude Code, Track B usa CODEX (ou vice-versa) — garante que cada agente tem um papel claro |
 | **Sem recurso compartilhado** | Nenhum arquivo de coordenação único (ex: `CURRENT_PE.md`) é modificado por ambos simultaneamente |
@@ -1012,8 +1012,8 @@ simultâneo de dois PEs independentes (Track A + Track B).
 - `scripts/check_current_pe.py` — extensão:
   - Aceitar a estrutura `Track A / Track B` opcional
   - Validar que Track A e Track B não têm dependência mútua (direta ou transitiva)
-  - Validar que os escopos de arquivo dos dois tracks não se intersectam
   - Rejeitar Track B se `parallel_eligible: false` no plano
+  - (verificação de sobreposição de arquivos é responsabilidade de `check_parallel_eligibility.py`, não deste script)
 
 - `scripts/check_parallel_eligibility.py` — novo script:
   - Recebe dois PE IDs e o arquivo de plano
@@ -1054,11 +1054,11 @@ def can_parallelize(pe_a, pe_b, dag):
 
 | # | Critério |
 |---|---|
-| AC-1 | `check_parallel_eligibility.py` retorna `ELIGIBLE` para PE-AUTH-01 + PE-AUTH-02 (caso empírico confirmado) |
+| AC-1 | `check_parallel_eligibility.py` retorna `ELIGIBLE` para PE-MS-07 ∥ PR #299 (`chore/review-2agent-automation-plan`) — caso empírico documentado neste plano; e retorna `ELIGIBLE` para PE-AUTH-01 + PE-AUTH-02 como validação por critérios estruturais (sem dependência mútua, arquivos distintos) |
 | AC-2 | `check_parallel_eligibility.py` retorna `INELIGIBLE` para PE com dependência entre si |
 | AC-3 | Sequencer faz dispatch duplo quando DAG tem ≥2 PEs prontos e elegíveis |
 | AC-4 | `check_current_pe.py` valida estrutura Track A + Track B e rejeita estado inválido |
-| AC-5 | Quando Track A fecha: Track B permanece ativo; agente de Track A transita para validação de Track B |
+| AC-5 | Quando Track A fecha: Track B permanece ativo; se Track B estiver em Gate 1 (ready-for-validation), o agente liberado de Track A transita imediatamente para validação de Track B; se Track B ainda estiver em implementação, o agente aguarda Track B atingir Gate 1 antes de iniciar validação |
 | AC-6 | `PARALLEL_TRACK_GUIDE.md` cobre os 5 critérios de elegibilidade com exemplos |
 
 ---
