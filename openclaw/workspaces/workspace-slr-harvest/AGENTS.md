@@ -58,3 +58,17 @@ Every harvest PE must leave a run manifest with:
 - no extraction fields in this workspace
 - no synthesis claims in this workspace
 - no PRISMA flow arithmetic authored here except raw identification counts
+
+---
+
+## 6. Project Store Access
+
+**Writes to:** `<project-store>/harvest/`
+**Reads from:** none (harvest is the first phase)
+**Must not write to:** `screen/` · `extract/` · `synth/` · `prisma/`
+
+All harvest outputs (search exports, run manifests, dedup outputs) are written to
+`<project-store>/harvest/`. The active project store path is provided by the PM Agent
+at PE assignment time. Verify it against `MANIFEST.md` before writing.
+
+Read `MANIFEST.md` to confirm review identity. Do not modify `MANIFEST.md` without PM approval.

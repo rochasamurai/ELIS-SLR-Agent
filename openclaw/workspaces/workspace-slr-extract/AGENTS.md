@@ -51,3 +51,17 @@ Every extraction PE must record:
 - no inclusion/exclusion rule authoring in this workspace
 - no evidence synthesis prose in this workspace
 - no PRISMA checklist/diagram formatting in this workspace
+
+---
+
+## 6. Project Store Access
+
+**Writes to:** `<project-store>/extract/`
+**Reads from:** `<project-store>/harvest/` · `<project-store>/screen/`
+**Must not write to:** `synth/` · `prisma/`
+
+Structured extraction sheets (one JSONL per included study) are written to
+`<project-store>/extract/`. Upstream harvest and screen artifacts are consumed
+read-only.
+
+Read `MANIFEST.md` to confirm review identity. Do not modify `MANIFEST.md` without PM approval.

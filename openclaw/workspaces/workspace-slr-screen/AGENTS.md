@@ -51,3 +51,17 @@ Every screening PE must record:
 - no extraction schema authoring in this workspace
 - no synthesis claim drafting in this workspace
 - no final PRISMA appendix formatting in this workspace
+
+---
+
+## 6. Project Store Access
+
+**Writes to:** `<project-store>/screen/`
+**Reads from:** `<project-store>/harvest/`
+**Must not write to:** `extract/` · `synth/` · `prisma/`
+
+All screening decisions (title/abstract and full-text inclusion/exclusion, JSONL) are
+written to `<project-store>/screen/`. Harvest outputs are consumed read-only from
+`<project-store>/harvest/`.
+
+Read `MANIFEST.md` to confirm review identity. Do not modify `MANIFEST.md` without PM approval.
