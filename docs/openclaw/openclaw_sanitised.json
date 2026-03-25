@@ -17,24 +17,54 @@
         }
       },
       {
-        "id": "slr-impl-codex",
-        "workspace": "/home/samurai/openclaw/workspace-slr-impl",
+        "id": "harvest-impl-codex",
+        "workspace": "/home/samurai/openclaw/workspace-slr-harvest",
         "model": "openai/gpt-5.1-codex"
       },
       {
-        "id": "slr-impl-claude",
-        "workspace": "/home/samurai/openclaw/workspace-slr-impl",
+        "id": "harvest-val-claude",
+        "workspace": "/home/samurai/openclaw/workspace-slr-harvest",
         "model": "anthropic/claude-sonnet-4-6"
       },
       {
-        "id": "slr-val-codex",
-        "workspace": "/home/samurai/openclaw/workspace-slr-val",
+        "id": "screen-impl-claude",
+        "workspace": "/home/samurai/openclaw/workspace-slr-screen",
+        "model": "anthropic/claude-opus-4-6"
+      },
+      {
+        "id": "screen-val-codex",
+        "workspace": "/home/samurai/openclaw/workspace-slr-screen",
         "model": "openai/gpt-5.1-codex"
       },
       {
-        "id": "slr-val-claude",
-        "workspace": "/home/samurai/openclaw/workspace-slr-val",
+        "id": "extract-impl-codex",
+        "workspace": "/home/samurai/openclaw/workspace-slr-extract",
+        "model": "openai/gpt-5.1-codex"
+      },
+      {
+        "id": "extract-val-claude",
+        "workspace": "/home/samurai/openclaw/workspace-slr-extract",
+        "model": "anthropic/claude-opus-4-6"
+      },
+      {
+        "id": "synth-impl-claude",
+        "workspace": "/home/samurai/openclaw/workspace-slr-synth",
+        "model": "anthropic/claude-opus-4-6"
+      },
+      {
+        "id": "synth-val-codex",
+        "workspace": "/home/samurai/openclaw/workspace-slr-synth",
+        "model": "openai/gpt-5.1-codex"
+      },
+      {
+        "id": "prisma-impl-claude",
+        "workspace": "/home/samurai/openclaw/workspace-slr-prisma",
         "model": "anthropic/claude-sonnet-4-6"
+      },
+      {
+        "id": "prisma-val-codex",
+        "workspace": "/home/samurai/openclaw/workspace-slr-prisma",
+        "model": "openai/gpt-5.1-codex"
       },
       {
         "id": "prog-impl-codex",

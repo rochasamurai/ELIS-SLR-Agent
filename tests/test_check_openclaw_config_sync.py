@@ -27,14 +27,14 @@ _SAMPLE_CONFIG = {
                 "exec": {"ask": True},
             },
             {
-                "id": "slr-impl-codex",
-                "workspace": "workspace-slr-impl",
+                "id": "harvest-impl-codex",
+                "workspace": "workspace-slr-harvest",
                 "model": "openai/gpt-5.1-codex",
                 "exec": {"ask": True},
             },
             {
-                "id": "slr-impl-claude",
-                "workspace": "workspace-slr-impl",
+                "id": "harvest-val-claude",
+                "workspace": "workspace-slr-harvest",
                 "model": "anthropic/claude-sonnet-4-6",
                 "exec": {"ask": True},
             },
@@ -47,11 +47,11 @@ Agents:
 - pm
   Workspace: workspace-pm
   Model: openai/gpt-5.1-codex
-- slr-impl-codex
-  Workspace: workspace-slr-impl
+- harvest-impl-codex
+  Workspace: workspace-slr-harvest
   Model: openai/gpt-5.1-codex
-- slr-impl-claude
-  Workspace: workspace-slr-impl
+- harvest-val-claude
+  Workspace: workspace-slr-harvest
   Model: anthropic/claude-sonnet-4-6
 """
 
@@ -72,7 +72,7 @@ def test_declared_agent_ids(tmp_path):
     cfg = tmp_path / "openclaw.json"
     cfg.write_text(json.dumps(_SAMPLE_CONFIG), encoding="utf-8")
     ids = _declared_agent_ids(cfg)
-    assert ids == ["pm", "slr-impl-codex", "slr-impl-claude"]
+    assert ids == ["pm", "harvest-impl-codex", "harvest-val-claude"]
 
 
 # ---------------------------------------------------------------------------
@@ -91,7 +91,7 @@ def test_live_agent_ids_in_sync():
     with patch("scripts.check_openclaw_config_sync.subprocess.run") as mock_run:
         mock_run.return_value = _mock_run_success(_AGENTS_LIST_OUTPUT_IN_SYNC)
         ids = _live_agent_ids("openclaw")
-    assert ids == ["pm", "slr-impl-codex", "slr-impl-claude"]
+    assert ids == ["pm", "harvest-impl-codex", "harvest-val-claude"]
 
 
 def test_live_agent_ids_docker_not_found():

@@ -7,6 +7,25 @@ import json
 import pathlib
 import sys
 
+REQUIRED_SLR_PHASE_IDS = {
+    "harvest-impl-codex",
+    "harvest-val-claude",
+    "screen-impl-claude",
+    "screen-val-codex",
+    "extract-impl-codex",
+    "extract-val-claude",
+    "synth-impl-claude",
+    "synth-val-codex",
+    "prisma-impl-claude",
+    "prisma-val-codex",
+}
+LEGACY_SLR_IDS = {
+    "slr-impl-codex",
+    "slr-impl-claude",
+    "slr-val-codex",
+    "slr-val-claude",
+}
+
 
 def _load_config(path: pathlib.Path) -> dict:
     if not path.exists():
@@ -22,8 +41,20 @@ def _validate_agents(config: dict) -> list[str]:
         return ["agents.list must be an array"]
     if not agents:
         return ["agents.list must be non-empty"]
-    if not any(agent.get("id") == "pm" for agent in agents):
+    agent_ids = {agent.get("id") for agent in agents}
+    if "pm" not in agent_ids:
         errors.append("agents.list must include the pm agent")
+    missing_phase_ids = sorted(REQUIRED_SLR_PHASE_IDS - agent_ids)
+    if missing_phase_ids:
+        errors.append(
+            "agents.list missing phase-specialized SLR IDs: "
+            + ", ".join(missing_phase_ids)
+        )
+    stale_ids = sorted(LEGACY_SLR_IDS & agent_ids)
+    if stale_ids:
+        errors.append(
+            "agents.list still includes legacy generic SLR IDs: " + ", ".join(stale_ids)
+        )
     for agent in agents:
         agent_id = agent.get("id", "<unknown>")
         workspace = agent.get("workspace")

@@ -1,28 +1,23 @@
 # OpenClaw Agent Catalogue
 
-> Updated 2026-03-24 for PE-MS-04.
-> Runtime reference: `docs/openclaw/openclaw_sanitised.json`
+> Updated 2026-03-25 for PE-MS-06.
+> Source-config reference: `docs/openclaw/openclaw_sanitised.json`
 > Architecture target: `ELIS_SLR_AI_Platform_Conceptual_Architecture_v1_6.md` §4.2
 
 ---
 
 ## 1. Purpose
 
-This document records the current native OpenClaw runtime roster on `elis-server`
-and the remaining gap to the Architecture v1.6 target.
+This document records the source-controlled native OpenClaw roster that should be
+deployed to `elis-server` after PE-MS-06.
 
-It is intentionally split into:
-
-- current runtime state: what is configured and operating now
-- target architecture: what later PEs still need to provision
+It now reflects the full 19-agent Architecture v1.6 topology in repo config.
+The live host may still be on the previous 13-agent baseline until the next
+deployment run is executed.
 
 ---
 
-## 2. Current Runtime Snapshot (13 agents)
-
-As of 2026-03-24, the native runtime is still operating a 13-agent roster.
-This snapshot was taken from live `openclaw config get agents.list --json` output
-and normalized to canonical host workspace paths.
+## 2. Source-Controlled Runtime Target (19 agents)
 
 | ID | Domain | Role | Model | Workspace |
 |---|---|---|---|---|
@@ -35,69 +30,37 @@ and normalized to canonical host workspace paths.
 | `infra-impl-claude` | Infrastructure | Implementer | `anthropic/claude-sonnet-4-6` | `/home/samurai/openclaw/workspace-infra-impl` |
 | `infra-val-codex` | Infrastructure | Validator | `openai/gpt-5.1-codex` | `/home/samurai/openclaw/workspace-infra-val` |
 | `infra-val-claude` | Infrastructure | Validator | `anthropic/claude-sonnet-4-6` | `/home/samurai/openclaw/workspace-infra-val` |
-| `slr-impl-codex` | SLR | Implementer | `openai/gpt-5.1-codex` | `/home/samurai/openclaw/workspace-slr-impl` |
-| `slr-impl-claude` | SLR | Implementer | `anthropic/claude-sonnet-4-6` | `/home/samurai/openclaw/workspace-slr-impl` |
-| `slr-val-codex` | SLR | Validator | `openai/gpt-5.1-codex` | `/home/samurai/openclaw/workspace-slr-val` |
-| `slr-val-claude` | SLR | Validator | `anthropic/claude-sonnet-4-6` | `/home/samurai/openclaw/workspace-slr-val` |
+| `harvest-impl-codex` | Harvest | Implementer | `openai/gpt-5.1-codex` | `/home/samurai/openclaw/workspace-slr-harvest` |
+| `harvest-val-claude` | Harvest | Validator | `anthropic/claude-sonnet-4-6` | `/home/samurai/openclaw/workspace-slr-harvest` |
+| `screen-impl-claude` | Screen | Implementer | `anthropic/claude-opus-4-6` | `/home/samurai/openclaw/workspace-slr-screen` |
+| `screen-val-codex` | Screen | Validator | `openai/gpt-5.1-codex` | `/home/samurai/openclaw/workspace-slr-screen` |
+| `extract-impl-codex` | Extraction | Implementer | `openai/gpt-5.1-codex` | `/home/samurai/openclaw/workspace-slr-extract` |
+| `extract-val-claude` | Extraction | Validator | `anthropic/claude-opus-4-6` | `/home/samurai/openclaw/workspace-slr-extract` |
+| `synth-impl-claude` | Synthesis | Implementer | `anthropic/claude-opus-4-6` | `/home/samurai/openclaw/workspace-slr-synth` |
+| `synth-val-codex` | Synthesis | Validator | `openai/gpt-5.1-codex` | `/home/samurai/openclaw/workspace-slr-synth` |
+| `prisma-impl-claude` | PRISMA | Implementer | `anthropic/claude-sonnet-4-6` | `/home/samurai/openclaw/workspace-slr-prisma` |
+| `prisma-val-codex` | PRISMA | Validator | `openai/gpt-5.1-codex` | `/home/samurai/openclaw/workspace-slr-prisma` |
 
 Notes:
 
-- PM is currently in contingency mode on `openai/gpt-5-mini`.
-- Generic `workspace-slr-impl` / `workspace-slr-val` are still present in runtime.
-- Current runtime is native `systemd`, not Docker.
+- PM remains in contingency mode on `openai/gpt-5-mini`.
+- Generic `workspace-slr-impl` / `workspace-slr-val` are removed from the source-controlled runtime.
+- Production runtime remains native `systemd`, not Docker.
 
 ---
 
-## 3. Current Runtime Guarantees
-
-PE-MS-04 normalizes the source-controlled runtime reference to canonical host paths:
+## 3. Runtime Guarantees After PE-MS-06
 
 - no agent workspace points to `/app/...`
 - no runtime workspace path is relative in the source-controlled config
 - PM remains the only externally bound agent
 - Discord and Telegram plugins remain enabled
-
-This PE does **not** yet expand the runtime to the full 19-agent Architecture v1.6 target.
-
----
-
-## 4. Gap to Architecture v1.6
-
-Architecture v1.6 defines a 19-agent topology:
-
-- 1 PM agent
-- 4 Programs agents
-- 4 Infrastructure agents
-- 10 phase-specialized SLR agents
-
-The current runtime differs in two ways:
-
-1. It still runs 4 generic SLR agents:
-   - `slr-impl-codex`
-   - `slr-impl-claude`
-   - `slr-val-codex`
-   - `slr-val-claude`
-2. It does not yet register the 10 phase-specialized SLR agents:
-   - `harvest-impl-codex`
-   - `harvest-val-claude`
-   - `screen-impl-claude`
-   - `screen-val-codex`
-   - `extract-impl-codex`
-   - `extract-val-claude`
-   - `synth-impl-claude`
-   - `synth-val-codex`
-   - `prisma-impl-claude`
-   - `prisma-val-codex`
-
-That gap is expected to close in later PEs:
-
-- `PE-MS-05` workspace audit and segmentation check
-- `PE-MS-06` SLR phase workspace provisioning
-- `PE-MS-07` project-store layout and PM visibility rules
+- the 10 phase-specialized SLR agents replace the 4 generic SLR agents
+- all 5 phase-specialized SLR workspaces are provisioned in repo and ready for deployment
 
 ---
 
-## 5. Canonical Path Contract
+## 4. Canonical Path Contract
 
 Source-controlled runtime config must use canonical host paths:
 
@@ -106,29 +69,30 @@ Source-controlled runtime config must use canonical host paths:
 - `/home/samurai/openclaw/workspace-prog-val`
 - `/home/samurai/openclaw/workspace-infra-impl`
 - `/home/samurai/openclaw/workspace-infra-val`
-- `/home/samurai/openclaw/workspace-slr-impl`
-- `/home/samurai/openclaw/workspace-slr-val`
+- `/home/samurai/openclaw/workspace-slr-harvest`
+- `/home/samurai/openclaw/workspace-slr-screen`
+- `/home/samurai/openclaw/workspace-slr-extract`
+- `/home/samurai/openclaw/workspace-slr-synth`
+- `/home/samurai/openclaw/workspace-slr-prisma`
 
-This makes runtime intent explicit and prevents drift back to:
+This prevents drift back to:
 
 - container-only `/app/...` paths
 - ambiguous relative workspace names in the source-controlled config
+- obsolete generic SLR workspace declarations
 
 ---
 
-## 6. Source of Truth
+## 5. Source of Truth
 
 Use these artifacts together:
 
 - `openclaw/openclaw.json`
-  source-controlled runtime config to deploy
 - `docs/openclaw/openclaw_sanitised.json`
-  redacted reviewable copy of the runtime config
+- `docs/openclaw/SLR_PHASE_WORKSPACE_PROVISIONING_2026-03-25.md`
 - `docs/openclaw/TARGET_LAYOUT.md`
-  canonical host layout and workspace strategy
 - `ELIS_SLR_AI_Platform_Conceptual_Architecture_v1_6.md`
-  architecture target and agent-topology invariants
 
 ---
 
-*OpenClaw Agent Catalogue · Native runtime snapshot · 2026-03-24*
+*OpenClaw Agent Catalogue · Source-controlled target roster · 2026-03-25*

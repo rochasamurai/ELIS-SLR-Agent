@@ -16,8 +16,53 @@ def _valid_config() -> dict:
                     "model": "openai/gpt-5-mini",
                 },
                 {
-                    "id": "prog-impl-codex",
-                    "workspace": "/home/samurai/openclaw/workspace-prog-impl",
+                    "id": "harvest-impl-codex",
+                    "workspace": "/home/samurai/openclaw/workspace-slr-harvest",
+                    "model": "openai/gpt-5.1-codex",
+                },
+                {
+                    "id": "harvest-val-claude",
+                    "workspace": "/home/samurai/openclaw/workspace-slr-harvest",
+                    "model": "anthropic/claude-sonnet-4-6",
+                },
+                {
+                    "id": "screen-impl-claude",
+                    "workspace": "/home/samurai/openclaw/workspace-slr-screen",
+                    "model": "anthropic/claude-opus-4-6",
+                },
+                {
+                    "id": "screen-val-codex",
+                    "workspace": "/home/samurai/openclaw/workspace-slr-screen",
+                    "model": "openai/gpt-5.1-codex",
+                },
+                {
+                    "id": "extract-impl-codex",
+                    "workspace": "/home/samurai/openclaw/workspace-slr-extract",
+                    "model": "openai/gpt-5.1-codex",
+                },
+                {
+                    "id": "extract-val-claude",
+                    "workspace": "/home/samurai/openclaw/workspace-slr-extract",
+                    "model": "anthropic/claude-opus-4-6",
+                },
+                {
+                    "id": "synth-impl-claude",
+                    "workspace": "/home/samurai/openclaw/workspace-slr-synth",
+                    "model": "anthropic/claude-opus-4-6",
+                },
+                {
+                    "id": "synth-val-codex",
+                    "workspace": "/home/samurai/openclaw/workspace-slr-synth",
+                    "model": "openai/gpt-5.1-codex",
+                },
+                {
+                    "id": "prisma-impl-claude",
+                    "workspace": "/home/samurai/openclaw/workspace-slr-prisma",
+                    "model": "anthropic/claude-sonnet-4-6",
+                },
+                {
+                    "id": "prisma-val-codex",
+                    "workspace": "/home/samurai/openclaw/workspace-slr-prisma",
                     "model": "openai/gpt-5.1-codex",
                 },
             ]
@@ -44,6 +89,13 @@ def test_validate_agents_rejects_container_only_path():
     config["agents"]["list"][1]["workspace"] = "/app/workspaces/workspace-prog-impl"
     errors = doctor._validate_agents(config)
     assert any("container-only workspace path" in err for err in errors)
+
+
+def test_validate_agents_rejects_legacy_generic_slr_ids():
+    config = _valid_config()
+    config["agents"]["list"][1]["id"] = "slr-impl-codex"
+    errors = doctor._validate_agents(config)
+    assert any("legacy generic SLR IDs" in err for err in errors)
 
 
 def test_validate_bindings_requires_both_pm_channels():

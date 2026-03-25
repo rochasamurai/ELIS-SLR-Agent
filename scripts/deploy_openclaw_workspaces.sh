@@ -16,9 +16,8 @@ mkdir -p "$TARGET_PM_DOCS"
 if command -v rsync >/dev/null 2>&1; then
   rsync -av --delete "$SRC_DIR/" "$TARGET_ROOT/"
 else
-  rm -rf "$TARGET_PM"
-  mkdir -p "$TARGET_PM"
-  cp -R "$SRC_DIR/workspace-pm/." "$TARGET_PM/" 2>/dev/null || true
+  mkdir -p "$TARGET_ROOT"
+  cp -R "$SRC_DIR/." "$TARGET_ROOT/" 2>/dev/null || true
 fi
 
 echo "OpenClaw workspaces deployed to: $TARGET_ROOT"
