@@ -48,3 +48,48 @@ openclaw-security-check               pass
 rg -n "OPENAI_API_KEY|ANTHROPIC_API_KEY|CLAUDE_SETUP_TOKEN|CODEX_BOT_TOKEN|CLAUDE_BOT_TOKEN|PM_BOT_TOKEN" .github/workflows
 [no matches]
 ```
+
+---
+
+## Agent update — CODEX / PE-AUTO-01 / 2026-03-26 (Re-validation Round 2)
+
+### Verdict
+FAIL
+
+### Gate results
+black: PASS
+ruff: PASS
+pytest: 614 passed, 0 failed (17 pre-existing warnings)
+PE-specific tests: 7/7 passed (`tests/test_verify_bot_config.py` within full suite)
+
+### Scope
+M	HANDOFF.md
+A	docs/openclaw/BOT_ACCOUNTS_SETUP.md
+A	scripts/verify_bot_config.py
+A	tests/test_verify_bot_config.py
+
+### Required fixes
+- AC-3 is still not evidenced against the plan contract. [HANDOFF.md](c:/Users/carlo/ELIS-SLR-Agent/.worktrees/pe-auto-01/HANDOFF.md#L45) marks it PASS based on `CODEX_BOT_TOKEN`, `CLAUDE_BOT_TOKEN`, and `PM_BOT_TOKEN` existing as GitHub Secrets, but the plan requires that `verify_codex_auth.py` and `verify_claude_auth.py` actually exit 0 on runners. There is still no runner execution evidence for those scripts in this PE.
+- AC-4 is still not implemented. [HANDOFF.md](c:/Users/carlo/ELIS-SLR-Agent/.worktrees/pe-auto-01/HANDOFF.md#L46) treats documentation as completion, but `.github/workflows` still contains no references to `CODEX_BOT_TOKEN`, `CLAUDE_BOT_TOKEN`, or `PM_BOT_TOKEN`, and there are no workflow changes proving runner-side removal of `OPENAI_API_KEY` / `ANTHROPIC_API_KEY`.
+- The branch still contradicts itself on the token model. [BOT_ACCOUNTS_SETUP.md](c:/Users/carlo/ELIS-SLR-Agent/.worktrees/pe-auto-01/docs/openclaw/BOT_ACCOUNTS_SETUP.md#L1) and the rest of the runbook still describe “fine-grained PATs”, while [HANDOFF.md](c:/Users/carlo/ELIS-SLR-Agent/.worktrees/pe-auto-01/HANDOFF.md#L18) and [HANDOFF.md](c:/Users/carlo/ELIS-SLR-Agent/.worktrees/pe-auto-01/HANDOFF.md#L65) say the implemented path is classic PATs. The branch needs one consistent documented mechanism.
+
+### Evidence
+```text
+gh pr view 307
+title:  chore: bot account smoke test
+state:  CLOSED
+author: elis-codex-bot
+reviewers: elis-claude-bot (Approved)
+
+gh api /repos/rochasamurai/ELIS-SLR-Agent/branches/main/protection
+required_status_checks.contexts: ["quality","tests","validate","gate-1"]
+required_pull_request_reviews.required_approving_review_count: 1
+
+gh secret list --repo rochasamurai/ELIS-SLR-Agent
+CLAUDE_BOT_TOKEN
+CODEX_BOT_TOKEN
+PM_BOT_TOKEN
+
+rg -n "CODEX_BOT_TOKEN|CLAUDE_BOT_TOKEN|PM_BOT_TOKEN" .github/workflows
+[no matches]
+```
