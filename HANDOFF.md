@@ -1,43 +1,34 @@
-# HANDOFF.md — PE-AUTH-02
+# HANDOFF.md — PE-AUTO-01
 
-**PE:** PE-AUTH-02 — Claude Code setup-token for headless runners
-**Branch:** `feature/pe-auth-02-claude-setup-token`
-**Implementer:** CODEX (`infra-impl-codex`)
+**PE:** PE-AUTO-01 — Bot Accounts and GitHub Fine-Grained PATs
+**Branch:** `feature/pe-auto-01-bot-accounts-pats`
+**Implementer:** Claude Code (`infra-impl-claude`)
 **Date:** 2026-03-26
 
 ---
 
 ## Summary
 
-Implemented the Claude runner authentication verifier, unit tests, and the
-combined runbook for both runner and `elis-server` contexts. The PE records a
-positive runner-side contract around `CLAUDE_SETUP_TOKEN` and a negative
-`elis-server` result: current Anthropic-backed OpenClaw agents still rely on
-`ANTHROPIC_API_KEY`, so the setup token is adopted only for GitHub Actions
-runners at this stage.
+Delivered the bot account setup runbook, verification script, and unit tests
+for the three ELIS bot identities (`elis-codex-bot`, `elis-claude-bot`,
+`elis-pm-bot`). The PE resolves the single-account GitHub constraint that
+prevented the Validator from issuing a formal `gh pr review --approve` on the
+Implementer's PR.
 
----
-
-## Host verification findings (2026-03-26)
-
-| Field | Result |
-|---|---|
-| Host | `elis-server` |
-| Claude CLI on host | Not installed (`NOT_FOUND`) |
-| OpenClaw version | `2026.3.13` |
-| Host env names present | `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `OPENCLAW_GATEWAY_TOKEN` |
-| Local Anthropic probe result | Still routed through Anthropic API provider |
-| Mechanism adopted | `CLAUDE_SETUP_TOKEN` for runners only; keep `ANTHROPIC_API_KEY` on `elis-server` |
+Creating GitHub accounts and generating fine-grained PATs are one-time PO
+actions — the runbook covers each step. The verification script
+(`verify_bot_config.py`) provides a CI-compatible gate once the secrets are in
+place.
 
 ---
 
 ## Files changed
 
 ```
-A  docs/openclaw/CLAUDE_AUTH_SETUP.md
+A  docs/openclaw/BOT_ACCOUNTS_SETUP.md
+A  scripts/verify_bot_config.py
+A  tests/test_verify_bot_config.py
 M  HANDOFF.md
-A  scripts/verify_claude_auth.py
-A  tests/test_verify_claude_auth.py
 ```
 
 ---
@@ -46,32 +37,33 @@ A  tests/test_verify_claude_auth.py
 
 | # | Criterion | Status |
 |---|---|---|
-| AC-1 | Headless runner executes `claude --version` without `ANTHROPIC_API_KEY`, using `CLAUDE_SETUP_TOKEN` | ✓ — `verify_claude_auth.py` enforces token present + API key absent + `claude --version` exits 0 |
-| AC-2 | No token value in any log | ✓ — verifier prints only token length; runbook forbids echoing or pasting token values |
-| AC-3 | `scripts/verify_claude_auth.py` exits 0 | ✓ — implemented with unit coverage for success/failure paths |
-| AC-4 | Context B documented with verification result (supported / not-supported / workaround) | ✓ — `CLAUDE_AUTH_SETUP.md` records the live `elis-server` result: not supported in the current OpenClaw runtime path |
-| AC-5 | If Context B not-supported: decision recorded with review date in runbook | ✓ — runbook records 2026-03-26 review date and decision to retain `ANTHROPIC_API_KEY` on `elis-server` |
+| AC-1 | `elis-codex-bot` opens PR and `elis-claude-bot` approves without "Cannot approve your own PR" | Runbook §Step 7 documents the smoke-test procedure; requires PO to complete Steps 1–6 first |
+| AC-2 | Branch protection active — PR without green status check does not merge | Runbook §Step 6 provides the exact `gh api` command; requires PO to execute |
+| AC-3 | Secrets configured — `verify_codex_auth.py` and `verify_claude_auth.py` exit 0 on runners | `verify_bot_config.py` gates on CODEX_BOT_TOKEN / CLAUDE_BOT_TOKEN / PM_BOT_TOKEN; runner auth scripts from PE-AUTH-01/02 unchanged |
+| AC-4 | `OPENAI_API_KEY` and `ANTHROPIC_API_KEY` removed from agent runners | Runbook §AC-4 documents the separation: bot tokens for GitHub ops, auth secrets for CLI only; `ANTHROPIC_API_KEY` stays on elis-server (PE-AUTH-02 decision) |
 
 ---
 
 ## Design decisions
 
-**Why the verifier rejects `ANTHROPIC_API_KEY`:**
-PE-AUTH-02 is specifically about proving the runner can use
-`CLAUDE_SETUP_TOKEN` without the legacy Anthropic API-key path. The verifier
-fails fast if `ANTHROPIC_API_KEY` is still present so the runner evidence
-cannot be mistaken for an API-key-backed success.
+**Why `verify_bot_config.py` checks the workflow permission on `elis-pm-bot` only:**
+Only `elis-pm-bot` needs admin/maintain access for workflow dispatch and merge
+automation. The implementer/validator bots need write access for contents and
+pull requests only. The permission check uses the collaborators API
+(`role_name: admin | maintain`) to avoid dependence on the Workflows permission
+field, which is not exposed in fine-grained PAT API responses.
 
-**Why Context B is recorded as not supported:**
-`elis-server` does not have the Claude CLI installed, and the controlled local
-OpenClaw probe still routed the Anthropic agent through the API-backed provider
-path. That is sufficient evidence for the current runtime decision:
-`ANTHROPIC_API_KEY` remains required on `elis-server`.
+**Why branch protection is a PO action rather than a code deliverable:**
+Configuring branch protection via `gh api` requires the caller to be the
+repository owner (`rochasamurai`). The CI bot accounts (`elis-pm-bot`) do not
+yet exist at implementation time, so no programmatic path is available. The
+runbook provides the exact API call.
 
-**Why the runbook covers both contexts in one file:**
-The PE itself is split between runner verification and `elis-server`
-verification. Keeping both in one runbook makes the supported boundary explicit
-and reduces drift between CI guidance and host operations.
+**Why AC-1 and AC-2 require PO steps before full verification:**
+The bot accounts do not exist in GitHub at the time this branch is opened.
+Following the same pattern as PE-AUTH-01 (token extracted by PO) and PE-AUTH-02
+(setup-token generated by PO), the runbook captures the precise steps and the
+verification script provides the repeatable CI gate once secrets are in place.
 
 ---
 
@@ -80,13 +72,13 @@ and reduces drift between CI guidance and host operations.
 ```text
 python -m black --check .
 All done! ✨ 🍰 ✨
-129 files would be left unchanged.
+131 files would be left unchanged.
 
 python -m ruff check .
 All checks passed!
 
 python -m pytest
-607 passed, 17 warnings in 9.97s
+614 passed, 17 warnings in 15.00s
 
 python scripts/check_agent_scope.py
 Agent scope clean — no secret-pattern files detected in worktree.
@@ -94,4 +86,4 @@ Agent scope clean — no secret-pattern files detected in worktree.
 
 ---
 
-*ELIS SLR Agent · HANDOFF.md · infra-impl-codex · 2026-03-26*
+*ELIS SLR Agent · HANDOFF.md · infra-impl-claude · 2026-03-26*
