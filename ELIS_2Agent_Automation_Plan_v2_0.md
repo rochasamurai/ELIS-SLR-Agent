@@ -59,15 +59,15 @@ Phase E  Documentary governance      1 PE    (PE-PLAN-01, parallel to any phase)
 Total                               14 automation PEs + 1 SLR PE (future)
 ```
 
-**Transversal Capability (v3.0):** Parallel Track Model — independent PEs executed
+**Cross-cutting capability (v3.0):** Parallel Track Model — independent PEs executed
 simultaneously by both agents. Applicable in all phases where PEs have no
 mutual dependency. See section [Parallel Track Model](#parallel-track-model).
 
-**Transversal Capability (v3.1):** Architecture Decision Records (ADRs) — structured recording
+**Cross-cutting capability (v3.1):** Architecture Decision Records (ADRs) — structured recording
 of architectural decisions and their rationale. Phase E (PE-PLAN-01) creates the infrastructure and the
 first retroactive batch. See section [Phase E — Documentary Governance](#phase-e--documentary-governance).
 
-**Transversal Capability (v3.2):** Session Continuity — each PE must be resumable without
+**Cross-cutting capability (v3.2):** Session Continuity — each PE must be resumable without
 chat history. Progress is only considered durable when recorded in commits, PE artefacts
 (`HANDOFF.md` / `REVIEW_PE<N>.md`), and PR comments. PM monitors via PR + `CURRENT_PE.md`,
 not via session memory. See section [Session Continuity Model](#session-continuity-model).
@@ -1141,7 +1141,7 @@ parallel Chrome instances on the NUC8i7BEH.
 │  • Status: Proposed → Accepted → Superseded            │
 │  • Searchable by topic, not by date                     │
 ├─────────────────────────────────────────────────────────┤
-│  LAYER 2 — "What went wrong / was learnt"               │
+│  LAYER 2 — "What went wrong / what was learnt"          │
 │  LESSONS_LEARNED.md (already exists — maintain and expand) │
 │  • Error patterns + corrective rules                    │
 │  • Positive insights (e.g. parallel tracks discovery)  │
@@ -1242,12 +1242,12 @@ An ADR **is not required** for:
 **Deliverables:**
 
 - `docs/decisions/README.md` — ADR system guide: template, creation rules, status lifecycle, numbering convention
-- `docs/decisions/ADR-001-modelo-2-agents-alternacao.md`
-- `docs/decisions/ADR-002-git-worktrees-isolamento-pe.md`
-- `docs/decisions/ADR-003-paralelismo-de-tracks.md`
-- `docs/decisions/ADR-004-handoff-copia-nao-symlink.md`
-- `docs/decisions/ADR-005-agent-browser-descartado-para-auth.md`
-- `docs/decisions/ADR-006-openclaw-como-runtime.md`
+- `docs/decisions/ADR-001-two-agent-alternation-model.md`
+- `docs/decisions/ADR-002-git-worktrees-pe-isolation.md`
+- `docs/decisions/ADR-003-parallel-track-model.md`
+- `docs/decisions/ADR-004-handoff-copy-not-symlink.md`
+- `docs/decisions/ADR-005-agent-browser-rejected-for-auth.md`
+- `docs/decisions/ADR-006-openclaw-as-native-runtime.md`
 - Extension of `AGENTS.md` — rule §X: when to create an ADR (based on the rules above)
 
 **First batch — expected content of each ADR:**
@@ -1385,7 +1385,7 @@ Shows how track parallelism operates **within each phase**:
 ```
 Time →──────────────────────────────────────────────────────────────────────>
 
-PHASE 0 (example with PE-AUTH-01 ∥ PE-AUTH-02 — confirmed empirically as parallel):
+PHASE 0 (example with PE-AUTH-01 ∥ PE-AUTH-02 — eligible by structural criteria; empirical case is PE-MS-07 ∥ PR #299):
 
 Track A │[PE-AUTH-01: impl-claude]──────[val-codex]──[merge]│
 Track B │  [PE-AUTH-02: impl-codex]────────────[val-claude]──[merge]│
