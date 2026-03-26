@@ -19,7 +19,8 @@ operations and restore procedures into a single host runbook, wires those refere
 into the existing deployment/runtime docs, and adds pytest coverage to prevent the
 critical validation steps from silently drifting out of the documentation set. A
 follow-up fix on this branch also corrects `scripts/deploy_openclaw_workspaces.sh` so
-host-only PM entrypoint directories are recreated after `rsync --delete`.
+host-only PM entrypoint directories are recreated after `rsync --delete`, and live
+`gateway` runtime settings are preserved across config redeploys.
 
 The branch is intentionally documentation-first. It does not change runtime config or
 prompt behavior directly; instead it defines the exact host and Discord evidence the
@@ -37,8 +38,8 @@ Validator must collect on `elis-server` to close the final E2E acceptance checks
 | `docs/openclaw/NATIVE_INSTALL.md` | Modified | Declares the new authoritative operating runbooks |
 | `docs/openclaw/PM_AGENT_RULES.md` | Modified | Links PM deploy/reset flow to the E2E validation runbook |
 | `docs/openclaw/PM_SESSION_RESET.md` | Modified | Extends reset flow to require the full PM E2E validation set |
-| `scripts/deploy_openclaw_workspaces.sh` | Modified | Recreates `~/openclaw/workspace-pm/docs/` after sync so host entrypoint symlinks can be provisioned reliably |
-| `tests/test_pm_runbooks.py` | Added/Modified | Guards critical runbook coverage and the deploy-script `PLAN_CURRENT.md` entrypoint behavior |
+| `scripts/deploy_openclaw_workspaces.sh` | Modified | Recreates `~/openclaw/workspace-pm/docs/` after sync and preserves live `gateway` settings during config merge |
+| `tests/test_pm_runbooks.py` | Added/Modified | Guards critical runbook coverage and the deploy-script `PLAN_CURRENT.md` / `gateway` preservation behavior |
 
 ---
 
@@ -47,7 +48,7 @@ Validator must collect on `elis-server` to close the final E2E acceptance checks
 1. **Validation runbook separate from reset runbook**: reset only proves a fresh session exists; it does not prove PM behavior. `PM_E2E_VALIDATION_RUNBOOK.md` carries the actual Discord scenarios.
 2. **One native operations runbook**: the repo already had partial deploy/install guidance. `NATIVE_OPERATIONS_AND_RESTORE_RUNBOOK.md` consolidates day-to-day ops, PM recovery, and restore into one host-facing flow.
 3. **Docs are test-backed**: `tests/test_pm_runbooks.py` checks for required commands, questions, and references so the runbooks cannot quietly regress.
-4. **Deploy script recreates host-only docs dir after sync**: `rsync --delete` removes `~/openclaw/workspace-pm/docs/` because it is not source-controlled inside `openclaw/workspaces/workspace-pm/`. The deploy script now recreates that directory before symlinking `AGENTS.md` and `PLAN_CURRENT.md`.
+4. **Deploy script preserves host-only PM runtime state**: `rsync --delete` removes `~/openclaw/workspace-pm/docs/` because it is not source-controlled inside `openclaw/workspaces/workspace-pm/`, and config redeploy must not wipe live `gateway` settings. The deploy script now recreates the docs dir before symlinking `AGENTS.md` and `PLAN_CURRENT.md`, and preserves `channels`, `meta`, and `gateway` when merging config.
 5. **Workspace entrypoints remain the runtime contract**: all PM validation is framed around `~/openclaw/workspace-pm/...`, not direct repo reads in Discord sessions.
 6. **Validator captures live evidence**: because `elis-server` and Discord validation are external to this local worktree, the branch defines explicit evidence requirements for the Validator rather than inventing fake local runtime proof.
 

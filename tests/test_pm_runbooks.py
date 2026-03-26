@@ -57,4 +57,5 @@ def test_deploy_script_recreates_pm_docs_dir_after_sync() -> None:
 
     assert "rsync -av --delete" in text
     assert 'mkdir -p "$TARGET_PM_DOCS"' in text
+    assert 'for key in ("channels", "meta", "gateway")' in text
     assert 'ln -sfn "$REPO_ROOT/$PLAN_FILE" "$TARGET_PM_DOCS/PLAN_CURRENT.md"' in text
