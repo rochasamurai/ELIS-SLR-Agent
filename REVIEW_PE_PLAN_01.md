@@ -144,3 +144,80 @@ Why this blocks:
 ---
 
 *ELIS SLR Agent · REVIEW_PE_PLAN_01.md · infra-val-codex · 2026-03-26*
+
+---
+
+## Re-validation — 2026-03-26 (Round 2)
+
+### Verdict
+
+PASS
+
+### Gate results
+
+```text
+gh pr checks 303
+Parse verdict and auto-merge if PASS  pass
+Projects Auto-Add / add_and_set_status  pass
+openclaw-config-sync-check  pass
+openclaw-doctor-check  pass
+openclaw-health-check  pass
+quality  pass
+review-evidence-check  pass
+secrets-scope-check  pass
+slr-quality-check  pass
+tests  pass
+validate  pass
+deep-review  skipping
+openclaw-security-check  pass
+```
+
+### Scope
+
+Still within PE-PLAN-01 scope. The revalidation round only addresses:
+
+```text
+M	HANDOFF.md
+M	docs/decisions/ADR-003-parallel-track-model.md
+A	REVIEW_PE_PLAN_01.md
+```
+
+### Required fixes
+
+None.
+
+### Evidence
+
+The previous two blocking findings are now closed.
+
+```text
+HANDOFF.md
+75: ## Quality gates (verbatim output)
+80: python -m black --check .
+81: All done! ✨ 🍰 ✨
+82: 125 files would be left unchanged.
+87: python -m pytest
+88: 602 passed, 17 warnings in 18.17s
+90: python scripts/check_agent_scope.py
+91: Agent scope clean — no secret-pattern files detected in worktree.
+
+docs/decisions/ADR-003-parallel-track-model.md
+28: 2. **Empirical eligibility:** the file scopes of the two branches must not
+29:    overlap. Before starting parallel work, PM or the Implementer verifies this
+30:    by running:
+36:    planned future artefact.
+81:   (`REVIEW_ELIS_2Agent_Automation_Plan_v2_0.md` at repo root) — confirmed
+
+Test-Path scripts/check_parallel_eligibility.py
+False
+
+Test-Path REVIEW_ELIS_2Agent_Automation_Plan_v2_0.md
+True
+```
+
+Why this now passes:
+- `HANDOFF.md` now includes the exact quality-gate commands and pasted outputs
+  required by `AGENTS.md` §5.1 step 7.
+- ADR-003 now distinguishes manual present-day verification from the planned
+  future automation artefact, and its review-file reference points to the real
+  repo-root file.
