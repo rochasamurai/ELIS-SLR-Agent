@@ -21,20 +21,17 @@
 
 | Field   | Value                                              |
 |---------|----------------------------------------------------|
-| PE      | PE-AUTH-01 (Track A) · PE-AUTH-02 (Track B)        |
-| Branch  | feature/pe-auth-01-codex-oauth-token (Track A)     |
-|         | feature/pe-auth-02-claude-setup-token (Track B)    |
-
-Parallel tracks — both PEs open simultaneously. Each agent implements its own track.
+| PE      | PE-AUTH-02                                         |
+| Branch  | feature/pe-auth-02-claude-setup-token              |
 
 ---
 
 ## Agent roles
 
-| Agent       | Track A (PE-AUTH-01)   | Track B (PE-AUTH-02)   |
-|-------------|------------------------|------------------------|
-| Claude Code | Implementer            | Validator              |
-| CODEX       | Validator              | Implementer            |
+| Agent       | Role        |
+|-------------|-------------|
+| Claude Code | Validator   |
+| CODEX       | Implementer |
 
 ---
 
@@ -82,8 +79,8 @@ Parallel tracks — both PEs open simultaneously. Each agent implements its own 
 | PE-MS-07    | infra           | infra-impl-claude    | infra-val-codex    | feature/pe-ms-07-slr-project-store                | merged          | 2026-03-25   |
 | PE-MS-08    | infra           | infra-impl-codex     | infra-val-claude   | feature/pe-ms-08-e2e-validation                   | merged          | 2026-03-26   |
 | PE-PLAN-01  | infra           | infra-impl-claude    | infra-val-codex    | feature/pe-plan-01-adr-infrastructure             | merged          | 2026-03-26   |
-| PE-AUTH-01  | auth            | infra-impl-claude    | infra-val-codex    | feature/pe-auth-01-codex-oauth-token              | planning        | 2026-03-26   |
-| PE-AUTH-02  | auth            | infra-impl-codex     | infra-val-claude   | feature/pe-auth-02-claude-setup-token             | planning        | 2026-03-26   |
+| PE-AUTH-01  | auth            | infra-impl-claude    | infra-val-codex    | feature/pe-auth-01-codex-oauth-token              | merged          | 2026-03-26   |
+| PE-AUTH-02  | auth            | infra-impl-codex     | infra-val-claude   | feature/pe-auth-02-claude-setup-token             | implementing    | 2026-03-26   |
 
 Valid status values:
 - `planning`
@@ -117,6 +114,7 @@ PM housekeeping entries (prefix `PM-CHORE-XX`):
 | PM-CHORE-15  | Closed PE-MS-07 as merged (PR #300, PASS verdict). Opened PE-MS-08 with `infra-impl-codex` as Implementer and `infra-val-claude` as Validator per alternation rule. | 2026-03-25 |
 | PM-CHORE-16  | Closed PE-MS-08 as merged (PR #302, PASS verdict). MiniServer Implementation Series complete (PE-MS-01 to PE-MS-08). Transitioned release to ELIS 2-Agent Automation Plan (`ELIS_2Agent_Automation_Plan_v2_0.md`). Opened PE-PLAN-01 (ADR infrastructure and first batch) with `infra-impl-claude` as Implementer and `infra-val-codex` as Validator per alternation rule. | 2026-03-26 |
 | PM-CHORE-17  | Closed PE-PLAN-01 as merged (PR #303, PASS verdict). Opened Phase 0 parallel tracks: PE-AUTH-01 (Codex CLI OAuth token, `infra-impl-claude` / `infra-val-codex`, Track A) and PE-AUTH-02 (Claude Code setup-token, `infra-impl-codex` / `infra-val-claude`, Track B). Both PEs start simultaneously per parallel track model. Removed stale merged worktrees. | 2026-03-26 |
+| PM-CHORE-18  | Closed PE-AUTH-01 as merged (PR #304, PASS verdict). Removed `.worktrees/pe-auth-01`. PE-AUTH-02 (Track B) continues as sole active PE — CODEX Implementer, Claude Code Validator. | 2026-03-26 |
 
 Alternation rule:
 - For consecutive PEs in the same domain, the implementer engine must alternate (`codex` <-> `claude`).
