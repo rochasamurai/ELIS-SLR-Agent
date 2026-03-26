@@ -150,6 +150,31 @@ Gate 1 and Gate 2 are enforced by CI automation after PE-INFRA-04.
   - the PM explicitly authorises a different language for a specific artefact
 - Agents must normalise spelling and wording to UK English when drafting or editing repository-facing content unless one of the exceptions above applies.
 
+### 2.12 Architecture Decision Records (ADRs)
+
+An ADR (`docs/decisions/ADR-NNN-title.md`) **must** be created when:
+
+- a structural choice is made that affects how PEs, agents, branches, or CI
+  interact (e.g., worktree strategy, role alternation, merge policy)
+- a previously-trialled approach is discarded in favour of a different one
+  (e.g., rejecting symlinks for HANDOFF, rejecting Docker for native runtime)
+- a new cross-cutting capability is introduced to the workflow
+  (e.g., parallel tracks, session continuity model, ADR system itself)
+- a retrospective reveals a significant undocumented design choice that has
+  driven subsequent decisions
+
+An ADR is **not** required for:
+
+- routine PE implementation choices (file layout, variable names, test structure)
+- temporary fixes or workarounds expected to be revisited within one PE
+- changes fully documented in `LESSONS_LEARNED.md` that do not affect workflow
+  structure
+
+When in doubt: if the decision would be surprising or non-obvious to a new
+agent reading the codebase, write an ADR.
+
+ADR format and lifecycle are defined in `docs/decisions/README.md`.
+
 ---
 
 ## 3) Worktree lifecycle — mandatory for every PE

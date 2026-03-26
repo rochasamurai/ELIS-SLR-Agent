@@ -1,142 +1,84 @@
-# HANDOFF.md — PE-MS-08
+# HANDOFF.md — PE-PLAN-01
 
-**PE:** `PE-MS-08`  
-**Title:** PM Agent End-to-End Operational Validation and Native Runbooks  
-**Implementer:** CODEX (`infra-impl-codex`)  
-**Validator:** Claude Code (`infra-val-claude`)  
-**Branch:** `feature/pe-ms-08-e2e-validation`  
-**Base branch:** `main`  
-**Plan:** `ELIS_MultiAgent_Implementation_Plan_v1_6.md`  
-**Commit:** `pending final HANDOFF commit`
+**PE:** PE-PLAN-01 — Architecture Decision Records: Infrastructure and First Batch
+**Branch:** `feature/pe-plan-01-adr-infrastructure`
+**Implementer:** Claude Code (`infra-impl-claude`)
+**Date:** 2026-03-26
 
 ---
 
 ## Summary
 
-This PE turns the current PM/native operating model into an auditable implementation
-package. It adds a dedicated PM Agent E2E validation runbook, consolidates native
-operations and restore procedures into a single host runbook, wires those references
-into the existing deployment/runtime docs, and adds pytest coverage to prevent the
-critical validation steps from silently drifting out of the documentation set. A
-follow-up fix on this branch also corrects `scripts/deploy_openclaw_workspaces.sh` so
-host-only PM entrypoint directories are recreated after `rsync --delete`, and live
-`gateway` runtime settings are preserved across config redeploys.
-
-The branch is intentionally documentation-first. It does not change runtime config or
-prompt behavior directly; instead it defines the exact host and Discord evidence the
-Validator must collect on `elis-server` to close the final E2E acceptance checks.
+Introduced the ADR system for the ELIS project. Created the `docs/decisions/`
+directory with a README guide and 6 retroactive ADRs documenting the key
+architectural decisions made during the ELIS development history. Extended
+`AGENTS.md` with §2.12 defining when to create an ADR.
 
 ---
 
-## Files Changed
+## Files changed
 
-| File | Change | Purpose |
+```
+A  docs/decisions/README.md
+A  docs/decisions/ADR-001-two-agent-alternation-model.md
+A  docs/decisions/ADR-002-git-worktrees-pe-isolation.md
+A  docs/decisions/ADR-003-parallel-track-model.md
+A  docs/decisions/ADR-004-handoff-copy-not-symlink.md
+A  docs/decisions/ADR-005-agent-browser-rejected-for-auth.md
+A  docs/decisions/ADR-006-openclaw-as-native-runtime.md
+M  AGENTS.md
+M  HANDOFF.md
+```
+
+---
+
+## Acceptance criteria checklist
+
+| # | Criterion | Status |
 |---|---|---|
-| `docs/openclaw/PM_E2E_VALIDATION_RUNBOOK.md` | Added | Canonical end-to-end PM validation flow for Discord and host cross-checks |
-| `docs/openclaw/NATIVE_OPERATIONS_AND_RESTORE_RUNBOOK.md` | Added | Native deploy, operations, PM recovery, and restore guidance |
-| `docs/openclaw/DEPLOYMENT.md` | Modified | Points deploy flow to PM reset, E2E validation, and native restore runbooks |
-| `docs/openclaw/NATIVE_INSTALL.md` | Modified | Declares the new authoritative operating runbooks |
-| `docs/openclaw/PM_AGENT_RULES.md` | Modified | Links PM deploy/reset flow to the E2E validation runbook |
-| `docs/openclaw/PM_SESSION_RESET.md` | Modified | Extends reset flow to require the full PM E2E validation set |
-| `scripts/deploy_openclaw_workspaces.sh` | Modified | Recreates `~/openclaw/workspace-pm/docs/` after sync and preserves live `gateway` settings during config merge |
-| `tests/test_pm_runbooks.py` | Added/Modified | Guards critical runbook coverage and the deploy-script `PLAN_CURRENT.md` / `gateway` preservation behavior |
+| AC-1 | `docs/decisions/README.md` present with template, lifecycle, and creation rules | ✓ |
+| AC-2 | 6 ADRs present with status `Accepted` and all fields completed | ✓ |
+| AC-3 | Each ADR has at least one discarded alternative documented | ✓ |
+| AC-4 | `AGENTS.md` updated with rule for when to create an ADR (§2.12) | ✓ |
+| AC-5 | ADR-003 references empirical case PE-MS-07 ∥ PR #299 | ✓ |
+| AC-6 | ADR-004 references finding F4 from PR #299 | ✓ |
 
 ---
 
-## Design Decisions
+## ADR content notes
 
-1. **Validation runbook separate from reset runbook**: reset only proves a fresh session exists; it does not prove PM behavior. `PM_E2E_VALIDATION_RUNBOOK.md` carries the actual Discord scenarios.
-2. **One native operations runbook**: the repo already had partial deploy/install guidance. `NATIVE_OPERATIONS_AND_RESTORE_RUNBOOK.md` consolidates day-to-day ops, PM recovery, and restore into one host-facing flow.
-3. **Docs are test-backed**: `tests/test_pm_runbooks.py` checks for required commands, questions, and references so the runbooks cannot quietly regress.
-4. **Deploy script preserves host-only PM runtime state**: `rsync --delete` removes `~/openclaw/workspace-pm/docs/` because it is not source-controlled inside `openclaw/workspaces/workspace-pm/`, and config redeploy must not wipe live `gateway` settings. The deploy script now recreates the docs dir before symlinking `AGENTS.md` and `PLAN_CURRENT.md`, and preserves `channels`, `meta`, and `gateway` when merging config.
-5. **Workspace entrypoints remain the runtime contract**: all PM validation is framed around `~/openclaw/workspace-pm/...`, not direct repo reads in Discord sessions.
-6. **Validator captures live evidence**: because `elis-server` and Discord validation are external to this local worktree, the branch defines explicit evidence requirements for the Validator rather than inventing fake local runtime proof.
+**ADR-001** (two-agent alternation): covers the alternation rule governing Implementer/Validator
+rotation across PEs. References the PE-MS series (PE-MS-01 to PE-MS-08) as historical evidence.
 
----
+**ADR-002** (git worktrees): covers mandatory worktree-per-PE isolation. References `AGENTS.md §3`
+and `CLAUDE.md` do-not list. Worktree pattern observed across all 8 MiniServer PEs.
 
-## Acceptance Criteria
+**ADR-003** (parallel tracks): covers the parallel-track model. Cites PE-MS-07 ∥ PR #299 as the
+empirical case. Notes PE-AUTH-01 ∥ PE-AUTH-02 as structurally eligible but not yet empirically
+verified (per AC-5).
 
-| # | Criterion | Status | Evidence |
-|---|---|---|---|
-| AC-1 | PM Agent identifies current PE state correctly from canonical files | READY FOR VALIDATION | `docs/openclaw/PM_E2E_VALIDATION_RUNBOOK.md` Scenario 2 defines Discord + host proof |
-| AC-2 | PM Agent reports worktrees only from explicit host evidence | READY FOR VALIDATION | `docs/openclaw/PM_E2E_VALIDATION_RUNBOOK.md` Scenario 3 uses `git -C /opt/elis/repo worktree list` |
-| AC-3 | PM Agent produces Discord-safe registry reporting | READY FOR VALIDATION | `docs/openclaw/PM_E2E_VALIDATION_RUNBOOK.md` Scenario 4 defines chunked `(1/N)` behavior under Discord limit |
-| AC-4 | Native operations and restore guidance are committed and validated | IMPLEMENTED | `docs/openclaw/NATIVE_OPERATIONS_AND_RESTORE_RUNBOOK.md`; `tests/test_pm_runbooks.py` |
+**ADR-004** (HANDOFF copy not symlink): covers the decision to use a generated copy. References
+PR #299 Finding 4 (Medium — HANDOFF symlink fragility across Windows/Linux) as the direct
+evidence that motivated the decision (per AC-6).
 
----
+**ADR-005** (agent browser rejected for auth): covers the decision not to use browser-based login
+for credential harvesting. Agent browser remains available for content retrieval only.
 
-## Quality Gate Results
+**ADR-006** (OpenClaw as native runtime): covers the transition from Docker Compose to native
+OpenClaw + systemd --user. References PE-MS-08 (PR #302) end-to-end validation as confirmation.
 
-```bash
-python scripts/check_agent_scope.py
-Agent scope clean - no secret-pattern files detected in worktree.
-
-python -m ruff check .
-All checks passed!
-
-python -m pytest -q
-602 passed, 17 warnings in 15.64s
-
-python -m pytest -q tests/test_pm_runbooks.py
-4 passed in 0.12s
-
-python -m black --check tests/test_pm_runbooks.py
-All done! ✨ 🍰 ✨
-1 file would be left unchanged.
-```
+**AGENTS.md §2.12**: added after §2.11 (language standard). Defines mandatory ADR triggers,
+non-required cases, and a judgement heuristic. Points to `docs/decisions/README.md` for format.
 
 ---
 
-## Scope
+## Validator notes
 
-```bash
-git diff --name-status origin/main
-M	HANDOFF.md
-A	REVIEW_PE_MS_08.md
-M	docs/openclaw/DEPLOYMENT.md
-M	docs/openclaw/NATIVE_INSTALL.md
-A	docs/openclaw/NATIVE_OPERATIONS_AND_RESTORE_RUNBOOK.md
-M	docs/openclaw/PM_AGENT_RULES.md
-A	docs/openclaw/PM_E2E_VALIDATION_RUNBOOK.md
-M	docs/openclaw/PM_SESSION_RESET.md
-M	scripts/deploy_openclaw_workspaces.sh
-A	tests/test_pm_runbooks.py
-
-git diff --stat origin/main
- HANDOFF.md                                         | 151 ++++++++------
- REVIEW_PE_MS_08.md                                 | 226 +++++++++++++++++++++
- docs/openclaw/DEPLOYMENT.md                        |  26 ++-
- docs/openclaw/NATIVE_INSTALL.md                    |   6 +
- docs/openclaw/NATIVE_OPERATIONS_AND_RESTORE_RUNBOOK.md | 188 +++++++++++++++++
- docs/openclaw/PM_AGENT_RULES.md                    |   4 +
- docs/openclaw/PM_E2E_VALIDATION_RUNBOOK.md         | 214 +++++++++++++++++++
- docs/openclaw/PM_SESSION_RESET.md                  |   1 +
- scripts/deploy_openclaw_workspaces.sh              |   5 +
- tests/test_pm_runbooks.py                          |  60 ++++++
- 10 files changed, 816 insertions(+), 65 deletions(-)
-```
+- All ADR files are in `docs/decisions/` — no test files were modified.
+- `AGENTS.md` change is limited to adding §2.12 after §2.11; no other sections were touched.
+- Scope is clean: 7 new files + 2 modified files (AGENTS.md, HANDOFF.md), all PE-PLAN-01 scope.
+- No Python source files were modified; quality gates are expected to pass unchanged.
 
 ---
 
-## Validator Checklist
-
-- [ ] Run `python -m black --check .`
-- [ ] Run `python -m ruff check .`
-- [ ] Run `python -m pytest -q`
-- [ ] Confirm `tests/test_pm_runbooks.py` passes
-- [ ] Follow `docs/openclaw/NATIVE_OPERATIONS_AND_RESTORE_RUNBOOK.md` on `elis-server`
-- [ ] Follow `docs/openclaw/PM_SESSION_RESET.md` if prompt or exec-policy changes are in scope
-- [ ] Execute all scenarios in `docs/openclaw/PM_E2E_VALIDATION_RUNBOOK.md`
-- [ ] Capture host evidence and Discord evidence in `REVIEW_PE_MS_08.md`
-- [ ] Confirm no unrelated files appear in the scope diff
-
----
-
-## Ready for Validator
-
-Yes.
-
-Local implementation is complete and the branch is scoped to PM/native runbooks plus
-one supporting pytest file. Remaining evidence for AC-1 through AC-3 is intentionally
-reserved for Validator capture on `elis-server`, because those acceptance criteria
-require fresh Discord and host-side runtime validation.
+*ELIS SLR Agent · HANDOFF.md · infra-impl-claude · 2026-03-26*
