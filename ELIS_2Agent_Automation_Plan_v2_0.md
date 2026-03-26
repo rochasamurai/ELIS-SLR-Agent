@@ -221,7 +221,8 @@ extended with an optional Track B field:
 ### Cross-Validation Pattern
 
 Parallelism creates an additional opportunity: when one track closes,
-the freed agent may validate the other track whilst it is still in progress.
+the freed agent may validate the other track once it reaches Gate 1 (ready-for-validation).
+If Track B is still implementing when Track A closes, the freed agent waits for Gate 1.
 
 **"Cross-Validate" Pattern:**
 
