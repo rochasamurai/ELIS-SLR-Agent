@@ -137,6 +137,19 @@ Gate 1 and Gate 2 are enforced by CI automation after PE-INFRA-04.
 - Agent role rotation
 - Any CI job that exits with the `pm-escalation` flag
 
+### 2.11 Language standard
+- All repository-facing content must use **UK English** by default.
+- This applies to:
+  - file contents committed to the repository
+  - commit messages
+  - Pull Request titles, bodies, and review comments
+  - `HANDOFF.md`, `REVIEW_PE<N>.md`, audit reports, runbooks, and plan files
+- Exceptions are allowed only when:
+  - quoting user-provided text verbatim
+  - preserving the official name of an external document, product, or source
+  - the PM explicitly authorises a different language for a specific artefact
+- Agents must normalise spelling and wording to UK English when drafting or editing repository-facing content unless one of the exceptions above applies.
+
 ---
 
 ## 3) Worktree lifecycle — mandatory for every PE
