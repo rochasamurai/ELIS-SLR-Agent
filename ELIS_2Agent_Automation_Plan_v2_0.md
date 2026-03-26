@@ -1,6 +1,6 @@
 # ELIS — Plano de Aperfeiçoamento do Modelo 2-Agents Autônomo
 
-**Versão:** 3.0
+**Versão:** 3.1
 **Data:** 2026-03-25
 **Autor:** PM (Carlo) + Claude Code (análise e redação)
 **Base:** Avaliação do modelo 2-Agents de 2026-03-25 · AGENTS.md v2.0 · ELIS_MultiAgent_Implementation_Plan_v1_6.md
@@ -14,6 +14,7 @@
 | v1.0 | 2026-03-25 | Plano inicial — avaliação de gaps e 4 fases de automação (Fases A–D, 10 PEs) |
 | v2.0 | 2026-03-25 | Adição da Fase 0 (auth sem API keys) com PE-AUTH-01 e PE-AUTH-02; avaliação e descarte de `agent-browser` para auth; adição de PE-SLR-HARVEST-WEB como PE futuro de SLR |
 | v3.0 | 2026-03-25 | Adição do Modelo de Paralelismo de Tracks (§ Paralelismo) com PE-AUTO-11 (Parallel Track Scheduler); extensão de CURRENT_PE.md para suporte a Track B; diretrizes de authoring para PEs paralelizáveis; roadmap atualizado com diagrama de trilhas paralelas |
+| v3.1 | 2026-03-25 | Adição da Fase E (Governança Documental) com PE-PLAN-01 (Architecture Decision Records); modelo híbrido 3-camadas (ADR + LESSONS_LEARNED + PM Journal); template de ADR; primeiro batch de 6 ADRs retroativos identificados; regras de quando criar um ADR integradas ao workflow |
 
 ---
 
@@ -33,7 +34,7 @@ autônomo** onde:
 4. Os agentes autenticam-se usando **tokens de subscription** (sem API keys), reduzindo custo
    operacional e dependência de cotas de API.
 
-O plano é dividido em **5 fases** (Fase 0 + Fases A–D), totalizando **12 PEs** de automação mais
+O plano é dividido em **6 fases** (Fase 0 + Fases A–E), totalizando **14 PEs** de automação mais
 um PE futuro de SLR.
 
 > **Estado atual vs. estado-alvo:** Tudo descrito a partir da Fase B (loop autônomo) é um
@@ -52,13 +53,18 @@ Fase A  Fundação — gaps estruturais 3 PEs   (pré-requisito para B)
 Fase B  Loop autônomo               3 PEs   (pré-requisito para C)
 Fase C  PM Agent árbitro            2 PEs   (pré-requisito para D)
 Fase D  Operação completa           3 PEs   (+PE-AUTO-11 Parallel Scheduler)
+Fase E  Governança documental       1 PE    (PE-PLAN-01, paralelo a qualquer fase)
                                    ──────
-Total                              13 PEs automação + 1 PE SLR (futuro)
+Total                              14 PEs automação + 1 PE SLR (futuro)
 ```
 
 **Capacidade transversal (v3.0):** Paralelismo de Tracks — PEs independentes executados
 simultaneamente por ambos os agentes. Aplicável em todas as fases onde PEs não têm
 dependência entre si. Ver seção [Modelo de Paralelismo de Tracks](#modelo-de-paralelismo-de-tracks).
+
+**Capacidade transversal (v3.1):** Architecture Decision Records (ADRs) — registro estruturado
+das decisões arquiteturais e seus motivos. Fase E (PE-PLAN-01) cria a infraestrutura e o
+primeiro batch retroativo. Ver seção [Fase E — Governança Documental](#fase-e--governança-documental).
 
 ---
 
@@ -1106,6 +1112,161 @@ instâncias paralelas de Chrome no NUC8i7BEH.
 
 ---
 
+## Fase E — Governança Documental
+
+> **Objetivo:** Preencher o gap identificado na avaliação de 2026-03-25: o modelo atual
+> cobre bem "o que mudou" (git) e "o que deu errado" (LESSONS_LEARNED.md), mas não captura
+> sistematicamente o "porquê das decisões arquiteturais". A Fase E implementa o modelo
+> híbrido de 3 camadas para registro da evolução da solução.
+>
+> **Pode correr em paralelo com qualquer outra fase** — não tem dependências de runtime.
+
+---
+
+### Modelo de Histórico em 3 Camadas
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  CAMADA 1 — "Por quê arquitetural"                      │
+│  docs/decisions/ADR-NNN-*.md                            │
+│  • Uma decisão por arquivo                              │
+│  • Revisado em PR — mesma governança do código          │
+│  • Status: Proposed → Accepted → Superseded            │
+│  • Pesquisável por tema, não por data                   │
+├─────────────────────────────────────────────────────────┤
+│  CAMADA 2 — "O que deu errado / foi aprendido"          │
+│  LESSONS_LEARNED.md (já existe — manter e expandir)    │
+│  • Padrões de erro + regras corretivas                  │
+│  • Insights positivos (ex: parallel tracks discovery)  │
+├─────────────────────────────────────────────────────────┤
+│  CAMADA 3 — "O que aconteceu operacionalmente"          │
+│  PM Agent Journal (OpenClaw, elis-server)               │
+│  • Log de eventos de sessão, arbitragem, Discord cmds   │
+│  • Não é a fonte primária de decisão arquitetural       │
+│  • Decisões relevantes são destiladas em ADR ou LL      │
+└─────────────────────────────────────────────────────────┘
+```
+
+**Por que ADRs e não Journal como fonte primária:**
+
+| Critério | ADR (`docs/decisions/`) | Journal (OpenClaw) |
+|---|---|---|
+| Git-tracked | ✓ | ✗ por padrão |
+| PR-reviewable | ✓ | ✗ |
+| Pesquisável por tema | ✓ — 1 arquivo/decisão | ✗ — cronológico |
+| Evidence-first (§2.4) | ✓ — revisado com código | ✗ |
+| Sobrevive reinstalação | ✓ | ✗ |
+| Padrão open-source | ✓ — AWS, Netflix, Google | ✗ |
+| Captura alternativas descartadas | ✓ — campo explícito | Parcial |
+
+---
+
+### Template de ADR
+
+Localização: `docs/decisions/ADR-NNN-titulo-kebab-case.md`
+
+```markdown
+# ADR-NNN: Título da Decisão
+
+**Status:** Proposed | Accepted | Superseded by ADR-XXX | Deprecated
+**Data:** YYYY-MM-DD
+**Autores:** <agentes e PM envolvidos>
+
+## Contexto
+
+O problema ou situação que motivou a decisão. Fatos, não opiniões.
+
+## Decisão
+
+O que foi decidido, de forma afirmativa. Uma decisão por ADR.
+
+## Consequências
+
+### Positivas
+- ...
+
+### Negativas / trade-offs
+- ...
+
+### Neutras
+- ...
+
+## Alternativas descartadas
+
+| Alternativa | Motivo do descarte |
+|---|---|
+| ... | ... |
+
+## Evidência
+
+Referências a PRs, commits, ou seções do plano que embasam a decisão.
+```
+
+---
+
+### Regras de quando criar um ADR
+
+Um novo ADR deve ser criado quando:
+
+1. **Uma decisão arquitetural é tomada** que afetará múltiplos PEs ou agentes
+2. **Uma alternativa significativa foi avaliada e descartada** (ex: symlinks, agent-browser para auth)
+3. **Um padrão observado empiricamente é adotado como prática** (ex: parallel tracks)
+4. **Uma regra de AGENTS.md é adicionada** por razão arquitetural (não apenas por erro)
+5. **Um PE é redesenhado** ou uma fase é reestruturada com impacto futuro
+
+Um ADR **não é necessário** para:
+- Correções de bugs menores
+- Mudanças puramente operacionais (runbooks, scripts utilitários)
+- Decisões de implementação locais dentro de um único PE
+- Findings de validação (esses vão em REVIEW_PE ou LESSONS_LEARNED)
+
+---
+
+### PE-PLAN-01 · Architecture Decision Records — Infraestrutura e Primeiro Batch
+
+| Campo | Valor |
+|---|---|
+| Domínio | infra |
+| Depends On | — (pode iniciar a qualquer momento) |
+| Implementer | `infra-impl-claude` |
+| Validator | `infra-val-codex` |
+| parallel_eligible | true |
+
+**Entregáveis:**
+
+- `docs/decisions/README.md` — guia do sistema ADR: template, regras de criação, lifecycle de status, convenção de numeração
+- `docs/decisions/ADR-001-modelo-2-agents-alternacao.md`
+- `docs/decisions/ADR-002-git-worktrees-isolamento-pe.md`
+- `docs/decisions/ADR-003-paralelismo-de-tracks.md`
+- `docs/decisions/ADR-004-handoff-copia-nao-symlink.md`
+- `docs/decisions/ADR-005-agent-browser-descartado-para-auth.md`
+- `docs/decisions/ADR-006-openclaw-como-runtime.md`
+- Extensão de `AGENTS.md` — regra §X: quando criar um ADR (baseada nas regras acima)
+
+**Primeiro batch — conteúdo esperado de cada ADR:**
+
+| ADR | Decisão central | Alternativa descartada |
+|---|---|---|
+| ADR-001 | Alternação Implementer/Validator por PE; sem roles fixos | Roles fixos por agente; single-agent review |
+| ADR-002 | Git worktrees para isolamento; um worktree por PE ativo | Branch switching com stash; diretórios temporários |
+| ADR-003 | Parallel tracks quando PEs independentes; máximo 2 | Sempre sequencial; round-robin com >2 agentes |
+| ADR-004 | HANDOFF como cópia gerada por script, não symlink | Symlink `HANDOFF.md → handoffs/HANDOFF_{PE}.md` |
+| ADR-005 | agent-browser para SLR web harvest, não para auth | Browser cookies como substituto de API keys |
+| ADR-006 | OpenClaw como runtime de orquestração nativo | Docker compose; chamadas diretas a APIs sem runtime |
+
+**Acceptance Criteria:**
+
+| # | Critério |
+|---|---|
+| AC-1 | `docs/decisions/README.md` presente com template, lifecycle e regras de criação |
+| AC-2 | 6 ADRs do primeiro batch presentes, com status `Accepted` e todos os campos preenchidos |
+| AC-3 | Cada ADR tem pelo menos uma alternativa descartada documentada |
+| AC-4 | `AGENTS.md` atualizado com regra de quando criar um ADR |
+| AC-5 | ADR-003 (parallel tracks) referencia o caso empírico PE-MS-07 ∥ PR #299 |
+| AC-6 | ADR-004 (HANDOFF cópia) referencia o finding F4 do PR #299 como evidência |
+
+---
+
 ## Roadmap e Dependências
 
 ### Diagrama sequencial por fase
@@ -1119,6 +1280,10 @@ PE-AUTH-02 Claude token PE-AUTO-02 CurrentPE CI  PE-AUTO-05 Val runner   PE-AUTO
                                                                           PE-AUTO-10 Dashboard
                                                                           PE-AUTO-11 Parallel ◀
 [ pré-verificação ]     [ exige Fase 0 ]          [ exige Fase A ]       [ exige Fase B ]
+
+Fase E (governança documental) — paralela a qualquer fase acima:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PE-PLAN-01 ADR infra    ◀ sem dependências de runtime; pode iniciar agora
 ```
 
 ### Diagrama de trilhas paralelas (v3.0)
@@ -1160,6 +1325,7 @@ Track B │              [PE-AUTO-10]──────────────[
 | PE-AUTO-11 | PE-AUTO-06 + PE-AUTO-09 | Parallel scheduler exige sequencer e plan loader funcionais |
 | PE-AUTH-02 Context B | Pré-verificação manual | Resultado determina se ANTHROPIC_API_KEY permanece no elis-server |
 | PE-SLR-HARVEST-WEB | PE-MS-06 | Workspaces de harvest phase devem existir |
+| PE-PLAN-01 | nenhuma | Infraestrutura de ADRs não depende de runtime; pode iniciar em paralelo a qualquer fase |
 
 ### Oportunidades de paralelismo identificadas no plano atual
 
@@ -1169,6 +1335,7 @@ Track B │              [PE-AUTO-10]──────────────[
 | Fase A (pós PE-AUTO-01) | PE-AUTO-02 + PE-AUTO-03 | PE-AUTO-02 não depende de PE-AUTO-03 e vice-versa ✓ |
 | Fase D | PE-AUTO-09 + PE-AUTO-10 | Dashboard não depende do Plan Loader diretamente ✓ |
 | Fase D | PE-AUTO-10 + PE-AUTO-11 | Parallel scheduler não depende do dashboard ✓ |
+| Fase E (qualquer) | PE-PLAN-01 + qualquer PE de outra fase | ADRs são docs puros; sem sobreposição de arquivos com código de automação ✓ |
 
 ---
 
@@ -1186,6 +1353,8 @@ Track B │              [PE-AUTO-10]──────────────[
 | Conflito de arquivo entre tracks paralelos | Baixa | Alto | `check_parallel_eligibility.py` valida ausência de sobreposição antes do dispatch; tracks com sobreposição são bloqueados e executados sequencialmente |
 | Estado inconsistente em CURRENT_PE.md dual-track | Baixa | Alto | `check_current_pe.py` valida estrutura Track A + B; sequencer só grava estado válido; git history preserva estado anterior |
 | Agente inicia Track B antes de Track A fechar (race condition) | Baixa | Médio | Sequencer controla dispatch; cada track tem branch isolada — não há shared state entre tracks ativos |
+| ADR criado sem revisão técnica adequada | Média | Médio | ADRs seguem o mesmo fluxo PE: PR aberta, Validator revisa antes do merge |
+| ADRs ficam desatualizados após mudanças de arquitetura | Média | Baixo | Regra no AGENTS.md: sempre que uma AC de PE mudar uma decisão arquitetural documentada, criar ou superseder o ADR correspondente na mesma PR |
 
 ---
 
@@ -1201,4 +1370,4 @@ Track B │              [PE-AUTO-10]──────────────[
 
 ---
 
-*ELIS 2-Agent Automation Plan v3.0 · 2026-03-25*
+*ELIS 2-Agent Automation Plan v3.1 · 2026-03-25*
