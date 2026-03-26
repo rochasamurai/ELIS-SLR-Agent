@@ -446,7 +446,8 @@ Mandatory pre-verification — determines whether `ANTHROPIC_API_KEY` can be rem
 # On elis-server — test all three hypotheses:
 
 # Hypothesis 1: OpenClaw accepts CLAUDE_SETUP_TOKEN as an alternative environment variable
-CLAUDE_SETUP_TOKEN=<token> openclaw agent run --agent-id infra-impl-claude --task "ping"
+env -u ANTHROPIC_API_KEY CLAUDE_SETUP_TOKEN=<token> \
+  openclaw agent --local --agent infra-impl-claude --message "ping"
 
 # Hypothesis 2: setup-token can be converted to a temporary API key
 claude api-key --from-setup-token  # if it exists
@@ -454,8 +455,9 @@ claude api-key --from-setup-token  # if it exists
 # Hypothesis 3: OpenClaw does not support it — ANTHROPIC_API_KEY remains for elis-server
 ```
 
-**If Context B is not supported:** `ANTHROPIC_API_KEY` remains on `elis-server` (documented
-with a review date). The setup-token is applied only to CI runners (Context A).
+**If Context B is not supported:** `ANTHROPIC_API_KEY` remains on `elis-server`
+(documented with a review date). The setup-token is applied only to CI runners
+(Context A).
 
 **Deliverables:**
 
