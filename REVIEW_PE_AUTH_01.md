@@ -167,3 +167,85 @@ Why this blocks:
 ---
 
 *ELIS SLR Agent · REVIEW_PE_AUTH_01.md · infra-val-codex · 2026-03-26*
+
+---
+
+## Re-validation — 2026-03-26 (Round 2)
+
+### Verdict
+
+PASS
+
+### Gate results
+
+```text
+gh pr checks 304
+Parse verdict and auto-merge if PASS  pass
+Projects Auto-Add / add_and_set_status  pass
+add_and_set_status  pass
+openclaw-config-sync-check  pass
+openclaw-doctor-check  pass
+openclaw-health-check  pass
+quality  pass
+review-evidence-check  pass
+secrets-scope-check  pass
+slr-quality-check  pass
+tests  pass
+validate  pass
+deep-review  skipping
+openclaw-security-check  pass
+```
+
+### Scope
+
+The remediation round stays within PE-AUTH-01 scope:
+
+```text
+git diff --name-status origin/main..HEAD
+M	ELIS_2Agent_Automation_Plan_v2_0.md
+M	HANDOFF.md
+A	REVIEW_PE_AUTH_01.md
+A	docs/openclaw/CODEX_AUTH_SETUP.md
+A	scripts/extract_codex_token.py
+A	scripts/verify_codex_auth.py
+```
+
+### Required fixes
+
+None.
+
+### Evidence
+
+The three prior blockers are now closed:
+
+```text
+ELIS_2Agent_Automation_Plan_v2_0.md
+351: > **Pre-verification finding (2026-03-26):** `codex auth status` subcommand is
+352: > not supported in the current CLI
+359: - `scripts/extract_codex_token.py` — reads local `auth.json`, prints only metadata (field names, `auth_mode`, `last_refresh`, boolean presence)
+360: - `scripts/verify_codex_auth.py` — verifies the runner environment: `OPENAI_API_KEY` set + `codex` on PATH + `codex --version` exits 0
+376: | AC-1 | `OPENAI_API_KEY` secret is set in the runner environment and `codex --version` exits 0 |
+379: | AC-4 | Runbook documents the renewal procedure; expiry timing is not exposed by the current CLI — renewal trigger is runner authentication failure |
+504: OPENAI_API_KEY         ← Codex CLI auth token (PE-AUTH-01; extracted from auth.json `OPENAI_API_KEY` field)
+683:           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+727: | AC-2 | Auth via `OPENAI_API_KEY` (Codex) / `CLAUDE_SETUP_TOKEN` (Claude) — injected from GitHub Secrets, never hardcoded |
+
+docs/openclaw/CODEX_AUTH_SETUP.md
+99: ### Step 6 — Store as GitHub Secret
+103: 3. Name: `OPENAI_API_KEY`
+145: > **Known limitation (from PE-AUTH-01 spec):** Token expiry timing is not
+147: > `status` is not supported). Monitor runner failures as the renewal signal.
+
+HANDOFF.md
+27: | F1 — plan still referenced `codex auth status` contract | Updated plan
+28: | F2 — plan used `CODEX_OAUTH_TOKEN` / `CODEX_ACCESS_TOKEN`; branch uses `OPENAI_API_KEY` | Updated plan
+29: | F3 — `extract_codex_token.py` description claimed expiry/scope; AC-4 required expiry date | Updated plan
+```
+
+Why this now passes:
+- The authoritative plan now matches the validated pre-verification result
+  instead of the superseded assumption.
+- The runbook, helper scripts, and later plan dependencies now use the same
+  secret/mechanism contract.
+- The expiry requirement was normalised to the CLI reality discovered during
+  PE-AUTH-01 instead of being left internally contradictory.
