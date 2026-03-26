@@ -25,10 +25,15 @@ Two PEs may execute in parallel when both of the following hold:
 
 1. **Structural eligibility:** the PE pair has no mutual dependency in the plan
    (neither PE is listed as a prerequisite of the other).
-2. **Empirical eligibility:** `check_parallel_eligibility.py` confirms that
-   the two branches have non-overlapping file scopes
-   (`git diff --name-only origin/main..branch` for each; intersection must be
-   empty).
+2. **Empirical eligibility:** the file scopes of the two branches must not
+   overlap. Before starting parallel work, PM or the Implementer verifies this
+   by running:
+   ```bash
+   git diff --name-only origin/main..branch-a
+   git diff --name-only origin/main..branch-b
+   ```
+   and confirming the two sets are disjoint. Automation of this check is a
+   planned future artefact.
 
 The maximum concurrency is two active PEs at once (one per agent).
 
@@ -71,10 +76,9 @@ available.
 ## Evidence / references
 
 - `ELIS_2Agent_Automation_Plan_v2_0.md` §Parallel Track Model (v3.0)
-- `scripts/check_parallel_eligibility.py` — automated eligibility checker
 - **Empirical case:** PE-MS-07 (`feature/pe-ms-07-slr-project-store`) ran
   in parallel with the plan review in PR #299
-  (`docs/review/REVIEW_ELIS_2Agent_Automation_Plan_v2_0.md`) — confirmed
+  (`REVIEW_ELIS_2Agent_Automation_Plan_v2_0.md` at repo root) — confirmed
   non-overlapping file scopes; both merged without conflicts
 - PE-AUTH-01 ∥ PE-AUTH-02 — identified as structurally eligible by the plan
   (Phase C), pending empirical verification at the time of writing

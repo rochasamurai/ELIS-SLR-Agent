@@ -72,12 +72,30 @@ non-required cases, and a judgement heuristic. Points to `docs/decisions/README.
 
 ---
 
+## Quality gates (verbatim output)
+
+Run from worktree `.worktrees/pe-plan-01` on 2026-03-26:
+
+```text
+python -m black --check .
+All done! ✨ 🍰 ✨
+125 files would be left unchanged.
+
+python -m ruff check .
+All checks passed!
+
+python -m pytest
+602 passed, 17 warnings in 18.17s
+
+python scripts/check_agent_scope.py
+Agent scope clean — no secret-pattern files detected in worktree.
+```
+
 ## Validator notes
 
 - All ADR files are in `docs/decisions/` — no test files were modified.
 - `AGENTS.md` change is limited to adding §2.12 after §2.11; no other sections were touched.
 - Scope is clean: 7 new files + 2 modified files (AGENTS.md, HANDOFF.md), all PE-PLAN-01 scope.
-- No Python source files were modified; quality gates are expected to pass unchanged.
 
 ---
 
