@@ -35,6 +35,12 @@ openclaw channels status
 openclaw approvals get --gateway
 ```
 
+Authoritative operating procedures:
+
+- `docs/openclaw/DEPLOYMENT.md` for deploy + restart flow
+- `docs/openclaw/PM_E2E_VALIDATION_RUNBOOK.md` for Discord-side PM validation
+- `docs/openclaw/NATIVE_OPERATIONS_AND_RESTORE_RUNBOOK.md` for routine operations and restore
+
 ## Docker Decommission On `elis-server`
 
 Perform this only after the native service is verified healthy:

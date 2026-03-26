@@ -57,6 +57,10 @@ Deployment is native, not Docker-based:
 3. verify PM entrypoints and health
 4. reset the PM session if prompt files changed
 
+For live host verification after deploy/reset, use:
+
+- `docs/openclaw/PM_E2E_VALIDATION_RUNBOOK.md`
+
 ---
 
 ## Discord Reporting Rules

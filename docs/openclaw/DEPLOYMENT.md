@@ -56,9 +56,33 @@ Expected:
 
 If `SOUL.md`, `AGENTS.md`, `MEMORY.md`, or PM exec-policy rules changed, use:
 
-- [PM_SESSION_RESET.md](c:\Users\carlo\ELIS-SLR-Agent\.worktrees\pe-ms-02\docs\openclaw\PM_SESSION_RESET.md)
+- `docs/openclaw/PM_SESSION_RESET.md`
 
 Do not treat validation evidence as current until a fresh PM session has started.
+
+---
+
+## Step 5 — Run PM E2E validation
+
+After deploy/restart and any required PM session reset, validate the Discord behavior with:
+
+- `docs/openclaw/PM_E2E_VALIDATION_RUNBOOK.md`
+
+This is the authoritative flow for:
+
+- identity
+- current PE state
+- worktree reporting
+- full-registry chunking
+- assignment dry-run behavior
+
+---
+
+## Step 6 — Native operations and restore
+
+For routine native operations, PM recovery, or host restore after drift, use:
+
+- `docs/openclaw/NATIVE_OPERATIONS_AND_RESTORE_RUNBOOK.md`
 
 ---
 

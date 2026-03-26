@@ -34,6 +34,7 @@ systemctl --user restart openclaw-gateway
 
 - `Who are you?`
 - `What are the current PEs?`
+- then continue with `docs/openclaw/PM_E2E_VALIDATION_RUNBOOK.md` for the full validation set
 
 If the response still reflects old behavior, do not treat the deployment as active evidence.
 

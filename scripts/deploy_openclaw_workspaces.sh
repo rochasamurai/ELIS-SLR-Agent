@@ -20,6 +20,11 @@ else
   cp -R "$SRC_DIR/." "$TARGET_ROOT/" 2>/dev/null || true
 fi
 
+# `rsync --delete` removes host-only PM docs/entrypoint directories because they are not
+# present in the source-controlled workspace tree. Recreate them before provisioning symlinks.
+mkdir -p "$TARGET_PM"
+mkdir -p "$TARGET_PM_DOCS"
+
 echo "OpenClaw workspaces deployed to: $TARGET_ROOT"
 
 # Provision PM workspace entrypoints that resolve to canonical repo files.
@@ -34,8 +39,8 @@ fi
 
 # Deploy openclaw config to container state directory.
 # Merges repo config (agents, bindings, commands, plugins) with the live state dir config,
-# preserving the `channels` and `meta` keys which contain runtime secrets (botToken etc.)
-# that must NEVER be committed to the repository.
+# preserving runtime-only keys that must NEVER be committed to the repository and must
+# survive redeploys (`channels`, `meta`, and live `gateway` mode/bind settings).
 CONFIG_SRC="$ROOT_DIR/openclaw/openclaw.json"
 CONFIG_DEST="$HOME/.openclaw/openclaw.json"
 mkdir -p "$(dirname "$CONFIG_DEST")"
@@ -51,7 +56,7 @@ if dest.exists():
     try:
         state_cfg = json.loads(dest.read_text(encoding="utf-8"))
         # Preserve runtime-only keys that hold secrets
-        for key in ("channels", "meta"):
+        for key in ("channels", "meta", "gateway"):
             if key in state_cfg:
                 repo_cfg[key] = state_cfg[key]
     except (json.JSONDecodeError, OSError):
