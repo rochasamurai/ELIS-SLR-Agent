@@ -1,6 +1,6 @@
 # ELIS — Plano de Aperfeiçoamento do Modelo 2-Agents Autônomo
 
-**Versão:** 3.1
+**Versão:** 3.2
 **Data:** 2026-03-25
 **Autor:** PM (Carlo) + Claude Code (análise e redação)
 **Base:** Avaliação do modelo 2-Agents de 2026-03-25 · AGENTS.md v2.0 · ELIS_MultiAgent_Implementation_Plan_v1_6.md
@@ -15,6 +15,7 @@
 | v2.0 | 2026-03-25 | Adição da Fase 0 (auth sem API keys) com PE-AUTH-01 e PE-AUTH-02; avaliação e descarte de `agent-browser` para auth; adição de PE-SLR-HARVEST-WEB como PE futuro de SLR |
 | v3.0 | 2026-03-25 | Adição do Modelo de Paralelismo de Tracks (§ Paralelismo) com PE-AUTO-11 (Parallel Track Scheduler); extensão de CURRENT_PE.md para suporte a Track B; diretrizes de authoring para PEs paralelizáveis; roadmap atualizado com diagrama de trilhas paralelas |
 | v3.1 | 2026-03-25 | Adição da Fase E (Governança Documental) com PE-PLAN-01 (Architecture Decision Records); modelo híbrido 3-camadas (ADR + LESSONS_LEARNED + PM Journal); template de ADR; primeiro batch de 6 ADRs retroativos identificados; regras de quando criar um ADR integradas ao workflow |
+| v3.2 | 2026-03-25 | Adição do Modelo de Continuidade de Sessão — "A PR é a memória operacional"; regra de resumibilidade obrigatória por PE; modelo de memória em 3 camadas (técnica / operacional / autoridade); checkpoints por papel; anti-padrões documentados; referência ao `TWO_AGENT_SESSION_CONTINUITY_RUNBOOK.md` |
 
 ---
 
@@ -65,6 +66,11 @@ dependência entre si. Ver seção [Modelo de Paralelismo de Tracks](#modelo-de-
 **Capacidade transversal (v3.1):** Architecture Decision Records (ADRs) — registro estruturado
 das decisões arquiteturais e seus motivos. Fase E (PE-PLAN-01) cria a infraestrutura e o
 primeiro batch retroativo. Ver seção [Fase E — Governança Documental](#fase-e--governança-documental).
+
+**Capacidade transversal (v3.2):** Continuidade de Sessão — cada PE deve ser resumível sem
+histórico de chat. Progresso só é considerado durável quando registrado em commits, artefatos
+do PE (`HANDOFF.md` / `REVIEW_PE<N>.md`) e PR comments. PM monitora via PR + `CURRENT_PE.md`,
+não via memória de sessão. Ver seção [Modelo de Continuidade de Sessão](#modelo-de-continuidade-de-sessão).
 
 ---
 
@@ -1267,6 +1273,91 @@ Um ADR **não é necessário** para:
 
 ---
 
+## Modelo de Continuidade de Sessão
+
+> Referência completa: `docs/_active/TWO_AGENT_SESSION_CONTINUITY_RUNBOOK.md`
+
+### Problema
+
+Em sessões longas, o contexto de chat pode ser compactado enquanto um PE ainda está em
+progresso. Quando estado relevante existe apenas na memória da sessão:
+
+- contexto de implementação se perde no meio de um PE
+- estado do validador deriva entre rounds de revisão
+- PM não consegue inferir progresso real a partir do chat
+- sessões reiniciadas podem repetir trabalho ou perder checkpoints concluídos
+
+A solução correta não é evitar compactação. É tornar cada PE operacionalmente resumível a
+partir de artefatos duráveis.
+
+### Princípio central
+
+**A PR é a memória operacional.**
+
+Chat é coordenação. A branch do PE e seus artefatos são a fonte de continuidade.
+
+Um fato só é seguro se existir em um destes lugares:
+
+- código ou docs commitados na branch do PE
+- `HANDOFF.md`
+- `REVIEW_PE<N>.md`
+- PR comments com status packets
+- `CURRENT_PE.md` para autoridade de papel/branch/plano
+
+Se existe apenas no chat, não é durável.
+
+### Regra obrigatória para cada PE
+
+> Todo PE ativo deve ser resumível sem histórico de chat. Progresso é considerado durável
+> somente quando registrado em commits da branch, `HANDOFF.md` / `REVIEW_PE<N>.md`, e PR
+> comments. PM monitora atividade dos agentes via estado da PR e `CURRENT_PE.md`, não
+> dependendo de continuidade de sessão de longa duração.
+
+### Modelo de memória em 3 camadas
+
+| Camada | Onde fica | Conteúdo |
+|---|---|---|
+| Técnica | `HANDOFF.md`, `REVIEW_PE<N>.md`, tests, docs do PE | estado de implementação e revisão |
+| Operacional | PR comments com status packets | milestone alcançado, gate result, bloqueador, próximo ator |
+| Autoridade | `CURRENT_PE.md` | PE ativo, branch, versão do plano, Implementer/Validator |
+
+### Checkpoints obrigatórios por papel
+
+**Implementer** — checkpoint durável em cada milestone:
+
+1. branch/worktree criada e contexto lido
+2. primeiro commit de implementação feito
+3. PR draft aberta
+4. quality gates passando
+5. `HANDOFF.md` completo
+6. PR convertida para ready-for-review
+
+**Validator** — checkpoint durável em cada milestone:
+
+1. assignment de validação aceito
+2. scope diff verificado
+3. acceptance criteria exercitados
+4. validação adversarial completa
+5. `REVIEW_PE<N>.md` commitado
+6. PASS ou FAIL postado na PR
+
+### Regras de sessão
+
+- Preferir sessões curtas com objetivo fechado; evitar "continue até o PE estar pronto"
+- Commit antes de qualquer pausa — tree limpa é obrigatória, não opcional
+- PR comment após cada milestone significativo (gates green, HANDOFF updated, FAIL posted, etc.)
+
+### Anti-padrões
+
+- Depender do histórico de chat como único log de atividade
+- Deixar tree suja ao final de sessão
+- Adiar `HANDOFF.md` ou `REVIEW_PE<N>.md` até o final do trabalho
+- Fazer múltiplas mudanças grandes antes do primeiro commit de checkpoint
+- Postar apenas um PR comment final após horas de trabalho
+- Assumir que PM consegue reconstruir progresso da memória em vez de artefatos
+
+---
+
 ## Roadmap e Dependências
 
 ### Diagrama sequencial por fase
@@ -1355,6 +1446,7 @@ Track B │              [PE-AUTO-10]──────────────[
 | Agente inicia Track B antes de Track A fechar (race condition) | Baixa | Médio | Sequencer controla dispatch; cada track tem branch isolada — não há shared state entre tracks ativos |
 | ADR criado sem revisão técnica adequada | Média | Médio | ADRs seguem o mesmo fluxo PE: PR aberta, Validator revisa antes do merge |
 | ADRs ficam desatualizados após mudanças de arquitetura | Média | Baixo | Regra no AGENTS.md: sempre que uma AC de PE mudar uma decisão arquitetural documentada, criar ou superseder o ADR correspondente na mesma PR |
+| Compactação de contexto no meio de um PE | Alta | Médio | Modelo de continuidade de sessão (v3.2): commits incrementais, PR comments por milestone, tree limpa obrigatória antes de pausas — ver `TWO_AGENT_SESSION_CONTINUITY_RUNBOOK.md` |
 
 ---
 
@@ -1370,4 +1462,4 @@ Track B │              [PE-AUTO-10]──────────────[
 
 ---
 
-*ELIS 2-Agent Automation Plan v3.1 · 2026-03-25*
+*ELIS 2-Agent Automation Plan v3.2 · 2026-03-25*
