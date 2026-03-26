@@ -5,13 +5,13 @@
 **Implementer:** CODEX (`infra-impl-codex`)
 **Validator:** Claude Code (`infra-val-claude`)
 **Branch:** `feature/pe-ms-08-e2e-validation`
-**Date:** 2026-03-26 (Round 2)
+**Date:** 2026-03-26 (Round 2 final)
 
 ---
 
 ### Verdict
 
-FAIL — awaiting Discord scenario evidence (Scenarios 1–5)
+PASS
 
 ---
 
@@ -48,7 +48,7 @@ Agent scope clean - no secret-pattern files detected in worktree.
 ```text
 python -m black --check .    → 125 files would be left unchanged.
 python -m ruff check .       → All checks passed!
-python -m pytest -q          → 601 passed, 17 warnings (598 baseline + 3 new)
+python -m pytest -q          → 601 passed, 17 warnings
 python scripts/check_agent_scope.py → Agent scope clean
 ```
 
@@ -75,37 +75,29 @@ A	tests/test_pm_runbooks.py
 
 No unrelated files in diff.
 
-Note: `git diff --name-status origin/main..HEAD` shows additional modified files
-(`AGENTS.md`, `ELIS_2Agent_Automation_Plan_v2_0.md`, `docs/_active/CONTRIBUTING.md`,
-`D docs/_active/TWO_AGENT_SESSION_CONTINUITY_RUNBOOK.md`) — these reflect main
-advancing via PR #301 after the PE-MS-08 branch was cut. PE-MS-08 did not touch those
-files. The 3-way merge at merge time will preserve main's versions; PM should confirm
-no conflicts before merging.
+Note: `git diff --name-status origin/main..HEAD` shows `AGENTS.md`,
+`ELIS_2Agent_Automation_Plan_v2_0.md`, `CONTRIBUTING.md`, and
+`D docs/_active/TWO_AGENT_SESSION_CONTINUITY_RUNBOOK.md` — these reflect main
+advancing via PR #301 after the PE-MS-08 branch was cut. PE-MS-08 did not touch
+those files. PM should confirm no conflicts before merging.
 
 ---
 
 ### Host evidence — Round 2 (2026-03-26)
 
-All three Round 1 blocking findings are confirmed resolved.
-
 ```text
 systemctl --user status openclaw-gateway --no-pager
 ● openclaw-gateway.service - OpenClaw Gateway (v2026.3.13)
-     Loaded: loaded (/home/samurai/.config/systemd/user/openclaw-gateway.service; enabled; preset: enabled)
      Active: active (running) since Thu 2026-03-26 00:37:35 GMT; 8h ago
-   Main PID: 210868 (openclaw-gatewa)
-     Memory: 455.1M
-        CPU: 2min 35.885s
+   Main PID: 210868
 
 openclaw doctor (summary)
 Telegram: ok (@elis_pm_agent_bot) (159ms)
 Discord: ok (@ELIS PM Agent) (633ms)
-Agents: pm (default), … infra-val-claude
 Heartbeat interval: 30m (pm)
-Session store (pm): 1 entry (466m ago)
 
 openclaw channels status --probe
-- Telegram 8508429120: enabled, configured, running, mode:polling, bot:@elis_pm_agent_bot, works
+- Telegram 8508429120: enabled, configured, running, mode:polling, works
 - Discord default: enabled, configured, running, connected, bot:@ELIS PM Agent, works
 
 openclaw approvals get --gateway
@@ -123,18 +115,13 @@ lrwxrwxrwx 1 samurai samurai 58 Mar 26 00:37 PLAN_CURRENT.md -> /opt/elis/repo/E
 git -C /opt/elis/repo rev-parse HEAD
 72384d35b84538280141a0f6d04ad33df0464c3a
 
-git -C /opt/elis/repo log --oneline -3
-72384d3 fix(pe-ms-08): preserve gateway settings on deploy
-a920d24 fix(pe-ms-08): recreate PM docs entrypoints after deploy
-70679b7 review(pe-ms-08): FAIL — elis-server stale, AC-1 to AC-3 blocked
-
 cat ~/openclaw/workspace-pm/AGENTS.md | tail -1
 *ELIS PM Agent · AGENTS.md · v2.2 · 2026-03-25*
 
 cat ~/openclaw/workspace-pm/CURRENT_PE.md | grep "Plan file\|PE \|Branch"
-| Plan file      | ELIS_MultiAgent_Implementation_Plan_v1_6.md                   |
-| PE      | PE-MS-08                                      |
-| Branch  | feature/pe-ms-08-e2e-validation               |
+| Plan file  | ELIS_MultiAgent_Implementation_Plan_v1_6.md  |
+| PE         | PE-MS-08                                     |
+| Branch     | feature/pe-ms-08-e2e-validation              |
 ```
 
 Host precondition summary:
@@ -149,109 +136,126 @@ Host precondition summary:
 
 ---
 
-### Host evidence — Round 1 (2026-03-25)
+### Discord scenario evidence — Round 2 (2026-03-26 09:06–09:09 GMT)
 
-```text
-systemctl --user status openclaw-gateway --no-pager
-● openclaw-gateway.service — Active: active (running) since Mon 2026-03-23 15:54:49 GMT
-  Main PID: 142624
+Session reset confirmed: `✅ New session started · model: openai/gpt-5-mini` at 09:06.
 
-openclaw doctor (summary)
-Telegram: ok · Discord: ok
-Session store (pm): 1 entry (1094m ago)
+#### Scenario 1 — Identity
 
-openclaw channels status --probe
-- Discord default: enabled, configured, running, disconnected, in:18h ago, out:2d ago, works
+Prompt: `/reset` then `Who are you?`
 
-ls -l ~/openclaw/workspace-pm/docs
-AGENTS.md  EXEC_POLICY.md  PLAN_v1_4.md  PLAN_v1_5.md  _stale_backup/
-
-git -C /opt/elis/repo rev-parse HEAD
-a647776e5c4be5dfeb7ef72959ba32d787f9f964
-
-cat ~/openclaw/workspace-pm/AGENTS.md | tail -1
-*ELIS PM Agent · AGENTS.md · v1.2 · 2026-03-23*
+PM reply:
 ```
+I'm PM — the ELIS Project Manager agent. I orchestrate the 19-agent ELIS
+SLR development model: I assign implementers/validators, monitor Gate 1/2,
+report PE/PR/worktree/runtime status from the canonical workspace files,
+and follow directives only from you (Carlos Rocha).
+```
+
+Pass criteria met:
+- ✓ Identifies as ELIS PM Agent
+- ✓ Names Carlos Rocha as PO authority
+- ✓ Does not answer as a generic assistant
+- ✓ Fresh-session marker present
+
+#### Scenario 2 — Current PE state
+
+Prompt: `What are the current PEs?`
+
+PM reply:
+```
+Active PEs (from CURRENT_PE.md):
+• planning: PE-MS-08 · feature/pe-ms-08-e2e-validation · Implementer: CODEX / Validator: Claude Code
+
+Source: /home/samurai/openclaw/workspace-pm/CURRENT_PE.md
+```
+
+Pass criteria met:
+- ✓ Reads from `~/openclaw/workspace-pm/CURRENT_PE.md` (workspace path, not `/opt/elis/repo`)
+- ✓ Discord-safe bullet format (non-merged only by default)
+- ✓ Correct PE-MS-08 state, branch, and roles
+- ✓ Did not ask for exec approval
+
+#### Scenario 3 — Worktree reporting
+
+Prompt: `What are the current PEs and the worktrees?`
+
+PM reply:
+```
+Active PEs (from CURRENT_PE.md):
+• planning: PE-MS-08 · feature/pe-ms-08-e2e-validation · Implementer: CODEX / Validator: Claude Code
+
+Worktrees (git -C /opt/elis/repo worktree list):
+• /opt/elis/repo — branch: feature/pe-ms-08-e2e-validation
+
+Notes:
+• The registry branch for PE-MS-08 matches an actual worktree on the host.
+
+Source: /home/samurai/openclaw/workspace-pm/CURRENT_PE.md and
+git -C /opt/elis/repo worktree list
+```
+
+Pass criteria met:
+- ✓ Worktrees from `git -C /opt/elis/repo worktree list` — not inferred from registry
+- ✓ Notes whether registry branch matches an actual host worktree
+- ✓ Source explicitly cites the host command
+
+#### Scenario 4 — Full registry reporting
+
+Prompt: `Show the full Active PE Registry.`
+
+PM sent two chunked messages: `(1/2)` and `(2/2)`.
+
+- ✓ No raw 7-column markdown table
+- ✓ Compact bullet-list format: `• PE-ID [status date] — impl-agent / val-agent`
+- ✓ Each entry on a single line
+- ✓ Chunked across two messages labelled `(1/2)` and `(2/2)`
+- ✓ Source: `/home/samurai/openclaw/workspace-pm/CURRENT_PE.md`
+- ✓ All 30+ registry entries covered including PE-MS-08 `[planning 2026-03-25]`
+
+#### Scenario 5 — Assignment behaviour
+
+Prompt: `If I open the next infra PE after the current one, who should be Implementer and Validator?`
+
+PM reply:
+```
+Next infra PE → Implementer: infra-impl-claude; Validator: infra-val-codex.
+This follows the alternation rule (consecutive PEs in the same domain
+alternate implementer engine; validator is the opposite).
+
+Source: /home/samurai/openclaw/workspace-pm/CURRENT_PE.md and
+/home/samurai/openclaw/workspace-pm/AGENTS.md
+```
+
+Pass criteria met:
+- ✓ Applies alternation rule correctly (PE-MS-08 Implementer is CODEX/infra-impl-codex → next is infra-impl-claude)
+- ✓ Reads from workspace files (CURRENT_PE.md and AGENTS.md)
+- ✓ Did not claim CURRENT_PE.md was updated
+- ✓ Did not mutate repo state
 
 ---
 
-### Required actions
+### Required fixes
 
-**Remaining before PASS verdict can be issued:**
-
-PO must perform a PM session reset, then execute Scenarios 1–5 from
-`docs/openclaw/PM_E2E_VALIDATION_RUNBOOK.md` in Discord DM and provide
-transcript/screenshots to the Validator.
-
-```bash
-# Session reset (per docs/openclaw/PM_SESSION_RESET.md)
-# Then in Discord DM, send each scenario prompt and capture the reply.
-
-# Scenario 1 — Identity
-/reset
-Who are you?
-
-# Scenario 2 — Current PE state
-What are the current PEs?
-
-# Scenario 3 — Worktree reporting
-What are the current PEs and the worktrees?
-
-# Scenario 4 — Full registry reporting
-Show the full Active PE Registry.
-
-# Scenario 5 — Assignment behaviour
-If I open the next infra PE after the current one, who should be Implementer and Validator?
-```
-
-Host side cross-check after each scenario:
-
-```bash
-git -C /opt/elis/repo worktree list
-cat ~/openclaw/workspace-pm/CURRENT_PE.md
-```
+None.
 
 ---
 
 ### Evidence
 
-#### Finding 1 — elis-server repo stale (Round 1, resolved in Round 2)
+#### Round 1 blocking findings (all resolved)
 
-**Round 1:** Server HEAD `a647776` (PE-MS-01 era); `CURRENT_PE.md` resolved to PE-MS-01.
+```text
+# F1 resolved: git -C /opt/elis/repo rev-parse HEAD → 72384d35 (PE-MS-08 branch)
+# F2 resolved: cat ~/openclaw/workspace-pm/AGENTS.md | tail -1 → v2.2 · 2026-03-25
+# F3 resolved: ls ~/openclaw/workspace-pm/docs/PLAN_CURRENT.md → symlink → v1.6
+```
 
-**Resolution (CODEX, a920d24 + 72384d3):** Deploy script fixed to recreate PM workspace
-entrypoints after `rsync --delete`. Gateway config now preserves `channels`, `meta`, and
-`gateway` keys during redeploy. Host re-checked at Round 2: HEAD is `72384d3`, CURRENT_PE.md
-resolves to PE-MS-08. **RESOLVED.**
-
-#### Finding 2 — deployed PM AGENTS.md v1.2 missing §5.1–§5.3 (Round 1, resolved in Round 2)
-
-**Round 1:** `~/openclaw/workspace-pm/AGENTS.md` was `v1.2 · 2026-03-23`. §5.1 Discord-safe
-format, §5.2 chunked registry, and §5.3 worktree reporting rules were all absent.
-
-**Resolution:** Redeploy on Round 2 branch (`72384d3`) published v2.2. Host cross-check
-confirms `*ELIS PM Agent · AGENTS.md · v2.2 · 2026-03-25*`. **RESOLVED.**
-
-#### Finding 3 — PLAN_CURRENT.md missing from workspace docs (Round 1, resolved in Round 2)
-
-**Round 1:** `~/openclaw/workspace-pm/docs/` contained only `PLAN_v1_4.md`,
-`PLAN_v1_5.md`, and `_stale_backup/`. No `PLAN_CURRENT.md`.
-
-**Resolution:** `deploy_openclaw_workspaces.sh` now adds explicit `mkdir -p "$TARGET_PM_DOCS"`
-before rsync and re-creates `ln -sfn "$REPO_ROOT/$PLAN_FILE" "$TARGET_PM_DOCS/PLAN_CURRENT.md"`
-after. Host cross-check: `docs/PLAN_CURRENT.md → /opt/elis/repo/ELIS_MultiAgent_Implementation_Plan_v1_6.md`. **RESOLVED.**
-
-#### Finding 4 — Discord scenario evidence not yet collected (Round 2, blocking)
-
-All preconditions from `docs/openclaw/PM_E2E_VALIDATION_RUNBOOK.md` are now satisfied:
-
-- ✓ Server HEAD at `72384d3` (PE-MS-08 branch)
-- ✓ AGENTS.md v2.2 deployed
-- ✓ PLAN_CURRENT.md symlink present
-- ✓ Discord gateway connected and working
-
-However, Scenarios 1–5 have not yet been executed. The Validator cannot fabricate
-Discord evidence. PO must run the scenarios and provide transcripts.
+| Finding | Round 1 | Resolution |
+|---|---|---|
+| F1 — server stale | HEAD `a647776` (PE-MS-01 era) | CODEX redeployed at `72384d3`; host confirmed ✓ |
+| F2 — AGENTS.md v1.2 | §5.1–§5.3 absent | Redeploy published v2.2; tail confirmed ✓ |
+| F3 — PLAN_CURRENT.md missing | Absent from docs/ | deploy script fixed; symlink confirmed ✓ |
 
 ---
 
@@ -259,10 +263,10 @@ Discord evidence. PO must run the scenarios and provide transcripts.
 
 | # | Criterion | Verdict | Notes |
 |---|---|---|---|
-| AC-1 | PM Agent identifies current PE state correctly from canonical files | PENDING | Host preconditions met; awaiting Discord Scenario 2 evidence |
-| AC-2 | PM Agent reports worktrees only from explicit host evidence | PENDING | Host preconditions met; awaiting Discord Scenario 3 evidence |
-| AC-3 | PM Agent produces Discord-safe registry reporting | PENDING | Host preconditions met; awaiting Discord Scenario 4 evidence |
-| AC-4 | Native ops and restore runbooks committed and validated | PASS | 602/602 tests pass; test_pm_runbooks.py 5/5; all cross-links present |
+| AC-1 | PM Agent identifies current PE state correctly from canonical files | PASS | Scenario 2: reads `~/openclaw/workspace-pm/CURRENT_PE.md`; returns PE-MS-08 ✓ |
+| AC-2 | PM Agent reports worktrees only from explicit host evidence | PASS | Scenario 3: worktrees from `git -C /opt/elis/repo worktree list`; no registry inference ✓ |
+| AC-3 | PM Agent produces Discord-safe registry reporting | PASS | Scenario 4: compact bullet chunks (1/2)/(2/2); no raw table ✓ |
+| AC-4 | Native ops and restore runbooks committed and validated | PASS | 602/602 tests; test_pm_runbooks.py 5/5; all cross-links present ✓ |
 
 ---
 
