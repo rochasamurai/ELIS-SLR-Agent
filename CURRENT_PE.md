@@ -10,9 +10,9 @@
 
 | Field          | Value                                                          |
 |----------------|----------------------------------------------------------------|
-| Release        | ELIS MiniServer Implementation Series                          |
+| Release        | ELIS 2-Agent Automation Plan                                   |
 | Base branch    | main                                                           |
-| Plan file      | ELIS_MultiAgent_Implementation_Plan_v1_6.md                   |
+| Plan file      | ELIS_2Agent_Automation_Plan_v2_0.md                            |
 | Plan location  | repo root                                                      |
 
 ---
@@ -21,8 +21,8 @@
 
 | Field   | Value                                         |
 |---------|-----------------------------------------------|
-| PE      | PE-MS-08                                      |
-| Branch  | feature/pe-ms-08-e2e-validation               |
+| PE      | PE-PLAN-01                                    |
+| Branch  | feature/pe-plan-01-adr-infrastructure         |
 
 ---
 
@@ -30,8 +30,8 @@
 
 | Agent       | Role        |
 |-------------|-------------|
-| Claude Code | Validator   |
-| CODEX       | Implementer |
+| Claude Code | Implementer |
+| CODEX       | Validator   |
 
 ---
 
@@ -77,7 +77,8 @@
 | PE-MS-05    | infra           | infra-impl-claude    | infra-val-codex    | feature/pe-ms-05-workspace-audit                  | merged          | 2026-03-25   |
 | PE-MS-06    | infra           | infra-impl-codex     | infra-val-claude   | feature/pe-ms-06-slr-phase-workspaces             | merged          | 2026-03-25   |
 | PE-MS-07    | infra           | infra-impl-claude    | infra-val-codex    | feature/pe-ms-07-slr-project-store                | merged          | 2026-03-25   |
-| PE-MS-08    | infra           | infra-impl-codex     | infra-val-claude   | feature/pe-ms-08-e2e-validation                   | planning        | 2026-03-25   |
+| PE-MS-08    | infra           | infra-impl-codex     | infra-val-claude   | feature/pe-ms-08-e2e-validation                   | merged          | 2026-03-26   |
+| PE-PLAN-01  | infra           | infra-impl-claude    | infra-val-codex    | feature/pe-plan-01-adr-infrastructure             | planning        | 2026-03-26   |
 
 Valid status values:
 - `planning`
@@ -109,6 +110,7 @@ PM housekeeping entries (prefix `PM-CHORE-XX`):
 | PM-CHORE-13  | Closed PE-MS-05 as merged (PR #297, PASS verdict). Opened PE-MS-06 with `infra-impl-codex` as Implementer and `infra-val-claude` as Validator per alternation rule. | 2026-03-25 |
 | PM-CHORE-14  | Closed PE-MS-06 as merged (PR #298, PASS verdict). Opened PE-MS-07 with `infra-impl-claude` as Implementer and `infra-val-codex` as Validator per alternation rule. | 2026-03-25 |
 | PM-CHORE-15  | Closed PE-MS-07 as merged (PR #300, PASS verdict). Opened PE-MS-08 with `infra-impl-codex` as Implementer and `infra-val-claude` as Validator per alternation rule. | 2026-03-25 |
+| PM-CHORE-16  | Closed PE-MS-08 as merged (PR #302, PASS verdict). MiniServer Implementation Series complete (PE-MS-01 to PE-MS-08). Transitioned release to ELIS 2-Agent Automation Plan (`ELIS_2Agent_Automation_Plan_v2_0.md`). Opened PE-PLAN-01 (ADR infrastructure and first batch) with `infra-impl-claude` as Implementer and `infra-val-codex` as Validator per alternation rule. | 2026-03-26 |
 
 Alternation rule:
 - For consecutive PEs in the same domain, the implementer engine must alternate (`codex` <-> `claude`).
