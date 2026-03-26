@@ -90,11 +90,21 @@ Recommended mechanism: store OPENAI_API_KEY as GitHub Secret 'OPENAI_API_KEY'.
 (Get-Content "$env:USERPROFILE\.codex\auth.json" | ConvertFrom-Json).OPENAI_API_KEY | Set-Clipboard
 ```
 
-**Linux / macOS:**
+**Linux:**
 
 ```bash
-python -c "import json; d=json.load(open(os.path.expanduser('~/.codex/auth.json'))); print(d['OPENAI_API_KEY'])"
+python -c "import json,os,subprocess; d=json.load(open(os.path.expanduser('~/.codex/auth.json'))); subprocess.run(['xclip','-selection','clipboard'], input=d['OPENAI_API_KEY'], text=True)"
 ```
+
+**macOS:**
+
+```bash
+python -c "import json,os,subprocess; d=json.load(open(os.path.expanduser('~/.codex/auth.json'))); subprocess.run(['pbcopy'], input=d['OPENAI_API_KEY'], text=True)"
+```
+
+> The value goes to the clipboard only — it is never printed to stdout or shell
+> history. After pasting into GitHub Secrets, clear the clipboard and purge
+> terminal history: `history -c` (bash/zsh) or `Clear-History` (PowerShell).
 
 ### Step 6 — Store as GitHub Secret
 

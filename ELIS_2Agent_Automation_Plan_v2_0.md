@@ -341,50 +341,57 @@ stored as a GitHub Secret.
 ```bash
 # On the PO's machine
 codex auth login
-# After browser callback, locate the token file:
+# After browser callback, locate the token file (Windows PowerShell):
+Get-ChildItem -Path "$env:USERPROFILE\.codex" -Filter "*.json" -Recurse -ErrorAction SilentlyContinue | Select-Object FullName
+# Linux / macOS:
 find ~/.codex ~/.config/openai -name "*.json" 2>/dev/null
-codex auth status --verbose
 ```
 
-The result determines the exact mechanism:
+> **Pre-verification finding (2026-03-26):** `codex auth status` subcommand is
+> not supported in the current CLI (`error: unrecognized subcommand 'status'`).
+> The mechanism is determined by inspecting `auth.json` directly.
 
-| Scenario | Mechanism |
+Pre-verification result (PO machine `carlo-notebook`, Windows, `auth_mode=chatgpt`):
+
+| Scenario | Mechanism adopted |
 |---|---|
-| Token in JSON file (`~/.codex/auth.json`) | Extract refresh token → `CODEX_OAUTH_TOKEN` in GitHub Secrets |
-| Token via environment variable | Store as `CODEX_ACCESS_TOKEN` |
+| `OPENAI_API_KEY` present as top-level field in `auth.json` | Store as GitHub Secret `OPENAI_API_KEY` — consumed directly by the Codex CLI via standard env var |
 
 **Deliverables:**
 
 - `docs/openclaw/CODEX_AUTH_SETUP.md` — runbook: generation, extraction, storage, renewal
-- `scripts/extract_codex_token.py` — reads local token, prints only metadata (expiry, scope) — never the value (rule `§13`)
-- `scripts/verify_codex_auth.py` — verifies the token is valid in the runner (existence check + `codex auth status`)
+- `scripts/extract_codex_token.py` — reads local `auth.json`, prints only metadata (field names, `auth_mode`, `last_refresh`, boolean presence) — never the value (rule `§13`)
+- `scripts/verify_codex_auth.py` — verifies the runner environment: `OPENAI_API_KEY` set + `codex` on PATH + `codex --version` exits 0
 
 ```python
 # scripts/verify_codex_auth.py
-import subprocess, sys
-result = subprocess.run(["codex", "auth", "status"], capture_output=True, text=True)
-if "authenticated" not in result.stdout.lower():
-    print("FAIL: codex not authenticated", file=sys.stderr)
+import os, shutil, subprocess, sys
+api_key = os.environ.get("OPENAI_API_KEY", "")
+if not api_key:
+    print("FAIL: OPENAI_API_KEY is not set in environment.", file=sys.stderr)
     sys.exit(1)
-print("OK: codex auth valid")
+print(f"OK: OPENAI_API_KEY is set (length={len(api_key)})")
+result = subprocess.run(["codex", "--version"], capture_output=True, text=True, timeout=15)
+if result.returncode != 0:
+    sys.exit(1)
+print(f"OK: codex --version → {result.stdout.strip()}")
 ```
 
 **Acceptance Criteria:**
 
 | # | Criterion |
 |---|---|
-| AC-1 | `codex auth status` returns `authenticated` on a headless runner with secret configured |
+| AC-1 | `OPENAI_API_KEY` secret is set in the runner environment and `codex --version` exits 0 |
 | AC-2 | No token value appears in any CI log |
 | AC-3 | `scripts/verify_codex_auth.py` exits 0 on the runner |
-| AC-4 | Runbook documents the renewal procedure with the expected expiry date |
-| AC-5 | No `OPENAI_API_KEY` present in agent runner workflows |
+| AC-4 | Runbook documents the renewal procedure; expiry timing is not exposed by the current CLI — renewal trigger is runner authentication failure |
+| AC-5 | `OPENAI_API_KEY` is injected from GitHub Secrets only — never hardcoded in workflow files |
 
 **Documented limitations:**
 
 - Subject to ChatGPT Plus usage limits — not equivalent to API throughput
 - Token expires — mandatory renewal before each long PE series
-- [TO VALIDATE] Quota monitoring: verify whether `codex auth status` exposes quota/expiry
-  information before including in the PM Agent loop (`--quota` flag not confirmed)
+- `codex auth status` subcommand not available in current CLI — expiry and quota cannot be polled programmatically; monitor via runner failures
 
 ---
 
@@ -501,7 +508,7 @@ Repository GitHub Secrets:
 CODEX_BOT_TOKEN        ← PAT for elis-codex-bot
 CLAUDE_BOT_TOKEN       ← PAT for elis-claude-bot
 PM_BOT_TOKEN           ← PAT for elis-pm-bot
-CODEX_OAUTH_TOKEN      ← Codex CLI OAuth token (PE-AUTH-01)
+OPENAI_API_KEY         ← Codex CLI auth token (PE-AUTH-01; extracted from auth.json `OPENAI_API_KEY` field)
 CLAUDE_SETUP_TOKEN     ← Claude Code setup-token (PE-AUTH-02)
 ```
 
@@ -680,7 +687,7 @@ jobs:
       - name: Authenticate Codex CLI
         if: inputs.engine == 'codex'
         env:
-          CODEX_OAUTH_TOKEN: ${{ secrets.CODEX_OAUTH_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: python scripts/verify_codex_auth.py
 
       - name: Authenticate Claude CLI
@@ -724,7 +731,7 @@ The scripts `run_codex_agent.py` / `run_claude_agent.py`:
 | # | Criterion |
 |---|---|
 | AC-1 | Runner fires upon detecting a change in `CURRENT_PE.md` with status `implementing` |
-| AC-2 | Auth via `CODEX_OAUTH_TOKEN` / `CLAUDE_SETUP_TOKEN` — without `OPENAI_API_KEY` |
+| AC-2 | Auth via `OPENAI_API_KEY` (Codex) / `CLAUDE_SETUP_TOKEN` (Claude) — injected from GitHub Secrets, never hardcoded |
 | AC-3 | PR opened by the correct account (`elis-codex-bot` or `elis-claude-bot`) |
 | AC-4 | `HANDOFF.md` committed before the PR is converted to ready |
 | AC-5 | Runner exits with exit 1 if `MAX_COMMITS` or timeout are reached |
