@@ -1,8 +1,8 @@
 from pathlib import Path
 
-
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DOCS_ROOT = REPO_ROOT / "docs" / "openclaw"
+DEPLOY_SCRIPT = REPO_ROOT / "scripts" / "deploy_openclaw_workspaces.sh"
 
 
 def read_doc(name: str) -> str:
@@ -50,3 +50,11 @@ def test_existing_docs_reference_new_runbooks() -> None:
     assert "NATIVE_OPERATIONS_AND_RESTORE_RUNBOOK.md" in native_install
     assert "PM_E2E_VALIDATION_RUNBOOK.md" in pm_rules
     assert "PM_E2E_VALIDATION_RUNBOOK.md" in pm_reset
+
+
+def test_deploy_script_recreates_pm_docs_dir_after_sync() -> None:
+    text = DEPLOY_SCRIPT.read_text(encoding="utf-8")
+
+    assert "rsync -av --delete" in text
+    assert 'mkdir -p "$TARGET_PM_DOCS"' in text
+    assert 'ln -sfn "$REPO_ROOT/$PLAN_FILE" "$TARGET_PM_DOCS/PLAN_CURRENT.md"' in text

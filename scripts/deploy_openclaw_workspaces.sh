@@ -20,6 +20,11 @@ else
   cp -R "$SRC_DIR/." "$TARGET_ROOT/" 2>/dev/null || true
 fi
 
+# `rsync --delete` removes host-only PM docs/entrypoint directories because they are not
+# present in the source-controlled workspace tree. Recreate them before provisioning symlinks.
+mkdir -p "$TARGET_PM"
+mkdir -p "$TARGET_PM_DOCS"
+
 echo "OpenClaw workspaces deployed to: $TARGET_ROOT"
 
 # Provision PM workspace entrypoints that resolve to canonical repo files.
