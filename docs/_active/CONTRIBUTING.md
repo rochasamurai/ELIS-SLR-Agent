@@ -11,6 +11,11 @@ To ensure consistency and reproducibility, all contributions must follow these r
 - **No direct edits on `main`** — always use a branch + Pull Request (PR).
 - **One logical change per PR** (schema update, doc update, bugfix, etc).
 - **Always link issues/decisions** in your PR description (Changelog doc in `/docs` must be updated).
+- **Use UK English** for repository-facing content by default:
+  - file contents
+  - commit messages
+  - PR titles, bodies, and review comments
+  - runbooks, plans, reviews, and audit artefacts
 
 ---
 
