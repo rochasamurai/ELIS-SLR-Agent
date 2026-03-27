@@ -18,6 +18,9 @@ name: PE-AUTO-01 — Bot Auth Verification
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - feature/pe-auto-01-bot-accounts-pats
 
 permissions:
   contents: read

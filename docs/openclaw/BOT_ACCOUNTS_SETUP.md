@@ -297,12 +297,12 @@ This separation is enforced by the secrets-scope-check CI gate.
 
 ## PAT renewal
 
-Fine-grained PATs expire on the date set during creation (recommended: 1 year).
+Classic PATs expire on the date set during creation (recommended: 1 year).
 Renewal procedure for each account:
 
 1. Log in to GitHub as the bot account.
 2. Navigate to **Settings → Developer settings → Personal access tokens →
-   Fine-grained tokens**.
+   Tokens (classic)**.
 3. Find the `ELIS-SLR-Agent PAT` and click **Regenerate**.
 4. Copy the new token and update the corresponding GitHub Secret (Step 4).
 5. Run `python scripts/verify_bot_config.py` to confirm the new token works.

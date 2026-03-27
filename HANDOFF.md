@@ -1,6 +1,6 @@
 # HANDOFF.md — PE-AUTO-01
 
-**PE:** PE-AUTO-01 — Bot Accounts and GitHub Fine-Grained PATs
+**PE:** PE-AUTO-01 — Bot Accounts and GitHub Classic PATs
 **Branch:** `feature/pe-auto-01-bot-accounts-pats`
 **Implementer:** Claude Code (`infra-impl-claude`)
 **Date:** 2026-03-26
