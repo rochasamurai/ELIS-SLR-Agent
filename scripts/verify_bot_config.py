@@ -13,18 +13,24 @@ Usage:
 
 Security rule §13: token values are never printed. Only token length,
 login name, and boolean permission flags are reported.
+
+Note on workflow scope: classic PAT scopes cannot be verified
+non-destructively via the GitHub API. The admin repository role check for
+elis-pm-bot confirms the account has the correct repository access level;
+the `workflow` scope must be confirmed correct at token generation time.
 """
 
 from __future__ import annotations
 
+import json
 import os
 import sys
-from urllib import request, error as url_error
-import json
+from urllib import error as url_error
+from urllib import request
 
 
 _BOTS: list[tuple[str, str, bool]] = [
-    # (env_var, expected_login, require_workflows_permission)
+    # (env_var, expected_login, require_admin_role)
     ("CODEX_BOT_TOKEN", "elis-codex-bot", False),
     ("CLAUDE_BOT_TOKEN", "elis-claude-bot", False),
     ("PM_BOT_TOKEN", "elis-pm-bot", True),
@@ -49,15 +55,19 @@ def _github_get(path: str, token: str) -> dict:
         raise RuntimeError(f"HTTP {exc.code}: {body}") from exc
 
 
-def _check_workflows_permission(token: str, login: str) -> bool:
-    """Return True if the token has workflows permission on the repository."""
+def _check_admin_role(token: str, login: str) -> bool:
+    """Return True if the login has admin or maintain role on the repository.
+
+    This verifies the account's repository access level, not PAT scopes.
+    Classic PAT scopes (e.g. `workflow`) cannot be checked non-destructively
+    via the GitHub API and must be confirmed at token generation time.
+    """
     try:
         data = _github_get(
-            "/repos/rochasamurai/ELIS-SLR-Agent/collaborators/" f"{login}/permission",
+            f"/repos/rochasamurai/ELIS-SLR-Agent/collaborators/{login}/permission",
             token,
         )
         role = data.get("role_name", "")
-        # admin role has full access including workflows
         return role in ("admin", "maintain")
     except RuntimeError:
         return False
@@ -66,7 +76,7 @@ def _check_workflows_permission(token: str, login: str) -> bool:
 def main() -> int:
     all_ok = True
 
-    for env_var, expected_login, need_workflows in _BOTS:
+    for env_var, expected_login, need_admin in _BOTS:
         token = os.environ.get(env_var, "")
         if not token:
             print(
@@ -100,17 +110,17 @@ def main() -> int:
 
         print(f"OK: {expected_login} authenticated — login={actual_login}")
 
-        if need_workflows:
-            has_perm = _check_workflows_permission(token, expected_login)
-            if not has_perm:
+        if need_admin:
+            has_role = _check_admin_role(token, expected_login)
+            if not has_role:
                 print(
                     f"FAIL: {expected_login} does not have admin/maintain "
-                    f"permission (required for workflows).",
+                    f"repository role.",
                     file=sys.stderr,
                 )
                 all_ok = False
             else:
-                print(f"OK: {expected_login} has workflows permission")
+                print(f"OK: {expected_login} has admin repository role")
 
     if not all_ok:
         return 1

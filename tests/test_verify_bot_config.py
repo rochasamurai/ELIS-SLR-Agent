@@ -133,7 +133,7 @@ def test_fails_on_api_http_error(monkeypatch, capsys):
 # ---------------------------------------------------------------------------
 
 
-def test_fails_when_pm_bot_lacks_workflows_permission(monkeypatch, capsys):
+def test_fails_when_pm_bot_lacks_admin_role(monkeypatch, capsys):
     monkeypatch.setenv("CODEX_BOT_TOKEN", "tok-codex")
     monkeypatch.setenv("CLAUDE_BOT_TOKEN", "tok-claude")
     monkeypatch.setenv("PM_BOT_TOKEN", "tok-pm")
@@ -150,7 +150,7 @@ def test_fails_when_pm_bot_lacks_workflows_permission(monkeypatch, capsys):
         rc = verify_bot_config.main()
 
     assert rc == 1
-    assert "does not have admin/maintain permission" in capsys.readouterr().err
+    assert "does not have admin/maintain repository role" in capsys.readouterr().err
 
 
 # ---------------------------------------------------------------------------
@@ -205,3 +205,4 @@ def test_passes_does_not_leak_token_values(monkeypatch, capsys):
     for secret in (secret_codex, secret_claude, secret_pm):
         assert secret not in combined, f"Token value leaked into output: {secret}"
     assert "length=" in combined
+    assert "admin repository role" in combined

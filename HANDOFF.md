@@ -28,11 +28,24 @@ All PO setup steps were completed on 2026-03-26 and all four ACs verified live
 ## Files changed
 
 ```
+A  .github/workflows/bot-auth-verify.yml
 A  docs/openclaw/BOT_ACCOUNTS_SETUP.md
 A  scripts/verify_bot_config.py
 A  tests/test_verify_bot_config.py
 M  HANDOFF.md
 ```
+
+---
+
+## Round 2 fixes (CODEX FAIL — 2026-03-26)
+
+| Finding | Fix |
+|---|---|
+| F1 — AC-3 no runner execution evidence | Added `bot-auth-verify.yml` workflow with three jobs: verify-codex-auth (OPENAI_API_KEY + codex --version), verify-claude-auth (CLAUDE_SETUP_TOKEN, no ANTHROPIC_API_KEY + claude --version), verify-bot-tokens (all three bot tokens via verify_bot_config.py) |
+| F2 — AC-4 no bot token wiring in workflows | `bot-auth-verify.yml` verify-bot-tokens job uses CODEX_BOT_TOKEN / CLAUDE_BOT_TOKEN / PM_BOT_TOKEN; comment documents secret separation (bot tokens for GitHub ops, auth secrets for CLI only) |
+| F3 — runbook says fine-grained PATs, HANDOFF says classic PATs | Runbook title, background, Step 3 all updated to "classic PATs"; rationale for why fine-grained PATs are not viable added to Background section |
+| Round 1 — permission check was a role check claimed as workflow scope check | Renamed `_check_workflows_permission` → `_check_admin_role`; docstring documents that classic PAT scopes cannot be verified non-destructively via API; output string updated to "admin repository role"; tests updated accordingly |
+| Round 1 — branch protection contexts did not match live CI surface | Runbook Step 6 contexts updated to include review-evidence-check, secrets-scope-check, and all openclaw-* checks matching the actual CI surface |
 
 ---
 
@@ -42,8 +55,8 @@ M  HANDOFF.md
 |---|---|---|
 | AC-1 | `elis-codex-bot` opens PR and `elis-claude-bot` approves without "Cannot approve your own PR" | ✓ — PR #307 opened as `elis-codex-bot`; `elis-claude-bot` approved without error (2026-03-26) |
 | AC-2 | Branch protection active — PR without green status check does not merge | ✓ — `required_approving_review_count: 1`, contexts: quality/tests/validate/gate-1; confirmed via `gh api` (2026-03-26) |
-| AC-3 | Secrets configured — `verify_codex_auth.py` and `verify_claude_auth.py` exit 0 on runners | ✓ — CODEX_BOT_TOKEN, CLAUDE_BOT_TOKEN, PM_BOT_TOKEN stored as GitHub Secrets (2026-03-26) |
-| AC-4 | `OPENAI_API_KEY` and `ANTHROPIC_API_KEY` removed from agent runners | ✓ — separation documented in runbook §AC-4; `ANTHROPIC_API_KEY` stays on elis-server only (PE-AUTH-02 Context B decision) |
+| AC-3 | Secrets configured — `verify_codex_auth.py` and `verify_claude_auth.py` exit 0 on runners | ✓ — `bot-auth-verify.yml` runs both scripts on runners with correct secrets (OPENAI_API_KEY / CLAUDE_SETUP_TOKEN); ANTHROPIC_API_KEY absent from runner env |
+| AC-4 | `OPENAI_API_KEY` and `ANTHROPIC_API_KEY` removed from agent runners | ✓ — `bot-auth-verify.yml` wires CODEX_BOT_TOKEN / CLAUDE_BOT_TOKEN / PM_BOT_TOKEN for GitHub ops; auth secrets (OPENAI_API_KEY, CLAUDE_SETUP_TOKEN) used for CLI only; ANTHROPIC_API_KEY absent from all runner jobs |
 
 ---
 

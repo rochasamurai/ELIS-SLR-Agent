@@ -1,7 +1,7 @@
-# Bot Accounts and GitHub Fine-Grained PATs
+# Bot Accounts and GitHub Classic PATs
 
 > Runbook for PE-AUTO-01: creating the three ELIS bot identities, generating
-> fine-grained PATs, configuring repository secrets, and activating branch
+> classic PATs, configuring repository secrets, and activating branch
 > protection so the Validator can issue formal GitHub Reviews on the
 > Implementer's PRs.
 
@@ -19,8 +19,14 @@ PE-AUTO-01 resolves this by establishing three separate GitHub accounts:
 | `elis-claude-bot` | Claude Code | Implementer or Validator per PE |
 | `elis-pm-bot` | PM Agent / CI orchestration | Gate automation, sequencer, merge |
 
-Each account receives a fine-grained PAT stored as a repository secret.
+Each account receives a classic PAT stored as a repository secret.
 Workflows and helper scripts use these tokens to act as the correct identity.
+
+> **Why classic PATs (not fine-grained):** GitHub fine-grained PATs can only
+> target the token owner's own account as resource owner. Bot accounts cannot
+> select `rochasamurai` as resource owner because `rochasamurai` is a personal
+> account, not an organisation. Classic PATs with `repo` scope achieve the same
+> result without the resource-owner restriction.
 
 ---
 
@@ -100,29 +106,32 @@ gh api /repos/rochasamurai/ELIS-SLR-Agent/invitations --jq '.[].id'
 
 ---
 
-## Step 3 — Generate fine-grained PATs
+## Step 3 — Generate classic PATs
 
-Log in to GitHub as each bot account and generate a fine-grained PAT:
+Log in to GitHub as each bot account and generate a classic PAT:
 
 1. Navigate to **Settings → Developer settings → Personal access tokens →
-   Fine-grained tokens → Generate new token**.
-2. Set **Token name** to `ELIS-SLR-Agent PAT`.
+   Tokens (classic) → Generate new token (classic)**.
+2. Set **Note** to `ELIS-SLR-Agent PAT`.
 3. Set **Expiration** to 1 year (review annually).
-4. Set **Resource owner** to `rochasamurai`.
-5. Select **Only select repositories → `ELIS-SLR-Agent`**.
-6. Grant the following **Repository permissions**:
+4. Grant the following **Scopes**:
 
-| Account | Contents | Pull requests | Issues | Workflows |
-|---|---|---|---|---|
-| `elis-codex-bot` | Read & write | Read & write | Read & write | — |
-| `elis-claude-bot` | Read & write | Read & write | Read & write | — |
-| `elis-pm-bot` | Read & write | Read & write | Read & write | Read & write |
+| Account | `repo` | `workflow` |
+|---|---|---|
+| `elis-codex-bot` | ✓ | — |
+| `elis-claude-bot` | ✓ | — |
+| `elis-pm-bot` | ✓ | ✓ |
 
-7. Click **Generate token** and copy the value immediately (it is shown only
+5. Click **Generate token** and copy the value immediately (it is shown only
    once).
 
 > **Security rule §13:** the PAT value must never appear in any log, chat
 > message, commit, or CI output. Copy it directly to the GitHub Secrets field.
+
+> **Scope note:** The `workflow` scope for `elis-pm-bot` allows updating
+> workflow files. Classic PAT scopes cannot be verified non-destructively via
+> the GitHub API — confirm the scope was granted correctly during token
+> creation.
 
 ---
 
@@ -174,7 +183,7 @@ OK: CLAUDE_BOT_TOKEN set (length=N)
 OK: elis-claude-bot authenticated — login=elis-claude-bot
 OK: PM_BOT_TOKEN set (length=N)
 OK: elis-pm-bot authenticated — login=elis-pm-bot
-OK: elis-pm-bot has workflows permission
+OK: elis-pm-bot has admin repository role
 
 bot config verification PASS
 ```
@@ -191,7 +200,12 @@ gh api --method PUT /repos/rochasamurai/ELIS-SLR-Agent/branches/main/protection 
 {
   "required_status_checks": {
     "strict": true,
-    "contexts": ["quality", "tests", "validate", "gate-1"]
+    "contexts": [
+      "quality", "tests", "validate",
+      "review-evidence-check", "secrets-scope-check",
+      "openclaw-config-sync-check", "openclaw-doctor-check",
+      "openclaw-health-check", "openclaw-security-check"
+    ]
   },
   "enforce_admins": false,
   "required_pull_request_reviews": {
@@ -206,9 +220,14 @@ gh api --method PUT /repos/rochasamurai/ELIS-SLR-Agent/branches/main/protection 
 JSON
 ```
 
-> **AC-2 note:** once branch protection is active, any PR lacking the four
+> **AC-2 note:** once branch protection is active, any PR lacking the
 > mandatory status checks cannot be merged — even by the repository owner.
 > Verify with: `gh api /repos/rochasamurai/ELIS-SLR-Agent/branches/main/protection`
+>
+> **Live result (2026-03-26):** branch protection was applied with
+> `required_approving_review_count: 1`. The `contexts` field was set to
+> `["quality","tests","validate","gate-1"]` — update to the full surface above
+> on next renewal if the additional checks become blocking.
 
 ---
 
