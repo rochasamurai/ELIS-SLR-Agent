@@ -82,6 +82,17 @@ because `rochasamurai` is a personal account, not an organisation. Classic PATs
 with `repo` scope (+ `workflow` for `elis-pm-bot`) achieve the same result
 without the resource-owner restriction.
 
+**Why AC-3 uses structural checks only, not live API auth calls:**
+`verify_codex_auth.py` and `verify_claude_auth.py` verify that secrets are present and
+CLIs are installed (`--version`). Neither script makes an authenticated API call.
+Open source CI best practice separates two levels:
+- **Level 1 — structural (every push):** secret set + CLI on PATH + `--version` exits 0.
+  Zero cost, no network dependency, safe for forked PRs (no secret access).
+- **Level 2 — live auth (workflow_dispatch only):** actual API call confirms the token
+  is accepted server-side. Costs one API call; not appropriate for push triggers.
+PE-AUTO-01 delivers Level 1. Level 2 is tracked as AUTO-01 in `docs/_active/TODO.md`
+and should be implemented in a follow-up PE (PE-AUTO-02).
+
 **Why AC-1 and AC-2 required PO steps before full verification:**
 The bot accounts do not exist in GitHub at the time this branch is opened.
 Following the same pattern as PE-AUTH-01 (token extracted by PO) and PE-AUTH-02

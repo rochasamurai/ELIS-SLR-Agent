@@ -4,6 +4,47 @@ Items that are known limitations or future improvements, not blocking current wo
 
 ---
 
+## CI / Bot automation
+
+### AUTO-01 — Live API auth verification for Codex and Claude Code tokens
+
+**Status:** Open
+**Priority:** Medium (Level 1 structural checks pass; Level 2 live auth not yet implemented)
+**Logged:** 2026-03-27
+**Parent PE:** PE-AUTO-01
+
+**Description:**
+`verify_codex_auth.py` and `verify_claude_auth.py` confirm secrets are set and CLIs are
+installed (`--version`), but do not make authenticated API calls. A token that is present
+but revoked or expired would pass the current checks.
+
+**Recommended fix (PE-AUTO-02):**
+Add a `verify-live-auth` job to `bot-auth-verify.yml` triggered only on `workflow_dispatch`:
+
+```yaml
+verify-live-auth:
+  name: Live auth smoke test (manual only)
+  if: github.event_name == 'workflow_dispatch'
+  steps:
+    - name: Claude live check
+      env:
+        CLAUDE_SETUP_TOKEN: ${{ secrets.CLAUDE_SETUP_TOKEN }}
+      run: echo "ok" | claude -p "Reply with the single word: authenticated"
+    - name: Codex live check
+      env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      run: echo "ok" | codex -q "Reply with the single word: authenticated"
+```
+
+Run manually after initial setup and after every token renewal.
+
+**References:**
+- `docs/openclaw/BOT_ACCOUNTS_SETUP.md` — Step 8, PAT renewal section
+- `docs/openclaw/CLAUDE_AUTH_SETUP.md` — runner auth section
+- HANDOFF.md (PE-AUTO-01) — Design decisions § AC-3
+
+---
+
 ## OpenClaw / elis-server
 
 ### DISCORD-01 — Discord server channel messages not received by PM Agent

@@ -275,6 +275,19 @@ In a GitHub Actions run with secrets injected:
 
 Both scripts must exit 0 (see PE-AUTH-01 and PE-AUTH-02 runbooks for details).
 
+> **Two-level auth verification:**
+> The scripts above are **Level 1 (structural)** checks — they confirm the secret is
+> present and the CLI is installed (`--version`). They do not make authenticated API
+> calls, so a revoked or expired token would still pass.
+>
+> **Level 2 (live auth)** — run manually via `workflow_dispatch` after initial setup
+> and after every token renewal:
+> ```bash
+> gh workflow run bot-auth-verify.yml --ref main
+> ```
+> The `verify-live-auth` job (added in PE-AUTO-02) will make a minimal API call to
+> confirm each token is accepted server-side. See `docs/_active/TODO.md` item AUTO-01.
+
 ---
 
 ## AC-4 — Removing `OPENAI_API_KEY` and `ANTHROPIC_API_KEY` from agent runners
