@@ -152,3 +152,63 @@ HANDOFF.md:58:| AC-3 | Secrets configured — `verify_codex_auth.py` and `verify
 HANDOFF.md:3:**PE:** PE-AUTO-01 — Bot Accounts and GitHub Fine-Grained PATs
 docs/openclaw/BOT_ACCOUNTS_SETUP.md:305:   Fine-grained tokens**.
 ```
+
+---
+
+## Agent update — CODEX / PE-AUTO-01 / 2026-03-27 (Re-validation Round 4)
+
+### Verdict
+PASS
+
+### Gate results
+black: PASS
+ruff: PASS
+pytest: 614 passed, 0 failed (17 pre-existing warnings)
+PE-specific tests: 7/7 passed (`tests/test_verify_bot_config.py` within full suite)
+
+### Scope
+A	.github/workflows/bot-auth-verify.yml
+M	HANDOFF.md
+A	docs/openclaw/BOT_ACCOUNTS_SETUP.md
+A	scripts/verify_bot_config.py
+A	tests/test_verify_bot_config.py
+
+### Required fixes
+- None.
+
+### Evidence
+```text
+python -m black --check .
+All done! ✨ 🍰 ✨
+131 files would be left unchanged.
+
+python -m ruff check .
+All checks passed!
+
+python -m pytest -q
+614 passed, 17 warnings in 16.52s
+
+python scripts/check_agent_scope.py
+Agent scope clean — no secret-pattern files detected in worktree.
+
+gh pr checks 306
+Parse verdict and auto-merge if PASS       pass
+Verify Claude Code auth (AC-3b)            pass
+Verify Codex CLI auth (AC-3a)              pass
+Verify bot token identities (AC-4)         pass
+quality                                    pass
+tests                                      pass
+validate                                   pass
+review-evidence-check                      pass
+secrets-scope-check                        pass
+openclaw-config-sync-check                 pass
+openclaw-doctor-check                      pass
+openclaw-health-check                      pass
+openclaw-security-check                    pass
+
+rg -n "Run URL|Classic PATs|Fine-Grained PATs|Fine-grained tokens" HANDOFF.md docs/openclaw/BOT_ACCOUNTS_SETUP.md
+HANDOFF.md:3:**PE:** PE-AUTO-01 — Bot Accounts and GitHub Classic PATs
+HANDOFF.md:136:Run URL: https://github.com/rochasamurai/ELIS-SLR-Agent/actions/runs/23645665023
+docs/openclaw/BOT_ACCOUNTS_SETUP.md:1:# Bot Accounts and GitHub Classic PATs
+docs/openclaw/BOT_ACCOUNTS_SETUP.md:313:Classic PATs expire on the date set during creation (recommended: 1 year).
+```
