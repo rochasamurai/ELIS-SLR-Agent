@@ -55,7 +55,7 @@ M  HANDOFF.md
 |---|---|---|
 | AC-1 | `elis-codex-bot` opens PR and `elis-claude-bot` approves without "Cannot approve your own PR" | ✓ — PR #307 opened as `elis-codex-bot`; `elis-claude-bot` approved without error (2026-03-26) |
 | AC-2 | Branch protection active — PR without green status check does not merge | ✓ — `required_approving_review_count: 1`, contexts: quality/tests/validate/gate-1; confirmed via `gh api` (2026-03-26) |
-| AC-3 | Secrets configured — `verify_codex_auth.py` and `verify_claude_auth.py` exit 0 on runners | ✓ — `bot-auth-verify.yml` runs both scripts on runners with correct secrets (OPENAI_API_KEY / CLAUDE_SETUP_TOKEN); ANTHROPIC_API_KEY absent from runner env |
+| AC-3 | Secrets configured — `verify_codex_auth.py` and `verify_claude_auth.py` exit 0 on runners | ✓ — run 23645665023 (2026-03-27): verify-codex-auth PASS (codex-cli 0.117.0, OPENAI_API_KEY length=2033), verify-claude-auth PASS (claude 2.1.85, CLAUDE_SETUP_TOKEN length=108, ANTHROPIC_API_KEY absent) |
 | AC-4 | `OPENAI_API_KEY` and `ANTHROPIC_API_KEY` removed from agent runners | ✓ — `bot-auth-verify.yml` wires CODEX_BOT_TOKEN / CLAUDE_BOT_TOKEN / PM_BOT_TOKEN for GitHub ops; auth secrets (OPENAI_API_KEY, CLAUDE_SETUP_TOKEN) used for CLI only; ANTHROPIC_API_KEY absent from all runner jobs |
 
 ---
@@ -120,14 +120,54 @@ allow_force_pushes: false
 allow_deletions: false
 ```
 
-### AC-3 — Secrets stored
+### AC-3 — Runner auth verification (bot-auth-verify.yml run 23645665023)
+
+Run URL: https://github.com/rochasamurai/ELIS-SLR-Agent/actions/runs/23645665023
+Triggered: push to feature/pe-auto-01-bot-accounts-pats (commit a34aad2) — 2026-03-27
 
 ```text
-gh secret list --repo rochasamurai/ELIS-SLR-Agent
-CLAUDE_BOT_TOKEN   about 5 minutes ago
-CODEX_BOT_TOKEN    about 2 minutes ago
-PM_BOT_TOKEN       less than a minute ago
+✓ Verify Codex CLI auth (AC-3a)   — 10s
+✓ Verify Claude Code auth (AC-3b) — 19s
+✓ Verify bot token identities (AC-4) — 11s
 ```
+
+AC-3a (Codex) step output:
+```text
+OK: OPENAI_API_KEY is set (length=2033)
+OK: codex CLI found at /usr/local/bin/codex
+OK: codex --version → codex-cli 0.117.0
+
+codex auth verification PASS
+```
+
+AC-3b (Claude) step output:
+```text
+OK: CLAUDE_SETUP_TOKEN is set (length=108)
+OK: ANTHROPIC_API_KEY is absent from environment
+OK: claude CLI found at /home/runner/.local/bin/claude
+OK: claude --version -> 2.1.85 (Claude Code)
+
+claude auth verification PASS
+```
+
+AC-4 (bot tokens) step output:
+```text
+OK: CODEX_BOT_TOKEN set (length=40)
+OK: elis-codex-bot authenticated — login=elis-codex-bot
+OK: CLAUDE_BOT_TOKEN set (length=40)
+OK: elis-claude-bot authenticated — login=elis-claude-bot
+OK: PM_BOT_TOKEN set (length=40)
+OK: elis-pm-bot authenticated — login=elis-pm-bot
+OK: elis-pm-bot has admin repository role
+
+bot config verification PASS
+```
+
+> **Note on OPENAI_API_KEY:** Local Codex auth uses `auth_mode: chatgpt` (OAuth JWT).
+> The `OPENAI_API_KEY` GitHub Secret holds the OAuth `access_token` (a JWT, length 2033).
+> `verify_codex_auth.py` checks presence and runs `codex --version` (no network auth
+> required); the token satisfies both checks. Renewal: re-extract from
+> `~/.codex/auth.json` `tokens.access_token` when the secret expires.
 
 ---
 
@@ -150,4 +190,4 @@ Agent scope clean — no secret-pattern files detected in worktree.
 
 ---
 
-*ELIS SLR Agent · HANDOFF.md · infra-impl-claude · 2026-03-26*
+*ELIS SLR Agent · HANDOFF.md · infra-impl-claude · 2026-03-27*
