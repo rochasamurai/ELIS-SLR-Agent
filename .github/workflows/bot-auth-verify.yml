@@ -1,0 +1,95 @@
+name: PE-AUTO-01 — Bot Auth Verification
+
+# =============================================================================
+# Purpose
+#   Verify that:
+#   - The Codex CLI auth chain works on a headless runner (AC-3a):
+#       OPENAI_API_KEY set + codex on PATH + codex --version exits 0
+#   - The Claude Code auth chain works on a headless runner (AC-3b):
+#       CLAUDE_SETUP_TOKEN set, ANTHROPIC_API_KEY absent + claude --version exits 0
+#   - Bot tokens wire correctly for GitHub operations (AC-4):
+#       CODEX_BOT_TOKEN / CLAUDE_BOT_TOKEN / PM_BOT_TOKEN authenticate as
+#       the expected GitHub identities.
+#
+# Trigger
+#   - Manual (workflow_dispatch) — run after secrets are configured.
+#   - No push trigger — this is a one-time verification workflow.
+# =============================================================================
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/pe-auto-01-bot-accounts-pats
+
+permissions:
+  contents: read
+
+jobs:
+  verify-codex-auth:
+    name: Verify Codex CLI auth (AC-3a)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install Codex CLI
+        run: npm install -g @openai/codex
+
+      - name: Verify Codex auth
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python scripts/verify_codex_auth.py
+
+  verify-claude-auth:
+    name: Verify Claude Code auth (AC-3b)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install Claude Code CLI
+        run: curl -fsSL https://claude.ai/install.sh | bash
+
+      - name: Verify Claude auth
+        env:
+          CLAUDE_SETUP_TOKEN: ${{ secrets.CLAUDE_SETUP_TOKEN }}
+          # ANTHROPIC_API_KEY must be absent — verify_claude_auth.py enforces this
+        run: python scripts/verify_claude_auth.py
+
+  verify-bot-tokens:
+    name: Verify bot token identities (AC-4)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Verify bot config
+        # Bot tokens are used for GitHub operations; auth secrets (OPENAI_API_KEY,
+        # CLAUDE_SETUP_TOKEN) are used for CLI operations only — never mixed.
+        env:
+          CODEX_BOT_TOKEN: ${{ secrets.CODEX_BOT_TOKEN }}
+          CLAUDE_BOT_TOKEN: ${{ secrets.CLAUDE_BOT_TOKEN }}
+          PM_BOT_TOKEN: ${{ secrets.PM_BOT_TOKEN }}
+        run: python scripts/verify_bot_config.py
