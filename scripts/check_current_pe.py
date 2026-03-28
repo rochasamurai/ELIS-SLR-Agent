@@ -130,7 +130,8 @@ def _validate_registry(pe: str, branch: str, rows: list[dict[str, str]]) -> None
 
     if current["branch"] != branch:
         raise ValueError(
-            f"Current PE branch mismatch: table has '{current['branch']}', expected '{branch}'."
+            "Current PE branch mismatch: "
+            f"table has '{current['branch']}', expected '{branch}'."
         )
 
     status = current["status"].lower()
@@ -138,22 +139,26 @@ def _validate_registry(pe: str, branch: str, rows: list[dict[str, str]]) -> None
         raise ValueError(f"Invalid registry status '{current['status']}'.")
     if status not in VALID_ACTIVE_STATUSES:
         raise ValueError(
-            f"Active PE status must be planning or implementing, found '{current['status']}'."
+            "Active PE status must be planning or implementing, "
+            f"found '{current['status']}'."
         )
     if not DATE_RE.fullmatch(current["last-updated"]):
         raise ValueError(
-            f"Registry last-updated must be YYYY-MM-DD, found '{current['last-updated']}'."
+            "Registry last-updated must be YYYY-MM-DD, "
+            f"found '{current['last-updated']}'."
         )
 
     impl_engine = _engine(current["implementer-agentid"])
     val_engine = _engine(current["validator-agentid"])
     if impl_engine is None:
         raise ValueError(
-            f"Implementer agent id has no valid engine: '{current['implementer-agentid']}'."
+            "Implementer agent id has no valid engine: "
+            f"'{current['implementer-agentid']}'."
         )
     if val_engine is None:
         raise ValueError(
-            f"Validator agent id has no valid engine: '{current['validator-agentid']}'."
+            "Validator agent id has no valid engine: "
+            f"'{current['validator-agentid']}'."
         )
     if impl_engine == val_engine:
         raise ValueError("Implementer and validator must use opposite engines.")
@@ -171,11 +176,13 @@ def _validate_registry(pe: str, branch: str, rows: list[dict[str, str]]) -> None
     previous_engine = _engine(merged_same_domain[-1]["implementer-agentid"])
     if previous_engine is None:
         raise ValueError(
-            f"Previous merged implementer has no valid engine: '{merged_same_domain[-1]['implementer-agentid']}'."
+            "Previous merged implementer has no valid engine: "
+            f"'{merged_same_domain[-1]['implementer-agentid']}'."
         )
     if previous_engine == impl_engine:
         raise ValueError(
-            "Alternation rule violated: current implementer engine matches the last merged PE in the same domain."
+            "Alternation rule violated: current implementer engine matches "
+            "the last merged PE in the same domain."
         )
 
 
@@ -226,7 +233,8 @@ def main() -> int:
             or roles["Claude Code"] != expected_claude_role
         ):
             raise ValueError(
-                "Agent roles table does not match the active PE registry engines."
+                "Agent roles table does not match the active PE registry "
+                "engines."
             )
         if val_engine != ("claude" if impl_engine == "codex" else "codex"):
             raise ValueError("Active PE registry engines are not opposite.")
@@ -234,7 +242,8 @@ def main() -> int:
         return fail(str(exc))
 
     print(
-        "CURRENT_PE.md OK — release context, roles, registry, and alternation valid."
+        "CURRENT_PE.md OK — release context, roles, registry, and "
+        "alternation valid."
     )
     return 0
 
