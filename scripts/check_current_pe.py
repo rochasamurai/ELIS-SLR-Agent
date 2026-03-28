@@ -21,6 +21,16 @@ VALID_REGISTRY_STATUSES = {
 PE_ID_RE = re.compile(r"^PE-[A-Z]+-[0-9]+$")
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 BRANCH_RE = re.compile(r"^(feature/pe-[a-z0-9-]+|chore/[a-z0-9-]+)$")
+REQUIRED_RELEASE_FIELDS = ("Release", "Base branch", "Plan file", "Plan location")
+REQUIRED_REGISTRY_COLUMNS = {
+    "pe-id",
+    "domain",
+    "implementer-agentid",
+    "validator-agentid",
+    "branch",
+    "status",
+    "last-updated",
+}
 
 
 def fail(message: str) -> int:
@@ -42,6 +52,7 @@ def _table_block(lines: list[str], heading: str) -> list[str]:
         if line.strip().lower() == heading.lower():
             start = idx + 1
             break
+
     if start is None:
         return []
 
@@ -70,6 +81,7 @@ def _parse_roles(content: str) -> dict[str, str]:
         )
         if not match:
             raise ValueError(f"Agent role row missing for {agent}.")
+
         role = match.group(1).strip()
         if role not in {"Implementer", "Validator"}:
             raise ValueError(f"Agent {agent} has invalid role '{role}'.")
@@ -82,9 +94,7 @@ def _parse_registry(content: str) -> tuple[list[str], list[dict[str, str]]]:
     if len(block) < 3:
         raise ValueError("Active PE Registry table missing or malformed.")
 
-    header = [
-        part.strip().lower() for part in block[0].strip("|").split("|")
-    ]
+    header = [part.strip().lower() for part in block[0].strip("|").split("|")]
     rows: list[dict[str, str]] = []
     for raw in block[2:]:
         values = [part.strip() for part in raw.strip("|").split("|")]
@@ -104,7 +114,7 @@ def _engine(agent_id: str) -> str | None:
 
 
 def _validate_release_context(lines: list[str]) -> None:
-    for field in ("Release", "Base branch", "Plan file", "Plan location"):
+    for field in REQUIRED_RELEASE_FIELDS:
         value = _table_value(lines, field)
         if not value:
             raise ValueError(f"Release context field '{field}' has no value.")
@@ -125,17 +135,21 @@ def _validate_current_pe(lines: list[str]) -> tuple[str, str]:
     return pe, branch
 
 
-def _validate_registry(pe: str, branch: str, rows: list[dict[str, str]]) -> None:
+def _current_registry_row(
+    pe: str, branch: str, rows: list[dict[str, str]]
+) -> dict[str, str]:
     current = next((row for row in rows if row["pe-id"] == pe), None)
     if current is None:
         raise ValueError(f"Current PE '{pe}' not found in Active PE Registry.")
-
     if current["branch"] != branch:
         raise ValueError(
             "Current PE branch mismatch: "
             f"table has '{current['branch']}', expected '{branch}'."
         )
+    return current
 
+
+def _validate_status_and_date(current: dict[str, str]) -> None:
     status = current["status"].lower()
     if status not in VALID_REGISTRY_STATUSES:
         raise ValueError(f"Invalid registry status '{current['status']}'.")
@@ -150,8 +164,11 @@ def _validate_registry(pe: str, branch: str, rows: list[dict[str, str]]) -> None
             f"found '{current['last-updated']}'."
         )
 
+
+def _validate_engines(current: dict[str, str]) -> tuple[str, str]:
     impl_engine = _engine(current["implementer-agentid"])
     val_engine = _engine(current["validator-agentid"])
+
     if impl_engine is None:
         raise ValueError(
             "Implementer agent id has no valid engine: "
@@ -165,6 +182,12 @@ def _validate_registry(pe: str, branch: str, rows: list[dict[str, str]]) -> None
     if impl_engine == val_engine:
         raise ValueError("Implementer and validator must use opposite engines.")
 
+    return impl_engine, val_engine
+
+
+def _validate_alternation(
+    current: dict[str, str], rows: list[dict[str, str]], impl_engine: str
+) -> None:
     domain = current["domain"].strip().lower()
     merged_same_domain = [
         row
@@ -188,6 +211,21 @@ def _validate_registry(pe: str, branch: str, rows: list[dict[str, str]]) -> None
         )
 
 
+def _validate_roles_table(
+    roles: dict[str, str], impl_engine: str, val_engine: str
+) -> None:
+    expected_roles = {
+        "CODEX": "Implementer" if impl_engine == "codex" else "Validator",
+        "Claude Code": "Implementer" if impl_engine == "claude" else "Validator",
+    }
+    if roles != expected_roles:
+        raise ValueError(
+            "Agent roles table does not match the active PE registry engines."
+        )
+    if val_engine != ("claude" if impl_engine == "codex" else "codex"):
+        raise ValueError("Active PE registry engines are not opposite.")
+
+
 def main() -> int:
     path = Path(os.environ.get("CURRENT_PE_PATH", "CURRENT_PE.md"))
     if not path.exists():
@@ -206,43 +244,21 @@ def main() -> int:
             raise ValueError("Agent roles must differ.")
 
         header, rows = _parse_registry(content)
-        required_columns = {
-            "pe-id",
-            "domain",
-            "implementer-agentid",
-            "validator-agentid",
-            "branch",
-            "status",
-            "last-updated",
-        }
-        missing = sorted(required_columns.difference(header))
+        missing = sorted(REQUIRED_REGISTRY_COLUMNS.difference(header))
         if missing:
             raise ValueError(
                 f"Active PE Registry columns missing: {', '.join(missing)}."
             )
-        _validate_registry(pe, branch, rows)
-        current = next(row for row in rows if row["pe-id"] == pe)
-        impl_engine = _engine(current["implementer-agentid"])
-        val_engine = _engine(current["validator-agentid"])
-        expected_codex_role = "Implementer" if impl_engine == "codex" else "Validator"
-        expected_claude_role = "Implementer" if impl_engine == "claude" else "Validator"
-        if (
-            roles["CODEX"] != expected_codex_role
-            or roles["Claude Code"] != expected_claude_role
-        ):
-            raise ValueError(
-                "Agent roles table does not match the active PE registry "
-                "engines."
-            )
-        if val_engine != ("claude" if impl_engine == "codex" else "codex"):
-            raise ValueError("Active PE registry engines are not opposite.")
+
+        current = _current_registry_row(pe, branch, rows)
+        _validate_status_and_date(current)
+        impl_engine, val_engine = _validate_engines(current)
+        _validate_alternation(current, rows, impl_engine)
+        _validate_roles_table(roles, impl_engine, val_engine)
     except ValueError as exc:
         return fail(str(exc))
 
-    print(
-        "CURRENT_PE.md OK — release context, roles, registry, and "
-        "alternation valid."
-    )
+    print("CURRENT_PE.md OK — release context, roles, registry, and alternation valid.")
     return 0
 
 
