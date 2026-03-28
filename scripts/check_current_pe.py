@@ -82,7 +82,9 @@ def _parse_registry(content: str) -> tuple[list[str], list[dict[str, str]]]:
     if len(block) < 3:
         raise ValueError("Active PE Registry table missing or malformed.")
 
-    header = [part.strip().lower() for part in block[0].strip("|").split("|")]
+    header = [
+        part.strip().lower() for part in block[0].strip("|").split("|")
+    ]
     rows: list[dict[str, str]] = []
     for raw in block[2:]:
         values = [part.strip() for part in raw.strip("|").split("|")]
@@ -105,7 +107,9 @@ def _validate_release_context(lines: list[str]) -> None:
     for field in ("Release", "Base branch", "Plan file", "Plan location"):
         value = _table_value(lines, field)
         if not value:
-            raise ValueError(f"Release context field '{field}' has no value.")
+            raise ValueError(
+                f"Release context field '{field}' has no value."
+            )
 
 
 def _validate_current_pe(lines: list[str]) -> tuple[str, str]:
@@ -136,7 +140,9 @@ def _validate_registry(pe: str, branch: str, rows: list[dict[str, str]]) -> None
 
     status = current["status"].lower()
     if status not in VALID_REGISTRY_STATUSES:
-        raise ValueError(f"Invalid registry status '{current['status']}'.")
+        raise ValueError(
+            f"Invalid registry status '{current['status']}'."
+        )
     if status not in VALID_ACTIVE_STATUSES:
         raise ValueError(
             "Active PE status must be planning or implementing, "
@@ -222,9 +228,7 @@ def main() -> int:
         current = next(row for row in rows if row["pe-id"] == pe)
         impl_engine = _engine(current["implementer-agentid"])
         val_engine = _engine(current["validator-agentid"])
-        expected_codex_role = (
-            "Implementer" if impl_engine == "codex" else "Validator"
-        )
+        expected_codex_role = "Implementer" if impl_engine == "codex" else "Validator"
         expected_claude_role = (
             "Implementer" if impl_engine == "claude" else "Validator"
         )
@@ -237,7 +241,9 @@ def main() -> int:
                 "engines."
             )
         if val_engine != ("claude" if impl_engine == "codex" else "codex"):
-            raise ValueError("Active PE registry engines are not opposite.")
+            raise ValueError(
+                "Active PE registry engines are not opposite."
+            )
     except ValueError as exc:
         return fail(str(exc))
 
