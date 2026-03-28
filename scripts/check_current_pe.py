@@ -215,9 +215,16 @@ def main() -> int:
         current = next(row for row in rows if row["pe-id"] == pe)
         impl_engine = _engine(current["implementer-agentid"])
         val_engine = _engine(current["validator-agentid"])
-        expected_codex_role = "Implementer" if impl_engine == "codex" else "Validator"
-        expected_claude_role = "Implementer" if impl_engine == "claude" else "Validator"
-        if roles["CODEX"] != expected_codex_role or roles["Claude Code"] != expected_claude_role:
+        expected_codex_role = (
+            "Implementer" if impl_engine == "codex" else "Validator"
+        )
+        expected_claude_role = (
+            "Implementer" if impl_engine == "claude" else "Validator"
+        )
+        if (
+            roles["CODEX"] != expected_codex_role
+            or roles["Claude Code"] != expected_claude_role
+        ):
             raise ValueError(
                 "Agent roles table does not match the active PE registry engines."
             )
@@ -226,7 +233,9 @@ def main() -> int:
     except ValueError as exc:
         return fail(str(exc))
 
-    print("CURRENT_PE.md OK — release context, roles, registry, and alternation valid.")
+    print(
+        "CURRENT_PE.md OK — release context, roles, registry, and alternation valid."
+    )
     return 0
 
 
