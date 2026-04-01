@@ -1,0 +1,25 @@
+repos:
+  - repo: https://github.com/psf/black
+    rev: 24.8.0
+    hooks:
+      - id: black
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.9
+    hooks:
+      - id: ruff
+
+  - repo: local
+    hooks:
+      - id: scope-gate
+        name: Agent scope gate
+        entry: python scripts/check_agent_scope.py
+        language: python
+        pass_filenames: false
+
+      - id: current-pe-validation
+        name: Validate CURRENT_PE.md
+        entry: python scripts/check_current_pe.py
+        language: python
+        files: CURRENT_PE\.md
+        pass_filenames: false
