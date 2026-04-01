@@ -1,51 +1,61 @@
-# HANDOFF.md — PE-AUTO-01
+# HANDOFF.md — PE-AUTO-02
 
-**PE:** PE-AUTO-01 — Bot Accounts and GitHub Classic PATs
-**Branch:** `feature/pe-auto-01-bot-accounts-pats`
-**Implementer:** Claude Code (`infra-impl-claude`)
-**Date:** 2026-03-26
+**PE:** PE-AUTO-02 — CURRENT_PE.md Validation in CI  
+**Branch:** `feature/pe-auto-02-current-pe-ci-validation`  
+**Implementer:** CODEX (`infra-impl-codex`)  
+**Date:** 2026-03-28
 
 ---
 
 ## Summary
 
-Delivered the bot account setup runbook, verification script, and unit tests
-for the three ELIS bot identities (`elis-codex-bot`, `elis-claude-bot`,
-`elis-pm-bot`). The PE resolves the single-account GitHub constraint that
-prevented the Validator from issuing a formal `gh pr review --approve` on the
-Implementer's PR.
+Delivered the `CURRENT_PE.md` validator and wired it into the main CI workflow.
+The new gate blocks malformed PE assignments before downstream jobs proceed and
+codifies the alternation and role-opposition rules that were previously only
+documented in `CURRENT_PE.md` and the release plan.
 
-Creating GitHub accounts and generating classic PATs are one-time PO
-actions — the runbook covers each step. The verification script
-(`verify_bot_config.py`) provides a CI-compatible gate once the secrets are in
-place.
+The branch adds:
 
-All PO setup steps were completed on 2026-03-26 and all four ACs verified live
-(see §Live verification evidence below).
+- `scripts/check_current_pe.py`
+- `tests/test_check_current_pe.py`
+- a new `current-pe-check` job in `.github/workflows/ci.yml`
+
+The CI workflow now runs `python scripts/check_current_pe.py` on pull requests
+and on pushes to `main` and `release/2.0`.
 
 ---
 
 ## Files changed
 
-```
-A  .github/workflows/bot-auth-verify.yml
-A  docs/openclaw/BOT_ACCOUNTS_SETUP.md
-A  scripts/verify_bot_config.py
-A  tests/test_verify_bot_config.py
-M  HANDOFF.md
+```text
+M  .github/workflows/ci.yml
+A  scripts/check_current_pe.py
+A  tests/test_check_current_pe.py
 ```
 
 ---
 
-## Round 2 fixes (CODEX FAIL — 2026-03-26)
+## Design decisions
 
-| Finding | Fix |
-|---|---|
-| F1 — AC-3 no runner execution evidence | Added `bot-auth-verify.yml` workflow with three jobs: verify-codex-auth (OPENAI_API_KEY + codex --version), verify-claude-auth (CLAUDE_SETUP_TOKEN, no ANTHROPIC_API_KEY + claude --version), verify-bot-tokens (all three bot tokens via verify_bot_config.py) |
-| F2 — AC-4 no bot token wiring in workflows | `bot-auth-verify.yml` verify-bot-tokens job uses CODEX_BOT_TOKEN / CLAUDE_BOT_TOKEN / PM_BOT_TOKEN; comment documents secret separation (bot tokens for GitHub ops, auth secrets for CLI only) |
-| F3 — runbook says fine-grained PATs, HANDOFF says classic PATs | Runbook title, background, Step 3 all updated to "classic PATs"; rationale for why fine-grained PATs are not viable added to Background section |
-| Round 1 — permission check was a role check claimed as workflow scope check | Renamed `_check_workflows_permission` → `_check_admin_role`; docstring documents that classic PAT scopes cannot be verified non-destructively via API; output string updated to "admin repository role"; tests updated accordingly |
-| Round 1 — branch protection contexts did not match live CI surface | Runbook Step 6 contexts updated to include review-evidence-check, secrets-scope-check, and all openclaw-* checks matching the actual CI surface |
+**Why the validator reads markdown tables directly rather than introducing a new format:**
+`CURRENT_PE.md` is already the normative PM-controlled file. The PE solves the
+single-point-of-failure problem by validating the existing structure in place,
+instead of adding a second schema source that could drift.
+
+**Why the alternation rule is checked against the latest merged PE in the same domain:**
+The plan defines alternation per domain, not globally. The validator therefore
+looks at the most recent `merged` row in the same domain and ensures the current
+implementer engine alternates relative to that row.
+
+**Why `current-pe-check` runs before downstream OpenClaw and SLR jobs:**
+An invalid `CURRENT_PE.md` should fail fast and prevent the rest of the pipeline
+from acting on a broken PM state. The workflow therefore places
+`current-pe-check` in the dependency chain for the later jobs.
+
+**Why the test suite exceeds the minimum of eight unit tests:**
+The plan requires at least eight unit tests. The branch adds ten targeted tests
+to cover the acceptance criteria plus two extra mismatch cases
+(missing registry row and roles-table mismatch) that are high-value regressions.
 
 ---
 
@@ -53,152 +63,137 @@ M  HANDOFF.md
 
 | # | Criterion | Status |
 |---|---|---|
-| AC-1 | `elis-codex-bot` opens PR and `elis-claude-bot` approves without "Cannot approve your own PR" | ✓ — PR #307 opened as `elis-codex-bot`; `elis-claude-bot` approved without error (2026-03-26) |
-| AC-2 | Branch protection active — PR without green status check does not merge | ✓ — `required_approving_review_count: 1`, contexts: quality/tests/validate/gate-1; confirmed via `gh api` (2026-03-26) |
-| AC-3 | Secrets configured — `verify_codex_auth.py` and `verify_claude_auth.py` exit 0 on runners | ✓ — run 23645665023 (2026-03-27): verify-codex-auth PASS (codex-cli 0.117.0, OPENAI_API_KEY length=2033), verify-claude-auth PASS (claude 2.1.85, CLAUDE_SETUP_TOKEN length=108, ANTHROPIC_API_KEY absent) |
-| AC-4 | `OPENAI_API_KEY` and `ANTHROPIC_API_KEY` removed from agent runners | ✓ — `bot-auth-verify.yml` wires CODEX_BOT_TOKEN / CLAUDE_BOT_TOKEN / PM_BOT_TOKEN for GitHub ops; auth secrets (OPENAI_API_KEY, CLAUDE_SETUP_TOKEN) used for CLI only; ANTHROPIC_API_KEY absent from all runner jobs |
+| AC-1 | `check_current_pe.py` exits 0 on the current state of `CURRENT_PE.md` | ✓ — evidenced by the `current-pe-check` job on PR #308 |
+| AC-2 | Blank field → exits 1 with descriptive error message | ✓ — covered by `test_blank_release_field_fails` |
+| AC-3 | Alternation rule violation → exits 1 | ✓ — covered by `test_alternation_rule_violation_fails` |
+| AC-4 | CI step active — push with invalid `CURRENT_PE.md` is blocked | ✓ — `current-pe-check` is active in `.github/workflows/ci.yml` and is a dependency for downstream CI jobs |
+| AC-5 | 8 unit tests covering all validation cases | ✓ — 10 unit tests added in `tests/test_check_current_pe.py` |
 
 ---
 
-## Design decisions
+## Validation commands and outputs
 
-**Why `verify_bot_config.py` checks the workflow permission on `elis-pm-bot` only:**
-Only `elis-pm-bot` needs admin/maintain access for workflow dispatch and merge
-automation. The implementer/validator bots need write access for contents and
-pull requests only. The permission check uses the collaborators API
-(`role_name: admin | maintain`) to avoid dependence on the Workflows permission
-field, which is not exposed in fine-grained PAT API responses.
-
-**Why branch protection is a PO action rather than a code deliverable:**
-Configuring branch protection via `gh api` requires the caller to be the
-repository owner (`rochasamurai`). The CI bot accounts (`elis-pm-bot`) do not
-yet exist at implementation time, so no programmatic path is available. The
-runbook provides the exact API call.
-
-**Why classic PATs instead of fine-grained PATs:**
-GitHub fine-grained PATs can only target the token owner's own account as
-resource owner — bot accounts cannot select `rochasamurai` as resource owner
-because `rochasamurai` is a personal account, not an organisation. Classic PATs
-with `repo` scope (+ `workflow` for `elis-pm-bot`) achieve the same result
-without the resource-owner restriction.
-
-**Why AC-3 uses structural checks only, not live API auth calls:**
-`verify_codex_auth.py` and `verify_claude_auth.py` verify that secrets are present and
-CLIs are installed (`--version`). Neither script makes an authenticated API call.
-Open source CI best practice separates two levels:
-- **Level 1 — structural (every push):** secret set + CLI on PATH + `--version` exits 0.
-  Zero cost, no network dependency, safe for forked PRs (no secret access).
-- **Level 2 — live auth (workflow_dispatch only):** actual API call confirms the token
-  is accepted server-side. Costs one API call; not appropriate for push triggers.
-PE-AUTO-01 delivers Level 1. Level 2 is tracked as AUTO-01 in `docs/_active/TODO.md`
-and should be implemented in a follow-up PE (PE-AUTO-02).
-
-**Why AC-1 and AC-2 required PO steps before full verification:**
-The bot accounts do not exist in GitHub at the time this branch is opened.
-Following the same pattern as PE-AUTH-01 (token extracted by PO) and PE-AUTH-02
-(setup-token generated by PO), the runbook captures the precise steps and the
-verification script provides the repeatable CI gate once secrets are in place.
-
----
-
-## Live verification evidence (2026-03-26)
-
-### AC-1 — Bot PR + approval smoke test
+### Working tree and scope
 
 ```text
-# PR opened as elis-codex-bot
-gh pr create --title "chore: bot account smoke test" ...
-→ https://github.com/rochasamurai/ELIS-SLR-Agent/pull/307
+git status -sb
+## feature/pe-auto-02-current-pe-ci-validation...origin/feature/pe-auto-02-current-pe-ci-validation
 
-# Approved as elis-claude-bot
-gh pr review 307 --approve --body "AC-1 smoke test — elis-claude-bot."
-→ ✓ Approved pull request rochasamurai/ELIS-SLR-Agent#307
+git diff --name-status origin/main..HEAD
+M	.github/workflows/ci.yml
+A	scripts/check_current_pe.py
+A	tests/test_check_current_pe.py
 
-# Cleaned up
-gh pr close 307  → ✓ Closed pull request rochasamurai/ELIS-SLR-Agent#307
-git push origin --delete test/bot-smoke  → [deleted] test/bot-smoke
-```
-
-### AC-2 — Branch protection
-
-```text
-gh api /repos/rochasamurai/ELIS-SLR-Agent/branches/main/protection \
-  --jq '.required_pull_request_reviews.required_approving_review_count'
-→ 1
-
-Required status checks: quality, tests, validate, gate-1
-allow_force_pushes: false
-allow_deletions: false
-```
-
-### AC-3 — Runner auth verification (bot-auth-verify.yml run 23645665023)
-
-Run URL: https://github.com/rochasamurai/ELIS-SLR-Agent/actions/runs/23645665023
-Triggered: push to feature/pe-auto-01-bot-accounts-pats (commit a34aad2) — 2026-03-27
-
-```text
-✓ Verify Codex CLI auth (AC-3a)   — 10s
-✓ Verify Claude Code auth (AC-3b) — 19s
-✓ Verify bot token identities (AC-4) — 11s
-```
-
-AC-3a (Codex) step output:
-```text
-OK: OPENAI_API_KEY is set (length=2033)
-OK: codex CLI found at /usr/local/bin/codex
-OK: codex --version → codex-cli 0.117.0
-
-codex auth verification PASS
-```
-
-AC-3b (Claude) step output:
-```text
-OK: CLAUDE_SETUP_TOKEN is set (length=108)
-OK: ANTHROPIC_API_KEY is absent from environment
-OK: claude CLI found at /home/runner/.local/bin/claude
-OK: claude --version -> 2.1.85 (Claude Code)
-
-claude auth verification PASS
-```
-
-AC-4 (bot tokens) step output:
-```text
-OK: CODEX_BOT_TOKEN set (length=40)
-OK: elis-codex-bot authenticated — login=elis-codex-bot
-OK: CLAUDE_BOT_TOKEN set (length=40)
-OK: elis-claude-bot authenticated — login=elis-claude-bot
-OK: PM_BOT_TOKEN set (length=40)
-OK: elis-pm-bot authenticated — login=elis-pm-bot
-OK: elis-pm-bot has admin repository role
-
-bot config verification PASS
-```
-
-> **Note on OPENAI_API_KEY:** Local Codex auth uses `auth_mode: chatgpt` (OAuth JWT).
-> The `OPENAI_API_KEY` GitHub Secret holds the OAuth `access_token` (a JWT, length 2033).
-> `verify_codex_auth.py` checks presence and runs `codex --version` (no network auth
-> required); the token satisfies both checks. Renewal: re-extract from
-> `~/.codex/auth.json` `tokens.access_token` when the secret expires.
-
----
-
-## Quality gates (verbatim output)
-
-```text
-python -m black --check .
-All done! ✨ 🍰 ✨
-131 files would be left unchanged.
-
-python -m ruff check .
-All checks passed!
-
-python -m pytest
-614 passed, 17 warnings in 15.00s
+git diff --stat origin/main..HEAD
+ .github/workflows/ci.yml       |  22 +++-
+ scripts/check_current_pe.py    | 266 +++++++++++++++++++++++++++++++++++++++++
+ tests/test_check_current_pe.py | 159 ++++++++++++++++++++++++
+ 3 files changed, 446 insertions(+), 1 deletion(-)
 
 python scripts/check_agent_scope.py
 Agent scope clean — no secret-pattern files detected in worktree.
 ```
 
+### Repository state
+
+```text
+git log -5 --oneline --decorate
+1b07a66 (HEAD -> feature/pe-auto-02-current-pe-ci-validation, origin/feature/pe-auto-02-current-pe-ci-validation) refactor(pe-auto-02): rewrite CURRENT_PE validator cleanly
+af450dc fix(pe-auto-02): collapse simple validator expressions
+4d74d02 fix(pe-auto-02): simplify CURRENT_PE validator style
+ad0af32 fix(pe-auto-02): align CURRENT_PE validator formatting
+37a9150 fix(pe-auto-02): format CURRENT_PE validator
+```
+
+### PR state
+
+```text
+gh pr view 308
+title:	WIP: feat(pe-auto-02): CURRENT_PE CI validation
+state:	DRAFT
+author:	rochasamurai
+number:	308
+url:	https://github.com/rochasamurai/ELIS-SLR-Agent/pull/308
+additions:	446
+deletions:	1
+
+gh pr checks 308
+Parse verdict and auto-merge if PASS	pass	5s
+Projects Auto-Add / add_and_set_status	pass	4s
+current-pe-check	pass	6s
+openclaw-config-sync-check	pass	7s
+openclaw-doctor-check	pass	9s
+openclaw-health-check	pass	5s
+quality	pass	10s
+review-evidence-check	pass	4s
+secrets-scope-check	pass	5s
+slr-quality-check	pass	10s
+tests	pass	17s
+validate	pass	15s
+deep-review	skipping	0
+openclaw-security-check	pass	9s
+```
+
+### CI evidence — quality gate
+
+Run: `https://github.com/rochasamurai/ELIS-SLR-Agent/actions/runs/23684434750`
+
+```text
+ruff check .
+All checks passed!
+
+black --check .
+All done! ✨ 🍰 ✨
+133 files would be left unchanged.
+```
+
+### CI evidence — CURRENT_PE validator
+
+Run: `https://github.com/rochasamurai/ELIS-SLR-Agent/actions/runs/23684434750`
+
+```text
+python scripts/check_current_pe.py
+CURRENT_PE.md OK — release context, roles, registry, and alternation valid.
+```
+
+### CI evidence — tests
+
+Run: `https://github.com/rochasamurai/ELIS-SLR-Agent/actions/runs/23684434750`
+
+```text
+pytest -q
+Found 42 test candidate file(s). Running pytest…
+........................................................................ [ 11%]
+........................................................................ [ 23%]
+........................................................................ [ 34%]
+........................................................................ [ 46%]
+........................................................................ [ 57%]
+........................................................................ [ 69%]
+........................................................................ [ 80%]
+........................................................................ [ 92%]
+................................................                         [100%]
+=============================== warnings summary ===============================
+tests/test_pipeline_screen.py::TestScreenMain::test_write_output
+  /home/runner/work/ELIS-SLR-Agent/ELIS-SLR-Agent/tests/test_pipeline_screen.py:217: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/pytest-of-runner/pytest-0/test_write_output0/appendix_b.json' mode='r' encoding='utf-8'>
+    data = json.loads(open(out, encoding="utf-8").read())
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+```
+
+### Unit-test coverage count
+
+```text
+(Get-Content tests/test_check_current_pe.py | Select-String '^def test_').Count
+10
+```
+
 ---
 
-*ELIS SLR Agent · HANDOFF.md · infra-impl-claude · 2026-03-27*
+## Ready for Validator
+
+Yes. The branch is scoped to the PE, CI is green, and `HANDOFF.md` is now the
+last implementer commit as required by `AGENTS.md`.
+
+---
+
+*ELIS SLR Agent · HANDOFF.md · infra-impl-codex · 2026-03-28*
