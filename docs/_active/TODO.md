@@ -6,6 +6,30 @@ Items that are known limitations or future improvements, not blocking current wo
 
 ## CI / Bot automation
 
+### AUTO-02 — gate-1 commit status lost on branch update
+
+**Status:** Open
+**Priority:** Medium (manual workaround: re-post via `gh api` after every branch update)
+**Logged:** 2026-04-01
+
+**Description:**
+`gate-1` is a required branch-protection status posted as a commit status on a specific
+SHA. Every time the feature branch is updated (GitHub "Update branch" button or
+`gh api .../update-branch`), a new merge commit is created with a new SHA — the
+`gate-1` status on the old SHA is no longer visible to branch protection, which resets
+it to "Expected — Waiting for status to be reported".
+
+**Impact:**
+Manual `gh api .../statuses/$HEAD` call required after every branch update. Observed on
+PR #306, #308, and #309.
+
+**Resolution:**
+PE-AUTO-06 (PE Sequencer) posts `gate-1` as part of the automatic advance workflow.
+Once PE-AUTO-06 is merged, the sequencer will always post `gate-1` on the correct HEAD
+immediately after branch operations, eliminating the manual step.
+
+---
+
 ### AUTO-01 — Live API auth verification for Codex and Claude Code tokens
 
 **Status:** Open
