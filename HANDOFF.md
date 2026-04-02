@@ -20,7 +20,9 @@ assessment findings:
 Deliverables:
 - `.pre-commit-config.yaml` — black, ruff, scope-gate, current-pe-validation
 - `handoffs/` — namespaced HANDOFF directory; PE-AUTO-01 and PE-AUTO-02 migrated
+- `scripts/copy_handoff.py` — copies `handoffs/HANDOFF_{PE_ID}.md` to root `HANDOFF.md`
 - `scripts/check_handoff.py` — updated to resolve namespaced path before root fallback
+- `tests/test_copy_handoff.py` — 4 unit tests for copy script
 - `tests/test_check_handoff_namespacing.py` — 8 unit tests for new resolution logic
 - `docs/_active/CONTRIBUTING.md` — Section 0 added: `pre-commit install` onboarding
 
@@ -34,7 +36,9 @@ A  handoffs/.gitkeep
 A  handoffs/HANDOFF_PE-AUTO-01.md
 A  handoffs/HANDOFF_PE-AUTO-02.md
 A  handoffs/HANDOFF_PE-AUTO-03.md
+A  scripts/copy_handoff.py
 M  scripts/check_handoff.py
+A  tests/test_copy_handoff.py
 A  tests/test_check_handoff_namespacing.py
 M  docs/_active/CONTRIBUTING.md
 M  HANDOFF.md
@@ -48,7 +52,7 @@ M  HANDOFF.md
 |---|---|---|
 | AC-1 | `pre-commit run --all-files` exits 0 on the current repo state | ✓ — evidenced in Validation Commands below |
 | AC-2 | `git commit` with a black error is blocked locally | ✓ — hook installed; black runs on staged Python files |
-| AC-3 | Historical HANDOFFs migrated to `handoffs/`; root `HANDOFF.md` is a script-generated copy | ✓ — PE-AUTO-01 and PE-AUTO-02 in `handoffs/`; root is copy of this file |
+| AC-3 | Historical HANDOFFs migrated to `handoffs/`; root `HANDOFF.md` is a script-generated copy | ✓ — PE-AUTO-01 and PE-AUTO-02 in `handoffs/`; root regenerated via `python scripts/copy_handoff.py`; 4 unit tests pass |
 | AC-4 | `check_handoff.py` exits 0 via root `HANDOFF.md` and via `handoffs/HANDOFF_{PE_ID}.md` | ✓ — both paths tested; 8 unit tests pass |
 | AC-5 | Onboarding documentation updated with `pre-commit install` instruction | ✓ — Section 0 added to `docs/_active/CONTRIBUTING.md` |
 
@@ -62,9 +66,9 @@ fresh clones before any HANDOFF files are written.
 
 **Why no symlink for root `HANDOFF.md`:**
 Symlinks behave inconsistently on Windows (`core.symlinks=false` by default) and
-across git clients. The root `HANDOFF.md` is a plain file copy of the active PE's
-namespaced HANDOFF, updated at each PE advance (PE-AUTO-06 Sequencer will automate
-this copy step).
+across git clients. `scripts/copy_handoff.py` produces the root `HANDOFF.md` as a
+plain-file copy of the active PE's namespaced HANDOFF. PE-AUTO-06 Sequencer will
+invoke `copy_handoff.py` automatically at each PE advance.
 
 **Why `check_handoff.py` falls back to root `HANDOFF.md`:**
 During the migration period, older PEs on existing branches still have only the root
