@@ -21,8 +21,8 @@
 
 | Field   | Value                                              |
 |---------|----------------------------------------------------|
-| PE      | PE-AUTO-04                                         |
-| Branch  | feature/pe-auto-04-impl-runner                     |
+| PE      | PE-AUTO-05                                         |
+| Branch  | feature/pe-auto-05-validator-runner                |
 
 ---
 
@@ -30,8 +30,8 @@
 
 | Agent       | Role        |
 |-------------|-------------|
-| CODEX       | Implementer |
-| Claude Code | Validator   |
+| Claude Code | Implementer |
+| CODEX       | Validator   |
 
 ---
 
@@ -84,7 +84,8 @@
 | PE-AUTO-01  | infra           | infra-impl-claude    | infra-val-codex    | feature/pe-auto-01-bot-accounts-pats              | merged          | 2026-03-28   |
 | PE-AUTO-02  | infra           | infra-impl-codex     | infra-val-claude   | feature/pe-auto-02-current-pe-ci-validation       | merged          | 2026-04-01   |
 | PE-AUTO-03  | infra           | infra-impl-claude    | infra-val-codex    | feature/pe-auto-03-precommit-handoff-namespacing  | merged          | 2026-04-03   |
-| PE-AUTO-04  | infra           | infra-impl-codex     | infra-val-claude   | feature/pe-auto-04-impl-runner                    | implementing    | 2026-04-03   |
+| PE-AUTO-04  | infra           | infra-impl-codex     | infra-val-claude   | feature/pe-auto-04-impl-runner                    | merged          | 2026-04-03   |
+| PE-AUTO-05  | infra           | infra-impl-claude    | infra-val-codex    | feature/pe-auto-05-validator-runner               | implementing    | 2026-04-03   |
 
 Valid status values:
 - `planning`
@@ -123,6 +124,7 @@ PM housekeeping entries (prefix `PM-CHORE-XX`):
 | PM-CHORE-20  | Closed PE-AUTO-01 as merged (PR #306, PASS verdict). Removed `.worktrees/pe-auto-01`. Opened PE-AUTO-02 (CURRENT_PE.md Validation in CI) with `infra-impl-codex` as Implementer and `infra-val-claude` as Validator per alternation rule. | 2026-03-28 |
 | PM-CHORE-21  | Closed PE-AUTO-02 as merged (PR #309, PASS verdict — continuation of #308). Opened PE-AUTO-03 (Pre-commit Hooks + HANDOFF Namespacing) with `infra-impl-claude` as Implementer and `infra-val-codex` as Validator per alternation rule. Logged AUTO-02 backlog item: gate-1 status lost on branch update, resolved by PE-AUTO-06. | 2026-04-01 |
 | PM-CHORE-22  | Closed PE-AUTO-03 as merged (PR #310, PASS verdict — 1 FAIL iteration resolved). Removed `.worktrees/pe-auto-03`. Opened PE-AUTO-04 (Implementer Agent Runner) with `infra-impl-codex` as Implementer and `infra-val-claude` as Validator per alternation rule. | 2026-04-03 |
+| PM-CHORE-23  | Closed PE-AUTO-04 as merged (PR #311, PASS verdict). Opened PE-AUTO-05 (Validator Agent Runner) with `infra-impl-claude` as Implementer and `infra-val-codex` as Validator per alternation rule. | 2026-04-03 |
 
 Alternation rule:
 - For consecutive PEs in the same domain, the implementer engine must alternate (`codex` <-> `claude`).
