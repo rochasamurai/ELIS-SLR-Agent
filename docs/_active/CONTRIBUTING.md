@@ -7,6 +7,31 @@ To ensure consistency and reproducibility, all contributions must follow these r
 
 ---
 
+## 0. Local development setup (required)
+
+Before making any commit, install the pre-commit hooks:
+
+```bash
+pip install pre-commit
+pre-commit install
+```
+
+This installs hooks that run automatically on every `git commit`:
+- **black** — code formatting
+- **ruff** — linting
+- **scope-gate** — prevents secret-pattern files entering commits
+- **current-pe-validation** — validates `CURRENT_PE.md` on every change
+
+To run all hooks manually against the full repo:
+```bash
+pre-commit run --all-files
+```
+
+> Hooks are defined in `.pre-commit-config.yaml` at the repo root.
+> CI enforces the same checks — local hooks catch failures before push.
+
+---
+
 ## 1. General Principles
 - **No direct edits on `main`** — always use a branch + Pull Request (PR).
 - **One logical change per PR** (schema update, doc update, bugfix, etc).
