@@ -1,0 +1,64 @@
+name: ELIS - Validator Dispatcher
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  actions: write
+  pull-requests: read
+
+jobs:
+  dispatch-validator:
+    name: Dispatch validator runner for active PE
+    runs-on: ubuntu-latest
+    # Only trigger on PR comments containing the Gate 1 assignment phrase.
+    if: |
+      github.event.issue.pull_request != null &&
+      contains(github.event.comment.body, '@claude-code — assigned as Validator. Begin review.')
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -e ".[dev]" --quiet
+
+      - name: Resolve validator inputs from CURRENT_PE.md
+        id: current
+        env:
+          PR_NUMBER: ${{ github.event.issue.number }}
+          GH_TOKEN: ${{ github.token }}
+        run: python scripts/dispatch_validator_runner.py
+
+      - name: Dispatch validator workflow
+        if: steps.current.outputs.should_dispatch == 'true'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.PM_BOT_TOKEN }}
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'validator-runner.yml',
+              ref: 'main',
+              inputs: {
+                pe_id:       '${{ steps.current.outputs.pe_id }}',
+                branch:      '${{ steps.current.outputs.branch }}',
+                engine:      '${{ steps.current.outputs.engine }}',
+                plan_file:   '${{ steps.current.outputs.plan_file }}',
+                base_branch: '${{ steps.current.outputs.base_branch }}',
+                pr_number:   '${{ steps.current.outputs.pr_number }}'
+              }
+            });
+
+      - name: Log skipped dispatch
+        if: steps.current.outputs.should_dispatch != 'true'
+        run: |
+          echo "Gate 1 comment detected but PR branch does not match active PE branch — skipping validator dispatch."

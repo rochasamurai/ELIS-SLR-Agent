@@ -1,0 +1,134 @@
+name: Validator Agent Runner
+
+on:
+  workflow_dispatch:
+    inputs:
+      pe_id:
+        required: true
+        type: string
+      branch:
+        required: true
+        type: string
+      engine:
+        required: true
+        type: choice
+        options:
+          - codex
+          - claude
+      plan_file:
+        required: true
+        type: string
+      base_branch:
+        required: true
+        type: string
+      pr_number:
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  run-validator:
+    name: Run validator for ${{ inputs.pe_id }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+          fetch-depth: 0
+          # Validator uses the opposite bot token to the implementer.
+          # codex validator -> elis-codex-bot, claude validator -> elis-claude-bot.
+          token: ${{ inputs.engine == 'codex' && secrets.CODEX_BOT_TOKEN || secrets.CLAUDE_BOT_TOKEN }}
+
+      - name: Configure Git identity (Codex validator)
+        if: inputs.engine == 'codex'
+        run: |
+          git config user.name "elis-codex-bot"
+          git config user.email "elis-codex-bot@users.noreply.github.com"
+
+      - name: Configure Git identity (Claude validator)
+        if: inputs.engine == 'claude'
+        run: |
+          git config user.name "elis-claude-bot"
+          git config user.email "elis-claude-bot@users.noreply.github.com"
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Install Codex CLI
+        if: inputs.engine == 'codex'
+        run: npm install -g @openai/codex
+
+      - name: Install Claude CLI
+        if: inputs.engine == 'claude'
+        run: curl -fsSL https://claude.ai/install.sh | bash
+
+      - name: Verify Codex auth
+        if: inputs.engine == 'codex'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python scripts/verify_codex_auth.py
+
+      - name: Verify Claude auth
+        if: inputs.engine == 'claude'
+        env:
+          CLAUDE_SETUP_TOKEN: ${{ secrets.CLAUDE_SETUP_TOKEN }}
+        run: python scripts/verify_claude_auth.py
+
+      - name: Run CODEX validator
+        if: inputs.engine == 'codex'
+        env:
+          GH_TOKEN: ${{ secrets.CODEX_BOT_TOKEN }}
+        run: |
+          python scripts/run_codex_validator.py \
+            --pe-id "${{ inputs.pe_id }}" \
+            --plan "${{ inputs.plan_file }}" \
+            --branch "${{ inputs.branch }}" \
+            --base-branch "${{ inputs.base_branch }}" \
+            --pr-number "${{ inputs.pr_number }}"
+
+      - name: Run Claude validator
+        if: inputs.engine == 'claude'
+        env:
+          GH_TOKEN: ${{ secrets.CLAUDE_BOT_TOKEN }}
+        run: |
+          python scripts/run_claude_validator.py \
+            --pe-id "${{ inputs.pe_id }}" \
+            --plan "${{ inputs.plan_file }}" \
+            --branch "${{ inputs.branch }}" \
+            --base-branch "${{ inputs.base_branch }}" \
+            --pr-number "${{ inputs.pr_number }}"
+
+      - name: Read verdict from REVIEW file
+        id: verdict
+        run: |
+          python scripts/parse_verdict.py
+        env:
+          REVIEW_FILE: REVIEW_${{ inputs.pe_id != '' && replace(inputs.pe_id, '-', '_') || 'UNKNOWN' }}.md
+
+      - name: Post fail assignment (elis-pm-bot)
+        if: steps.verdict.outputs.verdict == 'FAIL'
+        env:
+          GH_TOKEN: ${{ secrets.PM_BOT_TOKEN }}
+        run: |
+          python - <<'EOF'
+          import os, sys
+          sys.path.insert(0, '.')
+          from scripts.validator_runner_common import post_fail_assignment
+          engine = '${{ inputs.engine }}'
+          # Implementer engine is opposite of validator engine.
+          implementer_engine = 'codex' if engine == 'claude' else 'claude'
+          post_fail_assignment('${{ inputs.pr_number }}', implementer_engine)
+          EOF
