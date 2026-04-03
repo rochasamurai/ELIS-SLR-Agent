@@ -154,3 +154,60 @@ All checks passed!
 python scripts/check_agent_scope.py
 Agent scope clean — no secret-pattern files detected in worktree.
 ```
+
+---
+
+## Agent update — CODEX / PE-AUTO-05 / 2026-04-03 (Round 3)
+
+### Verdict
+FAIL
+
+### Gate results
+black: PASS (CI)
+ruff: PASS
+pytest: no new implementer changes since Round 2; CI remains green
+PE-specific tests: unchanged from Round 2
+
+### Scope
+```text
+M	.github/workflows/auto-assign-validator.yml
+A	.github/workflows/validator-dispatch.yml
+A	.github/workflows/validator-runner.yml
+M	HANDOFF.md
+A	REVIEW_PE_AUTO_05.md
+A	handoffs/HANDOFF_PE-AUTO-05.md
+A	scripts/dispatch_validator_runner.py
+A	scripts/run_claude_validator.py
+A	scripts/run_codex_validator.py
+A	scripts/validator_runner_common.py
+A	tests/test_dispatch_validator_runner.py
+A	tests/test_validator_runner_common.py
+```
+
+### Required fixes
+- No new implementer commit has landed since the previous validator round. The branch head remains `1a78dd9`, so the Round 2 blockers are unchanged.
+- AC-1 is still not evidenced as working end-to-end on the live PR. PR #312 still shows repeated GitHub Actions comments saying `Gate 1 — manual PM review required` and no automated validator-assignment comment.
+- AC-3 remains under-verified. `verify_formal_review_posted()` still checks only for the existence of any review entry, not that the review was posted by the expected opposite bot account for the active PE.
+
+### Evidence
+```text
+git log --oneline --decorate -5
+1a78dd9 (HEAD -> feature/pe-auto-05-validator-runner, origin/feature/pe-auto-05-validator-runner) review(pe-auto-05): revalidate validator runner
+21c7963 fix(pe-auto-05): resolve CODEX FAIL — AC-1 engine-agnostic trigger, AC-2/AC-3 independent verification
+50a4713 review(pe-auto-05): validate validator runner
+
+gh pr view 312 --json headRefOid,reviews,comments
+headRefOid: 1a78dd93863b5828b919ab85e9ec72ca1087d6c7
+reviews: []
+comments include:
+- github-actions: "## ⚠️ Gate 1 — manual PM review required"
+- github-actions: "## ⚠️ Gate 1 — manual PM review required"
+- github-actions: "## ⚠️ Gate 1 — manual PM review required"
+- github-actions: "## ⚠️ Gate 1 — manual PM review required"
+
+ruff check .
+All checks passed!
+
+python scripts/check_agent_scope.py
+Agent scope clean — no secret-pattern files detected in worktree.
+```
