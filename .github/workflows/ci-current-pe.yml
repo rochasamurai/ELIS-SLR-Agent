@@ -1,0 +1,53 @@
+name: ELIS - CURRENT_PE Dispatcher
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "CURRENT_PE.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  dispatch-implementer:
+    name: Dispatch implementer runner for active PE
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Resolve active PE from CURRENT_PE.md
+        id: current
+        run: python scripts/dispatch_implementer_runner.py
+
+      - name: Dispatch implementer workflow
+        if: steps.current.outputs.should_dispatch == 'true'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.PM_BOT_TOKEN }}
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'implementer-runner.yml',
+              ref: 'main',
+              inputs: {
+                pe_id: '${{ steps.current.outputs.pe_id }}',
+                branch: '${{ steps.current.outputs.branch }}',
+                engine: '${{ steps.current.outputs.engine }}',
+                plan_file: '${{ steps.current.outputs.plan_file }}',
+                base_branch: '${{ steps.current.outputs.base_branch }}'
+              }
+            });
+
+      - name: Log skipped dispatch
+        if: steps.current.outputs.should_dispatch != 'true'
+        run: echo "CURRENT_PE.md is not in implementing state; no implementer dispatch triggered."
