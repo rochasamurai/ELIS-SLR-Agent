@@ -1,0 +1,38 @@
+"""Resolve CURRENT_PE.md into workflow_dispatch inputs for PE-AUTO-04."""
+
+from __future__ import annotations
+
+import os
+import sys
+from pathlib import Path
+
+from scripts.implementer_runner_common import RunnerError, parse_current_pe
+
+
+def main() -> int:
+    try:
+        current_pe_path = Path(os.environ.get("CURRENT_PE_PATH", "CURRENT_PE.md"))
+        context = parse_current_pe(current_pe_path)
+        should_dispatch = context.status == "implementing"
+        lines = [
+            f"should_dispatch={'true' if should_dispatch else 'false'}",
+            f"pe_id={context.pe_id}",
+            f"branch={context.branch}",
+            f"engine={context.implementer_engine}",
+            f"plan_file={context.plan_file}",
+            f"base_branch={context.base_branch}",
+        ]
+        output_path = os.environ.get("GITHUB_OUTPUT")
+        if output_path:
+            with open(output_path, "a", encoding="utf-8") as handle:
+                handle.write("\n".join(lines) + "\n")
+        else:
+            print("\n".join(lines))
+        return 0
+    except RunnerError as exc:
+        print(f"FAIL: {exc}", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
