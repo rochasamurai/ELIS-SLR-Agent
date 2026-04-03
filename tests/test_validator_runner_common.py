@@ -232,6 +232,65 @@ def test_post_fail_assignment_calls_gh_claude(monkeypatch):
 
 
 # ---------------------------------------------------------------------------
+# verify_review_committed
+# ---------------------------------------------------------------------------
+
+
+def test_verify_review_committed_passes_when_file_in_log(monkeypatch):
+    monkeypatch.setattr(
+        common.subprocess,
+        "run",
+        lambda *_a, **_kw: subprocess.CompletedProcess(
+            [], 0, stdout="REVIEW_PE_AUTO_05.md\nsome_other.py\n", stderr=""
+        ),
+    )
+    common.verify_review_committed("PE-AUTO-05", "main")  # must not raise
+
+
+def test_verify_review_committed_fails_when_file_absent(monkeypatch):
+    monkeypatch.setattr(
+        common.subprocess,
+        "run",
+        lambda *_a, **_kw: subprocess.CompletedProcess(
+            [], 0, stdout="scripts/other.py\n", stderr=""
+        ),
+    )
+    with pytest.raises(common.RunnerError, match="not found in commits"):
+        common.verify_review_committed("PE-AUTO-05", "main")
+
+
+# ---------------------------------------------------------------------------
+# verify_formal_review_posted
+# ---------------------------------------------------------------------------
+
+
+def test_verify_formal_review_posted_passes_with_review(monkeypatch):
+    monkeypatch.setattr(
+        common.subprocess,
+        "run",
+        lambda *_a, **_kw: subprocess.CompletedProcess(
+            [],
+            0,
+            stdout='{"reviews": [{"state": "APPROVED", "author": {"login": "elis-codex-bot"}}]}',
+            stderr="",
+        ),
+    )
+    common.verify_formal_review_posted("312")  # must not raise
+
+
+def test_verify_formal_review_posted_fails_with_no_reviews(monkeypatch):
+    monkeypatch.setattr(
+        common.subprocess,
+        "run",
+        lambda *_a, **_kw: subprocess.CompletedProcess(
+            [], 0, stdout='{"reviews": []}', stderr=""
+        ),
+    )
+    with pytest.raises(common.RunnerError, match="No formal GitHub review"):
+        common.verify_formal_review_posted("312")
+
+
+# ---------------------------------------------------------------------------
 # run_validator — engine mismatch guard
 # ---------------------------------------------------------------------------
 

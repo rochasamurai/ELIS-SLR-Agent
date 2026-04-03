@@ -12,6 +12,7 @@ Imports shared utilities from implementer_runner_common to stay DRY.
 
 from __future__ import annotations
 
+import json
 import re
 import subprocess
 import sys
@@ -114,6 +115,49 @@ def read_verdict(repo_root: Path, pe_id: str) -> str:
     return "NOT_FOUND"
 
 
+def verify_review_committed(pe_id: str, base_branch: str) -> None:
+    """Raise RunnerError if the REVIEW file is not in the git log vs base branch."""
+    fname = review_file_name(pe_id)
+    result = subprocess.run(
+        ["git", "log", "--name-only", "--format=", f"origin/{base_branch}..HEAD"],
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
+    )
+    if result.returncode != 0:
+        raise RunnerError(result.stderr.strip() or "git log failed.")
+    committed = {line.strip() for line in result.stdout.splitlines() if line.strip()}
+    if fname not in committed:
+        raise RunnerError(
+            f"{fname!r} not found in commits on this branch vs {base_branch}. "
+            "Agent did not commit the REVIEW file."
+        )
+
+
+def verify_formal_review_posted(pr_number: str) -> None:
+    """Raise RunnerError if no formal GitHub review has been posted on the PR."""
+    result = subprocess.run(
+        ["gh", "pr", "view", pr_number, "--json", "reviews"],
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
+    )
+    if result.returncode != 0:
+        raise RunnerError(result.stderr.strip() or "gh pr view --json reviews failed.")
+    try:
+        data = json.loads(result.stdout)
+    except json.JSONDecodeError as exc:
+        raise RunnerError(f"Could not parse gh pr view output: {exc}") from exc
+    reviews = data.get("reviews", [])
+    if not reviews:
+        raise RunnerError(
+            f"No formal GitHub review found on PR #{pr_number}. "
+            "Agent did not post a formal review."
+        )
+
+
 def post_fail_assignment(pr_number: str, implementer_engine: str) -> None:
     """Post a fix-assignment comment on the PR for the Implementer agent.
 
@@ -206,6 +250,9 @@ def run_validator(argv: list[str], *, engine: str) -> int:
             pr_number=inputs.pr_number,
         )
         run_cli(engine, prompt)
+
+        verify_review_committed(inputs.pe_id, inputs.base_branch)
+        verify_formal_review_posted(inputs.pr_number)
 
         verdict = read_verdict(repo_root, inputs.pe_id)
         if verdict == "NOT_FOUND":

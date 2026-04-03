@@ -13,10 +13,12 @@ jobs:
   dispatch-validator:
     name: Dispatch validator runner for active PE
     runs-on: ubuntu-latest
-    # Only trigger on PR comments containing the Gate 1 assignment phrase.
+    # Only trigger on PR comments containing the Gate 1 machine-readable tag.
+    # The tag <!-- validator-assignment --> is injected by auto-assign-validator.yml
+    # and is engine-agnostic, supporting both @claude-code and @codex validators.
     if: |
       github.event.issue.pull_request != null &&
-      contains(github.event.comment.body, '@claude-code — assigned as Validator. Begin review.')
+      contains(github.event.comment.body, '<!-- validator-assignment -->')
 
     steps:
       - name: Checkout

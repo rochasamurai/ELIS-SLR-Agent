@@ -111,12 +111,31 @@ jobs:
             --base-branch "${{ inputs.base_branch }}" \
             --pr-number "${{ inputs.pr_number }}"
 
+      - name: Verify REVIEW file committed and formal review posted
+        run: |
+          python - <<'EOF'
+          import sys
+          sys.path.insert(0, '.')
+          from scripts.validator_runner_common import (
+              verify_review_committed,
+              verify_formal_review_posted,
+              RunnerError,
+          )
+          try:
+              verify_review_committed('${{ inputs.pe_id }}', '${{ inputs.base_branch }}')
+              verify_formal_review_posted('${{ inputs.pr_number }}')
+          except RunnerError as exc:
+              print(f'FAIL: {exc}', file=sys.stderr)
+              sys.exit(1)
+          EOF
+        env:
+          GH_TOKEN: ${{ inputs.engine == 'codex' && secrets.CODEX_BOT_TOKEN || secrets.CLAUDE_BOT_TOKEN }}
+
       - name: Read verdict from REVIEW file
         id: verdict
         run: |
-          python scripts/parse_verdict.py
-        env:
-          REVIEW_FILE: REVIEW_${{ inputs.pe_id != '' && replace(inputs.pe_id, '-', '_') || 'UNKNOWN' }}.md
+          review_file="REVIEW_$(echo '${{ inputs.pe_id }}' | tr '-' '_').md"
+          REVIEW_FILE="$review_file" python scripts/parse_verdict.py
 
       - name: Post fail assignment (elis-pm-bot)
         if: steps.verdict.outputs.verdict == 'FAIL'
