@@ -20,7 +20,7 @@ This branch adds:
 - thin entrypoints for Codex and Claude validators
 - a dispatcher script that verifies the PR branch matches the active PE branch
   before firing the validator workflow
-- unit tests for all new logic (20 tests)
+- unit tests for all new logic (22 tests)
 
 The validator runner complements the PE-AUTO-04 implementer runner:
 the Gate 1 comment triggers `validator-dispatch.yml` → `validator-runner.yml`.
@@ -39,10 +39,12 @@ A  .github/workflows/validator-dispatch.yml
 A  .github/workflows/validator-runner.yml
 M  HANDOFF.md
 A  handoffs/HANDOFF_PE-AUTO-05.md
+M  scripts/check_role_registration.py
 A  scripts/dispatch_validator_runner.py
 A  scripts/validator_runner_common.py
 A  scripts/run_claude_validator.py
 A  scripts/run_codex_validator.py
+A  tests/test_check_role_registration.py
 A  tests/test_dispatch_validator_runner.py
 A  tests/test_validator_runner_common.py
 ```
@@ -53,7 +55,7 @@ A  tests/test_validator_runner_common.py
 
 | # | Criterion | Status |
 |---|---|---|
-| AC-1 | Validator triggers automatically after Gate 1 comment | ✓ — `auto-assign-validator.yml` now resolves the active validator engine from `CURRENT_PE.md` and injects the correct mention (`@codex` or `@claude-code`) plus a machine-readable `<!-- validator-assignment -->` tag; `validator-dispatch.yml` triggers on the tag (engine-agnostic); 3 dispatch tests pass |
+| AC-1 | Validator triggers automatically after Gate 1 comment | ✓ — `auto-assign-validator.yml` now resolves the active validator engine from `CURRENT_PE.md` and injects the correct mention (`@codex` or `@claude-code`) plus a machine-readable `<!-- validator-assignment -->` tag; `validator-dispatch.yml` triggers on the tag (engine-agnostic); 3 dispatch tests pass. Root cause of Gate 1 failure also fixed: `check_role_registration.py` now skips PM-CHORE rows that use `—` as agent IDs (always merged, no engine identity); 2 new unit tests |
 | AC-2 | `REVIEW_PE*.md` committed on the branch with verbatim evidence | ✓ — `verify_review_committed()` independently checks `git log origin/base..HEAD` for the REVIEW filename after agent run; raises `RunnerError` if absent; workflow step enforces this before reading verdict; 2 unit tests |
 | AC-3 | Formal GitHub Review posted by the opposite account | ✓ — `verify_formal_review_posted(pr_number, expected_login)` calls `gh pr view --json reviews`, raises `RunnerError` if review list is empty, and also raises if no review's `author.login` matches the expected validator bot (`elis-codex-bot` or `elis-claude-bot`); `run_validator()` derives `expected_reviewer = f"elis-{engine}-bot"` and passes it; workflow step enforces this; 4 unit tests |
 | AC-4 | Gate 2 reads the verdict and auto-merges on PASS | ✓ — existing `auto-merge-on-pass.yml` triggers on push to the feature branch, finds the REVIEW file via `parse_verdict.py`, and squash-merges on PASS; no new code required |
@@ -125,10 +127,12 @@ tests/test_validator_runner_common.py::test_run_validator_rejects_wrong_engine P
 tests/test_dispatch_validator_runner.py::test_dispatches_when_pr_branch_matches_active_pe PASSED
 tests/test_dispatch_validator_runner.py::test_skips_when_pr_branch_does_not_match PASSED
 tests/test_dispatch_validator_runner.py::test_fails_when_pr_number_not_set PASSED
-20 passed in 0.32s
+tests/test_check_role_registration.py::test_pm_chore_row_with_dash_agent_ids_passes PASSED
+tests/test_check_role_registration.py::test_pm_chore_row_not_merged_fails PASSED
+22 passed in 0.40s
 
 python -m pytest
-669 passed, 17 warnings in 10.97s
+671 passed, 17 warnings in 12.43s
 
 python scripts/check_agent_scope.py
 Agent scope clean — no secret-pattern files detected in worktree.
@@ -197,7 +201,7 @@ python -m ruff check .
 All checks passed!
 
 python -m pytest
-669 passed, 17 warnings in 10.97s
+671 passed, 17 warnings in 12.43s
 ```
 
 ### 6.5

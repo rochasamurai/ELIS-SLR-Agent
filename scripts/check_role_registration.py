@@ -170,6 +170,17 @@ def main() -> int:
 
         impl_engine = extract_engine(implementer)
         val_engine = extract_engine(validator)
+
+        # PM housekeeping rows (e.g. PM-CHORE-XX) use '—' for both agent IDs.
+        # They have no engine identity and must be merged; skip engine checks.
+        if impl_engine is None and val_engine is None:
+            if status != "merged":
+                return fail(
+                    f"ERROR: Row '{pe_id}' has no agent engine IDs but status is"
+                    f" '{status}' (expected 'merged' for PM housekeeping entries)."
+                )
+            continue
+
         if impl_engine is None:
             return fail(
                 f"ERROR: Implementer agent id has no valid engine: '{implementer}'"
