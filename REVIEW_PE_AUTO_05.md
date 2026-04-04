@@ -235,6 +235,74 @@ findstr /n ".*" scripts\validator_runner_common.py
 
 ---
 
+## Agent update — CODEX / PE-AUTO-05 / 2026-04-04 (Round 5)
+
+### Verdict
+FAIL
+
+### Gate results
+black: PASS (CI)
+ruff: PASS
+pytest: CI full suite PASS
+PE-specific tests: implementer evidence shows 22 role-registration and validator-runner tests passing
+
+### Scope
+```text
+M	.github/workflows/auto-assign-validator.yml
+A	.github/workflows/validator-dispatch.yml
+A	.github/workflows/validator-runner.yml
+M	HANDOFF.md
+A	REVIEW_PE_AUTO_05.md
+A	handoffs/HANDOFF_PE-AUTO-05.md
+M	scripts/check_role_registration.py
+A	scripts/dispatch_validator_runner.py
+A	scripts/run_claude_validator.py
+A	scripts/run_codex_validator.py
+A	scripts/validator_runner_common.py
+A	tests/test_check_role_registration.py
+A	tests/test_dispatch_validator_runner.py
+A	tests/test_validator_runner_common.py
+```
+
+### Required fixes
+- AC-1 is still not correct for the active PE. Gate 1 now succeeds and posts the automated assignment comment, but it assigns `@claude-code` instead of `@codex` even though `CURRENT_PE.md` makes CODEX the Validator for PE-AUTO-05. The root cause is in `.github/workflows/auto-assign-validator.yml`: the resolver step prints `mention=@codex` to stdout but never writes it to `GITHUB_OUTPUT`, so `steps.validator.outputs.mention` is empty and the workflow falls back to `@claude-code`.
+- AC-2 through AC-5 remain unproven end-to-end on the live PR. PR #312 still has no formal reviews, so the validator runner has not yet produced the expected REVIEW/PR-review outcome on the branch.
+
+### Evidence
+```text
+gh pr view 312 --json headRefOid,reviews,comments
+headRefOid: 01d9d6c585ba3aaa36b1490722c4e85f65f20732
+reviews: []
+latest github-actions comment:
+"## 🤖 Gate 1 — automated"
+"@claude-code — assigned as Validator. Begin review."
+
+gh pr checks 312
+Parse verdict and auto-merge if PASS	pass
+Projects Auto-Add / add_and_set_status	pass
+current-pe-check	pass
+openclaw-config-sync-check	pass
+openclaw-doctor-check	pass
+openclaw-health-check	pass
+openclaw-security-check	pass
+quality	pass
+review-evidence-check	pass
+secrets-scope-check	pass
+slr-quality-check	pass
+tests	pass
+validate	pass
+
+findstr /n ".*" .github\workflows\auto-assign-validator.yml
+69:      - name: Resolve validator agent mention
+92:          print(f'mention={mention}')
+102:            const mention = '${{ steps.validator.outputs.mention }}' || '@claude-code';
+
+ruff check .
+All checks passed!
+```
+
+---
+
 ## Agent update — CODEX / PE-AUTO-05 / 2026-04-03 (Round 3)
 
 ### Verdict
