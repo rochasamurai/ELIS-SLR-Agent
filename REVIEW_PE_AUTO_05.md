@@ -157,6 +157,84 @@ Agent scope clean — no secret-pattern files detected in worktree.
 
 ---
 
+## Agent update — CODEX / PE-AUTO-05 / 2026-04-04 (Round 4)
+
+### Verdict
+FAIL
+
+### Gate results
+black: PASS (CI)
+ruff: PASS
+pytest: CI full suite PASS (669 passed, 17 warnings); local Gate 1 validators PASS
+PE-specific tests: implementer evidence shows 20 validator-runner tests passing
+
+### Scope
+```text
+M	.github/workflows/auto-assign-validator.yml
+A	.github/workflows/validator-dispatch.yml
+A	.github/workflows/validator-runner.yml
+M	HANDOFF.md
+A	REVIEW_PE_AUTO_05.md
+A	handoffs/HANDOFF_PE-AUTO-05.md
+A	scripts/dispatch_validator_runner.py
+A	scripts/run_claude_validator.py
+A	scripts/run_codex_validator.py
+A	scripts/validator_runner_common.py
+A	tests/test_dispatch_validator_runner.py
+A	tests/test_validator_runner_common.py
+```
+
+### Required fixes
+- AC-1 is still not satisfied end-to-end on the live PR. The branch now passes `check_status_packet.py` and `check_handoff.py` locally, but PR #312 still shows a fresh GitHub Actions comment saying `Gate 1 — manual PM review required` after the latest fix commit, and there is still no automated validator-assignment comment carrying the `<!-- validator-assignment -->` tag. Until that comment appears on the live PR, the validator runner path has not been demonstrated to trigger automatically.
+- AC-2 through AC-5 therefore remain unproven in the live flow on this branch. The code path for reviewer-identity checking is now correct, but there is still no formal review on PR #312 because the validator runner has not actually been triggered by Gate 1.
+
+### Evidence
+```text
+git log --oneline --decorate -5
+2742fc5 (HEAD -> feature/pe-auto-05-validator-runner, origin/feature/pe-auto-05-validator-runner) fix(pe-auto-05): resolve CODEX FAIL iteration 3 — AC-1 Status Packet, AC-3 reviewer identity
+b575ac5 review(pe-auto-05): revalidate unchanged branch state
+1a78dd9 review(pe-auto-05): revalidate validator runner
+
+gh pr checks 312
+Parse verdict and auto-merge if PASS	pass
+Projects Auto-Add / add_and_set_status	pass
+current-pe-check	pass
+openclaw-config-sync-check	pass
+openclaw-doctor-check	pass
+openclaw-health-check	pass
+openclaw-security-check	pass
+quality	pass
+review-evidence-check	pass
+secrets-scope-check	pass
+slr-quality-check	pass
+tests	pass
+validate	pass
+
+gh pr view 312 --json headRefOid,reviews,comments
+headRefOid: 2742fc5d74b3fad303ac4fb98022533537d5cbd8
+reviews: []
+latest github-actions comment:
+"## ⚠️ Gate 1 — manual PM review required"
+createdAt: 2026-04-04T10:02:12Z
+
+python scripts/check_status_packet.py
+Status Packet OK — all required sections present in HANDOFF.md.
+
+python scripts/check_handoff.py
+HANDOFF OK (handoffs\HANDOFF_PE-AUTO-05.md) — all required sections present.
+
+findstr /n ".*" scripts\validator_runner_common.py
+138:def verify_formal_review_posted(
+165:    if expected_login is not None:
+167:        if expected_login not in logins:
+168:            raise RunnerError(
+169:                f"No formal GitHub review from '{expected_login}' on PR #{pr_number}. "
+170:                f"Found reviewer(s): {sorted(logins)}. "
+171:                "Agent posted review from wrong identity."
+```
+
+---
+
 ## Agent update — CODEX / PE-AUTO-05 / 2026-04-03 (Round 3)
 
 ### Verdict
