@@ -98,6 +98,12 @@ jobs:
         if: success() && steps.pr.outputs.number != ''
         uses: actions/github-script@v7
         with:
+          # Must use PM_BOT_TOKEN (a PAT), not github.token.
+          # Comments posted by GITHUB_TOKEN do not trigger other workflow runs
+          # (GitHub platform rule to prevent infinite loops). The validator-dispatch
+          # workflow listens for the <!-- validator-assignment --> tag on issue_comment
+          # events — that event will only fire if the comment is posted by a PAT.
+          github-token: ${{ secrets.PM_BOT_TOKEN }}
           script: |
             const prNumber = parseInt('${{ steps.pr.outputs.number }}');
             const mention = '${{ steps.validator.outputs.mention }}' || '@claude-code';
