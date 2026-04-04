@@ -70,14 +70,14 @@ jobs:
         id: validator
         if: steps.pr.outputs.number != ''
         run: |
-          python - <<'EOF'
+          mention=$(python - <<'EOF'
           import re, sys
           from pathlib import Path
           content = Path('CURRENT_PE.md').read_text(encoding='utf-8')
           # Find the validator agent id from the Active PE Registry for the current PE.
           pe_match = re.search(r'^\|\s*PE\s*\|\s*(PE-[A-Z]+-[0-9]+)\s*\|', content, re.MULTILINE)
           if not pe_match:
-              print('mention=@claude-code')
+              print('@claude-code')
               sys.exit(0)
           pe_id = pe_match.group(1)
           row_match = re.search(
@@ -85,12 +85,13 @@ jobs:
               content, re.MULTILINE,
           )
           if not row_match:
-              print('mention=@claude-code')
+              print('@claude-code')
               sys.exit(0)
           validator_agent = row_match.group(1).strip().lower()
-          mention = '@codex' if 'codex' in validator_agent else '@claude-code'
-          print(f'mention={mention}')
+          print('@codex' if 'codex' in validator_agent else '@claude-code')
           EOF
+          )
+          echo "mention=${mention}" >> "$GITHUB_OUTPUT"
         shell: bash
 
       - name: Auto-assign Validator via PR comment
