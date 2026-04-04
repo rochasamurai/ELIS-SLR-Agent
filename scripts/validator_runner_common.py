@@ -135,8 +135,14 @@ def verify_review_committed(pe_id: str, base_branch: str) -> None:
         )
 
 
-def verify_formal_review_posted(pr_number: str) -> None:
-    """Raise RunnerError if no formal GitHub review has been posted on the PR."""
+def verify_formal_review_posted(
+    pr_number: str, expected_login: str | None = None
+) -> None:
+    """Raise RunnerError if no formal GitHub review has been posted on the PR.
+
+    If *expected_login* is given, also verify that at least one review was posted
+    by that account (i.e. the correct opposite-bot identity).
+    """
     result = subprocess.run(
         ["gh", "pr", "view", pr_number, "--json", "reviews"],
         capture_output=True,
@@ -156,6 +162,14 @@ def verify_formal_review_posted(pr_number: str) -> None:
             f"No formal GitHub review found on PR #{pr_number}. "
             "Agent did not post a formal review."
         )
+    if expected_login is not None:
+        logins = {r.get("author", {}).get("login", "") for r in reviews}
+        if expected_login not in logins:
+            raise RunnerError(
+                f"No formal GitHub review from '{expected_login}' on PR #{pr_number}. "
+                f"Found reviewer(s): {sorted(logins)}. "
+                "Agent posted review from wrong identity."
+            )
 
 
 def post_fail_assignment(pr_number: str, implementer_engine: str) -> None:
@@ -241,6 +255,10 @@ def run_validator(argv: list[str], *, engine: str) -> int:
 
         ensure_expected_login(engine)
 
+        # Derive the expected bot login for the validator engine.
+        # codex validator → elis-codex-bot; claude validator → elis-claude-bot.
+        expected_reviewer = f"elis-{engine}-bot"
+
         prompt = build_validator_prompt(
             engine=engine,
             repo_root=repo_root,
@@ -252,7 +270,7 @@ def run_validator(argv: list[str], *, engine: str) -> int:
         run_cli(engine, prompt)
 
         verify_review_committed(inputs.pe_id, inputs.base_branch)
-        verify_formal_review_posted(inputs.pr_number)
+        verify_formal_review_posted(inputs.pr_number, expected_login=expected_reviewer)
 
         verdict = read_verdict(repo_root, inputs.pe_id)
         if verdict == "NOT_FOUND":

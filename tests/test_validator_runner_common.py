@@ -290,6 +290,37 @@ def test_verify_formal_review_posted_fails_with_no_reviews(monkeypatch):
         common.verify_formal_review_posted("312")
 
 
+def test_verify_formal_review_posted_passes_with_correct_login(monkeypatch):
+    monkeypatch.setattr(
+        common.subprocess,
+        "run",
+        lambda *_a, **_kw: subprocess.CompletedProcess(
+            [],
+            0,
+            stdout='{"reviews": [{"state": "APPROVED", "author": {"login": "elis-codex-bot"}}]}',
+            stderr="",
+        ),
+    )
+    common.verify_formal_review_posted(
+        "312", expected_login="elis-codex-bot"
+    )  # must not raise
+
+
+def test_verify_formal_review_posted_fails_with_wrong_login(monkeypatch):
+    monkeypatch.setattr(
+        common.subprocess,
+        "run",
+        lambda *_a, **_kw: subprocess.CompletedProcess(
+            [],
+            0,
+            stdout='{"reviews": [{"state": "APPROVED", "author": {"login": "some-other-bot"}}]}',
+            stderr="",
+        ),
+    )
+    with pytest.raises(common.RunnerError, match="wrong identity"):
+        common.verify_formal_review_posted("312", expected_login="elis-codex-bot")
+
+
 # ---------------------------------------------------------------------------
 # run_validator — engine mismatch guard
 # ---------------------------------------------------------------------------
