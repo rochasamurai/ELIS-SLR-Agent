@@ -21,8 +21,23 @@ jobs:
       contains(github.event.comment.body, '<!-- validator-assignment -->')
 
     steps:
-      - name: Checkout
+      - name: Resolve PR head SHA
+        id: pr-head
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+            });
+            core.setOutput('sha', pr.data.head.sha);
+
+      - name: Checkout PR head
         uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.pr-head.outputs.sha }}
+          fetch-depth: 0
 
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
