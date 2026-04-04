@@ -303,6 +303,65 @@ All checks passed!
 
 ---
 
+## Agent update — CODEX / PE-AUTO-05 / 2026-04-04 (Round 6)
+
+### Verdict
+FAIL
+
+### Gate results
+black: PASS (CI)
+ruff: PASS
+pytest: CI full suite PASS
+PE-specific tests: unchanged from Round 5
+
+### Scope
+```text
+M	.github/workflows/auto-assign-validator.yml
+A	.github/workflows/validator-dispatch.yml
+A	.github/workflows/validator-runner.yml
+M	HANDOFF.md
+A	REVIEW_PE_AUTO_05.md
+A	handoffs/HANDOFF_PE-AUTO-05.md
+M	scripts/check_role_registration.py
+A	scripts/dispatch_validator_runner.py
+A	scripts/run_claude_validator.py
+A	scripts/run_codex_validator.py
+A	scripts/validator_runner_common.py
+A	tests/test_check_role_registration.py
+A	tests/test_dispatch_validator_runner.py
+A	tests/test_validator_runner_common.py
+```
+
+### Required fixes
+- AC-1 still fails on the live PR. Gate 1 now posts the automated assignment comment, but it still assigns `@claude-code` instead of `@codex` on PR #312 even though the current branch logic resolves the active validator row to `infra-val-codex`. The live workflow behaviour therefore still does not match the PE contract.
+- AC-2 through AC-5 remain unproven end-to-end on the live PR because the wrong validator is still being assigned and there are still no formal reviews on PR #312.
+
+### Evidence
+```text
+gh pr view 312 --json headRefOid,reviews,comments
+headRefOid: e34b9628808fdba5a0175b1d925499a77967d86d
+reviews: []
+latest github-actions comment:
+"## 🤖 Gate 1 — automated"
+"@claude-code — assigned as Validator. Begin review."
+
+PowerShell regex probe against CURRENT_PE.md
+peId=PE-AUTO-05
+captured=infra-val-codex
+
+findstr /n ".*" .github\workflows\auto-assign-validator.yml
+69:      - name: Resolve validator agent mention
+90:          validator_agent = row_match.group(1).strip().lower()
+91:          print('@codex' if 'codex' in validator_agent else '@claude-code')
+94:          echo "mention=${mention}" >> "$GITHUB_OUTPUT"
+103:            const mention = '${{ steps.validator.outputs.mention }}' || '@claude-code';
+
+gh pr checks 312
+all required checks: pass
+```
+
+---
+
 ## Agent update — CODEX / PE-AUTO-05 / 2026-04-03 (Round 3)
 
 ### Verdict
