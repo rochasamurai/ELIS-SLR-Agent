@@ -157,6 +157,71 @@ Agent scope clean — no secret-pattern files detected in worktree.
 
 ---
 
+## Agent update — CODEX / PE-AUTO-05 / 2026-04-05 (Round 8)
+
+### Verdict
+FAIL
+
+### Gate results
+black: PASS (CI)
+ruff: PASS
+pytest: CI full suite PASS; live validator-runner workflow FAIL
+PE-specific tests: validator-dispatch workflow SUCCESS; validator-runner workflow FAIL on live GitHub Actions
+
+### Scope
+```text
+M	HANDOFF.md
+A	REVIEW_PE_AUTO_05.md
+A	handoffs/HANDOFF_PE-AUTO-05.md
+M	scripts/check_role_registration.py
+A	scripts/dispatch_validator_runner.py
+A	scripts/run_claude_validator.py
+A	scripts/run_codex_validator.py
+A	scripts/validator_runner_common.py
+A	tests/test_check_role_registration.py
+A	tests/test_dispatch_validator_runner.py
+A	tests/test_validator_runner_common.py
+```
+
+### Required fixes
+- AC-1 is now satisfied live, but AC-2 through AC-5 still fail end-to-end because the validator-runner crashes on GitHub Actions before it can commit `REVIEW_PE_AUTO_05.md`, parse the verdict, or post the formal PR review. The live failure is `ModuleNotFoundError: No module named 'scripts'` in `scripts/run_codex_validator.py` when the workflow executes `python scripts/run_codex_validator.py ...`.
+- The runner entrypoints must be made import-safe for direct script execution on Actions. As implemented, `run_codex_validator.py` imports `from scripts.validator_runner_common import run_validator`, but the workflow invokes it as a file path, not as a package module, so the `scripts` package is not resolvable in the runner environment.
+
+### Evidence
+```text
+gh pr view 312 --json headRefOid,reviews,comments
+headRefOid: 484dbf9c589340568608fc2a0d1185d47a927482
+reviews: []
+latest automated comments include:
+- elis-pm-bot: "## 🤖 Gate 1 — automated" ... "@codex — assigned as Validator. Begin review."
+
+gh run list --repo rochasamurai/ELIS-SLR-Agent --workflow validator-dispatch.yml --limit 10
+completed success feat(pe-auto-05): validator agent runner ELIS - Validator Dispatcher main issue_comment 23987438925
+
+gh run list --repo rochasamurai/ELIS-SLR-Agent --workflow validator-runner.yml --limit 10
+completed failure Validator Agent Runner Validator Agent Runner main workflow_dispatch 23987444027
+
+gh run view 23987444027 --log-failed
+...
+Run python scripts/run_codex_validator.py \
+...
+Traceback (most recent call last):
+  File "/home/runner/work/ELIS-SLR-Agent/ELIS-SLR-Agent/scripts/run_codex_validator.py", line 7, in <module>
+    from scripts.validator_runner_common import run_validator
+ModuleNotFoundError: No module named 'scripts'
+
+gh pr checks 312
+all required checks: pass
+
+python scripts/check_agent_scope.py
+Agent scope clean — no secret-pattern files detected in worktree.
+
+ruff check .
+All checks passed!
+```
+
+---
+
 ## Agent update — CODEX / PE-AUTO-05 / 2026-04-04 (Round 4)
 
 ### Verdict
