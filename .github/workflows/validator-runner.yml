@@ -92,7 +92,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.CODEX_BOT_TOKEN }}
         run: |
-          python scripts/run_codex_validator.py \
+          python -m scripts.run_codex_validator \
             --pe-id "${{ inputs.pe_id }}" \
             --plan "${{ inputs.plan_file }}" \
             --branch "${{ inputs.branch }}" \
@@ -104,7 +104,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.CLAUDE_BOT_TOKEN }}
         run: |
-          python scripts/run_claude_validator.py \
+          python -m scripts.run_claude_validator \
             --pe-id "${{ inputs.pe_id }}" \
             --plan "${{ inputs.plan_file }}" \
             --branch "${{ inputs.branch }}" \
