@@ -222,6 +222,78 @@ All checks passed!
 
 ---
 
+## Agent update — CODEX / PE-AUTO-05 / 2026-04-05 (Round 9)
+
+### Verdict
+FAIL
+
+### Gate results
+black: PASS (local)
+ruff: PASS
+pytest: targeted validator tests PASS; live validator-runner workflow FAIL
+PE-specific tests: validator-dispatch workflow SUCCESS; validator-runner workflow still FAILS on GitHub Actions
+
+### Scope
+```text
+M	HANDOFF.md
+A	REVIEW_PE_AUTO_05.md
+A	handoffs/HANDOFF_PE-AUTO-05.md
+M	scripts/check_role_registration.py
+A	scripts/dispatch_validator_runner.py
+A	scripts/run_claude_validator.py
+A	scripts/run_codex_validator.py
+A	scripts/validator_runner_common.py
+A	tests/test_check_role_registration.py
+A	tests/test_dispatch_validator_runner.py
+A	tests/test_validator_runner_common.py
+```
+
+### Required fixes
+- The latest implementer fix did not clear the live blocker. The newest validator-runner run still executes `python scripts/run_codex_validator.py ...` and still crashes with `ModuleNotFoundError: No module named 'scripts'`.
+- The branch therefore still does not satisfy AC-2 through AC-5 end-to-end: no committed validator review update is produced by the runner, no formal PR review is posted, and the automated merge path remains unproven.
+- The implementation must ensure the live `validator-runner.yml` actually invokes the entrypoint in an import-safe way on Actions, and the next push must produce a fresh successful validator-runner run on PR #312.
+
+### Evidence
+```text
+gh pr view 312 --json headRefOid,reviews,comments,isDraft,state
+headRefOid: 6c52e044f037f1b8da5f3857bc7682d32e512290
+state: OPEN
+isDraft: false
+reviews: []
+latest implementer comment:
+- "Fix iteration 9 — ModuleNotFoundError in validator-runner"
+
+gh run list --repo rochasamurai/ELIS-SLR-Agent --workflow validator-runner.yml --limit 10
+completed failure Validator Agent Runner Validator Agent Runner main workflow_dispatch 23996176184
+
+gh run view 23996176184 --log-failed
+...
+Run python scripts/run_codex_validator.py \
+...
+Traceback (most recent call last):
+  File "/home/runner/work/ELIS-SLR-Agent/ELIS-SLR-Agent/scripts/run_codex_validator.py", line 7, in <module>
+    from scripts.validator_runner_common import run_validator
+ModuleNotFoundError: No module named 'scripts'
+
+gh pr checks 312
+Parse verdict and auto-merge if PASS  pass
+
+python scripts/check_agent_scope.py
+Agent scope clean — no secret-pattern files detected in worktree.
+
+python -m pytest tests/test_dispatch_validator_runner.py tests/test_validator_runner_common.py tests/test_check_role_registration.py -q
+......................                                                   [100%]
+
+python -m black --check .
+All done! ✨ 🍰 ✨
+149 files would be left unchanged.
+
+python -m ruff check .
+All checks passed!
+```
+
+---
+
 ## Agent update — CODEX / PE-AUTO-05 / 2026-04-04 (Round 4)
 
 ### Verdict
