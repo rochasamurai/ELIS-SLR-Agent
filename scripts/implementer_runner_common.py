@@ -346,7 +346,13 @@ def mark_pr_ready(branch: str, base_branch: str) -> None:
 
 def default_cli_command(engine: str, prompt: str) -> list[str]:
     if engine == "codex":
-        return ["codex", "exec", prompt]
+        return [
+            "codex",
+            "exec",
+            "--config",
+            'preferred_auth_method="apikey"',
+            prompt,
+        ]
     if engine == "claude":
         return ["claude", "-p", prompt]
     raise RunnerError(f"Unsupported engine '{engine}'.")

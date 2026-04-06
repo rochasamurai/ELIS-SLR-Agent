@@ -104,6 +104,18 @@ def test_build_prompt_contains_acceptance_criteria(tmp_path):
     assert "PR opened by the correct account" in prompt
 
 
+def test_default_cli_command_for_codex_forces_apikey_mode():
+    command = common.default_cli_command("codex", "validate this")
+
+    assert command[:4] == [
+        "codex",
+        "exec",
+        "--config",
+        'preferred_auth_method="apikey"',
+    ]
+    assert command[-1] == "validate this"
+
+
 def test_budget_guard_fails_when_commit_limit_exceeded():
     with pytest.raises(common.RunnerError, match="Commit budget exceeded"):
         common.ensure_budget(
