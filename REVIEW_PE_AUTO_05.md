@@ -157,6 +157,80 @@ Agent scope clean — no secret-pattern files detected in worktree.
 
 ---
 
+## Agent update — CODEX / PE-AUTO-05 / 2026-04-06 (Round 10)
+
+### Verdict
+FAIL
+
+### Gate results
+black: PASS (local)
+ruff: PASS
+pytest: targeted local rerun blocked in this workspace because `python` is not available on PATH; live validator-runner workflow FAIL
+PE-specific tests: live Gate 1 assignment PASS; live validator-runner still FAILS on GitHub Actions
+
+### Scope
+```text
+M	HANDOFF.md
+A	REVIEW_PE_AUTO_05.md
+A	handoffs/HANDOFF_PE-AUTO-05.md
+M	scripts/check_role_registration.py
+A	scripts/dispatch_validator_runner.py
+A	scripts/run_claude_validator.py
+A	scripts/run_codex_validator.py
+A	scripts/validator_runner_common.py
+A	tests/test_check_role_registration.py
+A	tests/test_dispatch_validator_runner.py
+A	tests/test_validator_runner_common.py
+```
+
+### Required fixes
+- AC-1 is now satisfied live: PR #312 has an automated Gate 1 assignment comment from `elis-pm-bot` tagging `@codex` with the `<!-- validator-assignment -->` marker, so the validator path is correctly authorised and triggered.
+- AC-2 through AC-5 still fail end-to-end because the CODEX validator step runs without `OPENAI_API_KEY` in its environment. `.github/workflows/validator-runner.yml` injects `OPENAI_API_KEY` only into `Verify Codex auth`, then launches `python -m scripts.run_codex_validator ...` with only `GH_TOKEN`. The live run at branch head `69db63e` reaches the Codex CLI invocation and then fails with `401 Unauthorized: Missing bearer or basic authentication in header`, so no REVIEW commit, no formal GitHub review, and no FAIL-assignment/auto-merge path can complete.
+- The same auth wiring gap exists in `.github/workflows/implementer-runner.yml` for the CODEX implementer step. Even though PE-AUTO-05 focuses on the validator runner, this branch claims to deliver the Codex-runner authentication path and currently leaves the shared CODEX runner invocation inconsistent between the verification step and the actual agent step.
+
+### Evidence
+```text
+gh pr view 312 --json headRefOid,state,isDraft,reviews,comments
+headRefOid: 69db63ece3bdab99c6d2de76ec133fd19238ebc6
+state: OPEN
+isDraft: false
+reviews: []
+latest automated comment:
+- elis-pm-bot: "## 🤖 Gate 1 — automated" ... "@codex — assigned as Validator. Begin review." ... "<!-- validator-assignment -->"
+
+gh run list --repo rochasamurai/ELIS-SLR-Agent --workflow validator-runner.yml --limit 5
+completed failure Validator Agent Runner Validator Agent Runner main workflow_dispatch 23997271243
+
+gh run view 23997271243 --log-failed
+...
+ERROR: unexpected status 401 Unauthorized: Missing bearer or basic authentication in header, url: https://api.openai.com/v1/responses
+##[error]Process completed with exit code 1.
+
+findstr /n ".*" .github\workflows\validator-runner.yml
+78:      - name: Verify Codex auth
+81:          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+90:      - name: Run CODEX validator
+92:          GH_TOKEN: ${{ secrets.CODEX_BOT_TOKEN }}
+
+findstr /n ".*" .github\workflows\implementer-runner.yml
+85:      - name: Verify Codex auth
+88:          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+97:      - name: Run CODEX implementer
+99:          GH_TOKEN: ${{ secrets.CODEX_BOT_TOKEN }}
+
+python scripts/check_agent_scope.py
+Agent scope clean — no secret-pattern files detected in worktree.
+
+python -m black --check .
+All done! ✨ 🍰 ✨
+149 files would be left unchanged.
+
+python -m ruff check .
+All checks passed!
+```
+
+---
+
 ## Agent update — CODEX / PE-AUTO-05 / 2026-04-05 (Round 8)
 
 ### Verdict
