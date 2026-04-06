@@ -157,6 +157,76 @@ Agent scope clean — no secret-pattern files detected in worktree.
 
 ---
 
+## Agent update — CODEX / PE-AUTO-05 / 2026-04-06 (Round 11)
+
+### Verdict
+FAIL
+
+### Gate results
+black: not rerun locally in this shell
+ruff: not rerun locally in this shell
+pytest: not rerun locally in this shell
+PE-specific tests: live Gate 1 assignment PASS; fresh live validator-runner reruns still FAIL on GitHub Actions
+
+### Scope
+```text
+M	.github/workflows/validator-runner.yml
+M	HANDOFF.md
+A	REVIEW_PE_AUTO_05.md
+A	handoffs/HANDOFF_PE-AUTO-05.md
+M	scripts/check_role_registration.py
+A	scripts/dispatch_validator_runner.py
+A	scripts/run_claude_validator.py
+A	scripts/run_codex_validator.py
+A	scripts/validator_runner_common.py
+M	scripts/implementer_runner_common.py
+A	tests/test_check_role_registration.py
+A	tests/test_dispatch_validator_runner.py
+M	tests/test_implementer_runner_common.py
+A	tests/test_validator_runner_common.py
+```
+
+### Required fixes
+- AC-1 remains satisfied live. PR #312 continues to receive automated Gate 1 assignment comments from `elis-pm-bot`, and `validator-dispatch.yml` successfully starts the validator workflow.
+- AC-2 through AC-5 are still not satisfied on the current branch head because the CODEX CLI itself is not authenticating successfully on GitHub Actions. I reran the live validator workflow on the updated branch head twice after the latest auth-wiring fixes, including a validator-side patch that forces `preferred_auth_method=\"apikey\"` in the shared Codex runner command. The fresh runs still fail inside `codex exec` with `401 Unauthorized: Missing bearer or basic authentication in header`.
+- This means the remaining blocker is no longer validator-runner orchestration. The live workflow now reaches the real agent invocation path and still cannot obtain usable Codex credentials from the current repository secret/runtime setup. PE-AUTO-05 therefore remains blocked by the underlying Codex authentication mechanism (or secret value) rather than by this PE’s dispatch/runner logic.
+- Required next action is outside normal validator code review scope: refresh or replace the Codex runner credential mechanism used by PE-AUTH-01 / repo secrets, then rerun the validator workflow on PR #312.
+
+### Evidence
+```text
+git log --oneline --decorate -4
+a209aa6 (HEAD -> feature/pe-auto-05-validator-runner, origin/feature/pe-auto-05-validator-runner) fix(pe-auto-05): force codex runner apikey auth mode
+2d7bd64 chore(pe-auto-05): update HANDOFF for fix iteration 11
+bb21bff fix(pe-auto-05): pass API key env vars to validator runner steps
+63b56a9 review(pe-auto-05): record fail on codex runner auth wiring
+
+gh run list --repo rochasamurai/ELIS-SLR-Agent --workflow validator-runner.yml --limit 3
+completed failure Validator Agent Runner Validator Agent Runner main workflow_dispatch 24055661053
+completed failure Validator Agent Runner Validator Agent Runner main workflow_dispatch 24055449625
+
+gh run view 24055661053 --log-failed
+Run CODEX validator
+...
+FAIL: codex runner invocation failed: Reading additional input from stdin...
+...
+ERROR: unexpected status 401 Unauthorized: Missing bearer or basic authentication in header, url: https://api.openai.com/v1/responses
+##[error]Process completed with exit code 1.
+
+gh run view 24055449625 --log-failed
+Run CODEX validator
+...
+ERROR: unexpected status 401 Unauthorized: Missing bearer or basic authentication in header, url: https://api.openai.com/v1/responses
+##[error]Process completed with exit code 1.
+
+gh pr view 312 --json headRefOid,reviews,comments
+headRefOid: 2d7bd64b8000c2c848ea12a5a13e2679cd4e53e7
+reviews: []
+latest automated comment:
+- elis-pm-bot: "## 🤖 Gate 1 — automated" ... "@codex — assigned as Validator. Begin review." ... "<!-- validator-assignment -->"
+```
+
+---
+
 ## Agent update — CODEX / PE-AUTO-05 / 2026-04-06 (Round 10)
 
 ### Verdict
