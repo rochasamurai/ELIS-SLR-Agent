@@ -36,7 +36,7 @@ On FAIL the workflow posts a fix-assignment comment via `PM_BOT_TOKEN` (AC-5).
 ```text
 M  .github/workflows/auto-assign-validator.yml
 A  .github/workflows/validator-dispatch.yml
-A  .github/workflows/validator-runner.yml
+M  .github/workflows/validator-runner.yml
 M  HANDOFF.md
 A  handoffs/HANDOFF_PE-AUTO-05.md
 M  scripts/check_role_registration.py
@@ -48,6 +48,11 @@ A  tests/test_check_role_registration.py
 A  tests/test_dispatch_validator_runner.py
 A  tests/test_validator_runner_common.py
 ```
+
+Note: `validator-runner.yml` is listed as `A` in the original delivery
+(bootstrapped to `main` by PM-CHORE-24, so `git diff origin/main..HEAD` shows
+no delta). The file is now `M` relative to `main` because fix iteration 11
+added `OPENAI_API_KEY` / `CLAUDE_SETUP_TOKEN` env vars to the runner steps.
 
 ---
 
@@ -146,7 +151,7 @@ HANDOFF OK (handoffs\HANDOFF_PE-AUTO-05.md) — all required sections present.
 
 ---
 
-## Status Packet
+## Status Packet — Fix Iteration 11 (2026-04-06)
 
 ### 6.1
 
@@ -163,20 +168,21 @@ git branch --show-current
 feature/pe-auto-05-validator-runner
 
 git rev-parse HEAD
-(see 6.5 — updated on commit)
+bb21bff
 
 git log -5 --oneline
-fix(pe-auto-05): fix validator-dispatch checkout — check out PR head, not main
-e34b962 fix(pe-auto-05): resolve CODEX FAIL iteration 5 — write mention to GITHUB_OUTPUT
-01d9d6c fix(pe-auto-05): resolve CODEX FAIL iteration 4 — Gate 1 blocked by PM-CHORE rows
-2742fc5 fix(pe-auto-05): resolve CODEX FAIL iteration 3 — AC-1 Status Packet, AC-3 reviewer identity
-21c7963 fix(pe-auto-05): resolve CODEX FAIL — AC-1 engine-agnostic trigger, AC-2/AC-3 independent verification
+bb21bff fix(pe-auto-05): pass API key env vars to validator runner steps
+63b56a9 review(pe-auto-05): record fail on codex runner auth wiring
+69db63e fix(pe-auto-05): make validator entrypoints self-sufficient for sys.path
+91d6736 review(pe-auto-05): revalidate repeated live runner failure
+6c52e04 fix(pe-auto-05): invoke runner entrypoints via -m to fix ModuleNotFoundError
 ```
 
 ### 6.3
 
 ```
 git diff --name-status origin/main..HEAD
+M  .github/workflows/validator-runner.yml
 M  HANDOFF.md
 A  REVIEW_PE_AUTO_05.md
 A  handoffs/HANDOFF_PE-AUTO-05.md
@@ -188,23 +194,16 @@ A  scripts/validator_runner_common.py
 A  tests/test_check_role_registration.py
 A  tests/test_dispatch_validator_runner.py
 A  tests/test_validator_runner_common.py
-
-Note: auto-assign-validator.yml, validator-dispatch.yml, and validator-runner.yml
-are now identical on main (PM-CHORE-24 bootstrap) so they no longer appear in
-the diff — they are still deliverables of this PE.
 ```
 
 ### 6.4
 
 ```
-python -m black --check .
-All done! ✨ 🍰 ✨  149 files would be left unchanged.
-
 python -m ruff check .
 All checks passed!
 
-python -m pytest
-671 passed, 17 warnings in 13.83s
+python scripts/check_agent_scope.py
+Agent scope clean — no secret-pattern files detected in worktree.
 ```
 
 ### 6.5
@@ -222,4 +221,4 @@ url:    https://github.com/rochasamurai/ELIS-SLR-Agent/pull/312
 
 ---
 
-*ELIS SLR Agent · handoffs/HANDOFF_PE-AUTO-05.md · infra-impl-claude · 2026-04-03*
+*ELIS SLR Agent · handoffs/HANDOFF_PE-AUTO-05.md · infra-impl-claude · 2026-04-06*
