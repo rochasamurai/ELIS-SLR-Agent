@@ -221,4 +221,75 @@ url:    https://github.com/rochasamurai/ELIS-SLR-Agent/pull/312
 
 ---
 
-*ELIS SLR Agent · handoffs/HANDOFF_PE-AUTO-05.md · infra-impl-claude · 2026-04-06*
+## Status Packet — Fix Iteration 12 (2026-04-07)
+
+### 6.1
+
+```
+git status -sb
+## feature/pe-auto-05-validator-runner...origin/feature/pe-auto-05-validator-runner
+M .github/workflows/implementer-runner.yml
+M .github/workflows/validator-runner.yml
+```
+
+### 6.2
+
+```
+git branch --show-current
+feature/pe-auto-05-validator-runner
+
+git log -5 --oneline
+(pending commit)
+```
+
+### 6.3
+
+```
+git diff --name-status origin/main..HEAD
+M  .github/workflows/implementer-runner.yml
+M  .github/workflows/validator-runner.yml
+M  HANDOFF.md
+A  REVIEW_PE_AUTO_05.md
+A  handoffs/HANDOFF_PE-AUTO-05.md
+M  scripts/check_role_registration.py
+A  scripts/dispatch_validator_runner.py
+A  scripts/run_claude_validator.py
+A  scripts/run_codex_validator.py
+A  scripts/validator_runner_common.py
+A  tests/test_check_role_registration.py
+A  tests/test_dispatch_validator_runner.py
+A  tests/test_validator_runner_common.py
+```
+
+### 6.4
+
+```
+python -m ruff check .
+All checks passed!
+
+python scripts/check_agent_scope.py
+Agent scope clean — no secret-pattern files detected in worktree.
+```
+
+### 6.5
+
+```
+gh pr list --state open --base main
+#312  feat(pe-auto-05): validator agent runner  feature/pe-auto-05-validator-runner
+```
+
+**Fix Iteration 12 changes:**
+- Pin `@openai/codex` to `0.118.0` in both `validator-runner.yml` and `implementer-runner.yml`
+  to match the confirmed-working version on elis-server.
+- Add a "Smoke-test Codex CLI" bash step before "Run CODEX validator" that runs
+  `codex exec --skip-git-repo-check --dangerously-bypass-approvals-and-sandbox "echo SMOKE_OK" < /dev/null`
+  to isolate whether the failure is in the CI environment or the Python subprocess wrapper.
+
+**Root cause hypothesis:** The unpinned `npm install -g @openai/codex` installed a version
+newer than 0.118.0 on GitHub Actions. The newer version changed how `codex exec` processes
+its positional argument or auth.json, causing the `premature end of input at line 1 column 65`
+error within 400 ms (before any API call).
+
+---
+
+*ELIS SLR Agent · handoffs/HANDOFF_PE-AUTO-05.md · infra-impl-claude · 2026-04-07*

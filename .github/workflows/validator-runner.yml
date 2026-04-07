@@ -69,7 +69,11 @@ jobs:
 
       - name: Install Codex CLI
         if: inputs.engine == 'codex'
-        run: npm install -g @openai/codex
+        run: npm install -g @openai/codex@0.118.0
+
+      - name: Smoke-test Codex CLI
+        if: inputs.engine == 'codex'
+        run: codex --version && codex exec --skip-git-repo-check --dangerously-bypass-approvals-and-sandbox "echo SMOKE_OK" < /dev/null
 
       - name: Install Claude CLI
         if: inputs.engine == 'claude'

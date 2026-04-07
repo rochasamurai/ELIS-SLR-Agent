@@ -76,7 +76,7 @@ jobs:
 
       - name: Install Codex CLI
         if: inputs.engine == 'codex'
-        run: npm install -g @openai/codex
+        run: npm install -g @openai/codex@0.118.0
 
       - name: Install Claude CLI
         if: inputs.engine == 'claude'
