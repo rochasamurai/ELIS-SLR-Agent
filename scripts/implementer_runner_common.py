@@ -346,7 +346,9 @@ def mark_pr_ready(branch: str, base_branch: str) -> None:
 
 def default_cli_command(engine: str, prompt: str) -> list[str]:
     if engine == "codex":
-        return ["codex", "exec"]
+        # Task is passed as a positional arg; stdin must be closed (DEVNULL)
+        # so the CLI does not attempt to read a JSON sandbox spec from it.
+        return ["codex", "exec", prompt]
     if engine == "claude":
         return ["claude", "-p", prompt]
     raise RunnerError(f"Unsupported engine '{engine}'.")
@@ -363,12 +365,9 @@ def cli_command(engine: str, prompt: str) -> list[str]:
 
 
 def run_cli(engine: str, prompt: str) -> None:
-    cmd = cli_command(engine, prompt)
-    # codex exec reads the task from stdin; claude -p takes it as a flag arg.
-    stdin_data = prompt if engine == "codex" else None
     result = subprocess.run(
-        cmd,
-        input=stdin_data,
+        cli_command(engine, prompt),
+        stdin=subprocess.DEVNULL,
         capture_output=True,
         text=True,
         timeout=300,
