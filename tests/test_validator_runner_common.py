@@ -367,7 +367,9 @@ def test_run_validator_enforces_expected_reviewer_login(tmp_path, monkeypatch):
         common, "verify_review_committed", lambda _pe_id, _base_branch: None
     )
 
-    def fake_verify_formal_review_posted(pr_number: str, expected_login: str | None = None):
+    def fake_verify_formal_review_posted(
+        pr_number: str, expected_login: str | None = None
+    ):
         captured["pr_number"] = pr_number
         captured["expected_login"] = expected_login or ""
 

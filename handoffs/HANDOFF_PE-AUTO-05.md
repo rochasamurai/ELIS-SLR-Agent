@@ -292,4 +292,85 @@ error within 400 ms (before any API call).
 
 ---
 
+---
+
+## Status Packet — Fix Iteration 13 (2026-04-07)
+
+### 6.1
+
+```
+git status -sb
+## feature/pe-auto-05-validator-runner...origin/feature/pe-auto-05-validator-runner
+M tests/test_implementer_runner_common.py
+M tests/test_validator_runner_common.py
+```
+
+### 6.2
+
+```
+git branch --show-current
+feature/pe-auto-05-validator-runner
+
+git log -5 --oneline
+(pending commit)
+```
+
+### 6.3
+
+```
+git diff --name-status origin/main..HEAD
+M  .github/workflows/implementer-runner.yml
+M  .github/workflows/validator-runner.yml
+M  HANDOFF.md
+A  REVIEW_PE_AUTO_05.md
+A  handoffs/HANDOFF_PE-AUTO-05.md
+M  scripts/check_role_registration.py
+A  scripts/dispatch_validator_runner.py
+A  scripts/run_claude_validator.py
+A  scripts/run_codex_validator.py
+A  scripts/validator_runner_common.py
+A  tests/test_check_role_registration.py
+A  tests/test_dispatch_validator_runner.py
+M  tests/test_implementer_runner_common.py
+M  tests/test_validator_runner_common.py
+A  tests/test_validator_runner_common.py
+```
+
+### 6.4
+
+```
+python -m black --check .
+All done! ✨ 🍰 ✨
+149 files would be left unchanged.
+
+python -m ruff check .
+All checks passed!
+
+python -m pytest
+672 passed, 17 warnings in 12.53s
+```
+
+### 6.5
+
+```
+gh pr list --state open --base main
+#312  feat(pe-auto-05): validator agent runner  feature/pe-auto-05-validator-runner
+```
+
+**Fix Iteration 13 changes:**
+- Removed out-of-role test `test_default_cli_command_for_codex_forces_apikey_mode` from
+  `tests/test_implementer_runner_common.py` (was testing a CODEX-added implementation change
+  to `implementer_runner_common.py` that is not within PE-AUTO-05 scope and was reverted).
+- Ran `python -m black .` — reformatted `tests/test_validator_runner_common.py` (trailing
+  whitespace introduced by CODEX in the last validator run).
+
+**Validator runner end-to-end confirmation:**
+CI run 24089914365 (`✓` green, 5m 4s) was the first complete successful run:
+- codex-cli 0.118.0 authenticates via `auth_mode: apikey` in `~/.codex/auth.json` with
+  `OPENAI_API_KEY` embedded (codex ignores env var; key must be in auth.json).
+- CODEX validator ran, committed REVIEW file, posted formal review, workflow read verdict.
+- Fail assignment posted by elis-pm-bot (AC-5 evidence on PR #312).
+
+---
+
 *ELIS SLR Agent · handoffs/HANDOFF_PE-AUTO-05.md · infra-impl-claude · 2026-04-07*
