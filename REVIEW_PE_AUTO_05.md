@@ -749,3 +749,70 @@ All checks passed!
 python scripts/check_agent_scope.py
 Agent scope clean — no secret-pattern files detected in worktree.
 ```
+
+---
+
+## Agent update — CODEX / PE-AUTO-05 / 2026-04-07 (Round 12)
+
+### Verdict
+FAIL
+
+### Gate results
+black: FAIL (`python -m black --check .` reports 36 files would be reformatted)
+ruff: PASS
+pytest: FAIL (1 failed: `tests/test_implementer_runner_common.py::test_default_cli_command_for_codex_forces_apikey_mode`)
+PE-specific tests: PASS (`python -m pytest tests/test_validator_runner_common.py -q` -> 18 passed)
+
+### Scope
+```text
+M	.github/workflows/implementer-runner.yml
+M	.github/workflows/validator-runner.yml
+M	HANDOFF.md
+A	REVIEW_PE_AUTO_05.md
+A	handoffs/HANDOFF_PE-AUTO-05.md
+M	scripts/check_role_registration.py
+A	scripts/dispatch_validator_runner.py
+M	scripts/implementer_runner_common.py
+A	scripts/run_claude_validator.py
+A	scripts/run_codex_validator.py
+A	scripts/validator_runner_common.py
+A	tests/test_check_role_registration.py
+A	tests/test_dispatch_validator_runner.py
+M	tests/test_implementer_runner_common.py
+A	tests/test_validator_runner_common.py
+```
+
+### Required fixes
+- AC-3 is not satisfied on PR #312. There is no formal GitHub review on the PR (`gh pr view 312 --json reviews` returns `[]`).
+- AC-5 is not evidenced in the live PR thread for this run. There are zero `elis-pm-bot` comments matching `Fail — fix assignment`.
+- Quality-gate contract in AGENTS.md §6.4 is not met on the current branch (`black --check` and full `pytest -q` fail), so this PE cannot be marked PASS.
+
+### Evidence
+```text
+python -m black --check .
+...
+Oh no! 💥 💔 💥
+36 files would be reformatted, 113 files would be left unchanged.
+
+python -m ruff check .
+All checks passed!
+
+python -m pytest -q
+...
+FAILED tests/test_implementer_runner_common.py::test_default_cli_command_for_codex_forces_apikey_mode
+
+python -m pytest tests/test_validator_runner_common.py -q
+..................                                                       [100%]
+
+gh pr view 312 --json reviews --jq '.reviews'
+[]
+
+gh api repos/rochasamurai/ELIS-SLR-Agent/issues/312/comments --paginate --jq '[.[] | select((.user.login=="elis-pm-bot") and (.body | contains("<!-- validator-assignment -->")))] | length'
+5
+
+gh api repos/rochasamurai/ELIS-SLR-Agent/issues/312/comments --paginate --jq '[.[] | select((.user.login=="elis-pm-bot") and (.body | contains("Fail — fix assignment")))] | length'
+0
+
+gh pr checks 312
+Parse verdict and auto-merge if PASS	pass	10s	https://github.com/rochasamurai/ELIS-SLR-Agent/actions/runs/24089764430/job/70272567171
+```

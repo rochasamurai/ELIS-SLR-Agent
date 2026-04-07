@@ -349,3 +349,50 @@ def test_run_validator_rejects_wrong_engine(tmp_path, monkeypatch):
         engine="claude",
     )
     assert rc == 1
+
+
+def test_run_validator_enforces_expected_reviewer_login(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "AGENTS.md").write_text("AGENTS BODY", encoding="utf-8")
+    (tmp_path / "CURRENT_PE.md").write_text(CURRENT_PE_BODY, encoding="utf-8")
+    (tmp_path / "ELIS_2Agent_Automation_Plan_v2_0.md").write_text(
+        PLAN_BODY, encoding="utf-8"
+    )
+
+    captured: dict[str, str] = {}
+
+    monkeypatch.setattr(common, "ensure_expected_login", lambda _engine: None)
+    monkeypatch.setattr(common, "run_cli", lambda _engine, _prompt: None)
+    monkeypatch.setattr(
+        common, "verify_review_committed", lambda _pe_id, _base_branch: None
+    )
+
+    def fake_verify_formal_review_posted(pr_number: str, expected_login: str | None = None):
+        captured["pr_number"] = pr_number
+        captured["expected_login"] = expected_login or ""
+
+    monkeypatch.setattr(
+        common, "verify_formal_review_posted", fake_verify_formal_review_posted
+    )
+    monkeypatch.setattr(common, "read_verdict", lambda _repo_root, _pe_id: "PASS")
+
+    rc = common.run_validator(
+        [
+            "run_codex_validator.py",
+            "--pe-id",
+            "PE-AUTO-05",
+            "--branch",
+            "feature/pe-auto-05-validator-runner",
+            "--plan",
+            "ELIS_2Agent_Automation_Plan_v2_0.md",
+            "--pr-number",
+            "312",
+            "--base-branch",
+            "main",
+        ],
+        engine="codex",
+    )
+
+    assert rc == 0
+    assert captured["pr_number"] == "312"
+    assert captured["expected_login"] == "elis-codex-bot"
