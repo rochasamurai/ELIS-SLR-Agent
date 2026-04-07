@@ -376,4 +376,77 @@ CI run 24089914365 (`✓` green, 5m 4s) was the first complete successful run:
 
 ---
 
+---
+
+## Status Packet — Final (2026-04-07) — PASS received
+
+### 6.1
+
+```
+git status -sb
+## feature/pe-auto-05-validator-runner...origin/feature/pe-auto-05-validator-runner
+(clean)
+```
+
+### 6.2
+
+```
+git log -5 --oneline
+71bad5b review(pe-auto-05): append round 15 pass validation evidence
+329c838 review(pe-auto-05): append round 14 fail evidence and adversarial test
+0c863b8 fix(pe-auto-05): pin black/ruff in runner, fix HANDOFF Files Changed scope
+22b56de fix(pe-auto-05): remove out-of-role test, fix black formatting
+1ec7ef0 review(pe-auto-05): add round 13 fail evidence
+```
+
+### 6.3
+
+```
+git diff --name-status origin/main..HEAD
+M  .github/workflows/implementer-runner.yml
+M  .github/workflows/validator-runner.yml
+M  HANDOFF.md
+A  REVIEW_PE_AUTO_05.md
+A  handoffs/HANDOFF_PE-AUTO-05.md
+M  scripts/check_role_registration.py
+A  scripts/dispatch_validator_runner.py
+A  scripts/run_claude_validator.py
+A  scripts/run_codex_validator.py
+A  scripts/validator_runner_common.py
+A  tests/test_check_role_registration.py
+A  tests/test_dispatch_validator_runner.py
+A  tests/test_validator_runner_common.py
+```
+
+### 6.4
+
+```
+python -m black --check .
+All done! ✨ 🍰 ✨
+149 files would be left unchanged.
+
+python -m ruff check .
+All checks passed!
+
+python -m pytest
+672 passed, 17 warnings in 12.53s
+```
+
+### 6.5
+
+```
+gh pr view 312
+title:  feat(pe-auto-05): validator agent runner
+state:  OPEN
+author: rochasamurai
+url:    https://github.com/rochasamurai/ELIS-SLR-Agent/pull/312
+reviewers: elis-codex-bot (Approved) — PASS Round 15
+```
+
+CODEX verdict PASS (Round 15): all AC-1..AC-5 validated.
+Gate 2 (auto-merge-on-pass.yml) ran green on CODEX's push but skipped merge
+step due to a PR API race condition. This commit re-triggers Gate 2.
+
+---
+
 *ELIS SLR Agent · handoffs/HANDOFF_PE-AUTO-05.md · infra-impl-claude · 2026-04-07*
