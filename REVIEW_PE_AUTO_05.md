@@ -1106,3 +1106,92 @@ scripts/validator_runner_common.py:273:        verify_formal_review_posted(input
 .github/workflows/validator-runner.yml:171:          post_fail_assignment('${{ inputs.pr_number }}', implementer_engine)
 .github/workflows/validator-dispatch.yml:21:      contains(github.event.comment.body, '<!-- validator-assignment -->')
 ```
+
+---
+
+## Agent update — CODEX / PE-AUTO-05 / 2026-04-07 (Round 16)
+
+### Verdict
+PASS
+
+### Gate results
+black: PASS
+ruff: PASS
+pytest: PASS — 673 passed, 0 failed
+PE-specific tests: PASS — 24/24 passed (`tests/test_validator_runner_common.py`, `tests/test_dispatch_validator_runner.py`, `tests/test_check_role_registration.py`)
+
+### Scope
+```text
+M	.github/workflows/auto-merge-on-pass.yml
+M	.github/workflows/implementer-runner.yml
+M	.github/workflows/validator-runner.yml
+M	HANDOFF.md
+A	REVIEW_PE_AUTO_05.md
+A	handoffs/HANDOFF_PE-AUTO-05.md
+M	scripts/check_role_registration.py
+A	scripts/dispatch_validator_runner.py
+M	scripts/implementer_runner_common.py
+A	scripts/run_claude_validator.py
+A	scripts/run_codex_validator.py
+A	scripts/validator_runner_common.py
+A	tests/test_check_role_registration.py
+A	tests/test_dispatch_validator_runner.py
+A	tests/test_validator_runner_common.py
+```
+
+### Required fixes
+None.
+
+### Evidence
+```text
+python -m black --check .
+All done! ✨ 🍰 ✨
+149 files would be left unchanged.
+
+python -m ruff check .
+All checks passed!
+
+python -m pytest
+673 passed in 3.89s
+
+python -m pytest tests/test_validator_runner_common.py tests/test_dispatch_validator_runner.py tests/test_check_role_registration.py
+24 passed in 0.07s
+
+python - <<'PY'
+import json,subprocess
+meta=json.loads(subprocess.check_output(['gh','pr','view','312','--json','author,state,mergeStateStatus,reviews,comments'], text=True))
+author=meta['author']['login']
+reviews=meta['reviews']
+comments=meta['comments']
+assign=[c for c in comments if '<!-- validator-assignment -->' in (c.get('body') or '')]
+assign_pm=[c for c in assign if c.get('author',{}).get('login')=='elis-pm-bot']
+fail_assign=[c for c in comments if c.get('author',{}).get('login')=='elis-pm-bot' and 'Fail — fix assignment' in (c.get('body') or '')]
+opp=[r for r in reviews if r.get('author',{}).get('login')!=author]
+print('pr_author',author)
+print('state',meta['state'])
+print('merge_state',meta['mergeStateStatus'])
+print('assignment_total',len(assign))
+print('assignment_from_pm_bot',len(assign_pm))
+print('fail_assignment_from_pm_bot',len(fail_assign))
+print('formal_reviews_total',len(reviews))
+print('formal_reviews_from_opposite_account',len(opp))
+print('review_authors',sorted({r.get('author',{}).get('login','') for r in reviews}))
+print('review_states',[r.get('state') for r in reviews])
+PY
+pr_author rochasamurai
+state OPEN
+merge_state BLOCKED
+assignment_total 17
+assignment_from_pm_bot 7
+fail_assignment_from_pm_bot 2
+formal_reviews_total 4
+formal_reviews_from_opposite_account 4
+review_authors ['elis-codex-bot']
+review_states ['CHANGES_REQUESTED', 'CHANGES_REQUESTED', 'CHANGES_REQUESTED', 'DISMISSED']
+
+REVIEW_FILE=REVIEW_PE_AUTO_05.md python scripts/parse_verdict.py
+Verdict: PASS (file: REVIEW_PE_AUTO_05.md)
+
+gh run list --workflow 'Auto-merge on Validator PASS' --branch feature/pe-auto-05-validator-runner --limit 5 --json databaseId,conclusion,status
+[{"databaseId":24100413921,"conclusion":"success","status":"completed"},{"databaseId":24100161527,"conclusion":"success","status":"completed"},{"databaseId":24094090291,"conclusion":"success","status":"completed"},{"databaseId":24093803781,"conclusion":"success","status":"completed"},{"databaseId":24093755121,"conclusion":"success","status":"completed"}]
+```
