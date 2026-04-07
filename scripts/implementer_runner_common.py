@@ -346,9 +346,16 @@ def mark_pr_ready(branch: str, base_branch: str) -> None:
 
 def default_cli_command(engine: str, prompt: str) -> list[str]:
     if engine == "codex":
-        # 'codex exec' runs a shell command in the sandbox — not an AI task.
-        # The correct non-interactive AI invocation is: codex --full-auto <task>
-        return ["codex", "--full-auto", prompt]
+        # --dangerously-bypass-approvals-and-sandbox is required for headless
+        # CI runners where bubblewrap kernel namespacing is not available.
+        # GitHub Actions and similar are externally sandboxed at the VM level.
+        return [
+            "codex",
+            "exec",
+            "--skip-git-repo-check",
+            "--dangerously-bypass-approvals-and-sandbox",
+            prompt,
+        ]
     if engine == "claude":
         return ["claude", "-p", prompt]
     raise RunnerError(f"Unsupported engine '{engine}'.")
