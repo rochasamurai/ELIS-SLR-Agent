@@ -103,7 +103,6 @@ jobs:
         if: inputs.engine == 'codex'
         env:
           GH_TOKEN: ${{ secrets.CODEX_BOT_TOKEN }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           python -m scripts.run_codex_validator \
             --pe-id "${{ inputs.pe_id }}" \
