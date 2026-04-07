@@ -85,9 +85,12 @@ jobs:
         if: inputs.engine == 'codex'
         env:
           CODEX_ACCESS_TOKEN: ${{ secrets.CODEX_ACCESS_TOKEN }}
+          CODEX_ID_TOKEN: ${{ secrets.CODEX_ID_TOKEN }}
+          CODEX_REFRESH_TOKEN: ${{ secrets.CODEX_REFRESH_TOKEN }}
+          CODEX_ACCOUNT_ID: ${{ secrets.CODEX_ACCOUNT_ID }}
         run: |
           mkdir -p ~/.codex
-          python -c "import json,os; json.dump({'auth_mode':'chatgpt','OPENAI_API_KEY':'','last_refresh':'','tokens':{'access_token':os.environ['CODEX_ACCESS_TOKEN'],'id_token':'','refresh_token':'','account_id':''}},open(os.path.expanduser('~/.codex/auth.json'),'w'))"
+          python -c "import json,os; json.dump({'auth_mode':'chatgpt','OPENAI_API_KEY':'','last_refresh':'','tokens':{'access_token':os.environ['CODEX_ACCESS_TOKEN'],'id_token':os.environ['CODEX_ID_TOKEN'],'refresh_token':os.environ['CODEX_REFRESH_TOKEN'],'account_id':os.environ['CODEX_ACCOUNT_ID']}},open(os.path.expanduser('~/.codex/auth.json'),'w'))"
 
       - name: Verify Claude auth
         if: inputs.engine == 'claude'
