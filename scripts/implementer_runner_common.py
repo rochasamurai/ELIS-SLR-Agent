@@ -346,7 +346,16 @@ def mark_pr_ready(branch: str, base_branch: str) -> None:
 
 def default_cli_command(engine: str, prompt: str) -> list[str]:
     if engine == "codex":
-        return ["codex", "exec", prompt]
+        # --dangerously-bypass-approvals-and-sandbox is required for headless
+        # CI runners where bubblewrap kernel namespacing is not available.
+        # GitHub Actions and similar are externally sandboxed at the VM level.
+        return [
+            "codex",
+            "exec",
+            "--skip-git-repo-check",
+            "--dangerously-bypass-approvals-and-sandbox",
+            prompt,
+        ]
     if engine == "claude":
         return ["claude", "-p", prompt]
     raise RunnerError(f"Unsupported engine '{engine}'.")
@@ -365,6 +374,7 @@ def cli_command(engine: str, prompt: str) -> list[str]:
 def run_cli(engine: str, prompt: str) -> None:
     result = subprocess.run(
         cli_command(engine, prompt),
+        stdin=subprocess.DEVNULL,
         capture_output=True,
         text=True,
         timeout=300,

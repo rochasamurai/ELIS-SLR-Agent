@@ -73,10 +73,11 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+          pip install black==24.8.0 ruff==0.6.9
 
       - name: Install Codex CLI
         if: inputs.engine == 'codex'
-        run: npm install -g @openai/codex
+        run: npm install -g @openai/codex@0.118.0
 
       - name: Install Claude CLI
         if: inputs.engine == 'claude'
@@ -88,6 +89,14 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: python scripts/verify_codex_auth.py
 
+      - name: Write Codex auth.json (apikey mode)
+        if: inputs.engine == 'codex'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          mkdir -p ~/.codex
+          python -c "import json,os; json.dump({'auth_mode':'apikey','OPENAI_API_KEY':os.environ['OPENAI_API_KEY']},open(os.path.expanduser('~/.codex/auth.json'),'w'))"
+
       - name: Verify Claude auth
         if: inputs.engine == 'claude'
         env:
@@ -98,6 +107,7 @@ jobs:
         if: inputs.engine == 'codex'
         env:
           GH_TOKEN: ${{ secrets.CODEX_BOT_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           python scripts/run_codex_agent.py \
             --pe-id "${{ inputs.pe_id }}" \

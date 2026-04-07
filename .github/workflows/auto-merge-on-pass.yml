@@ -71,7 +71,7 @@ jobs:
             const { data: prs } = await github.rest.pulls.list({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              head: `${context.repo.owner}:${context.ref_name}`,
+              head: `${context.repo.owner}:${process.env.GITHUB_REF_NAME}`,
               state: 'open'
             });
             if (prs.length === 0) { return; }
@@ -96,7 +96,7 @@ jobs:
             const { data: pr } = await github.rest.pulls.list({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              head: `${context.repo.owner}:${context.ref_name}`,
+              head: `${context.repo.owner}:${process.env.GITHUB_REF_NAME}`,
               state: 'open'
             });
             if (pr.length === 0) { core.setOutput('veto', 'no-pr'); return; }
