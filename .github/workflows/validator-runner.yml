@@ -83,9 +83,12 @@ jobs:
 
       - name: Write Codex auth.json (apikey mode)
         if: inputs.engine == 'codex'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           mkdir -p ~/.codex
-          python -c "import json,os; json.dump({'auth_mode':'apikey'},open(os.path.expanduser('~/.codex/auth.json'),'w'))"
+          python -c "import json,os; json.dump({'auth_mode':'apikey','OPENAI_API_KEY':os.environ['OPENAI_API_KEY']},open(os.path.expanduser('~/.codex/auth.json'),'w'))"
+          python -c "import json,os; d=json.load(open(os.path.expanduser('~/.codex/auth.json'))); print('auth.json OK — auth_mode:',d['auth_mode'],'key_len:',len(d.get('OPENAI_API_KEY','')))"
 
       - name: Smoke-test Codex CLI
         if: inputs.engine == 'codex'
