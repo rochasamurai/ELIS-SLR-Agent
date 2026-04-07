@@ -35,6 +35,7 @@ On FAIL the workflow posts a fix-assignment comment via `PM_BOT_TOKEN` (AC-5).
 
 ```text
 M  .github/workflows/auto-assign-validator.yml
+M  .github/workflows/implementer-runner.yml
 A  .github/workflows/validator-dispatch.yml
 M  .github/workflows/validator-runner.yml
 M  HANDOFF.md
@@ -51,8 +52,10 @@ A  tests/test_validator_runner_common.py
 
 Note: `validator-runner.yml` is listed as `A` in the original delivery
 (bootstrapped to `main` by PM-CHORE-24, so `git diff origin/main..HEAD` shows
-no delta). The file is now `M` relative to `main` because fix iteration 11
-added `OPENAI_API_KEY` / `CLAUDE_SETUP_TOKEN` env vars to the runner steps.
+no delta). The file is now `M` relative to `main` because fix iterations added
+auth wiring and pinned `@openai/codex@0.118.0`. `implementer-runner.yml` received
+the same auth-wiring changes (auth.json apikey mode, `OPENAI_API_KEY` injection,
+pinned codex version, pinned `black==24.8.0 ruff==0.6.9`) for consistency.
 
 ---
 
