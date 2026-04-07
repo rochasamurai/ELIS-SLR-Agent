@@ -81,6 +81,12 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: python scripts/verify_codex_auth.py
 
+      - name: Write Codex auth.json (apikey mode)
+        if: inputs.engine == 'codex'
+        run: |
+          mkdir -p ~/.codex
+          python -c "import json,os; json.dump({'auth_mode':'apikey'},open(os.path.expanduser('~/.codex/auth.json'),'w'))"
+
       - name: Smoke-test Codex CLI
         if: inputs.engine == 'codex'
         continue-on-error: true
