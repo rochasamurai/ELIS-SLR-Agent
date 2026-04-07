@@ -94,22 +94,7 @@ jobs:
           CODEX_ACCESS_TOKEN: ${{ secrets.CODEX_ACCESS_TOKEN }}
         run: |
           mkdir -p ~/.codex
-          python - <<'PYEOF'
-          import json, os
-          auth = {
-              "auth_mode": "chatgpt",
-              "OPENAI_API_KEY": "",
-              "last_refresh": "",
-              "tokens": {
-                  "access_token": os.environ["CODEX_ACCESS_TOKEN"],
-                  "id_token": "",
-                  "refresh_token": "",
-                  "account_id": ""
-              }
-          }
-          with open(os.path.expanduser("~/.codex/auth.json"), "w") as f:
-              json.dump(auth, f)
-          PYEOF
+          python -c "import json,os; json.dump({'auth_mode':'chatgpt','OPENAI_API_KEY':'','last_refresh':'','tokens':{'access_token':os.environ['CODEX_ACCESS_TOKEN'],'id_token':'','refresh_token':'','account_id':''}},open(os.path.expanduser('~/.codex/auth.json'),'w'))"
 
       - name: Verify Claude auth
         if: inputs.engine == 'claude'
