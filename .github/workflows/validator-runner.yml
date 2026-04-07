@@ -84,10 +84,25 @@ jobs:
       - name: Write Codex auth.json
         if: inputs.engine == 'codex'
         env:
-          CODEX_AUTH_JSON: ${{ secrets.CODEX_AUTH_JSON }}
+          CODEX_ACCESS_TOKEN: ${{ secrets.CODEX_ACCESS_TOKEN }}
         run: |
           mkdir -p ~/.codex
-          printf '%s' "$CODEX_AUTH_JSON" > ~/.codex/auth.json
+          python - <<'PYEOF'
+          import json, os
+          auth = {
+              "auth_mode": "chatgpt",
+              "OPENAI_API_KEY": "",
+              "last_refresh": "",
+              "tokens": {
+                  "access_token": os.environ["CODEX_ACCESS_TOKEN"],
+                  "id_token": "",
+                  "refresh_token": "",
+                  "account_id": ""
+              }
+          }
+          with open(os.path.expanduser("~/.codex/auth.json"), "w") as f:
+              json.dump(auth, f)
+          PYEOF
 
       - name: Verify Claude auth
         if: inputs.engine == 'claude'
