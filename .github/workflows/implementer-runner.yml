@@ -88,17 +88,6 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: python scripts/verify_codex_auth.py
 
-      - name: Write Codex auth.json
-        if: inputs.engine == 'codex'
-        env:
-          CODEX_ACCESS_TOKEN: ${{ secrets.CODEX_ACCESS_TOKEN }}
-          CODEX_ID_TOKEN: ${{ secrets.CODEX_ID_TOKEN }}
-          CODEX_REFRESH_TOKEN: ${{ secrets.CODEX_REFRESH_TOKEN }}
-          CODEX_ACCOUNT_ID: ${{ secrets.CODEX_ACCOUNT_ID }}
-        run: |
-          mkdir -p ~/.codex
-          python -c "import json,os; json.dump({'auth_mode':'chatgpt','tokens':{'access_token':os.environ['CODEX_ACCESS_TOKEN'],'id_token':os.environ['CODEX_ID_TOKEN'],'refresh_token':os.environ['CODEX_REFRESH_TOKEN'],'account_id':os.environ['CODEX_ACCOUNT_ID']}},open(os.path.expanduser('~/.codex/auth.json'),'w'))"
-
       - name: Verify Claude auth
         if: inputs.engine == 'claude'
         env:
@@ -109,6 +98,7 @@ jobs:
         if: inputs.engine == 'codex'
         env:
           GH_TOKEN: ${{ secrets.CODEX_BOT_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           python scripts/run_codex_agent.py \
             --pe-id "${{ inputs.pe_id }}" \

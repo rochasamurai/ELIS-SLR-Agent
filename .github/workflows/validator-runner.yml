@@ -81,21 +81,11 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: python scripts/verify_codex_auth.py
 
-      - name: Write Codex auth.json
-        if: inputs.engine == 'codex'
-        env:
-          CODEX_ACCESS_TOKEN: ${{ secrets.CODEX_ACCESS_TOKEN }}
-          CODEX_ID_TOKEN: ${{ secrets.CODEX_ID_TOKEN }}
-          CODEX_REFRESH_TOKEN: ${{ secrets.CODEX_REFRESH_TOKEN }}
-          CODEX_ACCOUNT_ID: ${{ secrets.CODEX_ACCOUNT_ID }}
-        run: |
-          mkdir -p ~/.codex
-          python -c "import json,os; json.dump({'auth_mode':'chatgpt','tokens':{'access_token':os.environ['CODEX_ACCESS_TOKEN'],'id_token':os.environ['CODEX_ID_TOKEN'],'refresh_token':os.environ['CODEX_REFRESH_TOKEN'],'account_id':os.environ['CODEX_ACCOUNT_ID']}},open(os.path.expanduser('~/.codex/auth.json'),'w'))"
-          python -c "import json,os; d=json.load(open(os.path.expanduser('~/.codex/auth.json'))); print('auth.json OK — auth_mode:',d['auth_mode'],'access_token_len:',len(d['tokens']['access_token']),'id_token_len:',len(d['tokens']['id_token']))"
-
       - name: Smoke-test Codex CLI
         if: inputs.engine == 'codex'
         continue-on-error: true
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: codex --version && codex exec --skip-git-repo-check --dangerously-bypass-approvals-and-sandbox "echo SMOKE_OK" < /dev/null
 
       - name: Verify Claude auth
@@ -108,6 +98,7 @@ jobs:
         if: inputs.engine == 'codex'
         env:
           GH_TOKEN: ${{ secrets.CODEX_BOT_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           python -m scripts.run_codex_validator \
             --pe-id "${{ inputs.pe_id }}" \
