@@ -365,6 +365,7 @@ def cli_command(engine: str, prompt: str) -> list[str]:
 def run_cli(engine: str, prompt: str) -> None:
     result = subprocess.run(
         cli_command(engine, prompt),
+        stdin=subprocess.DEVNULL,
         capture_output=True,
         text=True,
         timeout=300,
