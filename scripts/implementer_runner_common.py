@@ -346,9 +346,9 @@ def mark_pr_ready(branch: str, base_branch: str) -> None:
 
 def default_cli_command(engine: str, prompt: str) -> list[str]:
     if engine == "codex":
-        # Task is passed as a positional arg; stdin must be closed (DEVNULL)
-        # so the CLI does not attempt to read a JSON sandbox spec from it.
-        return ["codex", "exec", prompt]
+        # 'codex exec' runs a shell command in the sandbox — not an AI task.
+        # The correct non-interactive AI invocation is: codex --full-auto <task>
+        return ["codex", "--full-auto", prompt]
     if engine == "claude":
         return ["claude", "-p", prompt]
     raise RunnerError(f"Unsupported engine '{engine}'.")
