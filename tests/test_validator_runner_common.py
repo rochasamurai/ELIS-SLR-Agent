@@ -231,6 +231,17 @@ def test_post_fail_assignment_calls_gh_claude(monkeypatch):
     assert "@claude-code" in body_arg
 
 
+def test_post_fail_assignment_raises_on_gh_error(monkeypatch):
+    def fake_run(cmd, **_kwargs):
+        return subprocess.CompletedProcess(
+            cmd, 1, stdout="", stderr="gh: authentication failed"
+        )
+
+    monkeypatch.setattr(common.subprocess, "run", fake_run)
+    with pytest.raises(common.RunnerError, match="authentication failed"):
+        common.post_fail_assignment("312", "codex")
+
+
 # ---------------------------------------------------------------------------
 # verify_review_committed
 # ---------------------------------------------------------------------------

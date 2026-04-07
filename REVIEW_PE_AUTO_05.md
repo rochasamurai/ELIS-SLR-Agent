@@ -919,3 +919,97 @@ tests/test_check_role_registration.py
 tests/test_dispatch_validator_runner.py
 tests/test_validator_runner_common.py
 ```
+
+---
+
+## Agent update — CODEX / PE-AUTO-05 / 2026-04-07 (Round 14)
+
+### Verdict
+FAIL
+
+### Gate results
+black: PASS
+ruff: PASS
+pytest: PASS — 673 passed, 0 failed
+PE-specific tests: PASS — `tests/test_validator_runner_common.py` 19 passed
+
+### Scope
+```text
+M	.github/workflows/implementer-runner.yml
+M	.github/workflows/validator-runner.yml
+M	HANDOFF.md
+A	REVIEW_PE_AUTO_05.md
+A	handoffs/HANDOFF_PE-AUTO-05.md
+M	scripts/check_role_registration.py
+A	scripts/dispatch_validator_runner.py
+M	scripts/implementer_runner_common.py
+A	scripts/run_claude_validator.py
+A	scripts/run_codex_validator.py
+A	scripts/validator_runner_common.py
+A	tests/test_check_role_registration.py
+A	tests/test_dispatch_validator_runner.py
+A	tests/test_validator_runner_common.py
+```
+
+### Required fixes
+- AC-1 not satisfied by live PR evidence: Gate 1 assignment-tag comments are currently user-authored (`rochasamurai`), while the PR also contains repeated `github-actions` manual Gate 1 failure comments. Automatic validator triggering from Gate 1 is therefore not evidenced as working end-to-end.
+- AC-5 not satisfied by live PR evidence: there are zero PR comments from `elis-pm-bot` containing `Fail — fix assignment` on this PR, so the FAIL assignment path is not demonstrated.
+
+### Evidence
+```text
+python -m black --check .
+All done! ✨ 🍰 ✨
+149 files would be left unchanged.
+
+python -m ruff check .
+All checks passed!
+
+python -m pytest
+673 passed in 3.49s
+
+python -m pytest tests/test_validator_runner_common.py -q
+...................                                                      [100%]
+
+python - <<'PY'
+import json,subprocess
+repo='rochasamurai/ELIS-SLR-Agent'
+comments=json.loads(subprocess.check_output(['gh','api',f'repos/{repo}/issues/312/comments'], text=True))
+reviews=json.loads(subprocess.check_output(['gh','api',f'repos/{repo}/pulls/312/reviews'], text=True))
+author=json.loads(subprocess.check_output(['gh','api',f'repos/{repo}/pulls/312'], text=True)).get('user',{}).get('login')
+assign=[c for c in comments if 'validator-assignment' in (c.get('body') or '')]
+manual=[c for c in comments if 'Gate 1 — manual PM review required' in (c.get('body') or '')]
+pm=[c for c in comments if (c.get('user') or {}).get('login')=='elis-pm-bot' and 'Fail — fix assignment' in (c.get('body') or '')]
+print('pr_author',author)
+print('assignment_comments',len(assign))
+print('assignment_authors',sorted({(c.get('user') or {}).get('login') for c in assign}))
+print('manual_gate1_comments',len(manual))
+print('pm_fail_assignment_comments',len(pm))
+print('review_count',len(reviews))
+print('review_authors',sorted({(r.get('user') or {}).get('login') for r in reviews}))
+print('review_states', [r.get('state') for r in reviews])
+PY
+pr_author rochasamurai
+assignment_comments 9
+assignment_authors ['rochasamurai']
+manual_gate1_comments 10
+pm_fail_assignment_comments 0
+review_count 2
+review_authors ['elis-codex-bot']
+review_states ['CHANGES_REQUESTED', 'CHANGES_REQUESTED']
+
+gh pr checks 312
+Parse verdict and auto-merge if PASS	pass	7s	https://github.com/rochasamurai/ELIS-SLR-Agent/actions/runs/24092835122/job/70283550033
+
+rg -n "validator-assignment|post_fail_assignment|verify_formal_review_posted\(|Auto-merge if PASS|Gate 2b" \
+  .github/workflows/validator-dispatch.yml \
+  .github/workflows/validator-runner.yml \
+  .github/workflows/auto-merge-on-pass.yml \
+  scripts/validator_runner_common.py
+scripts/validator_runner_common.py:138:def verify_formal_review_posted(
+scripts/validator_runner_common.py:175:def post_fail_assignment(pr_number: str, implementer_engine: str) -> None:
+scripts/validator_runner_common.py:273:        verify_formal_review_posted(inputs.pr_number, expected_login=expected_reviewer)
+.github/workflows/auto-merge-on-pass.yml:128:      - name: Auto-merge if PASS, no veto, and CI green
+.github/workflows/validator-runner.yml:167:          from scripts.validator_runner_common import post_fail_assignment
+.github/workflows/validator-runner.yml:171:          post_fail_assignment('${{ inputs.pr_number }}', implementer_engine)
+.github/workflows/validator-dispatch.yml:21:      contains(github.event.comment.body, '<!-- validator-assignment -->')
+```
