@@ -255,8 +255,20 @@ jobs:
               // Skip PRs that already have a timeout label applied.
               if (labels.includes('timeout')) continue;
 
-              const updatedAt = new Date(pr.updated_at).getTime();
-              if (now - updatedAt < cutoffMs) continue;
+              // Measure blocked duration from when the blocking label was applied.
+              // Generic PR activity does not reset this timer.
+              const { data: events } = await github.rest.issues.listEvents({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                per_page: 100,
+              });
+              const blockedEvent = events
+                .filter(e => e.event === 'labeled' && (e.label.name === 'blocked' || e.label.name === 'pm-review-required'))
+                .pop();
+              if (!blockedEvent) continue;
+              const blockedAt = new Date(blockedEvent.created_at).getTime();
+              if (now - blockedAt < cutoffMs) continue;
 
               // Ensure the timeout label exists.
               try {
@@ -281,5 +293,5 @@ jobs:
                 issue_number: pr.number,
                 labels: ['timeout'],
               });
-              core.info(`Applied timeout label to PR #${pr.number} (last updated ${pr.updated_at})`);
+              core.info(`Applied timeout label to PR #${pr.number} (blocked since ${blockedEvent.created_at})`);
             }
