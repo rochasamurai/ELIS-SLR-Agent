@@ -13,7 +13,10 @@ from __future__ import annotations
 
 import argparse
 import datetime
+import os
 import pathlib
+import re
+import shutil
 import sys
 
 # ---------------------------------------------------------------------------
@@ -33,6 +36,7 @@ VALID_STATUSES = {
 ACTIVE_STATUSES = VALID_STATUSES - {"merged"}
 
 _DEFAULT_REGISTRY = pathlib.Path("CURRENT_PE.md")
+_DEFAULT_LESSONS = pathlib.Path("LESSONS_LEARNED.md")
 
 
 def parse_active_registry(
@@ -129,7 +133,59 @@ def _merged_this_week(rows: list[dict[str, str]], now: datetime.date) -> int:
     return count
 
 
-def format_status_response(rows: list[dict[str, str]], now: datetime.date) -> str:
+def _intervention_pe_ids(lessons_content: str) -> set[str]:
+    pe_ids: set[str] = set()
+    for block in re.split(r"(?=^## LL-\d+\b)", lessons_content, flags=re.MULTILINE):
+        if "PM Arbitration" not in block and "ESCALATE_PO" not in block:
+            continue
+        pe_ids.update(re.findall(r"\bPE-[A-Z]+-[0-9]+\b", block))
+    return pe_ids
+
+
+def autonomy_rate_summary(
+    rows: list[dict[str, str]],
+    lessons_content: str,
+) -> str:
+    merged_ids = {
+        row["pe-id"]
+        for row in rows
+        if row.get("status", "").lower() == "merged" and row.get("pe-id")
+    }
+    if not merged_ids:
+        return "Autonomy rate: 0/0 PEs merged without escalation (0%)"
+
+    intervention_ids = _intervention_pe_ids(lessons_content) & merged_ids
+    autonomous = len(merged_ids) - len(intervention_ids)
+    rate = round((autonomous / len(merged_ids)) * 100)
+    return (
+        f"Autonomy rate: {autonomous}/{len(merged_ids)} PEs merged without "
+        f"escalation ({rate}%)"
+    )
+
+
+def auth_status_summary(
+    env: dict[str, str] | None = None,
+    *,
+    which=shutil.which,
+) -> str:
+    if env is None:
+        env = os.environ
+
+    codex_ok = bool(env.get("OPENAI_API_KEY")) and which("codex") is not None
+    claude_ok = bool(env.get("CLAUDE_SETUP_TOKEN")) and which("claude") is not None
+
+    codex_text = "codex OK" if codex_ok else "codex unavailable"
+    claude_text = "claude OK" if claude_ok else "claude unavailable"
+    return f"Auth status: {codex_text} · {claude_text}"
+
+
+def format_status_response(
+    rows: list[dict[str, str]],
+    now: datetime.date,
+    *,
+    lessons_content: str = "",
+    auth_summary: str | None = None,
+) -> str:
     """Format Active PE Registry for PO consumption (AGENTS.md §4.1).
 
     When more than one domain is present, active PEs are grouped under labelled
@@ -167,6 +223,8 @@ def format_status_response(rows: list[dict[str, str]], now: datetime.date) -> st
 
     lines.append("")
     lines.append(f"{len(active)} PEs active. {merged_week} merged this week.")
+    lines.append(autonomy_rate_summary(rows, lessons_content))
+    lines.append(auth_summary or auth_status_summary())
     return "\n".join(lines)
 
 
@@ -255,6 +313,12 @@ def load_registry(registry_path: pathlib.Path) -> list[dict[str, str]]:
     return rows
 
 
+def load_lessons(lessons_path: pathlib.Path) -> str:
+    if not lessons_path.exists():
+        return ""
+    return lessons_path.read_text(encoding="utf-8")
+
+
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
@@ -269,7 +333,7 @@ def main() -> int:
     parser.add_argument(
         "--command",
         required=True,
-        choices=["status", "escalate"],
+        choices=["status", "escalate", "auth-check"],
         help="Command to execute",
     )
     parser.add_argument(
@@ -281,6 +345,11 @@ def main() -> int:
         default=str(_DEFAULT_REGISTRY),
         help="Path to CURRENT_PE.md (default: CURRENT_PE.md)",
     )
+    parser.add_argument(
+        "--lessons",
+        default=str(_DEFAULT_LESSONS),
+        help="Path to LESSONS_LEARNED.md (default: LESSONS_LEARNED.md)",
+    )
     args = parser.parse_args()
 
     try:
@@ -289,9 +358,22 @@ def main() -> int:
         print(f"ERROR: {exc}")
         return 1
 
+    lessons_content = load_lessons(pathlib.Path(args.lessons))
+
     if args.command == "status":
         now = datetime.date.today()
-        print(format_status_response(rows, now))
+        print(
+            format_status_response(
+                rows,
+                now,
+                lessons_content=lessons_content,
+                auth_summary=auth_status_summary(),
+            )
+        )
+        return 0
+
+    if args.command == "auth-check":
+        print(auth_status_summary())
         return 0
 
     if args.command == "escalate":

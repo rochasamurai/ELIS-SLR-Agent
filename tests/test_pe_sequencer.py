@@ -171,3 +171,20 @@ def test_skips_when_merged_branch_does_not_match_active_branch(tmp_path: Path) -
 
     assert decision.action == "skip"
     assert "skipping sequencer advance" in decision.reason
+
+
+def test_halts_when_loop_control_is_paused(tmp_path: Path) -> None:
+    current_pe = tmp_path / "CURRENT_PE.md"
+    plan = tmp_path / "ELIS_2Agent_Automation_Plan_v2_0.md"
+    control = tmp_path / "pm_loop_control.json"
+    _write(current_pe, CURRENT_PE_BODY)
+    _write(plan, PLAN_BODY)
+    control.write_text(
+        '{"paused": true, "reason": "PO pause requested"}\n',
+        encoding="utf-8",
+    )
+
+    decision = pe_sequencer.advance_current_pe(current_pe, control_file=control)
+
+    assert decision.action == "halt_paused"
+    assert "PO pause requested" in decision.reason

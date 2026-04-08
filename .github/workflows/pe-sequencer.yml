@@ -88,6 +88,13 @@ jobs:
                 'Automatic advance halted because the next PE is not ready.',
                 reason
               ].join('\n');
+            } else if (action === 'halt_paused') {
+              body = [
+                '## PM sequencer',
+                '',
+                'Automatic advance halted because the autonomous loop is paused.',
+                reason
+              ].join('\n');
             } else if (action === 'skip') {
               body = [
                 '## PM sequencer',

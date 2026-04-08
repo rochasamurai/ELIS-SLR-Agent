@@ -13,6 +13,10 @@ This file records the durable corrections that must survive session drift.
 - PR status must be reported only from `gh pr`.
 - Registry branch names do not prove worktrees exist — always verify with `git worktree list`.
 - Full PE registry in Discord: compact bullet format (one line per PE), max 25 entries per message, labeled (1/N). Never the raw 7-column table.
+- Sequencer pause state lives in `config/pm_loop_control.json`; `!pe veto` and `!pe pause`
+  must set it, and `!pe resume` must clear it.
+- `!pe auth-check` reports only safe status words such as `OK` / `unavailable`; never print
+  token values or derived secrets.
 
 ---
 

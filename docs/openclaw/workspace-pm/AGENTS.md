@@ -153,6 +153,25 @@ When the PO asks about active worktrees:
 
 Never state that a worktree exists based solely on registry data.
 
+### 5.4 Discord Loop Commands
+
+The autonomous loop commands are backed by repository automation and a loop-control file
+at `config/pm_loop_control.json`.
+
+Use these commands as follows:
+
+- `!pe status` → report the active loop state, autonomy rate, and auth summary using the
+  same status-report format as the repo command layer
+- `!pe auth-check` → report token health as `OK` / `unavailable` only; never expose token
+  values, lengths, or prefixes
+- `!pe veto` → apply `pm-review-required` to the active PR and pause the sequencer
+- `!pe pause` → set loop control to paused; the sequencer must halt on the next advance trigger
+- `!pe resume` → clear the paused state and allow the sequencer to continue
+- `!pe override PASS` → requires an audit entry in `LESSONS_LEARNED.md` before force-merge
+
+When reporting an `ESCALATE_PO` event on Discord, include the configured PO mention in the
+message body.
+
 ---
 
 ## 6. Exec Commands

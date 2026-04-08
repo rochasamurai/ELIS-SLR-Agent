@@ -10,6 +10,8 @@ import pytest
 
 from scripts.pm_status_reporter import (
     _engine_display,
+    auth_status_summary,
+    autonomy_rate_summary,
     build_escalation_message,
     format_status_response,
     handle_escalate,
@@ -102,6 +104,8 @@ def test_status_format_contains_required_fields() -> None:
     assert "Active PEs" in result
     assert "PEs active" in result
     assert "merged this week" in result
+    assert "Autonomy rate:" in result
+    assert "Auth status:" in result
 
 
 def test_status_format_active_count() -> None:
@@ -149,6 +153,44 @@ def test_status_format_no_active_pes() -> None:
     result = format_status_response(rows, datetime.date(2026, 2, 22))
     assert "no active PEs" in result
     assert "0 PEs active" in result
+
+
+def test_autonomy_rate_summary_counts_interventions_by_pe() -> None:
+    _, rows = parse_active_registry(
+        """\
+# Current PE Assignment
+
+## Active PE Registry
+
+| PE-ID | Domain | Implementer-agentId | Validator-agentId | Branch | Status | Last-updated |
+|---|---|---|---|---|---|---|
+| PE-OC-07 | openclaw-infra | prog-impl-codex | prog-val-claude | feature/x | merged | 2026-02-20 |
+| PE-OC-08 | openclaw-infra | prog-impl-claude | prog-val-codex | feature/y | merged | 2026-02-21 |
+"""
+    )
+    lessons = """\
+## LL-20 — Arbitration
+
+## PM Arbitration
+
+PE-OC-08 required escalation.
+"""
+    assert (
+        autonomy_rate_summary(rows, lessons)
+        == "Autonomy rate: 1/2 PEs merged without escalation (50%)"
+    )
+
+
+def test_auth_status_summary_hides_values() -> None:
+    env = {"OPENAI_API_KEY": "sk-live-secret", "CLAUDE_SETUP_TOKEN": "token-value"}
+
+    def fake_which(name: str) -> str | None:
+        return name
+
+    result = auth_status_summary(env, which=fake_which)
+    assert result == "Auth status: codex OK · claude OK"
+    assert "sk-live-secret" not in result
+    assert "token-value" not in result
 
 
 # ---------------------------------------------------------------------------
@@ -257,6 +299,29 @@ def test_main_escalate_command(tmp_path: Path, capsys) -> None:
     out = capsys.readouterr().out
     assert "PE-OC-08" in out
     assert "PM recommendation" in out
+
+
+def test_main_auth_check_command(tmp_path: Path, capsys, monkeypatch) -> None:
+    p = _make_registry_file(tmp_path)
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-redacted")
+    monkeypatch.setenv("CLAUDE_SETUP_TOKEN", "setup-redacted")
+    monkeypatch.setattr("scripts.pm_status_reporter.shutil.which", lambda name: name)
+    old_argv = sys.argv
+    sys.argv = [
+        "pm_status_reporter.py",
+        "--command",
+        "auth-check",
+        "--registry",
+        str(p),
+    ]
+    try:
+        rc = main()
+    finally:
+        sys.argv = old_argv
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "Auth status: codex OK · claude OK" in out
+    assert "sk-redacted" not in out
 
 
 def test_main_escalate_missing_pe_id_returns_1(tmp_path: Path, capsys) -> None:
