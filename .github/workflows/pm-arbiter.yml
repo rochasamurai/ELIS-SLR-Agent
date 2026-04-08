@@ -1,0 +1,220 @@
+name: PM Arbiter
+
+on:
+  pull_request:
+    types: [labeled]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  statuses: write
+
+jobs:
+  arbitrate:
+    name: Run PM arbitration
+    runs-on: ubuntu-latest
+    # Only fire on the arbitration trigger labels.
+    if: |
+      github.event.label.name == 'pm-arbitration-required' ||
+      github.event.label.name == 'scope-dispute' ||
+      github.event.label.name == 'pm-escalation'
+
+    steps:
+      - name: Checkout PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          token: ${{ secrets.PM_BOT_TOKEN }}
+
+      - name: Configure PM bot git identity
+        run: |
+          git config user.name "elis-pm-bot"
+          git config user.email "elis-pm-bot@users.noreply.github.com"
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -e ".[dev]"
+
+      - name: Determine trigger type and context
+        id: ctx
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const label = context.payload.label.name;
+            const prNumber = context.payload.pull_request.number;
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+            });
+
+            // Map label to trigger type.
+            let triggerType = 'fail_round_3';
+            if (label === 'scope-dispute') triggerType = 'scope_dispute';
+            if (label === 'pm-escalation') triggerType = 'technical_blocker';
+
+            // Count fail-round-* labels to determine fail round.
+            const failLabels = pr.labels
+              .map(l => l.name)
+              .filter(n => /^fail-round-\d+$/.test(n));
+            const failRound = failLabels.length;
+
+            // Count existing pm-arbitration-required labels applications.
+            // Use comment count with PM Arbitration marker as proxy for iteration.
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              per_page: 100,
+            });
+            const arbIterations = comments.filter(c =>
+              c.body && c.body.includes('## PM Arbitration')
+            ).length + 1;
+
+            core.setOutput('trigger_type', triggerType);
+            core.setOutput('fail_round', String(failRound));
+            core.setOutput('pr_number', String(prNumber));
+            core.setOutput('head_branch', pr.head.ref);
+            core.setOutput('arbiter_iteration', String(arbIterations));
+
+      - name: Find REVIEW file for this branch
+        id: review
+        run: |
+          base=$(git merge-base origin/main HEAD)
+          review_file=$(git diff --name-only "$base" -- 'REVIEW_*.md' 2>/dev/null | head -1)
+          echo "file=${review_file}" >> "$GITHUB_OUTPUT"
+
+      - name: Get scope diff
+        id: diff
+        run: |
+          base=$(git merge-base origin/main HEAD)
+          git diff --name-status "$base" HEAD > /tmp/scope_diff.txt
+          echo "Scope diff:"
+          cat /tmp/scope_diff.txt
+
+      - name: Read PE ID from CURRENT_PE.md
+        id: pe
+        run: |
+          pe_id=$(python - <<'EOF'
+          import re
+          from pathlib import Path
+          content = Path('CURRENT_PE.md').read_text(encoding='utf-8')
+          m = re.search(r'^\|\s*PE\s*\|\s*(PE-[A-Z]+-[0-9]+)\s*\|', content, re.MULTILINE)
+          print(m.group(1) if m else '')
+          EOF
+          )
+          echo "pe_id=${pe_id}" >> "$GITHUB_OUTPUT"
+
+      - name: Run PM arbiter
+        id: arbiter
+        run: |
+          python scripts/pm_arbiter.py \
+            --trigger "${{ steps.ctx.outputs.trigger_type }}" \
+            --fail-round "${{ steps.ctx.outputs.fail_round }}" \
+            --pe-id "${{ steps.pe.outputs.pe_id }}" \
+            --review-file "${{ steps.review.outputs.file }}" \
+            --handoff-file HANDOFF.md \
+            --arbiter-iteration "${{ steps.ctx.outputs.arbiter_iteration }}" \
+            --write \
+            --json \
+            < /tmp/scope_diff.txt
+
+      - name: Commit LESSONS_LEARNED.md update
+        run: |
+          git add LESSONS_LEARNED.md
+          if git diff --cached --quiet; then
+            echo "No changes to LESSONS_LEARNED.md"
+          else
+            git commit -m "chore(pm): arbiter appended lessons learned for ${{ steps.pe.outputs.pe_id }}"
+            git push origin HEAD:${{ steps.ctx.outputs.head_branch }}
+          fi
+
+      - name: Post PM Arbitration comment
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.PM_BOT_TOKEN }}
+          script: |
+            const prNumber = parseInt('${{ steps.ctx.outputs.pr_number }}');
+            const decision = '${{ steps.arbiter.outputs.decision }}';
+            const justification = `${{ steps.arbiter.outputs.justification }}`;
+            const llId = '${{ steps.arbiter.outputs.ll_id }}';
+            const peId = '${{ steps.pe.outputs.pe_id }}';
+            const triggerType = '${{ steps.ctx.outputs.trigger_type }}';
+            const failRound = '${{ steps.ctx.outputs.fail_round }}';
+
+            const decisionLabels = {
+              SIDE_IMPLEMENTER: 'SIDE_IMPLEMENTER — PM sides with Implementer',
+              SIDE_VALIDATOR: 'SIDE_VALIDATOR — PM sides with Validator',
+              SPLIT_PE: 'SPLIT_PE — Legitimate conflict; new PE will be created',
+              ESCALATE_PO: 'ESCALATE_PO — Requires human PO decision',
+            };
+            const instructions = {
+              SIDE_IMPLEMENTER: 'Validator: accept the Implementer\'s scope as declared in HANDOFF.md. Re-issue PASS verdict without the out-of-scope objection.',
+              SIDE_VALIDATOR: 'Implementer: fix all blocking findings in the REVIEW file. Deliver an updated Status Packet. Do not address non-blocking findings.',
+              SPLIT_PE: 'PM will create an additional PE in the plan to cover the disputed scope. Implementer: revert disputed changes and deliver HANDOFF for the original scope.',
+              ESCALATE_PO: 'Human PO intervention required. PM Agent will notify the PO on Discord with a structured summary.',
+            };
+
+            const body = [
+              '## PM Arbitration',
+              '',
+              `**PE:** ${peId}  `,
+              `**Trigger:** \`${triggerType}\`  `,
+              `**Decision:** \`${decision}\`  `,
+              '',
+              `**${decisionLabels[decision] || decision}**`,
+              '',
+              '### Justification',
+              '',
+              justification,
+              '',
+              '### Required action',
+              '',
+              instructions[decision] || decision,
+              '',
+              `_Lessons learned entry: ${llId}_`,
+              '',
+              '_PM Agent — automated arbitration_',
+            ].join('\n');
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body,
+            });
+
+      - name: Notify PO on Discord if ESCALATE_PO
+        if: steps.arbiter.outputs.decision == 'ESCALATE_PO'
+        env:
+          PM_AGENT_WEBHOOK_URL: ${{ secrets.PM_AGENT_WEBHOOK_URL }}
+        run: |
+          python - <<'EOF'
+          import json, os, urllib.request
+          url = os.environ.get("PM_AGENT_WEBHOOK_URL", "").strip()
+          if not url:
+              print("PM_AGENT_WEBHOOK_URL not configured — skipping Discord notify.")
+              raise SystemExit(0)
+          payload = {
+              "event": "pm-arbitration-escalate-po",
+              "pe_id": "${{ steps.pe.outputs.pe_id }}",
+              "trigger": "${{ steps.ctx.outputs.trigger_type }}",
+              "justification": "${{ steps.arbiter.outputs.justification }}",
+              "pr_number": "${{ steps.ctx.outputs.pr_number }}",
+              "ll_id": "${{ steps.arbiter.outputs.ll_id }}",
+          }
+          data = json.dumps(payload).encode("utf-8")
+          req = urllib.request.Request(
+              url, data=data,
+              headers={"Content-Type": "application/json"},
+              method="POST",
+          )
+          with urllib.request.urlopen(req, timeout=30) as resp:
+              print(f"Webhook status: {resp.status}")
+          EOF
