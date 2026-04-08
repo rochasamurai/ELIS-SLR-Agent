@@ -295,3 +295,25 @@ def test_workflow_has_timeout_route_for_24h_blocked_enforcement() -> None:
     assert (
         has_timeout_label_trigger or has_timeout_mapping or has_schedule_trigger
     ), "No timeout trigger route found in pm-arbiter workflow for blocked >24h enforcement."
+
+
+def test_workflow_has_automatic_detector_for_blocked_24h_timeout() -> None:
+    """AC-5 requires automatic timeout labelling or scheduled blocked-state detection."""
+    workflow = Path(".github/workflows/pm-arbiter.yml").read_text(encoding="utf-8")
+    all_workflows = "\n".join(
+        path.read_text(encoding="utf-8")
+        for path in Path(".github/workflows").glob("*.yml")
+    )
+
+    has_scheduled_detection = "schedule:" in workflow
+    has_timeout_label_automation = (
+        "labels: ['timeout']" in all_workflows
+        or 'labels: ["timeout"]' in all_workflows
+        or "labels: ['timeout'," in all_workflows
+        or 'labels: ["timeout",' in all_workflows
+        or "labels: [timeout]" in all_workflows
+    )
+
+    assert (
+        has_scheduled_detection or has_timeout_label_automation
+    ), "AC-5 unmet: no automatic 24h blocked detector found (schedule or timeout label automation)."

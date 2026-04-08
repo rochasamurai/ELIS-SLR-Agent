@@ -369,3 +369,130 @@ tests/test_pm_arbiter.py:295: AssertionError
 FAILED tests/test_pm_arbiter.py::test_workflow_has_timeout_route_for_24h_blocked_enforcement - AssertionError: No timeout trigger route found in pm-arbiter workflow for blocked >24h enforcement.
 assert (False or False or False)
 ```
+
+## Re-validation — 2026-04-08 (Round 5)
+
+### Verdict
+FAIL
+
+### Gate results
+black: PASS  
+ruff: PASS  
+pytest: FAIL (1 failing adversarial test)  
+PE-specific tests: `tests/test_pm_arbiter.py` FAIL (20 passed, 1 failed)
+
+### Scope
+```text
+M	.github/workflows/auto-merge-on-pass.yml
+A	.github/workflows/pm-arbiter.yml
+M	HANDOFF.md
+A	REVIEW_PE_AUTO_07.md
+A	handoffs/HANDOFF_PE-AUTO-07.md
+A	scripts/pm_arbiter.py
+M	tests/test_pm_arbiter.py
+```
+
+### Required fixes
+- AC-5 remains blocking: there is a timeout decision path and timeout label intake, but no automatic 24h blocked-state detector that raises timeout without manual intervention.
+- Add automatic timeout detection for blocked PEs (for example scheduled check of blocked duration or explicit automation that applies `timeout` label at 24h), then keep `ESCALATE_PO` Discord notification wired to that path.
+
+### Evidence
+```text
+$ python -m black --check .
+All done! ✨ 🍰 ✨
+153 files would be left unchanged.
+
+$ python -m ruff check .
+All checks passed!
+
+$ python -m pytest tests/test_pm_arbiter.py -q
+....................F                                                    [100%]
+=================================== FAILURES ===================================
+_________ test_workflow_has_automatic_detector_for_blocked_24h_timeout _________
+
+    def test_workflow_has_automatic_detector_for_blocked_24h_timeout() -> None:
+        """AC-5 requires automatic timeout labelling or scheduled blocked-state detection."""
+        workflow = Path(".github/workflows/pm-arbiter.yml").read_text(encoding="utf-8")
+        all_workflows = "\n".join(
+            path.read_text(encoding="utf-8")
+            for path in Path(".github/workflows").glob("*.yml")
+        )
+
+        has_scheduled_detection = "schedule:" in workflow
+        has_timeout_label_automation = (
+            "labels: ['timeout']" in all_workflows
+            or 'labels: ["timeout"]' in all_workflows
+            or "labels: ['timeout'," in all_workflows
+            or 'labels: ["timeout",' in all_workflows
+            or "labels: [timeout]" in all_workflows
+        )
+
+>       assert (
+            has_scheduled_detection or has_timeout_label_automation
+        ), "AC-5 unmet: no automatic 24h blocked detector found (schedule or timeout label automation)."
+E       AssertionError: AC-5 unmet: no automatic 24h blocked detector found (schedule or timeout label automation).
+E       assert (False or False)
+
+tests/test_pm_arbiter.py:317: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_pm_arbiter.py::test_workflow_has_automatic_detector_for_blocked_24h_timeout - AssertionError: AC-5 unmet: no automatic 24h blocked detector found (schedule or timeout label automation).
+assert (False or False)
+
+$ python -m pytest -q
+...
+FAILED tests/test_pm_arbiter.py::test_workflow_has_automatic_detector_for_blocked_24h_timeout - AssertionError: AC-5 unmet: no automatic 24h blocked detector found (schedule or timeout label automation).
+assert (False or False)
+
+$ python - <<'PY'
+from pathlib import Path
+from scripts.pm_arbiter import ArbContext, TriggerType, decide
+
+auto = Path('.github/workflows/auto-merge-on-pass.yml').read_text(encoding='utf-8')
+arb_wf = Path('.github/workflows/pm-arbiter.yml').read_text(encoding='utf-8')
+arb_py = Path('scripts/pm_arbiter.py').read_text(encoding='utf-8')
+all_wf = '\n'.join(p.read_text(encoding='utf-8') for p in Path('.github/workflows').glob('*.yml'))
+
+ctx = ArbContext(
+    trigger_type=TriggerType.TIMEOUT,
+    fail_round=3,
+    pe_id='PE-AUTO-07',
+    review_content='### Verdict\nFAIL\n',
+    handoff_content='## Files Changed\n```text\nA  scripts/pm_arbiter.py\n```',
+    scope_diff='A\tscripts/pm_arbiter.py\n',
+    arbiter_iteration=1,
+)
+decision, justification = decide(ctx)
+
+ac1 = ('nextRound >= 3' in auto and 'pm-arbitration-required' in auto and 'fail-round-' in auto)
+ac2 = ('## PM Arbitration' in arb_wf and 'github-token: ${{ secrets.PM_BOT_TOKEN }}' in arb_wf and 'issues.createComment' in arb_wf)
+ac3 = ('append_lessons_learned' in arb_py and 'git add LESSONS_LEARNED.md' in arb_wf and '--write' in arb_py)
+ac4 = ("if: steps.arbiter.outputs.decision == 'ESCALATE_PO'" in arb_wf and 'PM_AGENT_WEBHOOK_URL' in arb_wf and 'pm-arbitration-escalate-po' in arb_wf)
+ac5 = (
+    decision.value == 'ESCALATE_PO'
+    and 'blocked for >24h' in justification
+    and (
+        'schedule:' in arb_wf
+        or "labels: ['timeout']" in all_wf
+        or 'labels: ["timeout"]' in all_wf
+        or "labels: ['timeout'," in all_wf
+        or 'labels: ["timeout",' in all_wf
+        or 'labels: [timeout]' in all_wf
+    )
+)
+
+print('AC-1', 'PASS' if ac1 else 'FAIL')
+print('AC-2', 'PASS' if ac2 else 'FAIL')
+print('AC-3', 'PASS' if ac3 else 'FAIL')
+print('AC-4', 'PASS' if ac4 else 'FAIL')
+print('AC-5', 'PASS' if ac5 else 'FAIL')
+print('TIMEOUT_JUSTIFICATION', justification)
+print('AUTO_TIMEOUT_DETECTOR', 'YES' if ('schedule:' in arb_wf or "labels: ['timeout']" in all_wf or 'labels: ["timeout"]' in all_wf or "labels: ['timeout'," in all_wf or 'labels: ["timeout",' in all_wf or 'labels: [timeout]' in all_wf) else 'NO')
+PY
+AC-1 PASS
+AC-2 PASS
+AC-3 PASS
+AC-4 PASS
+AC-5 FAIL
+TIMEOUT_JUSTIFICATION Timeout: PE PE-AUTO-07 has been blocked for >24h without resolution (runner inactive for >4h). AC-5 threshold exceeded — PO must investigate.
+AUTO_TIMEOUT_DETECTOR NO
+```
