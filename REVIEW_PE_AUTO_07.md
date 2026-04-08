@@ -1,11 +1,11 @@
 ### Verdict
-PASS
+FAIL
 
 ### Gate results
 black: PASS  
 ruff: PASS  
-pytest: PASS (700 passed)  
-PE-specific tests: PASS (`tests/test_pm_arbiter.py`, 23/23)
+pytest: FAIL (1 failing test)  
+PE-specific tests: FAIL (`tests/test_pm_arbiter.py`, 23 passed, 1 failed)
 
 ### Scope
 ```text
@@ -19,7 +19,8 @@ A	tests/test_pm_arbiter.py
 ```
 
 ### Required fixes
-None.
+- AC-5 blocking gap: `.github/workflows/pm-arbiter.yml` computes timeout from `pr.updated_at` rather than when the PR entered `blocked` state. Any comment/label activity can refresh `updated_at` and defer timeout indefinitely, so a PE may remain blocked beyond 24h without PO notification.
+- Replace `updated_at`-based timeout logic with blocked-state age logic (for example, derive the timestamp of `blocked` label application from issue timeline events and compare that to 24h).
 
 ### Evidence
 ```text
@@ -30,59 +31,34 @@ All done! ✨ 🍰 ✨
 $ python -m ruff check .
 All checks passed!
 
-$ python -m pytest
-........................................................................ [ 10%]
-........................................................................ [ 20%]
-........................................................................ [ 30%]
-........................................................................ [ 41%]
-........................................................................ [ 51%]
-........................................................................ [ 61%]
-........................................................................ [ 72%]
-........................................................................ [ 82%]
-........................................................................ [ 92%]
-....................................................                     [100%]
-700 passed in 3.54s
+$ python -m pytest tests/test_pm_arbiter.py -q
+.....................F..                                                 [100%]
+FAILED tests/test_pm_arbiter.py::test_timeout_detector_does_not_use_pr_updated_at_as_blocked_timer
 
-$ python -m pytest tests/test_pm_arbiter.py -v
-============================= test session starts ==============================
-platform linux -- Python 3.11.15, pytest-9.0.3, pluggy-1.6.0
-rootdir: /home/runner/work/ELIS-SLR-Agent/ELIS-SLR-Agent
-configfile: pyproject.toml
-collected 23 items
+$ python -m pytest -q
+...
+FAILED tests/test_pm_arbiter.py::test_timeout_detector_does_not_use_pr_updated_at_as_blocked_timer
 
-tests/test_pm_arbiter.py .......................                         [100%]
-
-============================== 23 passed in 0.04s ==============================
+$ rg -n "blocked >24h|updated_at|labels: \['timeout'\]" .github/workflows/pm-arbiter.yml
+229:    name: Detect PRs blocked >24h and apply timeout label
+235:      - name: Apply timeout label to PRs blocked longer than 24h
+258:              const updatedAt = new Date(pr.updated_at).getTime();
+282:                labels: ['timeout'],
+284:              core.info(`Applied timeout label to PR #${pr.number} (last updated ${pr.updated_at})`);
 
 $ python - <<'PY'
 from pathlib import Path
-from scripts.pm_arbiter import ArbContext, TriggerType, decide
-
-auto = Path('.github/workflows/auto-merge-on-pass.yml').read_text(encoding='utf-8')
-arb = Path('.github/workflows/pm-arbiter.yml').read_text(encoding='utf-8')
-script = Path('scripts/pm_arbiter.py').read_text(encoding='utf-8')
-
-ac1 = all(s in auto for s in ['nextRound >= 3', 'pm-arbitration-required', 'fail-round-', 'issues.addLabels'])
-ac2 = all(s in arb for s in ['## PM Arbitration', 'github-token: ${{ secrets.PM_BOT_TOKEN }}', 'user.name "elis-pm-bot"', 'issues.createComment'])
-ac3 = all(s in arb for s in ['--write', 'git add LESSONS_LEARNED.md', 'Commit LESSONS_LEARNED.md update']) and 'def append_lessons_learned' in script
-ac4 = all(s in arb for s in ["if: steps.arbiter.outputs.decision == 'ESCALATE_PO'", 'PM_AGENT_WEBHOOK_URL', '"event": "pm-arbitration-escalate-po"', '"pe_id":', '"trigger":', '"justification":', '"pr_number":', '"ll_id":'])
-ctx = ArbContext(trigger_type=TriggerType.TIMEOUT, fail_round=0, pe_id='PE-AUTO-07', review_content='### Verdict\\nFAIL\\n', handoff_content='## Files Changed\\n```text\\nA  scripts/pm_arbiter.py\\n```\\n', scope_diff='A\\tscripts/pm_arbiter.py\\n', arbiter_iteration=1)
-timeout_decision, timeout_justification = decide(ctx)
-ac5 = all(s in arb for s in ['cutoffMs = 24 * 60 * 60 * 1000', "labels.includes('blocked')", "labels: ['timeout']", "github.event.label.name == 'timeout'", "triggerType = 'timeout'"]) and timeout_decision.value == 'ESCALATE_PO'
-
-for i, ok in enumerate([ac1, ac2, ac3, ac4, ac5], start=1):
-    print(f'AC-{i}:', 'PASS' if ok else 'FAIL')
-print('TIMEOUT_DECISION:', timeout_decision.value)
-print('TIMEOUT_JUSTIFICATION:', timeout_justification)
+am = Path('.github/workflows/auto-merge-on-pass.yml').read_text(encoding='utf-8')
+pa = Path('.github/workflows/pm-arbiter.yml').read_text(encoding='utf-8')
+print('AC1_AUTO_FAIL_ROUND3_TRIGGER:', 'PASS' if ('nextRound >= 3' in am and "labels: [\'pm-arbitration-required\']" in am) else 'FAIL')
+print('AC2_PM_COMMENT_SECTION_AND_ACTOR_PATH:', 'PASS' if ('## PM Arbitration' in pa and 'github-token: ${{ secrets.PM_BOT_TOKEN }}' in pa and 'user.name "elis-pm-bot"' in pa) else 'FAIL')
+print('AC3_LESSONS_ENTRY_PER_ARBITRATION_PATH:', 'PASS' if ('--write' in pa and 'git add LESSONS_LEARNED.md' in pa) else 'FAIL')
+print('AC4_ESCALATE_PO_DISCORD_NOTIFY_PATH:', 'PASS' if ("if: steps.arbiter.outputs.decision == 'ESCALATE_PO'" in pa and 'PM_AGENT_WEBHOOK_URL' in pa and '"event": "pm-arbitration-escalate-po"' in pa) else 'FAIL')
+print('AC5_BLOCKED_24H_LOGIC_QUALITY:', 'FAIL' if 'pr.updated_at' in pa else 'PASS')
 PY
-AC-1: PASS
-AC-2: PASS
-AC-3: PASS
-AC-4: PASS
-AC-5: PASS
-TIMEOUT_DECISION: ESCALATE_PO
-TIMEOUT_JUSTIFICATION: Timeout: PE PE-AUTO-07 has been blocked for >24h without resolution (runner inactive for >4h). AC-5 threshold exceeded — PO must investigate.
-
-$ REVIEW_FILE=REVIEW_PE_AUTO_07.md python scripts/check_review.py
-REVIEW evidence check PASS (REVIEW_PE_AUTO_07.md)
+AC1_AUTO_FAIL_ROUND3_TRIGGER: PASS
+AC2_PM_COMMENT_SECTION_AND_ACTOR_PATH: PASS
+AC3_LESSONS_ENTRY_PER_ARBITRATION_PATH: PASS
+AC4_ESCALATE_PO_DISCORD_NOTIFY_PATH: PASS
+AC5_BLOCKED_24H_LOGIC_QUALITY: FAIL
 ```

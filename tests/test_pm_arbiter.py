@@ -319,6 +319,15 @@ def test_workflow_has_automatic_detector_for_blocked_24h_timeout() -> None:
     ), "AC-5 unmet: no automatic 24h blocked detector found (schedule or timeout label automation)."
 
 
+def test_timeout_detector_does_not_use_pr_updated_at_as_blocked_timer() -> None:
+    """AC-5: blocked duration must be measured from blocked state, not generic PR activity."""
+    workflow = Path(".github/workflows/pm-arbiter.yml").read_text(encoding="utf-8")
+    assert "pr.updated_at" not in workflow, (
+        "AC-5 risk: timeout detection currently relies on pr.updated_at, "
+        "which resets on any PR activity and can mask >24h blocked duration."
+    )
+
+
 def test_auto_merge_workflow_triggers_pm_arbitration_on_fail_round_3() -> None:
     """AC-1 requires automatic PM arbitration once FAIL round 3 is reached."""
     workflow = Path(".github/workflows/auto-merge-on-pass.yml").read_text(
