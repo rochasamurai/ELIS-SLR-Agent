@@ -118,8 +118,8 @@ def decide(context: ArbContext) -> tuple[ArbDecision, str]:
     if context.trigger_type == TriggerType.TIMEOUT:
         return (
             ArbDecision.ESCALATE_PO,
-            f"Timeout: runner on PE {context.pe_id} inactive for >4h. "
-            "PO must investigate.",
+            f"Timeout: PE {context.pe_id} has been blocked for >24h without resolution "
+            "(runner inactive for >4h). AC-5 threshold exceeded — PO must investigate.",
         )
 
     if context.trigger_type == TriggerType.SCOPE_DISPUTE:
