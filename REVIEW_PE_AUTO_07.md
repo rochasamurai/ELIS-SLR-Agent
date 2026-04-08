@@ -496,3 +496,91 @@ AC-5 FAIL
 TIMEOUT_JUSTIFICATION Timeout: PE PE-AUTO-07 has been blocked for >24h without resolution (runner inactive for >4h). AC-5 threshold exceeded — PO must investigate.
 AUTO_TIMEOUT_DETECTOR NO
 ```
+
+## Re-validation — 2026-04-08 (Round 4)
+
+### Verdict
+PASS
+
+### Gate results
+black: PASS  
+ruff: PASS  
+pytest: PASS  
+PE-specific tests: `tests/test_pm_arbiter.py` PASS (21/21)
+
+### Scope
+```text
+M	.github/workflows/auto-merge-on-pass.yml
+A	.github/workflows/pm-arbiter.yml
+M	HANDOFF.md
+A	REVIEW_PE_AUTO_07.md
+A	handoffs/HANDOFF_PE-AUTO-07.md
+A	scripts/pm_arbiter.py
+A	tests/test_pm_arbiter.py
+```
+
+### Required fixes
+None.
+
+### Evidence
+```text
+$ python -m black --check .
+All done! ✨ 🍰 ✨
+153 files would be left unchanged.
+
+$ python -m ruff check .
+All checks passed!
+
+$ python -m pytest -q
+........................................................................ [ 10%]
+........................................................................ [ 20%]
+........................................................................ [ 30%]
+........................................................................ [ 41%]
+........................................................................ [ 51%]
+........................................................................ [ 61%]
+........................................................................ [ 72%]
+........................................................................ [ 82%]
+........................................................................ [ 92%]
+..................................................                       [100%]
+
+$ python -m pytest -q tests/test_pm_arbiter.py
+.....................                                                    [100%]
+
+$ python - <<'PY'
+from pathlib import Path
+
+auto = Path('.github/workflows/auto-merge-on-pass.yml').read_text(encoding='utf-8')
+arb = Path('.github/workflows/pm-arbiter.yml').read_text(encoding='utf-8')
+script = Path('scripts/pm_arbiter.py').read_text(encoding='utf-8')
+
+assert 'if (nextRound >= 3)' in auto
+assert "labels: ['pm-arbitration-required']" in auto
+print('AC-1 PASS')
+
+assert 'git config user.name "elis-pm-bot"' in arb
+assert "'## PM Arbitration'" in arb
+assert 'issues.createComment' in arb
+print('AC-2 PASS')
+
+assert 'append_lessons_learned' in script
+assert '--write' in script
+assert 'git add LESSONS_LEARNED.md' in arb
+print('AC-3 PASS')
+
+assert "if: steps.arbiter.outputs.decision == 'ESCALATE_PO'" in arb
+assert 'PM_AGENT_WEBHOOK_URL' in arb
+for key in ['event', 'pe_id', 'trigger', 'justification', 'pr_number', 'll_id']:
+    assert f'"{key}":' in arb
+print('AC-4 PASS')
+
+assert "const cutoffMs = 24 * 60 * 60 * 1000;" in arb
+assert "labels: ['timeout']" in arb
+assert "github.event.label.name == 'timeout'" in arb
+print('AC-5 PASS')
+PY
+AC-1 PASS
+AC-2 PASS
+AC-3 PASS
+AC-4 PASS
+AC-5 PASS
+```
