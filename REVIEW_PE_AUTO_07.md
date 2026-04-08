@@ -4,7 +4,7 @@ PASS
 ### Gate results
 black: PASS  
 ruff: PASS  
-pytest: PASS (698 passed, 0 failed)  
+pytest: PASS  
 PE-specific tests: `tests/test_pm_arbiter.py` PASS (21/21)
 
 ### Scope
