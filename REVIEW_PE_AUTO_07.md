@@ -146,3 +146,80 @@ AC-3 PASS
 AC-4 PASS
 AC-5 PASS
 ```
+
+## Re-validation — 2026-04-08 (Round 9)
+
+### Verdict
+FAIL
+
+### Gate results
+black: PASS  
+ruff: PASS  
+pytest: PASS (701 passed)  
+PE-specific tests: PASS (`tests/test_pm_arbiter.py`, 24 passed)
+
+### Scope
+```text
+M	.github/workflows/auto-merge-on-pass.yml
+A	.github/workflows/pm-arbiter.yml
+M	HANDOFF.md
+A	REVIEW_PE_AUTO_07.md
+A	handoffs/HANDOFF_PE-AUTO-07.md
+A	scripts/pm_arbiter.py
+A	tests/test_pm_arbiter.py
+```
+
+### Required fixes
+- AC-2 blocking gap: arbitration is triggered (`pm-arbitration-required` label present with 8 FAIL rounds), but PR #314 has `PM_ARBITRATION_COMMENT_COUNT 0` for comments authored by `elis-pm-bot` containing `## PM Arbitration`.
+- AC-3 blocking gap: no PM arbitration entries are present in `LESSONS_LEARNED.md` (`PM_ARBITRATION_LESSONS_ENTRIES 0`) despite repeated arbitration-trigger conditions on this PR.
+- Root-cause evidence indicates `pm-arbiter.yml` is not active from default branch yet (`HTTP 404: workflow pm-arbiter.yml not found on the default branch`). Add a working path that executes arbitration actions at round 3 in the live branch-protected flow (for example via an already-active workflow) so AC-2 and AC-3 are satisfied during PE operation, not only in static file content.
+
+### Evidence
+```text
+$ python -m black --check .
+All done! ✨ 🍰 ✨
+153 files would be left unchanged.
+
+$ python -m ruff check .
+All checks passed!
+
+$ python -m pytest
+........................................................................ [ 10%]
+........................................................................ [ 20%]
+........................................................................ [ 30%]
+........................................................................ [ 41%]
+........................................................................ [ 51%]
+........................................................................ [ 61%]
+........................................................................ [ 71%]
+........................................................................ [ 82%]
+........................................................................ [ 92%]
+.....................................................                    [100%]
+701 passed in 3.58s
+
+$ python -m pytest tests/test_pm_arbiter.py
+........................                                                 [100%]
+24 passed in 0.04s
+
+$ python - <<'PY'
+import json,subprocess,re
+pr=json.loads(subprocess.check_output(['gh','pr','view','314','--json','comments,labels']).decode())
+pm_arb=[c for c in pr['comments'] if c['author']['login']=='elis-pm-bot' and '## PM Arbitration' in c['body']]
+print('PM_ARBITRATION_COMMENT_COUNT', len(pm_arb))
+print('HAS_PM_ARBITRATION_REQUIRED_LABEL', any(l['name']=='pm-arbitration-required' for l in pr['labels']))
+print('FAIL_LABEL_COUNT', sum(1 for l in pr['labels'] if re.match(r'^fail-round-\\d+$', l['name'])))
+PY
+PM_ARBITRATION_COMMENT_COUNT 0
+HAS_PM_ARBITRATION_REQUIRED_LABEL True
+FAIL_LABEL_COUNT 8
+
+$ gh run list --workflow pm-arbiter.yml --limit 5
+HTTP 404: workflow pm-arbiter.yml not found on the default branch (https://api.github.com/repos/rochasamurai/ELIS-SLR-Agent/actions/workflows/pm-arbiter.yml)
+
+$ python - <<'PY'
+from pathlib import Path
+import re
+ll=Path('LESSONS_LEARNED.md').read_text(encoding='utf-8')
+print('PM_ARBITRATION_LESSONS_ENTRIES', len(re.findall(r'^## LL-\\d+ — PM Arbitration:', ll, re.M)))
+PY
+PM_ARBITRATION_LESSONS_ENTRIES 0
+```
