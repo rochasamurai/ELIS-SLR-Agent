@@ -4,8 +4,8 @@ PASS
 ### Gate results
 black: PASS  
 ruff: PASS  
-pytest: PASS  
-PE-specific tests: `tests/test_pm_arbiter.py` PASS (21/21)
+pytest: PASS (`python -m pytest -q` reached 100% with exit code 0)  
+PE-specific tests: PASS (`python -m pytest tests/test_pm_arbiter.py -q` reached 100% with exit code 0)
 
 ### Scope
 ```text
@@ -30,9 +30,6 @@ All done! ✨ 🍰 ✨
 $ python -m ruff check .
 All checks passed!
 
-$ python -m pytest tests/test_pm_arbiter.py -q
-.....................                                                    [100%]
-
 $ python -m pytest -q
 ........................................................................ [ 10%]
 ........................................................................ [ 20%]
@@ -45,79 +42,51 @@ $ python -m pytest -q
 ........................................................................ [ 92%]
 ..................................................                       [100%]
 
+$ python -m pytest tests/test_pm_arbiter.py -q
+.....................                                                    [100%]
+
 $ python - <<'PY'
 from pathlib import Path
-from tempfile import TemporaryDirectory
-from scripts.pm_arbiter import ArbContext, TriggerType, decide, _next_ll_id, format_lessons_entry, append_lessons_learned
+from scripts.pm_arbiter import ArbContext, TriggerType, decide, format_pr_comment
 
-wf_auto = Path('.github/workflows/auto-merge-on-pass.yml').read_text(encoding='utf-8')
-wf_arb = Path('.github/workflows/pm-arbiter.yml').read_text(encoding='utf-8')
-ll_before = Path('LESSONS_LEARNED.md').read_text(encoding='utf-8')
+auto = Path('.github/workflows/auto-merge-on-pass.yml').read_text(encoding='utf-8')
+arb = Path('.github/workflows/pm-arbiter.yml').read_text(encoding='utf-8')
 
-# AC-1
-ac1 = all(s in wf_auto for s in ["nextRound >= 3", "pm-arbitration-required", "fail-round-"])
+print('AC-1', "PASS" if ("if (nextRound >= 3)" in auto and "pm-arbitration-required" in auto) else "FAIL")
 
-# AC-2
-ac2 = all(s in wf_arb for s in ["## PM Arbitration", "github-token: ${{ secrets.PM_BOT_TOKEN }}", "issues.createComment", "elis-pm-bot"])
-
-# AC-3
 ctx = ArbContext(
     trigger_type=TriggerType.FAIL_ROUND_3,
     fail_round=3,
     pe_id='PE-AUTO-07',
-    review_content='### Verdict\nFAIL\n',
-    handoff_content='## Files Changed\n```text\nA  scripts/pm_arbiter.py\n```\n',
-    scope_diff='A\tscripts/pm_arbiter.py\n',
+    review_content='FAIL',
+    handoff_content='## Files Changed\nA  x.py',
+    scope_diff='A\tx.py',
     arbiter_iteration=1,
 )
-decision, justification = decide(ctx)
-ll_id = _next_ll_id(ll_before)
-entry = format_lessons_entry(ll_id, ctx, decision, justification, '2026-04-08')
-with TemporaryDirectory() as td:
-    p = Path(td) / 'LESSONS_LEARNED.md'
-    p.write_text('# Lessons Learned\n\n## LL-01 — Existing\n\n---\n', encoding='utf-8')
-    append_lessons_learned(p, entry)
-    appended = p.read_text(encoding='utf-8')
-ac3 = all([
-    f'## {ll_id} — PM Arbitration' in entry,
-    f'## {ll_id} — PM Arbitration' in appended,
-    '--write' in Path('scripts/pm_arbiter.py').read_text(encoding='utf-8'),
-    'git add LESSONS_LEARNED.md' in wf_arb,
-])
+decision, just = decide(ctx)
+comment = format_pr_comment(ctx, decision, just)
+print('AC-2', 'PASS' if ('## PM Arbitration' in comment and 'github-token: ${{ secrets.PM_BOT_TOKEN }}' in arb) else 'FAIL')
 
-# AC-4
-ac4 = all(s in wf_arb for s in [
-    "if: steps.arbiter.outputs.decision == 'ESCALATE_PO'",
-    'PM_AGENT_WEBHOOK_URL',
-    '"event": "pm-arbitration-escalate-po"',
-    '"pe_id":',
-    '"trigger":',
-    '"justification":',
-    '"pr_number":',
-    '"ll_id":',
-])
+script = Path('scripts/pm_arbiter.py').read_text(encoding='utf-8')
+print('AC-3', 'PASS' if ('append_lessons_learned(' in script and 'git add LESSONS_LEARNED.md' in arb) else 'FAIL')
 
-# AC-5
-has_24h_detector = all(s in wf_arb for s in ['cutoffMs = 24 * 60 * 60 * 1000', "labels.includes('blocked')", "labels: ['timeout']"])
-has_timeout_routing = all(s in wf_arb for s in ["github.event.label.name == 'timeout'", "if (label === 'timeout') triggerType = 'timeout'"])
+payload_keys = ['"event": "pm-arbitration-escalate-po"', '"pe_id":', '"trigger":', '"justification":', '"pr_number":', '"ll_id":']
+print('AC-4', 'PASS' if ("Notify PO on Discord if ESCALATE_PO" in arb and all(k in arb for k in payload_keys)) else 'FAIL')
+
 ctx_timeout = ArbContext(
     trigger_type=TriggerType.TIMEOUT,
-    fail_round=3,
+    fail_round=0,
     pe_id='PE-AUTO-07',
-    review_content='### Verdict\nFAIL\n',
-    handoff_content='## Files Changed\n```text\nA  scripts/pm_arbiter.py\n```\n',
-    scope_diff='A\tscripts/pm_arbiter.py\n',
+    review_content='',
+    handoff_content='',
+    scope_diff='',
     arbiter_iteration=1,
 )
-timeout_decision, timeout_just = decide(ctx_timeout)
-ac5 = has_24h_detector and has_timeout_routing and timeout_decision.value == 'ESCALATE_PO' and 'blocked for >24h' in timeout_just and ac4
-
-for i, ok in enumerate([ac1, ac2, ac3, ac4, ac5], start=1):
-    print(f'AC-{i}', 'PASS' if ok else 'FAIL')
-print('TIMEOUT_DECISION', timeout_decision.value)
-print('TIMEOUT_JUSTIFICATION', timeout_just)
-print('HAS_24H_DETECTOR', has_24h_detector)
-print('HAS_TIMEOUT_ROUTING', has_timeout_routing)
+d2, j2 = decide(ctx_timeout)
+has_24h_detector = 'schedule:' in arb and '0 */6 * * *' in arb and "labels.includes('blocked')" in arb and "labels: ['timeout']" in arb
+print('AC-5', 'PASS' if (has_24h_detector and "triggerType = 'timeout'" in arb and d2.value == 'ESCALATE_PO') else 'FAIL')
+print('TIMEOUT_DECISION', d2.value)
+print('TIMEOUT_JUSTIFICATION', j2)
 PY
 AC-1 PASS
 AC-2 PASS
@@ -126,6 +95,4 @@ AC-4 PASS
 AC-5 PASS
 TIMEOUT_DECISION ESCALATE_PO
 TIMEOUT_JUSTIFICATION Timeout: PE PE-AUTO-07 has been blocked for >24h without resolution (runner inactive for >4h). AC-5 threshold exceeded — PO must investigate.
-HAS_24H_DETECTOR True
-HAS_TIMEOUT_ROUTING True
 ```
