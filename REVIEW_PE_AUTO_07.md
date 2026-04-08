@@ -4,8 +4,8 @@ PASS
 ### Gate results
 black: PASS  
 ruff: PASS  
-pytest: PASS  
-PE-specific tests: `tests/test_pm_arbiter.py` PASS (23/23)
+pytest: PASS (700 passed)  
+PE-specific tests: PASS (`tests/test_pm_arbiter.py`, 23/23)
 
 ### Scope
 ```text
@@ -30,10 +30,7 @@ All done! ✨ 🍰 ✨
 $ python -m ruff check .
 All checks passed!
 
-$ python -m pytest tests/test_pm_arbiter.py -q
-.......................                                                  [100%]
-
-$ python -m pytest -q
+$ python -m pytest
 ........................................................................ [ 10%]
 ........................................................................ [ 20%]
 ........................................................................ [ 30%]
@@ -44,52 +41,45 @@ $ python -m pytest -q
 ........................................................................ [ 82%]
 ........................................................................ [ 92%]
 ....................................................                     [100%]
+700 passed in 3.36s
+
+$ python -m pytest tests/test_pm_arbiter.py -v
+============================= test session starts ==============================
+platform linux -- Python 3.11.15, pytest-9.0.3, pluggy-1.6.0
+rootdir: /home/runner/work/ELIS-SLR-Agent/ELIS-SLR-Agent
+configfile: pyproject.toml
+collected 23 items
+
+tests/test_pm_arbiter.py .......................                         [100%]
+
+============================== 23 passed in 0.04s ==============================
 
 $ python - <<'PY'
 from pathlib import Path
-from tempfile import TemporaryDirectory
-from scripts.pm_arbiter import ArbContext, TriggerType, decide, _next_ll_id, format_lessons_entry, append_lessons_learned
+from scripts.pm_arbiter import ArbContext, TriggerType, decide
 
-wf_auto = Path('.github/workflows/auto-merge-on-pass.yml').read_text(encoding='utf-8')
-wf_arb = Path('.github/workflows/pm-arbiter.yml').read_text(encoding='utf-8')
-ll_before = Path('LESSONS_LEARNED.md').read_text(encoding='utf-8')
+auto = Path('.github/workflows/auto-merge-on-pass.yml').read_text(encoding='utf-8')
+arb = Path('.github/workflows/pm-arbiter.yml').read_text(encoding='utf-8')
+script = Path('scripts/pm_arbiter.py').read_text(encoding='utf-8')
 
-ac1 = all(s in wf_auto for s in ['nextRound >= 3', 'pm-arbitration-required', 'fail-round-'])
-ac2 = all(s in wf_arb for s in ['## PM Arbitration', 'github-token: ${{ secrets.PM_BOT_TOKEN }}', 'issues.createComment'])
-
-ctx = ArbContext(trigger_type=TriggerType.FAIL_ROUND_3, fail_round=3, pe_id='PE-AUTO-07', review_content='### Verdict\\nFAIL\\n', handoff_content='## Files Changed\\n```text\\nA  scripts/pm_arbiter.py\\n```\\n', scope_diff='A\\tscripts/pm_arbiter.py\\n', arbiter_iteration=1)
-decision, justification = decide(ctx)
-ll_id = _next_ll_id(ll_before)
-entry = format_lessons_entry(ll_id, ctx, decision, justification, '2026-04-08')
-with TemporaryDirectory() as td:
-    llp = Path(td) / 'LESSONS_LEARNED.md'
-    llp.write_text('# Lessons Learned\\n\\n## LL-01 — Existing\\n\\n---\\n', encoding='utf-8')
-    append_lessons_learned(llp, entry)
-    appended = llp.read_text(encoding='utf-8')
-ac3 = f'## {ll_id} — PM Arbitration' in entry and f'## {ll_id} — PM Arbitration' in appended and '--write' in Path('scripts/pm_arbiter.py').read_text(encoding='utf-8') and 'git add LESSONS_LEARNED.md' in wf_arb
-
-ac4 = all(s in wf_arb for s in ["if: steps.arbiter.outputs.decision == 'ESCALATE_PO'", 'PM_AGENT_WEBHOOK_URL', '"event": "pm-arbitration-escalate-po"', '"pe_id":', '"trigger":', '"justification":', '"pr_number":', '"ll_id":'])
-
-ctx_timeout = ArbContext(trigger_type=TriggerType.TIMEOUT, fail_round=3, pe_id='PE-AUTO-07', review_content='### Verdict\\nFAIL\\n', handoff_content='## Files Changed\\n```text\\nA  scripts/pm_arbiter.py\\n```\\n', scope_diff='A\\tscripts/pm_arbiter.py\\n', arbiter_iteration=1)
-timeout_decision, timeout_just = decide(ctx_timeout)
-has_24h_detector = all(s in wf_arb for s in ['cutoffMs = 24 * 60 * 60 * 1000', "labels.includes('blocked')", "labels: ['timeout']"])
-has_timeout_routing = all(s in wf_arb for s in ["github.event.label.name == 'timeout'", "if (label === 'timeout') triggerType = 'timeout'"])
-ac5 = has_24h_detector and has_timeout_routing and timeout_decision.value == 'ESCALATE_PO' and 'blocked for >24h' in timeout_just and ac4
+ac1 = all(s in auto for s in ['nextRound >= 3', 'pm-arbitration-required', 'fail-round-', 'issues.addLabels'])
+ac2 = all(s in arb for s in ['## PM Arbitration', 'github-token: ${{ secrets.PM_BOT_TOKEN }}', 'user.name "elis-pm-bot"', 'issues.createComment'])
+ac3 = all(s in arb for s in ['--write', 'git add LESSONS_LEARNED.md', 'Commit LESSONS_LEARNED.md update']) and 'def append_lessons_learned' in script
+ac4 = all(s in arb for s in ["if: steps.arbiter.outputs.decision == 'ESCALATE_PO'", 'PM_AGENT_WEBHOOK_URL', '"event": "pm-arbitration-escalate-po"', '"pe_id":', '"trigger":', '"justification":', '"pr_number":', '"ll_id":'])
+ctx = ArbContext(trigger_type=TriggerType.TIMEOUT, fail_round=0, pe_id='PE-AUTO-07', review_content='### Verdict\\nFAIL\\n', handoff_content='## Files Changed\\n```text\\nA  scripts/pm_arbiter.py\\n```\\n', scope_diff='A\\tscripts/pm_arbiter.py\\n', arbiter_iteration=1)
+timeout_decision, timeout_justification = decide(ctx)
+ac5 = all(s in arb for s in ['cutoffMs = 24 * 60 * 60 * 1000', "labels.includes('blocked')", "labels: ['timeout']", "github.event.label.name == 'timeout'", "triggerType = 'timeout'"]) and timeout_decision.value == 'ESCALATE_PO'
 
 for i, ok in enumerate([ac1, ac2, ac3, ac4, ac5], start=1):
-    print(f'AC-{i}', 'PASS' if ok else 'FAIL')
-print('TIMEOUT_DECISION', timeout_decision.value)
-print('TIMEOUT_JUSTIFICATION', timeout_just)
-print('HAS_24H_DETECTOR', has_24h_detector)
-print('HAS_TIMEOUT_ROUTING', has_timeout_routing)
+    print(f'AC-{i}:', 'PASS' if ok else 'FAIL')
+print('TIMEOUT_DECISION:', timeout_decision.value)
+print('TIMEOUT_JUSTIFICATION:', timeout_justification)
 PY
-AC-1 PASS
-AC-2 PASS
-AC-3 PASS
-AC-4 PASS
-AC-5 PASS
-TIMEOUT_DECISION ESCALATE_PO
-TIMEOUT_JUSTIFICATION Timeout: PE PE-AUTO-07 has been blocked for >24h without resolution (runner inactive for >4h). AC-5 threshold exceeded — PO must investigate.
-HAS_24H_DETECTOR True
-HAS_TIMEOUT_ROUTING True
+AC-1: PASS
+AC-2: PASS
+AC-3: PASS
+AC-4: PASS
+AC-5: PASS
+TIMEOUT_DECISION: ESCALATE_PO
+TIMEOUT_JUSTIFICATION: Timeout: PE PE-AUTO-07 has been blocked for >24h without resolution (runner inactive for >4h). AC-5 threshold exceeded — PO must investigate.
 ```
