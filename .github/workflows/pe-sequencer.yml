@@ -1,0 +1,141 @@
+name: PE Sequencer
+
+on:
+  pull_request_target:
+    types: [closed]
+
+permissions:
+  contents: write
+  actions: write
+  pull-requests: write
+
+jobs:
+  advance-pe:
+    name: Advance CURRENT_PE after merged PE
+    runs-on: ubuntu-latest
+    if: |
+      github.event.pull_request.merged == true &&
+      startsWith(github.event.pull_request.head.ref, 'feature/')
+
+    steps:
+      - name: Checkout main with PM bot token
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.PM_BOT_TOKEN }}
+
+      - name: Configure PM bot git identity
+        run: |
+          git config user.name "elis-pm-bot"
+          git config user.email "elis-pm-bot@users.noreply.github.com"
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run sequencer against CURRENT_PE.md
+        id: sequencer
+        env:
+          MERGED_BRANCH: ${{ github.event.pull_request.head.ref }}
+        run: |
+          python scripts/pe_sequencer.py \
+            --merged-branch "$MERGED_BRANCH" \
+            --write \
+            --json
+
+      - name: Commit sequencer update
+        if: steps.sequencer.outputs.action == 'advance'
+        run: |
+          git add CURRENT_PE.md
+          git commit -m "chore(pm): auto-advance to ${{ steps.sequencer.outputs.next_pe }}"
+
+      - name: Push updated CURRENT_PE.md to main
+        if: steps.sequencer.outputs.action == 'advance'
+        run: git push origin HEAD:main
+
+      - name: Post merge follow-up comment
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.PM_BOT_TOKEN }}
+          script: |
+            const outcome = '${{ steps.sequencer.outcome }}';
+            const action = '${{ steps.sequencer.outputs.action }}';
+            const reason = '${{ steps.sequencer.outputs.reason }}';
+            let body;
+            if (outcome !== 'success') {
+              body = [
+                '## PM sequencer',
+                '',
+                'Automatic advance failed during the sequencer run.',
+                reason || 'Check the PE Sequencer workflow logs for details.'
+              ].join('\n');
+            } else if (action === 'advance') {
+              body = [
+                '## PM sequencer',
+                '',
+                `Merged PE recorded. CURRENT_PE.md advanced automatically to \`${{ steps.sequencer.outputs.next_pe }}\`.`,
+                `New branch: \`${{ steps.sequencer.outputs.next_branch }}\``,
+                '',
+                reason
+              ].join('\n');
+            } else if (action === 'halt_blocked') {
+              body = [
+                '## PM sequencer',
+                '',
+                'Automatic advance halted because the next PE is not ready.',
+                reason
+              ].join('\n');
+            } else if (action === 'skip') {
+              body = [
+                '## PM sequencer',
+                '',
+                'Merged PR did not match the active PE branch, so no automatic advance was performed.',
+                reason
+              ].join('\n');
+            } else {
+              body = [
+                '## PM sequencer',
+                '',
+                'Automation series complete. No further PE was opened automatically.',
+                reason
+              ].join('\n');
+            }
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body,
+            });
+
+      - name: Notify PM Agent webhook
+        if: ${{ steps.sequencer.outcome == 'success' && secrets.PM_AGENT_WEBHOOK_URL != '' }}
+        env:
+          PM_AGENT_WEBHOOK_URL: ${{ secrets.PM_AGENT_WEBHOOK_URL }}
+        run: |
+          python - <<'EOF'
+          import json
+          import os
+          import urllib.request
+
+          payload = {
+              "event": "pe-sequencer",
+              "action": "${{ steps.sequencer.outputs.action }}",
+              "merged_pe": "${{ steps.sequencer.outputs.merged_pe }}",
+              "next_pe": "${{ steps.sequencer.outputs.next_pe }}",
+              "next_branch": "${{ steps.sequencer.outputs.next_branch }}",
+              "reason": "${{ steps.sequencer.outputs.reason }}",
+              "pr_number": "${{ github.event.pull_request.number }}",
+          }
+          data = json.dumps(payload).encode("utf-8")
+          req = urllib.request.Request(
+              os.environ["PM_AGENT_WEBHOOK_URL"],
+              data=data,
+              headers={"Content-Type": "application/json"},
+              method="POST",
+          )
+          with urllib.request.urlopen(req, timeout=30) as response:
+              print(f"Webhook status: {response.status}")
+          EOF
