@@ -166,6 +166,7 @@ jobs:
             });
 
       - name: Notify PM — FAIL verdict
+        id: fail_notify
         if: |
           steps.verdict.outputs.verdict == 'FAIL' &&
           steps.labels.outputs.veto != 'no-pr'
@@ -173,9 +174,88 @@ jobs:
         with:
           script: |
             const prNumber = parseInt('${{ steps.labels.outputs.pr_number }}');
+
+            // Count existing fail-round-* labels to determine current round.
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+            });
+            const failLabels = pr.labels
+              .map(l => l.name)
+              .filter(n => /^fail-round-\d+$/.test(n));
+            const nextRound = failLabels.length + 1;
+            const newLabel = `fail-round-${nextRound}`;
+
+            // Ensure the label exists in the repo before applying it.
+            try {
+              await github.rest.issues.getLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: newLabel,
+              });
+            } catch {
+              await github.rest.issues.createLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: newLabel,
+                color: 'e11d48',
+                description: `FAIL verdict — round ${nextRound}`,
+              });
+            }
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              labels: [newLabel],
+            });
+
+            // Determine implementer mention from CURRENT_PE.md validator field.
+            // (Implementer is opposite of validator.)
+            let mention = '@codex';
+            try {
+              const { data: file } = await github.rest.repos.getContent({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                path: 'CURRENT_PE.md',
+                ref: process.env.GITHUB_REF_NAME,
+              });
+              const content = Buffer.from(file.content, 'base64').toString('utf-8');
+              const m = content.match(/^\|\s*Implementer\s*\|\s*([^|]+?)\s*\|/m);
+              if (m && m[1].toLowerCase().includes('claude')) mention = '@claude-code';
+            } catch { /* fall back to @codex */ }
+
+            let body = `## ❌ Gate 2 — FAIL verdict (round ${nextRound})\n\nValidator issued FAIL. Assigning Implementer to fix blocking findings.\n\n${mention} — read REVIEW file on this branch. Fix blocking findings only. Deliver updated Status Packet.`;
+
+            // On round 3, also trigger PM arbitration.
+            if (nextRound >= 3) {
+              try {
+                await github.rest.issues.getLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name: 'pm-arbitration-required',
+                });
+              } catch {
+                await github.rest.issues.createLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name: 'pm-arbitration-required',
+                  color: 'f97316',
+                  description: 'PM Arbiter triggered — 3 FAIL rounds reached',
+                });
+              }
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                labels: ['pm-arbitration-required'],
+              });
+              body += '\n\n⚠️ **Round 3 reached — PM Arbiter triggered automatically.**';
+            }
+
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: prNumber,
-              body: '## ❌ Gate 2 — FAIL verdict\n\nValidator issued FAIL. Assigning Implementer to fix blocking findings.\n\n@codex — read REVIEW file on this branch. Fix blocking findings only. Deliver updated Status Packet.'
+              body,
             });
