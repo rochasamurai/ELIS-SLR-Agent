@@ -3,6 +3,10 @@ name: PM Arbiter
 on:
   pull_request:
     types: [labeled]
+  schedule:
+    # Run every 6h to detect PRs with `blocked` status older than 24h.
+    - cron: '0 */6 * * *'
+  workflow_dispatch: {}
 
 permissions:
   contents: write
@@ -220,3 +224,62 @@ jobs:
           with urllib.request.urlopen(req, timeout=30) as resp:
               print(f"Webhook status: {resp.status}")
           EOF
+
+  detect-blocked-timeout:
+    name: Detect PRs blocked >24h and apply timeout label
+    runs-on: ubuntu-latest
+    # Only runs on schedule or manual dispatch — not on labeled events.
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Apply timeout label to PRs blocked longer than 24h
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.PM_BOT_TOKEN }}
+          script: |
+            const cutoffMs = 24 * 60 * 60 * 1000;
+            const now = Date.now();
+
+            // List all open PRs.
+            const { data: prs } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              per_page: 100,
+            });
+
+            for (const pr of prs) {
+              const labels = pr.labels.map(l => l.name);
+              // Only consider PRs already carrying a blocked indicator.
+              if (!labels.includes('blocked') && !labels.includes('pm-review-required')) continue;
+              // Skip PRs that already have a timeout label applied.
+              if (labels.includes('timeout')) continue;
+
+              const updatedAt = new Date(pr.updated_at).getTime();
+              if (now - updatedAt < cutoffMs) continue;
+
+              // Ensure the timeout label exists.
+              try {
+                await github.rest.issues.getLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name: 'timeout',
+                });
+              } catch {
+                await github.rest.issues.createLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name: 'timeout',
+                  color: 'b45309',
+                  description: 'PE blocked >24h without resolution — PM Arbiter timeout trigger',
+                });
+              }
+
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                labels: ['timeout'],
+              });
+              core.info(`Applied timeout label to PR #${pr.number} (last updated ${pr.updated_at})`);
+            }
