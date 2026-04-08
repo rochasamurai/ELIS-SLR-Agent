@@ -62,3 +62,87 @@ AC3_LESSONS_ENTRY_PER_ARBITRATION_PATH: PASS
 AC4_ESCALATE_PO_DISCORD_NOTIFY_PATH: PASS
 AC5_BLOCKED_24H_LOGIC_QUALITY: FAIL
 ```
+
+## Re-validation — 2026-04-08 (Round 5)
+
+### Verdict
+PASS
+
+### Gate results
+black: PASS  
+ruff: PASS  
+pytest: PASS (701 passed)  
+PE-specific tests: PASS (`tests/test_pm_arbiter.py`, 24 passed)
+
+### Scope
+```text
+M	.github/workflows/auto-merge-on-pass.yml
+A	.github/workflows/pm-arbiter.yml
+M	HANDOFF.md
+A	REVIEW_PE_AUTO_07.md
+A	handoffs/HANDOFF_PE-AUTO-07.md
+A	scripts/pm_arbiter.py
+A	tests/test_pm_arbiter.py
+```
+
+### Required fixes
+None.
+
+### Evidence
+```text
+$ python -m black --check .
+All done! ✨ 🍰 ✨
+153 files would be left unchanged.
+
+$ python -m ruff check .
+All checks passed!
+
+$ python -m pytest
+........................................................................ [ 10%]
+........................................................................ [ 20%]
+........................................................................ [ 30%]
+........................................................................ [ 41%]
+........................................................................ [ 51%]
+........................................................................ [ 61%]
+........................................................................ [ 71%]
+........................................................................ [ 82%]
+........................................................................ [ 92%]
+.....................................................                    [100%]
+701 passed in 3.76s
+
+$ python -m pytest tests/test_pm_arbiter.py
+........................                                                 [100%]
+24 passed in 0.04s
+
+$ python - <<'PY'
+from pathlib import Path
+wf = Path('.github/workflows/auto-merge-on-pass.yml').read_text(encoding='utf-8')
+assert 'fail-round-' in wf and 'nextRound' in wf
+assert 'if (nextRound >= 3)' in wf and 'pm-arbitration-required' in wf
+print('AC-1 PASS')
+
+wf2 = Path('.github/workflows/pm-arbiter.yml').read_text(encoding='utf-8')
+assert 'github-token: ${{ secrets.PM_BOT_TOKEN }}' in wf2
+assert "'## PM Arbitration'" in wf2 and 'issues.createComment' in wf2
+print('AC-2 PASS')
+
+assert 'git add LESSONS_LEARNED.md' in wf2 and '--write' in wf2
+print('AC-3 PASS')
+
+assert "if: steps.arbiter.outputs.decision == 'ESCALATE_PO'" in wf2
+assert 'PM_AGENT_WEBHOOK_URL' in wf2
+assert 'event": "pm-arbitration-escalate-po"' in wf2
+print('AC-4 PASS')
+
+assert 'schedule:' in wf2 and "cron: '0 */6 * * *'" in wf2
+assert 'cutoffMs = 24 * 60 * 60 * 1000' in wf2
+assert "labels: ['timeout']" in wf2
+assert "if (label === 'timeout') triggerType = 'timeout';" in wf2
+print('AC-5 PASS')
+PY
+AC-1 PASS
+AC-2 PASS
+AC-3 PASS
+AC-4 PASS
+AC-5 PASS
+```
