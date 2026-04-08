@@ -18,7 +18,8 @@ jobs:
     if: |
       github.event.label.name == 'pm-arbitration-required' ||
       github.event.label.name == 'scope-dispute' ||
-      github.event.label.name == 'pm-escalation'
+      github.event.label.name == 'pm-escalation' ||
+      github.event.label.name == 'timeout'
 
     steps:
       - name: Checkout PR head
@@ -58,6 +59,7 @@ jobs:
             let triggerType = 'fail_round_3';
             if (label === 'scope-dispute') triggerType = 'scope_dispute';
             if (label === 'pm-escalation') triggerType = 'technical_blocker';
+            if (label === 'timeout') triggerType = 'timeout';
 
             // Count fail-round-* labels to determine fail round.
             const failLabels = pr.labels
