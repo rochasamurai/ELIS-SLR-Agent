@@ -339,6 +339,31 @@ def test_auto_merge_workflow_triggers_pm_arbitration_on_fail_round_3() -> None:
     assert "Round 3 reached — PM Arbiter triggered automatically." in workflow
 
 
+def test_fail_round_3_path_has_executable_arbitration_action() -> None:
+    """AC-2/AC-3 require an executable action path, not label-only signalling."""
+    auto_merge = Path(".github/workflows/auto-merge-on-pass.yml").read_text(
+        encoding="utf-8"
+    )
+    pm_arbiter = Path(".github/workflows/pm-arbiter.yml").read_text(encoding="utf-8")
+
+    has_direct_pm_comment_in_fail_path = (
+        "## PM Arbitration" in auto_merge
+        and "issues.createComment" in auto_merge
+        and "steps.verdict.outputs.verdict == 'FAIL'" in auto_merge
+    )
+    has_explicit_dispatch_to_pm_arbiter = "createWorkflowDispatch" in auto_merge
+    workflow_is_default_available = "workflow_call:" in pm_arbiter
+
+    assert (
+        has_direct_pm_comment_in_fail_path
+        or has_explicit_dispatch_to_pm_arbiter
+        or workflow_is_default_available
+    ), (
+        "AC-2/AC-3 risk: FAIL round >=3 path applies only a label but has no guaranteed "
+        "executable arbitration action (comment/LESSONS update) before merge to default branch."
+    )
+
+
 def test_discord_payload_for_escalate_po_contains_structured_fields() -> None:
     """AC-4 requires a structured Discord payload for ESCALATE_PO."""
     workflow = Path(".github/workflows/pm-arbiter.yml").read_text(encoding="utf-8")

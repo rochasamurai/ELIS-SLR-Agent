@@ -223,3 +223,84 @@ print('PM_ARBITRATION_LESSONS_ENTRIES', len(re.findall(r'^## LL-\\d+ — PM Arbi
 PY
 PM_ARBITRATION_LESSONS_ENTRIES 0
 ```
+
+## Re-validation — 2026-04-08 (Round 10)
+
+### Verdict
+FAIL
+
+### Gate results
+black: PASS  
+ruff: PASS  
+pytest: FAIL (`python -m pytest -q` cannot run in this runner: `No module named pytest`)  
+PE-specific tests: FAIL (`python -m pytest tests/test_pm_arbiter.py -q` cannot run in this runner: `No module named pytest`)
+
+### Scope
+```text
+M	.github/workflows/auto-merge-on-pass.yml
+A	.github/workflows/pm-arbiter.yml
+M	HANDOFF.md
+A	REVIEW_PE_AUTO_07.md
+A	handoffs/HANDOFF_PE-AUTO-07.md
+A	scripts/pm_arbiter.py
+A	tests/test_pm_arbiter.py
+```
+
+### Required fixes
+- AC-2 blocking gap (operational): PR #314 has `pm-arbitration-required` and nine `fail-round-*` labels, but zero PR comments from `elis-pm-bot` containing `## PM Arbitration`.
+- AC-3 blocking gap (operational): `LESSONS_LEARNED.md` contains zero entries matching `## LL-<N> — PM Arbitration:` despite repeated arbitration-trigger conditions on this PR.
+- Root-cause gap: `gh run list --workflow pm-arbiter.yml` returns 404 on default branch; arbitration actions are label-only at FAIL round 3 unless an executable path is available from an active workflow. Add a guaranteed execution path for PM arbitration actions in the live flow (comment + lessons update).
+
+### Evidence
+```text
+$ python -m black --check .
+All done! ✨ 🍰 ✨
+153 files would be left unchanged.
+
+$ python -m ruff check .
+All checks passed!
+
+$ python -m pytest -q
+/opt/hostedtoolcache/Python/3.11.15/x64/bin/python: No module named pytest
+
+$ python -m pytest tests/test_pm_arbiter.py -q
+/opt/hostedtoolcache/Python/3.11.15/x64/bin/python: No module named pytest
+
+$ BASE=$(awk -F'|' '/Base branch/{gsub(/^[ \t]+|[ \t]+$/, "", $3); print $3}' CURRENT_PE.md); echo BASE=$BASE
+BASE=main
+
+$ git diff --name-status origin/main..HEAD
+M	.github/workflows/auto-merge-on-pass.yml
+A	.github/workflows/pm-arbiter.yml
+M	HANDOFF.md
+A	REVIEW_PE_AUTO_07.md
+A	handoffs/HANDOFF_PE-AUTO-07.md
+A	scripts/pm_arbiter.py
+A	tests/test_pm_arbiter.py
+
+$ gh run list --workflow pm-arbiter.yml --limit 5
+HTTP 404: workflow pm-arbiter.yml not found on the default branch (https://api.github.com/repos/rochasamurai/ELIS-SLR-Agent/actions/workflows/pm-arbiter.yml)
+
+$ python - <<'PY'
+import json, subprocess
+pr=json.loads(subprocess.check_output(['gh','pr','view','314','--json','labels,comments']).decode())
+labels=[l['name'] for l in pr['labels']]
+fails=sorted([l for l in labels if l.startswith('fail-round-')])
+pm_comments=[c for c in pr['comments'] if c['author']['login']=='elis-pm-bot' and '## PM Arbitration' in c['body']]
+print('FAIL_LABEL_COUNT', len(fails))
+print('HAS_PM_ARBITRATION_REQUIRED', 'pm-arbitration-required' in labels)
+print('PM_ARBITRATION_COMMENTS', len(pm_comments))
+PY
+FAIL_LABEL_COUNT 9
+HAS_PM_ARBITRATION_REQUIRED True
+PM_ARBITRATION_COMMENTS 0
+
+$ python - <<'PY'
+from pathlib import Path
+import re
+ll=Path('LESSONS_LEARNED.md').read_text(encoding='utf-8')
+entries=re.findall(r'^## LL-\\d+ — PM Arbitration:', ll, flags=re.M)
+print('PM_ARBITRATION_LESSONS_ENTRIES', len(entries))
+PY
+PM_ARBITRATION_LESSONS_ENTRIES 0
+```
