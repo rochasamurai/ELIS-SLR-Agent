@@ -219,4 +219,4 @@ gh pr list --state open --base main
 
 ---
 
-*ELIS SLR Agent · HANDOFF.md · Codex · 2026-04-08*
+*ELIS SLR Agent · handoffs/HANDOFF_PE-AUTO-08.md · Codex · 2026-04-08*
