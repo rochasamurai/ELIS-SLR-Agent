@@ -317,3 +317,27 @@ def test_workflow_has_automatic_detector_for_blocked_24h_timeout() -> None:
     assert (
         has_scheduled_detection or has_timeout_label_automation
     ), "AC-5 unmet: no automatic 24h blocked detector found (schedule or timeout label automation)."
+
+
+def test_auto_merge_workflow_triggers_pm_arbitration_on_fail_round_3() -> None:
+    """AC-1 requires automatic PM arbitration once FAIL round 3 is reached."""
+    workflow = Path(".github/workflows/auto-merge-on-pass.yml").read_text(
+        encoding="utf-8"
+    )
+
+    assert "nextRound >= 3" in workflow
+    assert "pm-arbitration-required" in workflow
+    assert "Round 3 reached — PM Arbiter triggered automatically." in workflow
+
+
+def test_discord_payload_for_escalate_po_contains_structured_fields() -> None:
+    """AC-4 requires a structured Discord payload for ESCALATE_PO."""
+    workflow = Path(".github/workflows/pm-arbiter.yml").read_text(encoding="utf-8")
+
+    assert "if: steps.arbiter.outputs.decision == 'ESCALATE_PO'" in workflow
+    assert '"event": "pm-arbitration-escalate-po"' in workflow
+    assert '"pe_id": "${{ steps.pe.outputs.pe_id }}"' in workflow
+    assert '"trigger": "${{ steps.ctx.outputs.trigger_type }}"' in workflow
+    assert '"justification": "${{ steps.arbiter.outputs.justification }}"' in workflow
+    assert '"pr_number": "${{ steps.ctx.outputs.pr_number }}"' in workflow
+    assert '"ll_id": "${{ steps.arbiter.outputs.ll_id }}"' in workflow
