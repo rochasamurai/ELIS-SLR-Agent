@@ -270,3 +270,15 @@ def test_append_lessons_learned_preserves_existing(tmp_path: Path) -> None:
     result = ll_file.read_text(encoding="utf-8")
     assert "## LL-01 — Existing" in result
     assert "## LL-02 — New entry" in result
+
+
+# ---------------------------------------------------------------------------
+# adversarial acceptance-criteria tests
+# ---------------------------------------------------------------------------
+
+
+def test_timeout_escalation_justification_references_24h_blocked_threshold() -> None:
+    """AC-5 requires explicit >24h blocked handling before PO notification."""
+    decision, justification = decide(_ctx(trigger=TriggerType.TIMEOUT))
+    assert decision == ArbDecision.ESCALATE_PO
+    assert "24h" in justification or "24 h" in justification
