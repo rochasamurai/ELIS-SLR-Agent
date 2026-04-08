@@ -41,7 +41,7 @@ $ python -m pytest
 ........................................................................ [ 82%]
 ........................................................................ [ 92%]
 ....................................................                     [100%]
-700 passed in 3.36s
+700 passed in 3.54s
 
 $ python -m pytest tests/test_pm_arbiter.py -v
 ============================= test session starts ==============================
@@ -82,4 +82,7 @@ AC-4: PASS
 AC-5: PASS
 TIMEOUT_DECISION: ESCALATE_PO
 TIMEOUT_JUSTIFICATION: Timeout: PE PE-AUTO-07 has been blocked for >24h without resolution (runner inactive for >4h). AC-5 threshold exceeded — PO must investigate.
+
+$ REVIEW_FILE=REVIEW_PE_AUTO_07.md python scripts/check_review.py
+REVIEW evidence check PASS (REVIEW_PE_AUTO_07.md)
 ```
