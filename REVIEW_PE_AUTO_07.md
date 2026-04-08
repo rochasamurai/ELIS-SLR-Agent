@@ -240,3 +240,132 @@ AC-4 PASS
 AC-5 PASS
 TIMEOUT_JUSTIFICATION Timeout: PE PE-AUTO-07 has been blocked for >24h without resolution (runner inactive for >4h). AC-5 threshold exceeded — PO must investigate.
 ```
+
+## Re-validation — 2026-04-08 (Round 4)
+
+### Verdict
+FAIL
+
+### Gate results
+black: PASS  
+ruff: PASS  
+pytest: FAIL (1 failing adversarial test)  
+PE-specific tests: `tests/test_pm_arbiter.py` FAIL (19 passed, 1 failed)
+
+### Scope
+```text
+M	.github/workflows/auto-merge-on-pass.yml
+A	.github/workflows/pm-arbiter.yml
+M	HANDOFF.md
+A	REVIEW_PE_AUTO_07.md
+A	handoffs/HANDOFF_PE-AUTO-07.md
+A	scripts/pm_arbiter.py
+M	tests/test_pm_arbiter.py
+```
+
+### Required fixes
+- AC-5 is not fully satisfied: timeout escalation logic exists in `scripts/pm_arbiter.py`, but `.github/workflows/pm-arbiter.yml` has no routable timeout trigger path (no timeout label mapping and no scheduled timeout detection), so blocked `>24h` enforcement cannot trigger automatically.
+- Add an automated timeout route into PM arbitration (for example timeout label mapping or scheduled blocked-state detector) and keep Discord notification on `ESCALATE_PO`.
+
+### Evidence
+```text
+$ python - <<'PY'
+from pathlib import Path
+import re
+
+auto = Path('.github/workflows/auto-merge-on-pass.yml').read_text(encoding='utf-8')
+arb_wf = Path('.github/workflows/pm-arbiter.yml').read_text(encoding='utf-8')
+arb_py = Path('scripts/pm_arbiter.py').read_text(encoding='utf-8')
+
+ac1 = ('nextRound >= 3' in auto and 'pm-arbitration-required' in auto and 'fail-round-' in auto)
+ac2 = ('## PM Arbitration' in arb_wf and 'github-token: ${{ secrets.PM_BOT_TOKEN }}' in arb_wf and 'issues.createComment' in arb_wf)
+ac3 = ('append_lessons_learned' in arb_py and '--write' in arb_py and 'git add LESSONS_LEARNED.md' in arb_wf)
+ac4 = ("if: steps.arbiter.outputs.decision == 'ESCALATE_PO'" in arb_wf and 'PM_AGENT_WEBHOOK_URL' in arb_wf and 'pm-arbitration-escalate-po' in arb_wf)
+
+timeout_trigger_routable = (
+    "triggerType = 'timeout'" in arb_wf
+    or 'timeout' in re.findall(r"github.event.label.name == '([^']+)'", arb_wf)
+    or 'schedule:' in arb_wf
+)
+blocked_24h_semantics_present = ('blocked for >24h' in arb_py)
+
+print('AC-1', 'PASS' if ac1 else 'FAIL')
+print('AC-2', 'PASS' if ac2 else 'FAIL')
+print('AC-3', 'PASS' if ac3 else 'FAIL')
+print('AC-4', 'PASS' if ac4 else 'FAIL')
+print('AC-5', 'PASS' if (timeout_trigger_routable and blocked_24h_semantics_present and ac4) else 'FAIL')
+print('timeout_trigger_routable', timeout_trigger_routable)
+print('blocked_24h_semantics_present', blocked_24h_semantics_present)
+PY
+AC-1 PASS
+AC-2 PASS
+AC-3 PASS
+AC-4 PASS
+AC-5 FAIL
+timeout_trigger_routable False
+blocked_24h_semantics_present True
+
+$ python -m black --check .
+All done! ✨ 🍰 ✨
+153 files would be left unchanged.
+
+$ python -m ruff check .
+All checks passed!
+
+$ python -m pytest tests/test_pm_arbiter.py -q
+...................F                                                     [100%]
+=================================== FAILURES ===================================
+_________ test_workflow_has_timeout_route_for_24h_blocked_enforcement __________
+
+    def test_workflow_has_timeout_route_for_24h_blocked_enforcement() -> None:
+        """AC-5 requires an automated route that can trigger timeout arbitration."""
+        workflow = Path(".github/workflows/pm-arbiter.yml").read_text(encoding="utf-8")
+
+        has_timeout_label_trigger = "github.event.label.name == 'timeout'" in workflow
+        has_timeout_mapping = "triggerType = 'timeout'" in workflow
+        has_schedule_trigger = "\nschedule:" in workflow
+
+>       assert (
+            has_timeout_label_trigger or has_timeout_mapping or has_schedule_trigger
+        ), "No timeout trigger route found in pm-arbiter workflow for blocked >24h enforcement."
+E       AssertionError: No timeout trigger route found in pm-arbiter workflow for blocked >24h enforcement.
+E       assert (False or False or False)
+
+tests/test_pm_arbiter.py:295: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_pm_arbiter.py::test_workflow_has_timeout_route_for_24h_blocked_enforcement - AssertionError: No timeout trigger route found in pm-arbiter workflow for blocked >24h enforcement.
+assert (False or False or False)
+
+$ python -m pytest -q
+........................................................................ [ 10%]
+........................................................................ [ 20%]
+........................................................................ [ 30%]
+........................................................................ [ 41%]
+........................................................................ [ 51%]
+........................................................................ [ 61%]
+.........................................................F.............. [ 72%]
+........................................................................ [ 82%]
+........................................................................ [ 92%]
+.................................................                        [100%]
+=================================== FAILURES ===================================
+_________ test_workflow_has_timeout_route_for_24h_blocked_enforcement __________
+
+    def test_workflow_has_timeout_route_for_24h_blocked_enforcement() -> None:
+        """AC-5 requires an automated route that can trigger timeout arbitration."""
+        workflow = Path(".github/workflows/pm-arbiter.yml").read_text(encoding="utf-8")
+
+        has_timeout_label_trigger = "github.event.label.name == 'timeout'" in workflow
+        has_timeout_mapping = "triggerType = 'timeout'" in workflow
+        has_schedule_trigger = "\nschedule:" in workflow
+
+>       assert (
+            has_timeout_label_trigger or has_timeout_mapping or has_schedule_trigger
+        ), "No timeout trigger route found in pm-arbiter workflow for blocked >24h enforcement."
+E       AssertionError: No timeout trigger route found in pm-arbiter workflow for blocked >24h enforcement.
+E       assert (False or False or False)
+
+tests/test_pm_arbiter.py:295: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_pm_arbiter.py::test_workflow_has_timeout_route_for_24h_blocked_enforcement - AssertionError: No timeout trigger route found in pm-arbiter workflow for blocked >24h enforcement.
+assert (False or False or False)
+```

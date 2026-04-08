@@ -282,3 +282,16 @@ def test_timeout_escalation_justification_references_24h_blocked_threshold() -> 
     decision, justification = decide(_ctx(trigger=TriggerType.TIMEOUT))
     assert decision == ArbDecision.ESCALATE_PO
     assert "24h" in justification or "24 h" in justification
+
+
+def test_workflow_has_timeout_route_for_24h_blocked_enforcement() -> None:
+    """AC-5 requires an automated route that can trigger timeout arbitration."""
+    workflow = Path(".github/workflows/pm-arbiter.yml").read_text(encoding="utf-8")
+
+    has_timeout_label_trigger = "github.event.label.name == 'timeout'" in workflow
+    has_timeout_mapping = "triggerType = 'timeout'" in workflow
+    has_schedule_trigger = "\nschedule:" in workflow
+
+    assert (
+        has_timeout_label_trigger or has_timeout_mapping or has_schedule_trigger
+    ), "No timeout trigger route found in pm-arbiter workflow for blocked >24h enforcement."
