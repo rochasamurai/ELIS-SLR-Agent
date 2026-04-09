@@ -538,3 +538,39 @@ def test_make_branch_name_with_title() -> None:
     name = _make_branch_name("PE-AUTO-09", "Plan Loader New Plan")
     assert name.startswith("feature/pe-auto-09-")
     assert "plan" in name
+
+
+# ---------------------------------------------------------------------------
+# adversarial acceptance-criteria tests
+# ---------------------------------------------------------------------------
+
+
+def test_discord_plan_load_path_exists_for_validation_confirmation() -> None:
+    """AC-5 requires a Discord `!plan load` confirmation path before sequencer start."""
+    workflow_text = ""
+    workflow_dir = Path(".github/workflows")
+    if workflow_dir.exists():
+        workflow_text = "\n".join(
+            path.read_text(encoding="utf-8") for path in workflow_dir.glob("*.yml")
+        )
+
+    docs_and_scripts = "\n".join(
+        path.read_text(encoding="utf-8")
+        for path in [
+            Path("scripts/plan_loader.py"),
+            Path("docs/openclaw/workspace-pm/AGENTS.md"),
+        ]
+        if path.exists()
+    )
+
+    combined = "\n".join([workflow_text, docs_and_scripts])
+
+    has_discord_command = "!plan load" in combined or "plan load" in combined
+    has_plan_loader_dispatch = "plan_loader" in workflow_text and (
+        "workflow_dispatch" in workflow_text or "PM_AGENT_WEBHOOK_URL" in workflow_text
+    )
+
+    assert has_discord_command and has_plan_loader_dispatch, (
+        "AC-5 unmet: no Discord !plan load confirmation path found that validates the "
+        "plan and confirms success before sequencer start."
+    )
