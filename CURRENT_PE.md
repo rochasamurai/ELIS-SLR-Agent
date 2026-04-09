@@ -21,8 +21,8 @@
 
 | Field   | Value                                              |
 |---------|----------------------------------------------------|
-| PE      | PE-AUTO-08                                         |
-| Branch  | feature/pe-auto-08-discord-loop-for-autonomous-operation |
+| PE      | PE-AUTO-09                                         |
+| Branch  | feature/pe-auto-09-plan-loader-new-plan-ingestion  |
 
 ---
 
@@ -30,8 +30,8 @@
 
 | Agent       | Role        |
 |-------------|-------------|
-| CODEX       | Implementer |
-| Claude Code | Validator   |
+| CODEX       | Validator   |
+| Claude Code | Implementer |
 
 ---
 
@@ -88,7 +88,8 @@
 | PE-AUTO-05  | infra           | infra-impl-claude    | infra-val-codex    | feature/pe-auto-05-validator-runner               | merged          | 2026-04-07   |
 | PE-AUTO-06  | infra           | infra-impl-codex     | infra-val-claude   | feature/pe-auto-06-pe-sequencer                   | merged          | 2026-04-08   |
 | PE-AUTO-07  | infra           | infra-impl-claude    | infra-val-codex    | feature/pe-auto-07-pm-agent-arbitration-protocol  | merged          | 2026-04-08   |
-| PE-AUTO-08  | infra           | infra-impl-codex     | infra-val-claude   | feature/pe-auto-08-discord-loop-for-autonomous-operation | implementing    | 2026-04-08   |
+| PE-AUTO-08  | infra           | infra-impl-codex     | infra-val-claude   | feature/pe-auto-08-discord-loop-for-autonomous-operation | merged          | 2026-04-09   |
+| PE-AUTO-09  | infra           | infra-impl-claude    | infra-val-codex    | feature/pe-auto-09-plan-loader-new-plan-ingestion        | implementing    | 2026-04-09   |
 
 Valid status values:
 - `planning`
@@ -131,6 +132,7 @@ PM housekeeping entries (prefix `PM-CHORE-XX`):
 | PM-CHORE-24  | Closed PE-AUTO-05 as merged (PR #312, PASS verdict — CODEX Round 16). Upgraded `elis-codex-bot` and `elis-claude-bot` to write collaborator access so bot reviews satisfy branch protection. Opened PE-AUTO-06 (PE Sequencer — Automatic Advance Between PEs) with `infra-impl-codex` as Implementer and `infra-val-claude` as Validator per alternation rule. | 2026-04-07 |
 | PM-CHORE-25  | Closed PE-AUTO-06 as merged (PR #313, PASS verdict). Opened PE-AUTO-07 (PM Agent Arbitration Protocol) with `infra-impl-claude` as Implementer and `infra-val-codex` as Validator per alternation rule. Dependencies PE-AUTO-04 and PE-AUTO-05 satisfied. | 2026-04-08 |
 | PM-CHORE-26  | Closed PE-AUTO-07 as merged (PR #314, PASS verdict — 6 FAIL iterations). Opened PE-AUTO-08 (Discord Loop for Autonomous Operation) with `infra-impl-codex` as Implementer and `infra-val-claude` as Validator per alternation rule. Dependencies PE-AUTO-06 and PE-AUTO-07 satisfied. | 2026-04-08 |
+| PM-CHORE-27  | Closed PE-AUTO-08 as merged (PR #315, PASS verdict). Opened PE-AUTO-09 (Plan Loader — New Plan Ingestion) with `infra-impl-claude` as Implementer and `infra-val-codex` as Validator per alternation rule. Dependencies PE-AUTO-06 and PE-AUTO-08 satisfied. | 2026-04-09 |
 
 Alternation rule:
 - For consecutive PEs in the same domain, the implementer engine must alternate (`codex` <-> `claude`).
