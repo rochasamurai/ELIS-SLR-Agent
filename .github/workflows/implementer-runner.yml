@@ -103,6 +103,36 @@ jobs:
           CLAUDE_SETUP_TOKEN: ${{ secrets.CLAUDE_SETUP_TOKEN }}
         run: python scripts/verify_claude_auth.py
 
+      - name: Notify PM Agent webhook — PE started
+        if: env.PM_AGENT_WEBHOOK_URL != ''
+        env:
+          PM_AGENT_WEBHOOK_URL: ${{ secrets.PM_AGENT_WEBHOOK_URL }}
+        run: |
+          python - <<'EOF'
+          import json
+          import os
+          import urllib.request
+
+          payload = {
+              "event": "pe-lifecycle",
+              "stage": "started",
+              "pe_id": "${{ inputs.pe_id }}",
+              "branch": "${{ inputs.branch }}",
+              "engine": "${{ inputs.engine }}",
+              "base_branch": "${{ inputs.base_branch }}",
+              "message": "[AUTO] ${{ inputs.pe_id }} started · Implementer: ${{ inputs.engine }}",
+          }
+          data = json.dumps(payload).encode("utf-8")
+          req = urllib.request.Request(
+              os.environ["PM_AGENT_WEBHOOK_URL"],
+              data=data,
+              headers={"Content-Type": "application/json"},
+              method="POST",
+          )
+          with urllib.request.urlopen(req, timeout=30) as response:
+              print(f"Webhook status: {response.status}")
+          EOF
+
       - name: Run CODEX implementer
         if: inputs.engine == 'codex'
         env:

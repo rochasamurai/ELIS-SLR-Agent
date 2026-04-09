@@ -6,7 +6,28 @@ on:
   schedule:
     # Run every 6h to detect PRs with `blocked` status older than 24h.
     - cron: '0 */6 * * *'
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number to arbitrate when triggered manually'
+        required: false
+      trigger_type:
+        description: 'Optional arbitration trigger override'
+        required: false
+      head_branch:
+        description: 'Optional PR head branch override'
+        required: false
+  workflow_call:
+    inputs:
+      pr_number:
+        required: true
+        type: string
+      trigger_type:
+        required: false
+        type: string
+      head_branch:
+        required: false
+        type: string
 
 permissions:
   contents: write
@@ -20,6 +41,7 @@ jobs:
     runs-on: ubuntu-latest
     # Only fire on the arbitration trigger labels.
     if: |
+      github.event_name == 'workflow_call' ||
       github.event.label.name == 'pm-arbitration-required' ||
       github.event.label.name == 'scope-dispute' ||
       github.event.label.name == 'pm-escalation' ||
@@ -29,7 +51,7 @@ jobs:
       - name: Checkout PR head
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.event.pull_request.head.sha || inputs.head_branch || github.event.inputs.head_branch || github.ref_name }}
           fetch-depth: 0
           token: ${{ secrets.PM_BOT_TOKEN }}
 
@@ -51,8 +73,23 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const label = context.payload.label.name;
-            const prNumber = context.payload.pull_request.number;
+            const isWorkflowCall = context.eventName === 'workflow_call';
+            const isWorkflowDispatch = context.eventName === 'workflow_dispatch';
+            const label = context.payload.label?.name || '';
+            const triggerOverride =
+              (isWorkflowCall ? '${{ inputs.trigger_type }}' : '') ||
+              (isWorkflowDispatch ? '${{ github.event.inputs.trigger_type }}' : '');
+            const prNumberRaw =
+              (isWorkflowCall ? '${{ inputs.pr_number }}' : '') ||
+              (isWorkflowDispatch ? '${{ github.event.inputs.pr_number }}' : '') ||
+              context.payload.pull_request?.number;
+            const prNumber = Number(prNumberRaw);
+
+            if (!prNumber) {
+              core.setFailed('PR number is required for workflow_call/workflow_dispatch arbitration runs.');
+              return;
+            }
+
             const { data: pr } = await github.rest.pulls.get({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -60,10 +97,12 @@ jobs:
             });
 
             // Map label to trigger type.
-            let triggerType = 'fail_round_3';
-            if (label === 'scope-dispute') triggerType = 'scope_dispute';
-            if (label === 'pm-escalation') triggerType = 'technical_blocker';
-            if (label === 'timeout') triggerType = 'timeout';
+            let triggerType = triggerOverride || 'fail_round_3';
+            if (!triggerOverride) {
+              if (label === 'scope-dispute') triggerType = 'scope_dispute';
+              if (label === 'pm-escalation') triggerType = 'technical_blocker';
+              if (label === 'timeout') triggerType = 'timeout';
+            }
 
             // Count fail-round-* labels to determine fail round.
             const failLabels = pr.labels
@@ -86,7 +125,12 @@ jobs:
             core.setOutput('trigger_type', triggerType);
             core.setOutput('fail_round', String(failRound));
             core.setOutput('pr_number', String(prNumber));
-            core.setOutput('head_branch', pr.head.ref);
+            core.setOutput(
+              'head_branch',
+              (isWorkflowCall ? '${{ inputs.head_branch }}' : '') ||
+              (isWorkflowDispatch ? '${{ github.event.inputs.head_branch }}' : '') ||
+              pr.head.ref
+            );
             core.setOutput('arbiter_iteration', String(arbIterations));
 
       - name: Find REVIEW file for this branch
@@ -200,6 +244,7 @@ jobs:
         if: steps.arbiter.outputs.decision == 'ESCALATE_PO'
         env:
           PM_AGENT_WEBHOOK_URL: ${{ secrets.PM_AGENT_WEBHOOK_URL }}
+          PM_AGENT_PO_MENTION: ${{ secrets.PM_AGENT_PO_MENTION }}
         run: |
           python - <<'EOF'
           import json, os, urllib.request
@@ -214,6 +259,11 @@ jobs:
               "justification": "${{ steps.arbiter.outputs.justification }}",
               "pr_number": "${{ steps.ctx.outputs.pr_number }}",
               "ll_id": "${{ steps.arbiter.outputs.ll_id }}",
+              "po_mention": os.environ.get("PM_AGENT_PO_MENTION", "@PO"),
+              "message": (
+                  f"{os.environ.get('PM_AGENT_PO_MENTION', '@PO')} "
+                  f"[ESCALATE] ${{ steps.pe.outputs.pe_id }} requires PO decision"
+              ),
           }
           data = json.dumps(payload).encode("utf-8")
           req = urllib.request.Request(

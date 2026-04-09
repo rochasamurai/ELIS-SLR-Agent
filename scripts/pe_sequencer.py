@@ -21,6 +21,7 @@ REGISTRY_HEADING = "## Active PE Registry"
 SECTION_BREAK_RE = re.compile(r"^---\s*$", re.MULTILINE)
 PE_SECTION_RE = re.compile(r"^###\s+(PE-[A-Z]+-[0-9]+)\s+·\s+(.+?)\s*$", re.MULTILINE)
 TABLE_FIELD_RE = re.compile(r"^\|\s*(?P<field>[^|]+?)\s*\|\s*(?P<value>[^|]+?)\s*\|$")
+DEFAULT_CONTROL_FILE = Path("config/pm_loop_control.json")
 
 
 @dataclass(frozen=True)
@@ -60,6 +61,15 @@ class SequencerDecision:
 
 class SequencerError(RuntimeError):
     """Raised when the sequencer cannot update CURRENT_PE.md safely."""
+
+
+def _load_loop_control(path: Path) -> dict[str, object]:
+    if not path.exists():
+        return {"paused": False, "reason": "", "updated_by": "", "updated_at": ""}
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        raise SequencerError(f"Loop control file is malformed: {path}")
+    return data
 
 
 def _extract_table_value(content: str, heading: str, field: str) -> str:
@@ -359,6 +369,7 @@ def advance_current_pe(
     current_pe_path: Path,
     merged_pe: str | None = None,
     merged_branch: str | None = None,
+    control_file: Path | None = None,
 ) -> SequencerDecision:
     content = current_pe_path.read_text(encoding="utf-8")
     active_pe = _current_pe_id(content)
@@ -378,6 +389,25 @@ def advance_current_pe(
             reason=(
                 f"Merged branch {merged_branch} does not match active branch "
                 f"{active_branch}; skipping sequencer advance."
+            ),
+            updated_content=None,
+            implementer_engine=None,
+            validator_engine=None,
+            pm_chore_id=None,
+        )
+
+    loop_control = _load_loop_control(control_file or DEFAULT_CONTROL_FILE)
+    if bool(loop_control.get("paused")):
+        reason = str(loop_control.get("reason", "")).strip()
+        return SequencerDecision(
+            action="halt_paused",
+            merged_pe=merged_pe,
+            next_pe=None,
+            next_branch=None,
+            reason=(
+                "Sequencer is paused by PM control."
+                if not reason
+                else f"Sequencer is paused by PM control: {reason}"
             ),
             updated_content=None,
             implementer_engine=None,
@@ -495,6 +525,11 @@ def main() -> int:
         action="store_true",
         help="Print the decision as JSON.",
     )
+    parser.add_argument(
+        "--control-file",
+        default=str(DEFAULT_CONTROL_FILE),
+        help="Path to the sequencer loop-control file.",
+    )
     args = parser.parse_args()
 
     try:
@@ -503,6 +538,7 @@ def main() -> int:
             current_pe_path,
             args.merged_pe,
             args.merged_branch,
+            Path(args.control_file),
         )
         if args.write and decision.updated_content is not None:
             current_pe_path.write_text(decision.updated_content, encoding="utf-8")
