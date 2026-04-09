@@ -367,13 +367,13 @@ def main() -> int:
                 rows,
                 now,
                 lessons_content=lessons_content,
-                auth_summary=auth_status_summary(),
+                auth_summary=auth_status_summary(which=shutil.which),
             )
         )
         return 0
 
     if args.command == "auth-check":
-        print(auth_status_summary())
+        print(auth_status_summary(which=shutil.which))
         return 0
 
     if args.command == "escalate":
