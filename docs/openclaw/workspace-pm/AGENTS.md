@@ -169,6 +169,20 @@ Use these commands as follows:
 - `!pe resume` → clear the paused state and allow the sequencer to continue
 - `!pe override PASS` → requires an audit entry in `LESSONS_LEARNED.md` before force-merge
 
+### 5.5 Plan Load Command
+
+The `!plan load` command triggers the plan loader validation workflow before the sequencer
+starts a new release.
+
+Usage:
+
+- `!plan load` with an attached `.json` plan file → dispatches `pm-plan-load.yml` which
+  runs `scripts/plan_loader.py` against the plan, posts a Discord webhook confirmation on
+  success, or reports the validation error before allowing the sequencer to start
+- Validation must pass (exit 0) before the sequencer may advance into a new release plan
+- On validation failure, the Discord response includes the `INVALID:` diagnosis from the
+  loader and the sequencer remains blocked until a corrected plan is supplied
+
 When reporting an `ESCALATE_PO` event on Discord, include the configured PO mention in the
 message body.
 
