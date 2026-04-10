@@ -226,6 +226,102 @@ def _validate_roles_table(
         raise ValueError("Active PE registry engines are not opposite.")
 
 
+def _is_dual_track(content: str) -> bool:
+    return bool(re.search(r"^\|\s*Track A PE\s*\|", content, re.MULTILINE))
+
+
+def _dual_track_value(content: str, field: str) -> str | None:
+    """Extract a value from the dual-track Current PE table."""
+    match = re.search(
+        rf"^\|\s*{re.escape(field)}\s*\|\s*([^|]+?)\s*\|$",
+        content,
+        re.MULTILINE,
+    )
+    return match.group(1).strip() if match else None
+
+
+def _validate_dual_track(content: str, lines: list[str]) -> None:
+    """Validate dual-track CURRENT_PE.md structure (AC-4)."""
+    track_a_pe = _dual_track_value(content, "Track A PE")
+    track_a_branch = _dual_track_value(content, "Track A Branch")
+    track_b_pe = _dual_track_value(content, "Track B PE")
+    track_b_branch = _dual_track_value(content, "Track B Branch")
+
+    for label, value in [
+        ("Track A PE", track_a_pe),
+        ("Track A Branch", track_a_branch),
+        ("Track B PE", track_b_pe),
+        ("Track B Branch", track_b_branch),
+    ]:
+        if not value:
+            raise ValueError(f"Dual-track field '{label}' is missing or blank.")
+
+    for label, value in [("Track A PE", track_a_pe), ("Track B PE", track_b_pe)]:
+        if value and not PE_ID_RE.fullmatch(value):
+            raise ValueError(f"Dual-track {label} has invalid format: '{value}'.")
+    for label, value in [
+        ("Track A Branch", track_a_branch),
+        ("Track B Branch", track_b_branch),
+    ]:
+        if value and not BRANCH_RE.fullmatch(value):
+            raise ValueError(f"Dual-track {label} has invalid format: '{value}'.")
+
+    if track_a_pe == track_b_pe:
+        raise ValueError(f"Track A and Track B refer to the same PE '{track_a_pe}'.")
+
+    # Validate both tracks exist in the registry
+    _, rows = _parse_registry(content)
+    for pe_id, branch in [(track_a_pe, track_a_branch), (track_b_pe, track_b_branch)]:
+        row = next((r for r in rows if r["pe-id"] == pe_id), None)
+        if row is None:
+            raise ValueError(
+                f"Dual-track PE '{pe_id}' not found in Active PE Registry."
+            )
+        if row["branch"] != branch:
+            raise ValueError(
+                f"Dual-track branch mismatch for {pe_id}: "
+                f"registry has '{row['branch']}', expected '{branch}'."
+            )
+
+    # Engines must differ (parallel tracks must use opposite engines)
+    row_a = next(r for r in rows if r["pe-id"] == track_a_pe)
+    row_b = next(r for r in rows if r["pe-id"] == track_b_pe)
+    engine_a = _engine(row_a["implementer-agentid"])
+    engine_b = _engine(row_b["implementer-agentid"])
+    if engine_a is None or engine_b is None:
+        raise ValueError("Cannot determine implementer engines for dual-track PEs.")
+    if engine_a == engine_b:
+        raise ValueError(
+            f"Dual-track PEs {track_a_pe} and {track_b_pe} use the same "
+            f"implementer engine ('{engine_a}'). Parallel tracks must use "
+            "opposite engines."
+        )
+
+    # No mutual dependency — load plan file and check
+    plan_file_value = _table_value(lines, "Plan file")
+    if plan_file_value:
+        plan_path = (
+            Path(os.environ.get("CURRENT_PE_PATH", "CURRENT_PE.md")).parent
+            / plan_file_value
+        )
+        if plan_path.exists():
+            try:
+                from scripts.check_parallel_eligibility import (  # noqa: PLC0415
+                    check_eligibility,
+                )
+                from scripts.pe_sequencer import parse_plan  # noqa: PLC0415
+
+                plan_pes = parse_plan(plan_path)
+                eligible, reasons = check_eligibility(track_a_pe, track_b_pe, plan_pes)
+                if not eligible:
+                    raise ValueError(
+                        f"Dual-track PEs {track_a_pe} and {track_b_pe} are not "
+                        f"parallel-eligible: {'; '.join(reasons)}"
+                    )
+            except ImportError:
+                pass  # Plan eligibility check unavailable — skip
+
+
 def main() -> int:
     path = Path(os.environ.get("CURRENT_PE_PATH", "CURRENT_PE.md"))
     if not path.exists():
@@ -238,6 +334,17 @@ def main() -> int:
     lines = content.splitlines()
     try:
         _validate_release_context(lines)
+
+        # Dual-track mode: validate Track A + B structure (AC-4)
+        if _is_dual_track(content):
+            _validate_dual_track(content, lines)
+            print(
+                "CURRENT_PE.md OK — dual-track mode: "
+                "release context, Track A/B structure, and engine eligibility valid."
+            )
+            return 0
+
+        # Single-track mode: existing validation path
         pe, branch = _validate_current_pe(lines)
         roles = _parse_roles(content)
         if roles["CODEX"] == roles["Claude Code"]:
