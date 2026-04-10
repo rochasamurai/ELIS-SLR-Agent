@@ -73,7 +73,7 @@ jobs:
       - name: Handle status command
         if: inputs.command == 'status'
         run: |
-          python scripts/pm_status_reporter.py --command status > command.txt
+          python scripts/generate_pe_status_report.py > command.txt
           python - <<'EOF'
           import json
           from pathlib import Path

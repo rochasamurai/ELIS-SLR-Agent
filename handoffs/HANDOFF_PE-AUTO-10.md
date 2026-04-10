@@ -53,6 +53,7 @@ A  handoffs/HANDOFF_PE-AUTO-10.md
 | AC-2 | Autonomy rate calculated correctly | done — the dashboard counts merged PEs in the active release, derives intervention counts from `LESSONS_LEARNED.md`, and renders the autonomy numerator, denominator, and percentage |
 | AC-3 | Auth validity status included without exposing values | done — the dashboard reuses `auth_status_summary()` from `pm_status_reporter.py`, which reports availability only and never prints token values |
 | AC-4 | PM Agent posts report to Discord every hour | done — `pm-observability-dashboard.yml` runs on `cron: "0 * * * *"` and posts the generated dashboard to `#pe-status` through `PM_AGENT_WEBHOOK_URL` |
+| AC-5 | `!pe status` uses the same report for on-demand response | done — `pm-discord-command.yml` now routes the `status` command through `scripts/generate_pe_status_report.py`, so the on-demand Discord response and the hourly dashboard post share the same generated report |
 
 ---
 

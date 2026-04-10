@@ -27,6 +27,7 @@ def test_pm_discord_command_workflow_can_apply_veto_and_pause() -> None:
     assert "config/pm_loop_control.json" in workflow
     assert "workflow_dispatch" in workflow
     assert "override-pass" in workflow
+    assert "python scripts/generate_pe_status_report.py > command.txt" in workflow
 
 
 def test_pm_observability_dashboard_runs_hourly_and_posts_to_discord() -> None:
