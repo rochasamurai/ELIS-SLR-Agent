@@ -126,3 +126,114 @@ different AC set from the authoritative plan.
 ---
 
 *ELIS SLR Agent · REVIEW_PE_AUTO_09.md · CODEX · 2026-04-09*
+
+---
+
+## Round 2 — 2026-04-10
+
+### Scope
+
+```text
+A	.github/workflows/pm-plan-load.yml
+M	HANDOFF.md
+A	REVIEW_PE_AUTO_09.md
+M	docs/openclaw/workspace-pm/AGENTS.md
+A	handoffs/HANDOFF_PE-AUTO-09.md
+A	schemas/plan_schema.json
+A	scripts/plan_loader.py
+A	tests/test_plan_loader.py
+```
+
+The latest head adds the missing Discord plan-load workflow and PM workspace
+documentation, and the handoff now maps to the authoritative PE-AUTO-09
+acceptance criteria.
+
+### Gate results
+
+- `black --check .` — PASS
+- `ruff check .` — PASS
+- `pytest tests/test_plan_loader.py -q` — PASS (`36 passed`)
+- `pytest -q` — PASS (`749 passed`, plus the pre-existing `datetime.utcnow()` warnings)
+- `check_agent_scope.py` — PASS
+
+### Required fixes
+
+None.
+
+### Evidence
+
+AC evaluation against the authoritative plan:
+
+- AC-1 PASS: valid plans exit `0`, invalid plans exit `1` with diagnosis.
+- AC-2 PASS: dependency cycles are rejected with a cycle diagram.
+- AC-3 PASS: alternation violations are covered by the passing test suite.
+- AC-4 PASS: `CURRENT_PE.md` generation remains covered and spot-checkable.
+- AC-5 PASS: the branch now includes a `workflow_dispatch`-driven `pm-plan-load.yml`
+  path plus Discord-facing PM documentation for `!plan load`.
+
+```text
+> rg -n "!plan load|workflow_dispatch|PM_AGENT_WEBHOOK_URL|plan_loader.py" .github/workflows/pm-plan-load.yml docs/openclaw/workspace-pm/AGENTS.md
+docs/openclaw/workspace-pm/AGENTS.md:174:The `!plan load` command triggers the plan loader validation workflow before the sequencer
+docs/openclaw/workspace-pm/AGENTS.md:179:- `!plan load` with an attached `.json` plan file -> dispatches `pm-plan-load.yml` which
+docs/openclaw/workspace-pm/AGENTS.md:180:  runs `scripts/plan_loader.py` against the plan, posts a Discord webhook confirmation on
+.github/workflows/pm-plan-load.yml:1:name: PM — Plan Load (!plan load validation)
+.github/workflows/pm-plan-load.yml:3:# Triggered by the PM Agent's Discord `!plan load` command (via workflow_dispatch)
+.github/workflows/pm-plan-load.yml:9:  workflow_dispatch:
+.github/workflows/pm-plan-load.yml:52:      - name: Post Discord confirmation (!plan load — VALID)
+.github/workflows/pm-plan-load.yml:55:          PM_AGENT_WEBHOOK_URL: ${{ secrets.PM_AGENT_WEBHOOK_URL }}
+.github/workflows/pm-plan-load.yml:70:      - name: Post Discord confirmation (!plan load — INVALID)
+.github/workflows/pm-plan-load.yml:73:          PM_AGENT_WEBHOOK_URL: ${{ secrets.PM_AGENT_WEBHOOK_URL }}
+
+> & 'c:\Users\carlo\ELIS-SLR-Agent\.venv\Scripts\python.exe' -m scripts.plan_loader validation_reports\plan_loader_valid_reval.json --json
+{
+  "valid": true,
+  "topo_order": [
+    "PE-AUTO-09",
+    "PE-AUTO-10"
+  ],
+  "first_pe": "PE-AUTO-09",
+  "pe_count": 2
+}
+
+> & 'c:\Users\carlo\ELIS-SLR-Agent\.venv\Scripts\python.exe' -m scripts.plan_loader validation_reports\plan_loader_cycle_reval.json
+INVALID: Dependency DAG contains a cycle: PE-AUTO-09 → PE-AUTO-10 → (cycle)
+Cyclic PEs: PE-AUTO-09, PE-AUTO-10
+
+> & 'c:\Users\carlo\ELIS-SLR-Agent\.venv\Scripts\pytest.exe' tests/test_plan_loader.py -q
+....................................                                     [100%]
+
+> & 'c:\Users\carlo\ELIS-SLR-Agent\.venv\Scripts\black.exe' --check .
+All done! ✨ 🍰 ✨
+158 files would be left unchanged.
+
+> & 'c:\Users\carlo\ELIS-SLR-Agent\.venv\Scripts\ruff.exe' check .
+All checks passed!
+
+> & 'c:\Users\carlo\ELIS-SLR-Agent\.venv\Scripts\pytest.exe' -q
+........................................................................ [  9%]
+........................................................................ [ 19%]
+........................................................................ [ 28%]
+........................................................................ [ 38%]
+........................................................................ [ 48%]
+........................................................................ [ 57%]
+........................................................................ [ 67%]
+........................................................................ [ 76%]
+........................................................................ [ 86%]
+........................................................................ [ 96%]
+.............................                                            [100%]
+
+> & 'c:\Users\carlo\ELIS-SLR-Agent\.venv\Scripts\python.exe' scripts/check_agent_scope.py
+Agent scope clean — no secret-pattern files detected in worktree.
+```
+
+### Verdict
+
+PASS
+
+PE-AUTO-09 now satisfies the authoritative plan acceptance criteria on the latest
+head. The original AC-5 blocker is resolved by the new Discord `!plan load`
+workflow and PM workspace documentation, and the full validation gates pass.
+
+---
+
+*ELIS SLR Agent · REVIEW_PE_AUTO_09.md · CODEX · 2026-04-10*
