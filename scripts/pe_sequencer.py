@@ -503,6 +503,9 @@ def advance_current_pe(
         header, rows = _parse_registry_rows(content)
 
         track_a_id = _extract_table_value(content, CURRENT_PE_HEADING, TRACK_A_PE_FIELD)
+        track_a_br = _extract_table_value(
+            content, CURRENT_PE_HEADING, TRACK_A_BRANCH_FIELD
+        )
         track_b_id = _extract_table_value(content, CURRENT_PE_HEADING, TRACK_B_PE_FIELD)
         track_b_br = _extract_table_value(
             content, CURRENT_PE_HEADING, TRACK_B_BRANCH_FIELD
@@ -513,6 +516,21 @@ def advance_current_pe(
             raise SequencerError(
                 f"Dual-track mode: expected Track A ({track_a_id}) to close, "
                 f"got {merged_pe}."
+            )
+        if merged_branch is not None and merged_branch != track_a_br:
+            return SequencerDecision(
+                action="skip",
+                merged_pe=merged_pe,
+                next_pe=None,
+                next_branch=None,
+                reason=(
+                    f"Merged branch {merged_branch} does not match Track A branch "
+                    f"{track_a_br}; skipping dual-track close."
+                ),
+                updated_content=None,
+                implementer_engine=None,
+                validator_engine=None,
+                pm_chore_id=None,
             )
         # Mark Track A merged
         merged_row = _find_registry_row(rows, merged_pe)

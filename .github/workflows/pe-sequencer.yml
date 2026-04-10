@@ -46,13 +46,13 @@ jobs:
             --json
 
       - name: Commit sequencer update
-        if: steps.sequencer.outputs.action == 'advance'
+        if: contains('advance,dual_advance,track_a_closed', steps.sequencer.outputs.action)
         run: |
           git add CURRENT_PE.md
           git commit -m "chore(pm): auto-advance to ${{ steps.sequencer.outputs.next_pe }}"
 
       - name: Push updated CURRENT_PE.md to main
-        if: steps.sequencer.outputs.action == 'advance'
+        if: contains('advance,dual_advance,track_a_closed', steps.sequencer.outputs.action)
         run: git push origin HEAD:main
 
       - name: Post merge follow-up comment

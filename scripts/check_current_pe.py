@@ -299,10 +299,15 @@ def _validate_dual_track(content: str, lines: list[str]) -> None:
 
     # No mutual dependency — load plan file and check
     plan_file_value = _table_value(lines, "Plan file")
+    plan_location_value = _table_value(lines, "Plan location")
     if plan_file_value:
+        current_pe_parent = Path(
+            os.environ.get("CURRENT_PE_PATH", "CURRENT_PE.md")
+        ).parent
         plan_path = (
-            Path(os.environ.get("CURRENT_PE_PATH", "CURRENT_PE.md")).parent
-            / plan_file_value
+            current_pe_parent / plan_file_value
+            if plan_location_value in {None, "repo root"}
+            else current_pe_parent / plan_location_value / plan_file_value
         )
         if plan_path.exists():
             try:

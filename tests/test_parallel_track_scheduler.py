@@ -460,6 +460,27 @@ def test_check_current_pe_valid_dual_track(tmp_path, monkeypatch, capsys) -> Non
     assert "dual-track" in out.lower()
 
 
+def test_check_current_pe_dual_track_honours_plan_location(
+    tmp_path, monkeypatch, capsys
+) -> None:
+    docs_dir = tmp_path / "docs" / "plans"
+    docs_dir.mkdir(parents=True)
+    path = tmp_path / "CURRENT_PE.md"
+    path.write_text(
+        VALID_DUAL_TRACK_CURRENT_PE.replace(
+            "| Plan location  | repo root                           |",
+            "| Plan location  | docs/plans                          |",
+        ),
+        encoding="utf-8",
+    )
+    (docs_dir / "plan.md").write_text(PLAN_DUAL, encoding="utf-8")
+    monkeypatch.setenv("CURRENT_PE_PATH", str(path))
+    rc = CCP.main()
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "dual-track" in out.lower()
+
+
 def test_check_current_pe_dual_track_missing_field(tmp_path, monkeypatch) -> None:
     content = VALID_DUAL_TRACK_CURRENT_PE.replace(
         "| Track B PE     | PE-D-02", "| Track B PE     |"
@@ -590,6 +611,23 @@ def test_track_a_close_updates_roles_for_track_b(tmp_path: Path) -> None:
     assert "Claude Code | Implementer" in decision.updated_content
 
 
+def test_track_a_close_skips_when_merged_branch_is_not_track_a(tmp_path: Path) -> None:
+    current_pe = tmp_path / "CURRENT_PE.md"
+    plan_file = tmp_path / "plan.md"
+    current_pe.write_text(DUAL_TRACK_CURRENT_PE_FOR_SEQUENCER, encoding="utf-8")
+    plan_file.write_text(PLAN_DUAL, encoding="utf-8")
+
+    decision = advance_current_pe(
+        current_pe,
+        merged_pe="PE-D-01",
+        merged_branch="feature/pe-d-02-track-b-candidate",
+    )
+
+    assert decision.action == "skip"
+    assert decision.updated_content is None
+    assert "does not match Track A branch" in decision.reason
+
+
 def test_track_a_close_wrong_pe_raises(tmp_path: Path) -> None:
     current_pe = tmp_path / "CURRENT_PE.md"
     plan_file = tmp_path / "plan.md"
@@ -603,6 +641,16 @@ def test_track_a_close_wrong_pe_raises(tmp_path: Path) -> None:
         assert False, "Expected SequencerError"
     except SequencerError as exc:
         assert "Track A" in str(exc)
+
+
+def test_pe_sequencer_workflow_persists_dual_track_actions() -> None:
+    workflow_text = (
+        Path(__file__).resolve().parents[1]
+        / ".github"
+        / "workflows"
+        / "pe-sequencer.yml"
+    ).read_text(encoding="utf-8")
+    assert "contains('advance,dual_advance,track_a_closed'" in workflow_text
 
 
 # ---------------------------------------------------------------------------
