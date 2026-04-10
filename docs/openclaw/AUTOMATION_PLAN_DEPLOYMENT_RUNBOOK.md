@@ -26,8 +26,8 @@
 | `implementer-runner.yml` | workflow_dispatch | launch Implementer agent |
 | `validator-runner.yml` | workflow_dispatch | launch Validator agent |
 | `validator-dispatch.yml` | workflow_dispatch | dispatch Validator via bot token |
-| `pe-sequencer.yml` | workflow_dispatch | advance sequencer after merge |
-| `pm-arbiter.yml` | workflow_dispatch | PM arbitration on FAIL iteration |
+| `pe-sequencer.yml` | merged feature PR (`pull_request_target.closed`) | advance sequencer after merge |
+| `pm-arbiter.yml` | PR label / schedule / manual / workflow_call | PM arbitration on FAIL iteration and blocked-timeout escalation |
 | `pm-discord-command.yml` | workflow_dispatch | respond to `!pe *` Discord commands |
 | `pm-observability-dashboard.yml` | cron (hourly) | post dashboard to `#pe-status` |
 | `pm-plan-load.yml` | workflow_dispatch | `!plan load` — validate plan before sequencer |
@@ -145,13 +145,18 @@ git status -sb
 > **Do not force-reset the server repo without inspecting uncommitted state.**
 > If unexpected modifications exist, escalate to PO before proceeding.
 
-Verify the pull landed at the correct commit:
+Verify the pull landed at the correct deployment state:
 
 ```bash
 git log -3 --oneline --decorate
+grep -n "Plan complete" CURRENT_PE.md
 ```
 
-Expected tip: `chore(pm): PM-CHORE-30 — close PE-AUTO-11, plan complete`
+Expected:
+
+- the latest commits are on `origin/main`
+- `CURRENT_PE.md` shows `Plan complete`
+- `CURRENT_PE.md` has `PE = —`, `Branch = —`, and no active agent roles
 
 ---
 
@@ -397,9 +402,9 @@ cd /opt/elis/repo
 # Confirm pre-deploy SHA
 cat /tmp/elis_pre_deploy_sha.txt
 
-# Hard-reset to pre-deploy state
+# Restore the repo to the recorded pre-deploy commit on a named rollback branch
 git fetch --all
-git checkout <pre-deploy-sha>
+git checkout -B rollback/automation-plan-deploy <pre-deploy-sha>
 
 # Redeploy workspaces at that commit
 bash scripts/deploy_openclaw_workspaces.sh
@@ -418,6 +423,19 @@ openclaw channels status --probe
 # Confirm old behavior is restored before logging the rollback
 ```
 
+Important:
+
+- this rollback leaves the server on `rollback/automation-plan-deploy`, not `main`
+- do not run a plain `git pull` afterwards and assume the server is back on the normal update path
+- once the incident is resolved, return to the standard deployment path explicitly:
+
+```bash
+cd /opt/elis/repo
+git fetch --all --prune
+git checkout main
+git pull
+```
+
 After rollback, open a GitHub issue or PM-CHORE noting:
 
 - the pre-deploy SHA restored
@@ -434,7 +452,7 @@ Do not re-attempt deployment until the root cause is identified and a fix is mer
 |---|---|---|
 | 1 | Verify prerequisites (git remote, systemd unit, Python, gh auth) | ☐ |
 | 2 | Capture pre-deployment baseline snapshot (SHA, service state, health) | ☐ |
-| 3 | `git pull` — verify tip commit is PM-CHORE-30 | ☐ |
+| 3 | `git pull` — verify `CURRENT_PE.md` shows the expected deployment state | ☐ |
 | 4 | Run pytest — all tests pass | ☐ |
 | 5 | `bash scripts/deploy_openclaw_workspaces.sh` — entrypoints verified | ☐ |
 | 6 | `systemctl --user restart openclaw-gateway` — service active | ☐ |
