@@ -135,4 +135,4 @@ Full repository test suite: 754 passed
 
 ---
 
-*ELIS SLR Agent · HANDOFF.md · CODEX · 2026-04-10*
+*ELIS SLR Agent · HANDOFF_PE-AUTO-10.md · CODEX · 2026-04-10*
