@@ -27,3 +27,14 @@ def test_pm_discord_command_workflow_can_apply_veto_and_pause() -> None:
     assert "config/pm_loop_control.json" in workflow
     assert "workflow_dispatch" in workflow
     assert "override-pass" in workflow
+    assert "python scripts/generate_pe_status_report.py > command.txt" in workflow
+
+
+def test_pm_observability_dashboard_runs_hourly_and_posts_to_discord() -> None:
+    workflow = Path(".github/workflows/pm-observability-dashboard.yml").read_text(
+        encoding="utf-8"
+    )
+    assert 'cron: "0 * * * *"' in workflow
+    assert "generate_pe_status_report.py" in workflow
+    assert "PM_AGENT_WEBHOOK_URL" in workflow
+    assert "#pe-status" in workflow

@@ -1,0 +1,62 @@
+name: PM Observability Dashboard
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 * * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  dashboard:
+    name: Generate and post PE dashboard
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Generate observability dashboard
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          CLAUDE_SETUP_TOKEN: ${{ secrets.CLAUDE_SETUP_TOKEN }}
+        run: |
+          python scripts/generate_pe_status_report.py > dashboard.txt
+          cat dashboard.txt
+
+      - name: Post dashboard to Discord (#pe-status)
+        env:
+          PM_AGENT_WEBHOOK_URL: ${{ secrets.PM_AGENT_WEBHOOK_URL }}
+        run: |
+          python - <<'EOF'
+          import json
+          import os
+          import urllib.request
+          from pathlib import Path
+
+          message = Path("dashboard.txt").read_text(encoding="utf-8").strip()
+          if not os.environ.get("PM_AGENT_WEBHOOK_URL", "").strip():
+              print("Discord webhook not configured — skipping notification.")
+              raise SystemExit(0)
+
+          payload = {
+              "event": "pm-observability-dashboard",
+              "channel": "#pe-status",
+              "content": message,
+          }
+          data = json.dumps(payload).encode("utf-8")
+          req = urllib.request.Request(
+              os.environ["PM_AGENT_WEBHOOK_URL"],
+              data=data,
+              headers={"Content-Type": "application/json"},
+              method="POST",
+          )
+          with urllib.request.urlopen(req, timeout=30) as response:
+              print(f"Webhook status: {response.status}")
+          EOF

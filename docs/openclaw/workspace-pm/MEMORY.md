@@ -17,6 +17,9 @@ This file records the durable corrections that must survive session drift.
   must set it, and `!pe resume` must clear it.
 - `!pe auth-check` reports only safe status words such as `OK` / `unavailable`; never print
   token values or derived secrets.
+- The observability dashboard is posted hourly to `#pe-status` from
+  `scripts/generate_pe_status_report.py`; it must stay sourced from `CURRENT_PE.md`,
+  the active plan, review files, and `LESSONS_LEARNED.md`.
 
 ---
 
