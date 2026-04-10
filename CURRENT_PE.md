@@ -21,8 +21,11 @@
 
 | Field   | Value                                              |
 |---------|----------------------------------------------------|
-| PE      | PE-AUTO-10                                         |
-| Branch  | feature/pe-auto-10-observability-dashboard         |
+| PE      | —                                                  |
+| Branch  | —                                                  |
+
+> **Plan complete.** All PEs in `ELIS_2Agent_Automation_Plan_v2_0.md` are merged.
+> Awaiting PM assignment of next plan or release.
 
 ---
 
@@ -30,8 +33,8 @@
 
 | Agent       | Role        |
 |-------------|-------------|
-| CODEX       | Implementer |
-| Claude Code | Validator   |
+| CODEX       | —           |
+| Claude Code | —           |
 
 ---
 
@@ -90,7 +93,8 @@
 | PE-AUTO-07  | infra           | infra-impl-claude    | infra-val-codex    | feature/pe-auto-07-pm-agent-arbitration-protocol  | merged          | 2026-04-08   |
 | PE-AUTO-08  | infra           | infra-impl-codex     | infra-val-claude   | feature/pe-auto-08-discord-loop-for-autonomous-operation | merged          | 2026-04-09   |
 | PE-AUTO-09  | infra           | infra-impl-claude    | infra-val-codex    | feature/pe-auto-09-plan-loader-new-plan-ingestion        | merged          | 2026-04-10   |
-| PE-AUTO-10  | infra           | infra-impl-codex     | infra-val-claude   | feature/pe-auto-10-observability-dashboard               | implementing    | 2026-04-10   |
+| PE-AUTO-10  | infra           | infra-impl-codex     | infra-val-claude   | feature/pe-auto-10-observability-dashboard               | merged          | 2026-04-10   |
+| PE-AUTO-11  | infra           | infra-impl-claude    | infra-val-codex    | feature/pe-auto-11-parallel-track-scheduler              | merged          | 2026-04-10   |
 
 Valid status values:
 - `planning`
@@ -135,6 +139,8 @@ PM housekeeping entries (prefix `PM-CHORE-XX`):
 | PM-CHORE-26  | Closed PE-AUTO-07 as merged (PR #314, PASS verdict — 6 FAIL iterations). Opened PE-AUTO-08 (Discord Loop for Autonomous Operation) with `infra-impl-codex` as Implementer and `infra-val-claude` as Validator per alternation rule. Dependencies PE-AUTO-06 and PE-AUTO-07 satisfied. | 2026-04-08 |
 | PM-CHORE-27  | Closed PE-AUTO-08 as merged (PR #315, PASS verdict). Opened PE-AUTO-09 (Plan Loader — New Plan Ingestion) with `infra-impl-claude` as Implementer and `infra-val-codex` as Validator per alternation rule. Dependencies PE-AUTO-06 and PE-AUTO-08 satisfied. | 2026-04-09 |
 | PM-CHORE-28  | Closed PE-AUTO-09 as merged (PR #316, PASS verdict — 1 FAIL iteration resolved). Opened PE-AUTO-10 (Observability Dashboard) with `infra-impl-codex` as Implementer and `infra-val-claude` as Validator per alternation rule. Dependency PE-AUTO-09 satisfied. | 2026-04-10 |
+| PM-CHORE-29  | Closed PE-AUTO-10 as merged (PR #317, PASS verdict). Opened PE-AUTO-11 (Parallel Track Scheduler) with `infra-impl-claude` as Implementer and `infra-val-codex` as Validator per alternation rule. Dependencies PE-AUTO-06 and PE-AUTO-09 satisfied. | 2026-04-10 |
+| PM-CHORE-30  | Closed PE-AUTO-11 as merged (PR #318, PASS verdict — 1 FAIL iteration resolved). All 14 automation PEs in `ELIS_2Agent_Automation_Plan_v2_0.md` are now merged. Plan complete. Awaiting PM assignment of next plan or release. | 2026-04-10 |
 
 Alternation rule:
 - For consecutive PEs in the same domain, the implementer engine must alternate (`codex` <-> `claude`).
