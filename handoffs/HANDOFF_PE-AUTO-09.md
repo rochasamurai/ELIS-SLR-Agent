@@ -20,14 +20,20 @@ This branch adds:
 - `scripts/plan_loader.py` — validation engine (5 checks: schema, DAG, alternation,
   first-PE readiness, CURRENT_PE.md generation) plus a full CLI with `--json`,
   `--write-current-pe`, and `--already-merged` flags
-- `tests/test_plan_loader.py` — 35 tests covering all acceptance criteria, error
+- `tests/test_plan_loader.py` — 36 tests covering all acceptance criteria, error
   paths, CLI exit codes, and edge cases
+- `.github/workflows/pm-plan-load.yml` — `workflow_dispatch` workflow that runs the
+  loader on command and posts a Discord webhook confirmation before the sequencer starts
+- `docs/openclaw/workspace-pm/AGENTS.md` §5.5 — documents the `!plan load` Discord
+  command and the confirmation flow
 
 ---
 
 ## Files Changed
 
 ```text
+A  .github/workflows/pm-plan-load.yml
+M  docs/openclaw/workspace-pm/AGENTS.md
 A  schemas/plan_schema.json
 A  scripts/plan_loader.py
 A  tests/test_plan_loader.py
@@ -45,7 +51,7 @@ A  handoffs/HANDOFF_PE-AUTO-09.md
 | AC-2 | `validate_dag` detects cycles and returns topological order | done — Kahn's algorithm; raises with cycle diagram listing all cyclic nodes |
 | AC-3 | `validate_alternation` enforces Codex/Claude alternation per domain | done — checks consecutive PEs in same domain; also rejects same engine for implementer+validator within one PE |
 | AC-4 | `generate_current_pe` writes a valid CURRENT_PE.md for the first ready PE | done — `--write-current-pe OUTPUT` flag writes full CURRENT_PE.md; roles table, registry row, and PM chore entry all populated |
-| AC-5 | CLI exits 0 for valid plans, 1 for invalid; `--json` flag outputs structured result | done — exit 0 + `VALID:` on stdout; exit 1 + `INVALID:` on stderr; `--json` emits `{valid, topo_order, first_pe, pe_count}` |
+| AC-5 | Discord `!plan load` confirms validation before starting sequencer | done — `pm-plan-load.yml` workflow dispatches `plan_loader.py`, posts Discord webhook confirmation on VALID, blocks on INVALID; AGENTS.md §5.5 documents the command; CLI exits 0/1 with `--json` structured output |
 
 ---
 
@@ -82,7 +88,7 @@ when the file is written or piped. ASCII `->` is unambiguous and portable.
 
 ```text
 (.venv) $ python -m pytest tests/test_plan_loader.py -q
-35 passed in 0.XXs
+36 passed in 0.XXs
 
 (.venv) $ python -m black --check .
 All done! 158 files would be left unchanged.
@@ -91,7 +97,7 @@ All done! 158 files would be left unchanged.
 All checks passed!
 
 (.venv) $ python -m pytest -q
-748 passed, 17 warnings
+749 passed, 17 warnings
 
 (.venv) $ python scripts/check_agent_scope.py
 Agent scope clean — no secret-pattern files detected in worktree.
