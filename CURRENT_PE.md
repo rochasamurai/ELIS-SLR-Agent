@@ -21,11 +21,12 @@
 
 | Field   | Value                                              |
 |---------|----------------------------------------------------|
-| PE      | —                                                  |
-| Branch  | —                                                  |
+| PE      | PE-AUTO-12                                         |
+| Branch  | feature/pe-auto-12-elis-server-bot-review-identities |
 
-> **Plan complete.** All PEs in `ELIS_2Agent_Automation_Plan_v2_0.md` are merged.
-> Awaiting PM assignment of next plan or release.
+> **Active PE.** PE-AUTO-12 restores distinct bot-authenticated GitHub review actions on
+> `elis-server` so CODEX, Claude Code, and the PM Agent stop falling back to the PO
+> identity for live PR operations.
 
 ---
 
@@ -33,8 +34,8 @@
 
 | Agent       | Role        |
 |-------------|-------------|
-| CODEX       | —           |
-| Claude Code | —           |
+| CODEX       | Implementer |
+| Claude Code | Validator   |
 
 ---
 
@@ -95,6 +96,7 @@
 | PE-AUTO-09  | infra           | infra-impl-claude    | infra-val-codex    | feature/pe-auto-09-plan-loader-new-plan-ingestion        | merged          | 2026-04-10   |
 | PE-AUTO-10  | infra           | infra-impl-codex     | infra-val-claude   | feature/pe-auto-10-observability-dashboard               | merged          | 2026-04-10   |
 | PE-AUTO-11  | infra           | infra-impl-claude    | infra-val-codex    | feature/pe-auto-11-parallel-track-scheduler              | merged          | 2026-04-10   |
+| PE-AUTO-12  | infra           | infra-impl-codex     | infra-val-claude   | feature/pe-auto-12-elis-server-bot-review-identities     | implementing    | 2026-04-11   |
 
 Valid status values:
 - `planning`
@@ -141,6 +143,7 @@ PM housekeeping entries (prefix `PM-CHORE-XX`):
 | PM-CHORE-28  | Closed PE-AUTO-09 as merged (PR #316, PASS verdict — 1 FAIL iteration resolved). Opened PE-AUTO-10 (Observability Dashboard) with `infra-impl-codex` as Implementer and `infra-val-claude` as Validator per alternation rule. Dependency PE-AUTO-09 satisfied. | 2026-04-10 |
 | PM-CHORE-29  | Closed PE-AUTO-10 as merged (PR #317, PASS verdict). Opened PE-AUTO-11 (Parallel Track Scheduler) with `infra-impl-claude` as Implementer and `infra-val-codex` as Validator per alternation rule. Dependencies PE-AUTO-06 and PE-AUTO-09 satisfied. | 2026-04-10 |
 | PM-CHORE-30  | Closed PE-AUTO-11 as merged (PR #318, PASS verdict — 1 FAIL iteration resolved). All 14 automation PEs in `ELIS_2Agent_Automation_Plan_v2_0.md` are now merged. Plan complete. Awaiting PM assignment of next plan or release. | 2026-04-10 |
+| PM-CHORE-31  | Extended the automation plan to include PE-AUTO-12 (elis-server Bot Review Identity Activation). Opened PE-AUTO-12 with `infra-impl-codex` as Implementer and `infra-val-claude` as Validator per alternation rule. This PE operationalises backlog item `ELIS-SERVER-01` so live PR review actions on `elis-server` use the correct bot identities instead of the PO account. | 2026-04-11 |
 
 Alternation rule:
 - For consecutive PEs in the same domain, the implementer engine must alternate (`codex` <-> `claude`).

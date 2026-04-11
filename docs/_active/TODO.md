@@ -73,9 +73,10 @@ Run manually after initial setup and after every token renewal.
 
 ### ELIS-SERVER-01 — GitHub bot review identities not operational on `elis-server`
 
-**Status:** Open
+**Status:** Assigned
 **Priority:** High (manual admin-bypass merge still required for single-account PRs)
 **Logged:** 2026-04-11
+**Parent PE:** PE-AUTO-12
 
 **Description:**
 `elis-server` can execute PM automation and dispatch GitHub workflows, but the runtime
