@@ -152,9 +152,17 @@ def _latest_verdict(review_content: str) -> str | None:
 
 
 def _round_count(review_content: str) -> int:
-    rounds = re.findall(r"^## Round\b", review_content, flags=re.MULTILINE)
-    if rounds:
-        return len(rounds)
+    explicit_rounds: list[int] = []
+    for match in re.finditer(
+        r"^##\s+(?:Round\s+(\d+)\b.*|.*\(Round\s+(\d+)\))\s*$",
+        review_content,
+        flags=re.MULTILINE,
+    ):
+        round_number = match.group(1) or match.group(2)
+        if round_number:
+            explicit_rounds.append(int(round_number))
+    if explicit_rounds:
+        return max(explicit_rounds)
     verdicts = re.findall(r"^### Verdict\b", review_content, flags=re.MULTILINE)
     return 1 if verdicts else 0
 

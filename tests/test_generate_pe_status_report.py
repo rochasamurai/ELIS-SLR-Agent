@@ -179,3 +179,32 @@ PASS
     )
 
     assert "PE-AUTO-09  merged    2026-04-10  PASS (round 2)" in report
+
+
+def test_build_dashboard_uses_explicit_round_number_from_revalidation_heading(
+    tmp_path: Path,
+) -> None:
+    rows = parse_active_registry(_CURRENT_PE)
+    plan_pes = parse_plan_markdown(_PLAN)
+    (tmp_path / "REVIEW_PE_AUTO_09.md").write_text(
+        """### Verdict
+FAIL
+
+## Re-validation — 2026-04-10 (Round 5)
+
+### Verdict
+PASS
+""",
+        encoding="utf-8",
+    )
+
+    report = build_dashboard(
+        release_name="ELIS 2-Agent Automation Plan",
+        plan_pes=plan_pes,
+        registry_rows=rows,
+        lessons_content="",
+        repo_root=tmp_path,
+        auth_summary="Auth status: codex OK · claude OK",
+    )
+
+    assert "PE-AUTO-09  merged    2026-04-10  PASS (round 5)" in report
