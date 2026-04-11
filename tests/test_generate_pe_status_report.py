@@ -148,3 +148,34 @@ def test_main_outputs_json_report(tmp_path: Path, monkeypatch, capsys) -> None:
     payload = json.loads(capsys.readouterr().out)
     assert "report" in payload
     assert "PE-AUTO-10" in payload["report"]
+
+
+def test_build_dashboard_uses_latest_verdict_from_multi_round_review(
+    tmp_path: Path,
+) -> None:
+    rows = parse_active_registry(_CURRENT_PE)
+    plan_pes = parse_plan_markdown(_PLAN)
+    (tmp_path / "REVIEW_PE_AUTO_09.md").write_text(
+        """## Round 1
+
+### Verdict
+FAIL
+
+## Round 2
+
+### Verdict
+PASS
+""",
+        encoding="utf-8",
+    )
+
+    report = build_dashboard(
+        release_name="ELIS 2-Agent Automation Plan",
+        plan_pes=plan_pes,
+        registry_rows=rows,
+        lessons_content="",
+        repo_root=tmp_path,
+        auth_summary="Auth status: codex OK · claude OK",
+    )
+
+    assert "PE-AUTO-09  merged    2026-04-10  PASS (round 2)" in report

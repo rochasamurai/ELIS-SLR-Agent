@@ -157,3 +157,32 @@ def test_agent_roles_table_must_match_registry_engines(tmp_path, monkeypatch):
     path = _write_current_pe(tmp_path, content)
     monkeypatch.setenv("CURRENT_PE_PATH", str(path))
     assert MODULE.main() == 1
+
+
+def test_plan_complete_mode_is_valid(tmp_path, monkeypatch, capsys):
+    content = (
+        VALID_CURRENT_PE.replace(
+            "| PE      | PE-AUTO-02                                    |",
+            "| PE      | —                                             |",
+        )
+        .replace(
+            "| Branch  | feature/pe-auto-02-current-pe-ci-validation   |",
+            "| Branch  | —                                             |",
+        )
+        .replace(
+            "| CODEX       | Implementer |",
+            "| CODEX       | —           |",
+        )
+        .replace(
+            "| Claude Code | Validator   |",
+            "| Claude Code | —           |",
+        )
+        .replace(
+            "## Agent roles\n",
+            "## Agent roles\n\n> **Plan complete.** All PEs are merged.\n\n",
+        )
+    )
+    path = _write_current_pe(tmp_path, content)
+    monkeypatch.setenv("CURRENT_PE_PATH", str(path))
+    assert MODULE.main() == 0
+    assert "plan-complete mode" in capsys.readouterr().out

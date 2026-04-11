@@ -124,6 +124,15 @@ def _validate_current_pe(lines: list[str]) -> tuple[str, str]:
     pe = _table_value(lines, "PE")
     if not pe:
         raise ValueError("PE field missing or blank.")
+    if pe == "—":
+        branch = _table_value(lines, "Branch")
+        if not branch:
+            raise ValueError("Branch field missing or blank.")
+        if branch != "—":
+            raise ValueError(
+                "Branch must also be '—' when CURRENT_PE.md is in plan-complete mode."
+            )
+        return pe, branch
     if not PE_ID_RE.fullmatch(pe):
         raise ValueError(f"PE field has invalid format: '{pe}'.")
 
@@ -351,6 +360,11 @@ def main() -> int:
 
         # Single-track mode: existing validation path
         pe, branch = _validate_current_pe(lines)
+        if pe == "—" and branch == "—":
+            print(
+                "CURRENT_PE.md OK — release context valid and plan-complete mode is active."
+            )
+            return 0
         roles = _parse_roles(content)
         if roles["CODEX"] == roles["Claude Code"]:
             raise ValueError("Agent roles must differ.")
