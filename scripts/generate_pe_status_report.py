@@ -138,12 +138,17 @@ def _review_file_for_pe(pe_id: str, repo_root: pathlib.Path) -> pathlib.Path | N
 
 
 def _latest_verdict(review_content: str) -> str | None:
-    verdicts = re.findall(
-        r"^### Verdict\s*$\s*^(PASS|FAIL|IN PROGRESS)\b",
-        review_content,
-        flags=re.MULTILINE,
-    )
-    return verdicts[-1] if verdicts else None
+    verdict: str | None = None
+    for match in re.finditer(r"^### Verdict\s*$", review_content, flags=re.MULTILINE):
+        tail = review_content[match.end() :]
+        verdict_match = re.search(
+            r"^\s*(PASS|FAIL|IN PROGRESS)\b",
+            tail,
+            flags=re.MULTILINE,
+        )
+        if verdict_match:
+            verdict = verdict_match.group(1)
+    return verdict
 
 
 def _round_count(review_content: str) -> int:

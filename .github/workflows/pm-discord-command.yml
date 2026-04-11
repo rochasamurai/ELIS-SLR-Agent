@@ -24,6 +24,9 @@ on:
         required: false
         default: ""
         type: string
+  repository_dispatch:
+    types:
+      - pm-discord-command
 
 permissions:
   contents: write
@@ -33,6 +36,11 @@ permissions:
 jobs:
   command:
     runs-on: ubuntu-latest
+    env:
+      PM_COMMAND: ${{ github.event_name == 'workflow_dispatch' && inputs.command || github.event.client_payload.command || '' }}
+      PM_PR_NUMBER: ${{ github.event_name == 'workflow_dispatch' && inputs.pr_number || github.event.client_payload.pr_number || '' }}
+      PM_ACTOR: ${{ github.event_name == 'workflow_dispatch' && inputs.actor || github.event.client_payload.actor || 'PO' }}
+      PM_REASON: ${{ github.event_name == 'workflow_dispatch' && inputs.reason || github.event.client_payload.reason || '' }}
 
     steps:
       - name: Checkout main with PM bot token
@@ -53,15 +61,15 @@ jobs:
           python-version: "3.11"
 
       - name: Handle control command
-        if: contains('pause resume veto override-pass', inputs.command)
+        if: contains('pause resume veto override-pass', env.PM_COMMAND)
         id: control
         env:
-          PR_NUMBER: ${{ inputs.pr_number }}
+          PR_NUMBER: ${{ env.PM_PR_NUMBER }}
         run: |
           args=(
-            --command "${{ inputs.command }}"
-            --actor "${{ inputs.actor }}"
-            --reason "${{ inputs.reason }}"
+            --command "$PM_COMMAND"
+            --actor "$PM_ACTOR"
+            --reason "$PM_REASON"
             --write
             --json
           )
@@ -71,7 +79,10 @@ jobs:
           python scripts/pm_discord_command.py "${args[@]}" > command.json
 
       - name: Handle status command
-        if: inputs.command == 'status'
+        if: env.PM_COMMAND == 'status'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          CLAUDE_SETUP_TOKEN: ${{ secrets.CLAUDE_SETUP_TOKEN }}
         run: |
           python scripts/generate_pe_status_report.py > command.txt
           python - <<'EOF'
@@ -91,7 +102,7 @@ jobs:
           EOF
 
       - name: Handle auth-check command
-        if: inputs.command == 'auth-check'
+        if: env.PM_COMMAND == 'auth-check'
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           CLAUDE_SETUP_TOKEN: ${{ secrets.CLAUDE_SETUP_TOKEN }}
@@ -114,10 +125,13 @@ jobs:
           EOF
 
       - name: Commit updated loop control
-        if: contains('pause resume veto', inputs.command)
-        env:
-          COMMIT_MESSAGE: ${{ inputs.command == 'veto' && 'chore(pm): apply veto and pause loop' || inputs.command == 'pause' && 'chore(pm): pause autonomous loop' || 'chore(pm): resume autonomous loop' }}
+        if: contains('pause resume veto', env.PM_COMMAND)
         run: |
+          case "$PM_COMMAND" in
+            veto) COMMIT_MESSAGE='chore(pm): apply veto and pause loop' ;;
+            pause) COMMIT_MESSAGE='chore(pm): pause autonomous loop' ;;
+            *) COMMIT_MESSAGE='chore(pm): resume autonomous loop' ;;
+          esac
           git add config/pm_loop_control.json
           if git diff --cached --quiet; then
             echo "No loop-control changes to commit."
@@ -127,12 +141,12 @@ jobs:
           fi
 
       - name: Apply PM veto label
-        if: inputs.command == 'veto'
+        if: env.PM_COMMAND == 'veto'
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.PM_BOT_TOKEN }}
           script: |
-            const prNumber = parseInt('${{ inputs.pr_number }}', 10);
+            const prNumber = parseInt(process.env.PM_PR_NUMBER, 10);
             await github.rest.issues.addLabels({
               owner: context.repo.owner,
               repo: context.repo.repo,

@@ -26,6 +26,8 @@ def test_pm_discord_command_workflow_can_apply_veto_and_pause() -> None:
     assert "pm-review-required" in workflow
     assert "config/pm_loop_control.json" in workflow
     assert "workflow_dispatch" in workflow
+    assert "repository_dispatch" in workflow
+    assert "pm-discord-command" in workflow
     assert "override-pass" in workflow
     assert "python scripts/generate_pe_status_report.py > command.txt" in workflow
 
