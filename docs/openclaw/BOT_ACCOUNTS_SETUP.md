@@ -188,6 +188,26 @@ OK: elis-pm-bot has admin repository role
 bot config verification PASS
 ```
 
+### `elis-server` operational note
+
+Repository secrets alone are not sufficient to satisfy branch protection from the live
+runtime. The host that executes PM / validator GitHub actions must also use the correct
+bot identity for each operation. If `elis-server` still performs `gh pr review` as the
+repository owner, GitHub will reject approval on self-authored PRs with:
+
+```text
+Review Can not approve your own pull request
+```
+
+Before considering bot-review automation complete on `elis-server`, verify:
+
+1. `elis-codex-bot`, `elis-claude-bot`, and `elis-pm-bot` have accepted repository
+   collaboration.
+2. The runtime path that executes `gh` commands on `elis-server` is authenticated as the
+   intended bot for that action, not the owner account.
+3. A live approval test from `elis-server` succeeds on a safe test PR without admin
+   bypass.
+
 ---
 
 ## Step 6 — Configure branch protection on `main`
