@@ -110,8 +110,13 @@ Agent scope clean — no secret-pattern files detected in worktree.
 (.venv) $ git diff --name-status origin/main..HEAD
 M	CURRENT_PE.md
 M	ELIS_2Agent_Automation_Plan_v2_0.md
+M	HANDOFF.md
 M	docs/_active/TODO.md
 M	docs/openclaw/BOT_ACCOUNTS_SETUP.md
+A	handoffs/HANDOFF_PE-AUTO-12.md
+A	scripts/gh_bot.py
+A	tests/test_gh_bot.py
+M	tests/test_pm_runbooks.py
 ```
 
 Targeted PE tests: 16 passed
