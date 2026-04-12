@@ -71,6 +71,48 @@ Run manually after initial setup and after every token renewal.
 
 ## OpenClaw / elis-server
 
+### ELIS-SERVER-01 — GitHub bot review identities not operational on `elis-server`
+
+**Status:** In progress
+**Priority:** High (manual admin-bypass merge still required for single-account PRs)
+**Logged:** 2026-04-11
+**Parent PE:** PE-AUTO-12
+
+**Description:**
+`elis-server` can execute PM automation and dispatch GitHub workflows, but the runtime
+still falls back to the repository owner's GitHub identity for PR review actions. This
+blocks the intended multi-bot review model on live PRs such as PR #320, where GitHub
+rejects approval because the acting identity is the PR author.
+
+**Observed symptom:**
+- `gh pr review 320 --approve` fails with `Review Can not approve your own pull request`.
+- Branch protection therefore still requires manual admin bypass or a second human/write
+  reviewer even though bot accounts exist in the design.
+
+**Required fix on `elis-server`:**
+1. Configure distinct authenticated GitHub identities for `elis-codex-bot`,
+   `elis-claude-bot`, and `elis-pm-bot` on the host/runtime actually executing PR
+   actions.
+2. Verify each identity has accepted repository collaboration and can perform its
+   intended role from `elis-server`.
+3. Update the PM / validator execution path so review actions use the correct bot token
+   instead of the owner account.
+4. Re-run a live approval test on a non-critical PR and confirm branch protection accepts
+   the bot-authored review without admin bypass.
+
+**Implementation note (PE-AUTO-12):**
+The repo now provides `scripts/gh_bot.py` plus an extended
+`docs/openclaw/BOT_ACCOUNTS_SETUP.md` runbook so `elis-server` can execute `gh`
+operations under explicit `elis-codex-bot`, `elis-claude-bot`, and `elis-pm-bot`
+identities rather than the owner's ambient GitHub session. Remaining closure work is the
+live host rollout and verification.
+
+**References:**
+- `docs/openclaw/BOT_ACCOUNTS_SETUP.md`
+- PR #320 (`fix(pm): reconcile PE-AUTO-07 status reporting`)
+
+---
+
 ### DISCORD-01 — Discord server channel messages not received by PM Agent
 
 **Status:** Open

@@ -16,6 +16,7 @@
 | v3.0 | 2026-03-25 | Addition of the Parallel Track Model (§ Parallelism) with PE-AUTO-11 (Parallel Track Scheduler); extension of CURRENT_PE.md to support Track B; authoring guidelines for parallelisable PEs; updated roadmap with parallel track diagram |
 | v3.1 | 2026-03-25 | Addition of Phase E (Documentary Governance) with PE-PLAN-01 (Architecture Decision Records); hybrid 3-layer model (ADR + LESSONS_LEARNED + PM Journal); ADR template; first batch of 6 retroactive ADRs identified; rules for when to create an ADR integrated into the workflow |
 | v3.2 | 2026-03-25 | Addition of the Session Continuity Model — "The PR is the operational memory"; mandatory resumability rule per PE; 3-layer memory model (technical / operational / authority); checkpoints by role; anti-patterns documented; reference to `TWO_AGENT_SESSION_CONTINUITY_RUNBOOK.md` |
+| v3.3 | 2026-04-11 | Addition of PE-AUTO-12 (elis-server Bot Review Identity Activation) to close the live-runtime gap where GitHub review actions still execute as the PO account on `elis-server` instead of the intended bot identities |
 
 ---
 
@@ -35,7 +36,7 @@ loop** where:
 4. Agents authenticate using **subscription tokens** (without API keys), reducing operational
    cost and dependency on API quotas.
 
-The plan is divided into **6 phases** (Phase 0 + Phases A–E), totalling **14 automation PEs** plus
+The plan is divided into **6 phases** (Phase 0 + Phases A–E), totalling **15 automation PEs** plus
 one future SLR PE.
 
 > **Current state vs. target state:** Everything described from Phase B onwards (autonomous loop) is a
@@ -53,10 +54,10 @@ Phase 0  Auth without API keys       2 PEs   (pre-blocking)
 Phase A  Foundation — structural gaps 3 PEs   (prerequisite for B)
 Phase B  Autonomous loop             3 PEs   (prerequisite for C)
 Phase C  PM Agent as arbiter         2 PEs   (prerequisite for D)
-Phase D  Full operation              3 PEs   (+PE-AUTO-11 Parallel Scheduler)
+Phase D  Full operation              4 PEs   (+PE-AUTO-11 Parallel Scheduler, PE-AUTO-12 Bot identity activation)
 Phase E  Documentary governance      1 PE    (PE-PLAN-01, parallel to any phase)
                                     ──────
-Total                               14 automation PEs + 1 SLR PE (future)
+Total                               15 automation PEs + 1 SLR PE (future)
 ```
 
 **Cross-cutting capability (v3.0):** Parallel Track Model — independent PEs executed
@@ -1082,6 +1083,43 @@ def can_parallelize(pe_a, pe_b, dag):
 | AC-4 | `check_current_pe.py` validates Track A + Track B structure and rejects invalid state |
 | AC-5 | When Track A closes: Track B remains active; if Track B is at Gate 1 (ready-for-validation), the agent freed from Track A transitions immediately to Track B validation; if Track B is still in implementation, the agent waits for Track B to reach Gate 1 before beginning validation |
 | AC-6 | `PARALLEL_TRACK_GUIDE.md` covers all 5 eligibility criteria with examples |
+
+---
+
+### PE-AUTO-12 · elis-server Bot Review Identity Activation
+
+| Field | Value |
+|---|---|
+| Domain | infra |
+| Depends On | PE-AUTO-01 (Bot Accounts), PE-AUTO-08 (Discord loop operational) |
+| Implementer | `infra-impl-codex` |
+| Validator | `infra-val-claude` |
+
+**Objective:** Ensure that live GitHub PR actions executed from `elis-server` use the
+correct bot identities (`elis-codex-bot`, `elis-claude-bot`, `elis-pm-bot`) rather than
+falling back to the PO account, so reviews and branch-protection handshakes work without
+manual admin bypass.
+
+**Deliverables:**
+
+- `docs/openclaw/BOT_ACCOUNTS_SETUP.md` — extended with `elis-server` runtime identity
+  verification and live approval-test steps
+- `docs/_active/TODO.md` — backlog item `ELIS-SERVER-01` linked to this PE and marked as
+  being actively resolved
+- Host/runtime configuration on `elis-server` for distinct bot-authenticated GitHub CLI
+  or token-based PR actions used by the PM and validator flows
+- Operational evidence from a safe live PR showing bot-authored review success from
+  `elis-server`
+
+**Acceptance Criteria:**
+
+| # | Criterion |
+|---|---|
+| AC-1 | `elis-server` can authenticate separately as `elis-codex-bot`, `elis-claude-bot`, and `elis-pm-bot` for GitHub API / CLI operations without exposing secret values |
+| AC-2 | A validator review action executed from `elis-server` succeeds as `elis-claude-bot` on a safe test PR and GitHub no longer returns `Review Can not approve your own pull request` |
+| AC-3 | PM-path PR actions executed from `elis-server` use `elis-pm-bot` rather than the PO account |
+| AC-4 | The runbook documents the exact runtime verification steps and the expected success output for each bot identity |
+| AC-5 | Branch protection for a safe test PR is satisfied by the bot-authored approval without admin bypass |
 
 ---
 
