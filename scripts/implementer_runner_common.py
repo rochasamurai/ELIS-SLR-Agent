@@ -357,7 +357,7 @@ def default_cli_command(engine: str, prompt: str) -> list[str]:
             prompt,
         ]
     if engine == "claude":
-        return ["claude", "-p", prompt]
+        return ["claude", "-p", prompt, "--dangerously-skip-permissions"]
     raise RunnerError(f"Unsupported engine '{engine}'.")
 
 

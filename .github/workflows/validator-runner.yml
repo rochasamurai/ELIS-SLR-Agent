@@ -99,19 +99,22 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: codex --version && codex exec --skip-git-repo-check --dangerously-bypass-approvals-and-sandbox "echo SMOKE_OK" < /dev/null
 
-      - name: Authenticate Claude CLI with setup token
+      - name: Write Claude credentials file
         if: inputs.engine == 'claude'
         env:
-          CLAUDE_SETUP_TOKEN: ${{ secrets.CLAUDE_SETUP_TOKEN }}
+          CLAUDE_CREDENTIALS_JSON: ${{ secrets.CLAUDE_CREDENTIALS_JSON }}
         run: |
-          export PATH="$HOME/.local/bin:$PATH"
-          claude setup-token "$CLAUDE_SETUP_TOKEN"
+          mkdir -p ~/.claude
+          printf '%s' "$CLAUDE_CREDENTIALS_JSON" > ~/.claude/.credentials.json
+          chmod 600 ~/.claude/.credentials.json
 
       - name: Verify Claude auth
         if: inputs.engine == 'claude'
         env:
-          CLAUDE_SETUP_TOKEN: ${{ secrets.CLAUDE_SETUP_TOKEN }}
-        run: python scripts/verify_claude_auth.py
+          CLAUDE_CREDENTIALS_JSON: ${{ secrets.CLAUDE_CREDENTIALS_JSON }}
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          python scripts/verify_claude_auth.py
 
       - name: Run CODEX validator
         if: inputs.engine == 'codex'
