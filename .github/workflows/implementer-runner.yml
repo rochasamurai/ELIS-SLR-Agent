@@ -150,6 +150,7 @@ jobs:
         if: inputs.engine == 'claude'
         env:
           GH_TOKEN: ${{ secrets.CLAUDE_BOT_TOKEN }}
+          CLAUDE_SETUP_TOKEN: ${{ secrets.CLAUDE_SETUP_TOKEN }}
         run: |
           python scripts/run_claude_agent.py \
             --pe-id "${{ inputs.pe_id }}" \
