@@ -1,7 +1,7 @@
 # ELIS SLR Agent — Multi-Agent Implementation Plan
 ## Version 1.8 — April 2026
 
-> **Status:** Pending Adoption — governs work to begin upon PM adoption of Architecture v1.8; current active plan may remain elsewhere until PM updates `CURRENT_PE.md`
+> **Status:** Active — adopted via PM-CHORE-33 (2026-04-12); supersedes `ELIS_2Agent_Automation_Plan_v2_0.md` as governing plan
 > **Default Agent Pairing:** CODEX + Claude Code (current default staffing, not an architectural restriction)
 > **Delivers:** Hybrid SLR execution — Harvest on GitHub workflows; Screening and lightweight support agents on `elis-server`; Extraction and Synthesis remain off-host for now; explicit workload-placement policy and capacity-aware deployment on `elis-server`
 > **Phases:** 4 Phases · 10 PEs
@@ -106,7 +106,7 @@ All of the following must be true before beginning the v1.8 series:
 | Implementer | `prog-impl-claude` |
 | Validator | `prog-val-codex` |
 | Phase | 1 |
-| Depends On | Architecture v1.8 adoption |
+| Depends On | — |
 | Status | Planned |
 
 **Scope**

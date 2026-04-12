@@ -18,6 +18,7 @@
 | v3.2 | 2026-03-25 | Addition of the Session Continuity Model — "The PR is the operational memory"; mandatory resumability rule per PE; 3-layer memory model (technical / operational / authority); checkpoints by role; anti-patterns documented; reference to `TWO_AGENT_SESSION_CONTINUITY_RUNBOOK.md` |
 | v3.3 | 2026-04-11 | Addition of PE-AUTO-12 (elis-server Bot Review Identity Activation) to close the live-runtime gap where GitHub review actions still execute as the PO account on `elis-server` instead of the intended bot identities |
 | v3.4 | 2026-04-12 | Addition of PE-AUTO-13 (Gate 2 Re-trigger on Bot Review Approval) to fix the gap where `auto-merge-on-pass.yml` only triggers on `push` — a bot review approval or gate-1 status posted after the last push does not re-trigger Gate 2, requiring manual merge intervention |
+| v3.5 | 2026-04-12 | PE-AUTO-13 closed as superseded by Architecture v1.8 (PR #322 closed). The Gate 2 re-trigger gap it targeted is resolved structurally under v1.8: Gate 2 becomes a direct PM action (PE-EXEC-02), not a GitHub Actions YAML trigger. PE-AUTO series closed. Governing plan replaced by `ELIS_MultiAgent_Implementation_Plan_v1_8.md`. |
 
 ---
 
