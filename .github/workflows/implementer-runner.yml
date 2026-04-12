@@ -98,6 +98,14 @@ jobs:
           mkdir -p ~/.codex
           python -c "import json,os; json.dump({'auth_mode':'apikey','OPENAI_API_KEY':os.environ['OPENAI_API_KEY']},open(os.path.expanduser('~/.codex/auth.json'),'w'))"
 
+      - name: Authenticate Claude CLI with setup token
+        if: inputs.engine == 'claude'
+        env:
+          CLAUDE_SETUP_TOKEN: ${{ secrets.CLAUDE_SETUP_TOKEN }}
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          claude setup-token "$CLAUDE_SETUP_TOKEN"
+
       - name: Verify Claude auth
         if: inputs.engine == 'claude'
         env:
@@ -152,6 +160,7 @@ jobs:
           GH_TOKEN: ${{ secrets.CLAUDE_BOT_TOKEN }}
           CLAUDE_SETUP_TOKEN: ${{ secrets.CLAUDE_SETUP_TOKEN }}
         run: |
+          export PATH="$HOME/.local/bin:$PATH"
           python scripts/run_claude_agent.py \
             --pe-id "${{ inputs.pe_id }}" \
             --plan "${{ inputs.plan_file }}" \

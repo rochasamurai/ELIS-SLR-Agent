@@ -65,6 +65,7 @@ jobs:
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
+          pip install -e . --no-deps
           pip install -r requirements.txt
           pip install black==24.8.0 ruff==0.6.9
 
@@ -97,6 +98,14 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: codex --version && codex exec --skip-git-repo-check --dangerously-bypass-approvals-and-sandbox "echo SMOKE_OK" < /dev/null
+
+      - name: Authenticate Claude CLI with setup token
+        if: inputs.engine == 'claude'
+        env:
+          CLAUDE_SETUP_TOKEN: ${{ secrets.CLAUDE_SETUP_TOKEN }}
+        run: |
+          export PATH="$HOME/.local/bin:$PATH"
+          claude setup-token "$CLAUDE_SETUP_TOKEN"
 
       - name: Verify Claude auth
         if: inputs.engine == 'claude'
