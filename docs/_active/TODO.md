@@ -73,7 +73,7 @@ Run manually after initial setup and after every token renewal.
 
 ### ELIS-SERVER-01 — GitHub bot review identities not operational on `elis-server`
 
-**Status:** Assigned
+**Status:** In progress
 **Priority:** High (manual admin-bypass merge still required for single-account PRs)
 **Logged:** 2026-04-11
 **Parent PE:** PE-AUTO-12
@@ -99,6 +99,13 @@ rejects approval because the acting identity is the PR author.
    instead of the owner account.
 4. Re-run a live approval test on a non-critical PR and confirm branch protection accepts
    the bot-authored review without admin bypass.
+
+**Implementation note (PE-AUTO-12):**
+The repo now provides `scripts/gh_bot.py` plus an extended
+`docs/openclaw/BOT_ACCOUNTS_SETUP.md` runbook so `elis-server` can execute `gh`
+operations under explicit `elis-codex-bot`, `elis-claude-bot`, and `elis-pm-bot`
+identities rather than the owner's ambient GitHub session. Remaining closure work is the
+live host rollout and verification.
 
 **References:**
 - `docs/openclaw/BOT_ACCOUNTS_SETUP.md`

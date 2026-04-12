@@ -59,3 +59,18 @@ def test_deploy_script_recreates_pm_docs_dir_after_sync() -> None:
     assert 'mkdir -p "$TARGET_PM_DOCS"' in text
     assert 'for key in ("channels", "meta", "gateway")' in text
     assert 'ln -sfn "$REPO_ROOT/$PLAN_FILE" "$TARGET_PM_DOCS/PLAN_CURRENT.md"' in text
+
+
+def test_bot_accounts_setup_documents_eli_server_runtime_activation() -> None:
+    text = read_doc("BOT_ACCOUNTS_SETUP.md")
+
+    required_fragments = [
+        "runtime activation (PE-AUTO-12)",
+        "python scripts/gh_bot.py codex --check-only",
+        "python scripts/gh_bot.py claude -- pr review <PR_NUMBER> --approve",
+        "python scripts/gh_bot.py pm -- pr comment <PR_NUMBER>",
+        "Review Can not approve your own pull request",
+        "GH_CONFIG_DIR",
+    ]
+    for fragment in required_fragments:
+        assert fragment in text

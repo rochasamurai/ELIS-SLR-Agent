@@ -208,6 +208,90 @@ Before considering bot-review automation complete on `elis-server`, verify:
 3. A live approval test from `elis-server` succeeds on a safe test PR without admin
    bypass.
 
+### `elis-server` runtime activation (PE-AUTO-12)
+
+On `elis-server`, do not rely on an ambient `gh auth login` session for PM or validator
+operations. Live PR actions must be run with explicit bot tokens so the acting identity
+cannot drift back to the repository owner.
+
+**Required host secret storage (not committed):**
+
+- `CODEX_BOT_TOKEN`
+- `CLAUDE_BOT_TOKEN`
+- `PM_BOT_TOKEN`
+
+Store them in secure host-only environment storage and load them into the shell or
+service environment before GitHub operations. Never paste token values into commands or
+logs.
+
+**Repo helper introduced in PE-AUTO-12:**
+
+```bash
+python scripts/gh_bot.py <codex|claude|pm> --check-only
+python scripts/gh_bot.py <codex|claude|pm> -- <gh arguments...>
+```
+
+The helper:
+
+1. reads the correct bot token from the environment,
+2. sets an isolated `GH_CONFIG_DIR` for that bot,
+3. verifies `gh api /user` resolves to the expected login,
+4. only then runs the requested `gh` command.
+
+This prevents the live runtime from accidentally using the PO account for `gh pr review`
+or PM-path PR actions.
+
+**Identity verification on `elis-server`:**
+
+```bash
+cd /opt/elis/repo
+python scripts/gh_bot.py codex --check-only
+python scripts/gh_bot.py claude --check-only
+python scripts/gh_bot.py pm --check-only
+```
+
+Expected output pattern:
+
+```text
+OK: CODEX_BOT_TOKEN authenticated via gh as elis-codex-bot
+gh bot verification PASS
+OK: CLAUDE_BOT_TOKEN authenticated via gh as elis-claude-bot
+gh bot verification PASS
+OK: PM_BOT_TOKEN authenticated via gh as elis-pm-bot
+gh bot verification PASS
+```
+
+**Safe live approval test on `elis-server` (AC-2 / AC-5):**
+
+Use a non-critical PR created for verification only.
+
+```bash
+cd /opt/elis/repo
+python scripts/gh_bot.py claude -- pr review <PR_NUMBER> --approve \
+  --body "PE-AUTO-12 live approval test — elis-claude-bot."
+```
+
+Expected result:
+
+- command exits `0`
+- GitHub records the approval author as `elis-claude-bot`
+- GitHub does **not** return `Review Can not approve your own pull request`
+- branch protection accepts the approval without admin bypass
+
+**Safe PM-path verification on `elis-server` (AC-3):**
+
+```bash
+cd /opt/elis/repo
+python scripts/gh_bot.py pm -- pr comment <PR_NUMBER> \
+  --body "PE-AUTO-12 PM-path identity check — elis-pm-bot."
+```
+
+Expected result:
+
+- command exits `0`
+- the PR comment author is `elis-pm-bot`
+- the operation is not attributed to `rochasamurai`
+
 ---
 
 ## Step 6 — Configure branch protection on `main`
