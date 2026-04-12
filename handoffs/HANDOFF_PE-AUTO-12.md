@@ -129,6 +129,40 @@ Live `elis-server` operator validation still required:
 - `python scripts/gh_bot.py claude -- pr review <PR_NUMBER> --approve --body "..."`
 - `python scripts/gh_bot.py pm -- pr comment <PR_NUMBER> --body "..."`
 
+Live `elis-server` operator validation completed on PR `#321`:
+
+```text
+samurai@elis-server:/opt/elis/repo$ set -a
+samurai@elis-server:/opt/elis/repo$ source ~/.openclaw/.env
+samurai@elis-server:/opt/elis/repo$ set +a
+samurai@elis-server:/opt/elis/repo$ cd /opt/elis/repo
+samurai@elis-server:/opt/elis/repo$ python3 scripts/gh_bot.py codex --check-only
+OK: CODEX_BOT_TOKEN authenticated via gh as elis-codex-bot (GH_CONFIG_DIR=/home/samurai/.config/elis-gh/codex)
+gh bot verification PASS
+samurai@elis-server:/opt/elis/repo$ python3 scripts/gh_bot.py claude --check-only
+OK: CLAUDE_BOT_TOKEN authenticated via gh as elis-claude-bot (GH_CONFIG_DIR=/home/samurai/.config/elis-gh/claude)
+gh bot verification PASS
+samurai@elis-server:/opt/elis/repo$ python3 scripts/gh_bot.py pm --check-only
+OK: PM_BOT_TOKEN authenticated via gh as elis-pm-bot (GH_CONFIG_DIR=/home/samurai/.config/elis-gh/pm)
+gh bot verification PASS
+
+samurai@elis-server:/opt/elis/repo$ python3 scripts/gh_bot.py pm -- pr list --state open --limit 10
+OK: PM_BOT_TOKEN authenticated via gh as elis-pm-bot (GH_CONFIG_DIR=/home/samurai/.config/elis-gh/pm)
+
+Showing 1 of 1 open pull request in rochasamurai/ELIS-SLR-Agent
+
+ID    TITLE                                                         BRANCH                                                CREATED AT
+#321  feat(pe-auto-12): activate elis-server bot review identities  feature/pe-auto-12-elis-server-bot-review-identities  about 20 minutes ago
+
+samurai@elis-server:/opt/elis/repo$ python3 scripts/gh_bot.py claude -- pr review 321 --approve --body "PE-AUTO-12 live approval test."
+OK: CLAUDE_BOT_TOKEN authenticated via gh as elis-claude-bot (GH_CONFIG_DIR=/home/samurai/.config/elis-gh/claude)
+✓ Approved pull request #321
+
+samurai@elis-server:/opt/elis/repo$ python3 scripts/gh_bot.py pm -- pr comment 321 --body "PE-AUTO-12 PM-path identity check."
+OK: PM_BOT_TOKEN authenticated via gh as elis-pm-bot (GH_CONFIG_DIR=/home/samurai/.config/elis-gh/pm)
+https://github.com/rochasamurai/ELIS-SLR-Agent/pull/321#issuecomment-4231398757
+```
+
 ---
 
 *ELIS SLR Agent · HANDOFF.md · CODEX · 2026-04-12*
