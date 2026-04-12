@@ -371,13 +371,13 @@ def cli_command(engine: str, prompt: str) -> list[str]:
     return shlex.split(rendered)
 
 
-def run_cli(engine: str, prompt: str) -> None:
+def run_cli(engine: str, prompt: str, *, timeout: int | None = None) -> None:
     result = subprocess.run(
         cli_command(engine, prompt),
         stdin=subprocess.DEVNULL,
         capture_output=True,
         text=True,
-        timeout=300,
+        timeout=timeout,
         check=False,
     )
     if result.returncode != 0:
@@ -480,7 +480,7 @@ def run_implementer(argv: list[str], *, engine: str) -> int:
             plan_path=repo_root / inputs.plan_file,
             pe_id=inputs.pe_id,
         )
-        run_cli(engine, prompt)
+        run_cli(engine, prompt, timeout=inputs.timeout_seconds)
 
         ensure_budget(
             branch_commit_count(inputs.base_branch),
