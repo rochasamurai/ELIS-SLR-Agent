@@ -26,7 +26,9 @@ import sys
 def main() -> int:
     credentials_json = os.environ.get("CLAUDE_CREDENTIALS_JSON", "")
     if not credentials_json:
-        print("FAIL: CLAUDE_CREDENTIALS_JSON is not set in environment.", file=sys.stderr)
+        print(
+            "FAIL: CLAUDE_CREDENTIALS_JSON is not set in environment.", file=sys.stderr
+        )
         print(
             "Set it from the GitHub Secret before invoking this script.",
             file=sys.stderr,
