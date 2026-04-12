@@ -17,6 +17,7 @@
 | v3.1 | 2026-03-25 | Addition of Phase E (Documentary Governance) with PE-PLAN-01 (Architecture Decision Records); hybrid 3-layer model (ADR + LESSONS_LEARNED + PM Journal); ADR template; first batch of 6 retroactive ADRs identified; rules for when to create an ADR integrated into the workflow |
 | v3.2 | 2026-03-25 | Addition of the Session Continuity Model — "The PR is the operational memory"; mandatory resumability rule per PE; 3-layer memory model (technical / operational / authority); checkpoints by role; anti-patterns documented; reference to `TWO_AGENT_SESSION_CONTINUITY_RUNBOOK.md` |
 | v3.3 | 2026-04-11 | Addition of PE-AUTO-12 (elis-server Bot Review Identity Activation) to close the live-runtime gap where GitHub review actions still execute as the PO account on `elis-server` instead of the intended bot identities |
+| v3.4 | 2026-04-12 | Addition of PE-AUTO-13 (Gate 2 Re-trigger on Bot Review Approval) to fix the gap where `auto-merge-on-pass.yml` only triggers on `push` — a bot review approval or gate-1 status posted after the last push does not re-trigger Gate 2, requiring manual merge intervention |
 
 ---
 
@@ -54,10 +55,10 @@ Phase 0  Auth without API keys       2 PEs   (pre-blocking)
 Phase A  Foundation — structural gaps 3 PEs   (prerequisite for B)
 Phase B  Autonomous loop             3 PEs   (prerequisite for C)
 Phase C  PM Agent as arbiter         2 PEs   (prerequisite for D)
-Phase D  Full operation              4 PEs   (+PE-AUTO-11 Parallel Scheduler, PE-AUTO-12 Bot identity activation)
+Phase D  Full operation              5 PEs   (+PE-AUTO-11 Parallel Scheduler, PE-AUTO-12 Bot identity activation, PE-AUTO-13 Gate 2 re-trigger)
 Phase E  Documentary governance      1 PE    (PE-PLAN-01, parallel to any phase)
                                     ──────
-Total                               15 automation PEs + 1 SLR PE (future)
+Total                               16 automation PEs + 1 SLR PE (future)
 ```
 
 **Cross-cutting capability (v3.0):** Parallel Track Model — independent PEs executed
@@ -1120,6 +1121,58 @@ manual admin bypass.
 | AC-3 | PM-path PR actions executed from `elis-server` use `elis-pm-bot` rather than the PO account |
 | AC-4 | The runbook documents the exact runtime verification steps and the expected success output for each bot identity |
 | AC-5 | Branch protection for a safe test PR is satisfied by the bot-authored approval without admin bypass |
+
+---
+
+### PE-AUTO-13 · Gate 2 Re-trigger on Bot Review Approval
+
+| Field        | Value                                             |
+|---|---|
+| Domain       | infra                                             |
+| Depends On   | PE-AUTO-12 (bot review identities operational)    |
+| Implementer  | `infra-impl-claude`                               |
+| Validator    | `infra-val-codex`                                 |
+
+**Objective:** `auto-merge-on-pass.yml` currently triggers only on `push`.
+When a bot review approval or a gate-1 status is posted after the last push —
+as occurred on PR #321 — the workflow does not re-run and the merge never
+fires, requiring manual PO intervention. This PE adds the missing triggers so
+Gate 2 re-evaluates whenever a PR review is submitted or gate-1 completes,
+without requiring a new commit.
+
+**Root cause (PR #321 post-mortem):**
+
+1. CODEX pushes final commit → `auto-merge-on-pass.yml` runs → review
+   dismissed, gate-1 pending → exits without merging.
+2. `elis-claude-bot` re-approves from `elis-server` → no trigger.
+3. `elis-pm-bot` posts gate-1 status → no trigger.
+4. Auto-merge never fires; PO merges manually.
+
+**Deliverables:**
+
+- `.github/workflows/auto-merge-on-pass.yml` — add two additional triggers:
+  - `pull_request_review` (types: `submitted`) — re-evaluates Gate 2 when
+    any review is submitted on a tracked branch
+  - `workflow_run` (on `Auto-assign Validator` completing with `success`) —
+    re-evaluates Gate 2 when gate-1 is posted
+  - Both new trigger paths pass through the same REVIEW-file → verdict →
+    veto → mergeable → merge pipeline as the existing `push` path
+- `tests/test_auto_merge_triggers.py` — new tests asserting:
+  - Workflow YAML contains `pull_request_review` trigger
+  - Workflow YAML contains `workflow_run` trigger referencing
+    `Auto-assign Validator`
+  - Both triggers are scoped to `feature/**`, `chore/**`, `hotfix/**`
+
+**Acceptance Criteria:**
+
+| # | Criterion |
+|---|---|
+| AC-1 | `auto-merge-on-pass.yml` contains a `pull_request_review: submitted` trigger scoped to `feature/**`, `chore/**`, `hotfix/**` |
+| AC-2 | `auto-merge-on-pass.yml` contains a `workflow_run` trigger on `Auto-assign Validator` completing successfully |
+| AC-3 | A bot review approval submitted after the last push re-triggers Gate 2 within 60 s and auto-merge fires if all other conditions are met |
+| AC-4 | A gate-1 status posted after the last push re-triggers Gate 2 within 60 s |
+| AC-5 | Existing `push` trigger is preserved — no regression to normal flow |
+| AC-6 | `tests/test_auto_merge_triggers.py` — all tests pass in CI |
 
 ---
 
