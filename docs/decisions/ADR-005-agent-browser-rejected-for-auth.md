@@ -71,7 +71,7 @@ ever moves to an institutional server, this alternative could be revisited.
 
 ## Evidence / references
 
-- `ELIS_2Agent_Automation_Plan_v2_0.md` §Phase C — auth strategy using
+- `docs/_archive/2026-04/ELIS_2Agent_Automation_Plan_v2_0.md` §Phase C — auth strategy using
   subscription tokens rather than browser-extracted credentials
 - `elis/adapters/` — Crossref, OpenAlex, Scopus adapters use static API keys
   from environment variables; no browser auth path exists in the codebase

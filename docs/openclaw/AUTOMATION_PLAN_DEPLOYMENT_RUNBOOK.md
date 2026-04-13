@@ -1,6 +1,9 @@
 # AUTOMATION_PLAN_DEPLOYMENT_RUNBOOK.md
 # Deploying the 2-Agent Automation Plan to elis-server
 
+> Historical runbook for the superseded automation-plan release line.
+> Current governing plan is `ELIS_MultiAgent_Implementation_Plan_v1_8.md`.
+
 > Use this runbook to install the completed ELIS 2-Agent Automation Plan onto
 > `elis-server` after the plan reaches the `plan complete` state in `CURRENT_PE.md`.
 >
@@ -43,7 +46,7 @@
 | Python scripts | `/opt/elis/repo/scripts/` | `scripts/` (pulled via git) |
 | Plan schema | `/opt/elis/repo/schemas/` | `schemas/plan_schema.json` |
 | Loop-control file | `/opt/elis/repo/config/` | `config/pm_loop_control.json` |
-| Plan file | `/opt/elis/repo/ELIS_2Agent_Automation_Plan_v2_0.md` | repo root |
+| Plan file | `/opt/elis/repo/docs/_archive/2026-04/ELIS_2Agent_Automation_Plan_v2_0.md` | archived historical plan |
 | CURRENT_PE.md | `/opt/elis/repo/CURRENT_PE.md` | repo root |
 
 ### 1.3 New capabilities requiring PM Agent awareness (added by PRs #315–#318)
@@ -216,7 +219,7 @@ Verify the plan entrypoint resolves to the correct file:
 
 ```bash
 readlink ~/openclaw/workspace-pm/docs/PLAN_CURRENT.md
-# Expected: /opt/elis/repo/ELIS_2Agent_Automation_Plan_v2_0.md
+# Expected: /opt/elis/repo/docs/_archive/2026-04/ELIS_2Agent_Automation_Plan_v2_0.md
 
 cat ~/openclaw/workspace-pm/CURRENT_PE.md | grep "Plan file"
 # Expected: ELIS_2Agent_Automation_Plan_v2_0.md

@@ -1,6 +1,9 @@
 # ELIS — 2-Agent Autonomous Model Improvement Plan
 
-**Version:** 3.2
+> **Status:** Superseded historical plan — archived on 2026-04-13 after adoption of `ELIS_MultiAgent_Implementation_Plan_v1_8.md` via PM-CHORE-33 (2026-04-12)
+> **Current governing plan:** `ELIS_MultiAgent_Implementation_Plan_v1_8.md`
+
+**Version:** 3.5
 **Date:** 2026-03-25
 **Author:** PM (Carlo) + Claude Code (analysis and drafting)
 **Base:** Assessment of the 2-Agent model on 2026-03-25 · AGENTS.md v2.0 · ELIS_MultiAgent_Implementation_Plan_v1_6.md
@@ -246,7 +249,7 @@ Track A (existing rule). But they can and should be the validator of Track B.
 
 ### Document assessed
 
-`open_claw_browser_auth_configuration_chat_gpt_claude.md` (ChatGPT, 2026-03-25)
+`docs/openclaw/OPENCLAW_BROWSER_AUTH_CONFIGURATION_CHATGPT_CLAUDE.md` (ChatGPT, 2026-03-25)
 
 ### What was correct in the ChatGPT document
 
