@@ -33,10 +33,11 @@
 
 | Agent       | Role        |
 |-------------|-------------|
-| Gemini CLI  | Implementer |
+| Claude Code | Implementer |
 | CODEX       | Validator   |
 
-> PE-SLR-02: `gemini-cli` (Gemini CLI) as Implementer · `prog-val-codex` (CODEX @ `elis-server`) as Validator.
+> PE-SLR-02: `prog-impl-claude` (Claude Code) as Implementer · `prog-val-codex` (CODEX @ `elis-server`) as Validator.
+> **PM exception:** Gemini CLI stopped mid-PE and was replaced by Claude Code as Implementer from 2026-04-13.
 
 ---
 
@@ -100,7 +101,7 @@
 | PE-AUTO-12  | infra           | infra-impl-codex     | infra-val-claude   | feature/pe-auto-12-elis-server-bot-review-identities     | merged          | 2026-04-12   |
 | PE-AUTO-13  | infra           | infra-impl-claude    | infra-val-codex    | feature/pe-auto-13-gate2-retrigger                       | superseded      | 2026-04-12   |
 | PE-SLR-01   | slr             | prog-impl-codex      | gemini-cli         | feature/pe-slr-01-harvest-workflow-contract               | merged         | 2026-04-13   |
-| PE-SLR-02   | slr             | gemini-cli           | prog-val-codex     | feature/pe-slr-02-harvest-workflow-reliability-audit      | planning       | 2026-04-13   |
+| PE-SLR-02   | slr             | prog-impl-claude     | prog-val-codex     | feature/pe-slr-02-harvest-workflow-reliability-audit      | implementing   | 2026-04-13   |
 
 Valid status values:
 - `planning`
