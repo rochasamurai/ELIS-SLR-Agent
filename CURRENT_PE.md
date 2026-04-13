@@ -34,10 +34,10 @@
 
 | Agent       | Role        |
 |-------------|-------------|
-| CODEX       | Validator   |
-| Claude Code | Implementer |
+| CODEX       | Implementer |
+| Claude Code | Validator   |
 
-> PE-SLR-01: `prog-impl-claude` (Claude Code) as Implementer · `prog-val-codex` (CODEX) as Validator
+> PE-SLR-01: `prog-impl-codex` (CODEX) as Implementer · `prog-val-claude` (Claude Code) as Validator
 
 ---
 
