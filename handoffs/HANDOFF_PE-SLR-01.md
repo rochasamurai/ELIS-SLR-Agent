@@ -21,6 +21,10 @@ This branch adds / modifies:
   workflow-governed dispatch surface, adds explicit `review_id` and
   `search_config` inputs, writes review-scoped artefacts, and uploads the
   Harvest bundle as a review-specific artifact
+- `scripts/check_current_pe.py` — now validates the active two-agent role rows
+  generically, recognises the temporary `Gemini CLI` validator exception for
+  PR `#323`, and accepts post-validation active statuses such as
+  `gate-2-pending`
 - `docs/slr/HARVEST_WORKFLOW_CONTRACT.md` — new contract document covering the
   canonical workflow, governed storage layout, supported source set, schema
   bindings, and the explicit off-host boundary for search/export/API-facing work
@@ -34,6 +38,8 @@ This branch adds / modifies:
 - `tests/test_harvest_contract.py` — focused coverage for workflow inputs,
   review-scoped storage paths, off-host governance text, supported sources, and
   representative evidence/manifest production
+- `tests/test_check_current_pe.py` — regression coverage for the `Gemini CLI`
+  validator exception and `gate-2-pending` active status
 
 ---
 
@@ -47,8 +53,10 @@ M  HANDOFF.md
 A  docs/slr/HARVEST_WORKFLOW_CONTRACT.md
 A  elis/harvest_contract.py
 A  handoffs/HANDOFF_PE-SLR-01.md
+M  scripts/check_current_pe.py
 M  schemas/README.md
 A  schemas/harvest_evidence.schema.json
+M  tests/test_check_current_pe.py
 A  tests/test_harvest_contract.py
 M  tests/test_verify_claude_auth.py
 ```
@@ -98,6 +106,12 @@ the resulting manifest and evidence artefacts against committed schemas.
 ## Validation Commands
 
 ```text
+(.venv) $ C:\Users\carlo\ELIS-SLR-Agent\.venv\Scripts\python.exe scripts/check_current_pe.py
+CURRENT_PE.md OK — release context, roles, registry, and alternation valid.
+
+(.venv) $ C:\Users\carlo\ELIS-SLR-Agent\.venv\Scripts\python.exe -m ruff check scripts/check_current_pe.py tests/test_check_current_pe.py tests/test_harvest_contract.py
+All checks passed!
+
 (.venv) $ /opt/elis/repo/.venv/bin/python -m pytest tests/test_harvest_contract.py -v
 ============================= test session starts ==============================
 platform linux -- Python 3.12.3, pytest-9.0.2, pluggy-1.6.0

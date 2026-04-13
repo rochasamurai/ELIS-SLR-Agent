@@ -175,14 +175,15 @@ jobs:
 
       - name: Patch search config from UI inputs
         env:
+          SEARCH_CONFIG:  ${{ steps.knobs.outputs.search_config }}
           CAP_PER_SOURCE:  ${{ steps.knobs.outputs.cap_per_source }}
           JOB_RESULT_CAP:  ${{ steps.knobs.outputs.job_result_cap }}
         run: |
           python - <<'PY'
           import yaml, sys, pathlib, os
-          src = pathlib.Path("config/elis_search_queries.yml")
+          src = pathlib.Path(os.environ["SEARCH_CONFIG"])
           if not src.exists():
-              print("Config file not found: config/elis_search_queries.yml", file=sys.stderr)
+              print(f"Config file not found: {src}", file=sys.stderr)
               sys.exit(2)
           with src.open("r", encoding="utf-8") as f:
               cfg = yaml.safe_load(f) or {}
@@ -196,6 +197,8 @@ jobs:
           g["job_result_cap"] = to_int(os.environ.get("JOB_RESULT_CAP", "1000"), 1000)
           out = pathlib.Path("/tmp/elis_config.yml")
           out.write_text(yaml.safe_dump(cfg, sort_keys=False, allow_unicode=True), encoding="utf-8")
+          with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as env_fh:
+              env_fh.write(f"PATCHED_SEARCH_CONFIG={out}\n")
           print(f"Wrote patched config to {out}")
           PY
 
@@ -213,15 +216,15 @@ jobs:
             echo "[DRY RUN] Harvest skipped. Set dry_run=false to run harvests."
           else
             elis harvest crossref \
-              --search-config "${{ steps.knobs.outputs.search_config }}" \
+              --search-config "$PATCHED_SEARCH_CONFIG" \
               --max-results "$MAX_RESULTS" \
               --output "$HARVEST_RAW_DIR/crossref.json"
             elis harvest openalex \
-              --search-config "${{ steps.knobs.outputs.search_config }}" \
+              --search-config "$PATCHED_SEARCH_CONFIG" \
               --max-results "$MAX_RESULTS" \
               --output "$HARVEST_RAW_DIR/openalex.json"
             elis harvest scopus \
-              --search-config "${{ steps.knobs.outputs.search_config }}" \
+              --search-config "$PATCHED_SEARCH_CONFIG" \
               --max-results "$MAX_RESULTS" \
               --output "$HARVEST_RAW_DIR/scopus.json"
             elis merge \

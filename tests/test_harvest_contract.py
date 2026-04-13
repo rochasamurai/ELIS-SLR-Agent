@@ -56,6 +56,10 @@ def test_canonical_workflow_uploads_review_scoped_harvest_bundle() -> None:
     assert "write_harvest_evidence" in workflow_text
     assert "PUBLISHED_APPENDIX_A_MANIFEST" in workflow_text
     assert "actions/upload-artifact@v4" in workflow_text
+    assert 'SEARCH_CONFIG:  ${{ steps.knobs.outputs.search_config }}' in workflow_text
+    assert 'src = pathlib.Path(os.environ["SEARCH_CONFIG"])' in workflow_text
+    assert 'PATCHED_SEARCH_CONFIG={out}' in workflow_text
+    assert '--search-config "$PATCHED_SEARCH_CONFIG"' in workflow_text
 
 
 def test_harvest_contract_documentation_states_off_host_boundary() -> None:

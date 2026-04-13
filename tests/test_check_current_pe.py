@@ -53,6 +53,40 @@ VALID_CURRENT_PE = """\
 | PE-AUTO-02  | infra  | infra-impl-codex    | infra-val-claude  | feature/pe-auto-02-current-pe-ci-validation  | implementing  | 2026-03-28   |
 """
 
+VALID_CURRENT_PE_GEMINI = """\
+# Current PE Assignment
+
+## Release context
+
+| Field          | Value                                     |
+|----------------|-------------------------------------------|
+| Release        | ELIS Hybrid SLR Execution Plan · v1.8.1   |
+| Base branch    | main                                      |
+| Plan file      | ELIS_MultiAgent_Implementation_Plan_v1_8_1.md |
+| Plan location  | repo root                                 |
+
+## Current PE
+
+| Field   | Value                                      |
+|---------|--------------------------------------------|
+| PE      | PE-SLR-01                                  |
+| Branch  | feature/pe-slr-01-harvest-workflow-contract |
+
+## Agent roles
+
+| Agent       | Role        |
+|-------------|-------------|
+| CODEX       | Implementer |
+| Gemini CLI  | Validator   |
+
+## Active PE Registry
+
+| PE-ID       | Domain | Implementer-agentId | Validator-agentId | Branch                                        | Status          | Last-updated |
+|-------------|--------|---------------------|-------------------|-----------------------------------------------|-----------------|--------------|
+| PE-OC-10    | slr    | slr-impl-claude     | slr-val-codex     | feature/pe-oc-10-e2e-slr                      | merged          | 2026-02-22   |
+| PE-SLR-01   | slr    | prog-impl-codex     | gemini-cli        | feature/pe-slr-01-harvest-workflow-contract   | gate-2-pending  | 2026-04-13   |
+"""
+
 
 def _write_current_pe(tmp_path: Path, content: str) -> Path:
     path = tmp_path / "CURRENT_PE.md"
@@ -62,6 +96,15 @@ def _write_current_pe(tmp_path: Path, content: str) -> Path:
 
 def test_main_accepts_valid_current_pe(tmp_path, monkeypatch, capsys):
     path = _write_current_pe(tmp_path, VALID_CURRENT_PE)
+    monkeypatch.setenv("CURRENT_PE_PATH", str(path))
+    assert MODULE.main() == 0
+    assert "CURRENT_PE.md OK" in capsys.readouterr().out
+
+
+def test_main_accepts_gemini_validator_and_gate_2_pending(
+    tmp_path, monkeypatch, capsys
+):
+    path = _write_current_pe(tmp_path, VALID_CURRENT_PE_GEMINI)
     monkeypatch.setenv("CURRENT_PE_PATH", str(path))
     assert MODULE.main() == 0
     assert "CURRENT_PE.md OK" in capsys.readouterr().out

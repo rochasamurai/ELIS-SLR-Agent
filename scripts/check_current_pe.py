@@ -8,7 +8,14 @@ import sys
 from pathlib import Path
 
 
-VALID_ACTIVE_STATUSES = {"planning", "implementing"}
+VALID_ACTIVE_STATUSES = {
+    "planning",
+    "implementing",
+    "gate-1-pending",
+    "validating",
+    "gate-2-pending",
+    "blocked",
+}
 VALID_REGISTRY_STATUSES = {
     "planning",
     "implementing",
@@ -30,6 +37,11 @@ REQUIRED_REGISTRY_COLUMNS = {
     "branch",
     "status",
     "last-updated",
+}
+ENGINE_TO_AGENT = {
+    "codex": "CODEX",
+    "claude": "Claude Code",
+    "gemini": "Gemini CLI",
 }
 
 
@@ -72,20 +84,23 @@ def _table_block(lines: list[str], heading: str) -> list[str]:
 
 
 def _parse_roles(content: str) -> dict[str, str]:
-    roles: dict[str, str] = {}
-    for agent in ("CODEX", "Claude Code"):
-        match = re.search(
-            rf"^\|\s*{re.escape(agent)}\s*\|\s*([^|]+?)\s*\|$",
-            content,
-            re.MULTILINE,
-        )
-        if not match:
-            raise ValueError(f"Agent role row missing for {agent}.")
+    roles_block = _table_block(content.splitlines(), "## Agent roles")
+    if len(roles_block) < 3:
+        raise ValueError("Agent roles table missing or malformed.")
 
-        role = match.group(1).strip()
+    roles: dict[str, str] = {}
+    for raw in roles_block[2:]:
+        parts = [part.strip() for part in raw.strip("|").split("|")]
+        if len(parts) < 2:
+            raise ValueError("Agent roles row is malformed.")
+        agent, role = parts[0], parts[1]
         if role not in {"Implementer", "Validator"}:
             raise ValueError(f"Agent {agent} has invalid role '{role}'.")
         roles[agent] = role
+    if len(roles) != 2:
+        raise ValueError("Agent roles table must contain exactly two agent rows.")
+    if set(roles.values()) != {"Implementer", "Validator"}:
+        raise ValueError("Agent roles must contain one Implementer and one Validator.")
     return roles
 
 
@@ -110,6 +125,8 @@ def _engine(agent_id: str) -> str | None:
         return "codex"
     if "claude" in lowered:
         return "claude"
+    if "gemini" in lowered:
+        return "gemini"
     return None
 
 
@@ -223,15 +240,19 @@ def _validate_alternation(
 def _validate_roles_table(
     roles: dict[str, str], impl_engine: str, val_engine: str
 ) -> None:
-    expected_roles = {
-        "CODEX": "Implementer" if impl_engine == "codex" else "Validator",
-        "Claude Code": "Implementer" if impl_engine == "claude" else "Validator",
-    }
-    if roles != expected_roles:
+    expected_impl_agent = ENGINE_TO_AGENT.get(impl_engine)
+    expected_val_agent = ENGINE_TO_AGENT.get(val_engine)
+    if expected_impl_agent is None or expected_val_agent is None:
+        raise ValueError("Active PE registry engines do not map to known agent labels.")
+    if roles.get(expected_impl_agent) != "Implementer":
         raise ValueError(
-            "Agent roles table does not match the active PE registry engines."
+            "Agent roles table does not match the active PE registry implementer."
         )
-    if val_engine != ("claude" if impl_engine == "codex" else "codex"):
+    if roles.get(expected_val_agent) != "Validator":
+        raise ValueError(
+            "Agent roles table does not match the active PE registry validator."
+        )
+    if impl_engine == val_engine:
         raise ValueError("Active PE registry engines are not opposite.")
 
 
@@ -366,9 +387,6 @@ def main() -> int:
             )
             return 0
         roles = _parse_roles(content)
-        if roles["CODEX"] == roles["Claude Code"]:
-            raise ValueError("Agent roles must differ.")
-
         header, rows = _parse_registry(content)
         missing = sorted(REQUIRED_REGISTRY_COLUMNS.difference(header))
         if missing:
