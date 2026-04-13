@@ -89,10 +89,14 @@ All of the following must be true before beginning the v1.8.2 series:
 
 ### Phase 1 — Harvest Boundary Hardening
 
-The following Harvest PEs are unchanged from v1.8.1:
+The following Harvest PEs keep the same scope as v1.8.1, with one live staffing update recorded below for `PE-SLR-02`:
 
 - `PE-SLR-01` · Harvest Workflow Contract
 - `PE-SLR-02` · Harvest Workflow Reliability and Audit
+
+**Live staffing note**
+
+- For the post-`PE-SLR-01` release handoff on 2026-04-13, `PE-SLR-02` is opened with `gemini-cli` as Implementer and `prog-val-codex` (CODEX on `elis-server`) as Validator.
 
 ### Governance Bridge — Role-Based Agent Surface Alignment
 
@@ -157,7 +161,7 @@ Unchanged from v1.8.1:
 | Week | PE | Phase | Implementer | Parallel with |
 |------|----|-------|-------------|--------------|
 | 1 | PE-SLR-01: Harvest workflow contract | 1 | `prog-impl-claude` | — |
-| 1 | PE-SLR-02: Harvest workflow reliability and audit | 1 | `prog-impl-codex` | — |
+| 1 | PE-SLR-02: Harvest workflow reliability and audit | 1 | `gemini-cli` | — |
 | 2 | PE-INFRA-SLR-01: Role-based agent surface normalisation | 1b | `infra-impl-claude` | — |
 | 2 | PE-INFRA-SLR-02: Distinct review identity enforcement | 1c | `infra-impl-codex` | — |
 | 3 | PE-SLR-03: ASReview screening pilot | 2 | `infra-impl-codex` | — |
