@@ -10,9 +10,9 @@
 
 | Field          | Value                                                          |
 |----------------|----------------------------------------------------------------|
-| Release        | ELIS Hybrid SLR Execution Plan · v1.8.1                        |
+| Release        | ELIS Hybrid SLR Execution Plan · v1.8.2                        |
 | Base branch    | main                                                           |
-| Plan file      | ELIS_MultiAgent_Implementation_Plan_v1_8_1.md                  |
+| Plan file      | ELIS_MultiAgent_Implementation_Plan_v1_8_2.md                  |
 | Plan location  | repo root                                                      |
 
 ---
@@ -153,6 +153,7 @@ PM housekeeping entries (prefix `PM-CHORE-XX`):
 | PM-CHORE-32  | Closed PE-AUTO-12 as merged (PR #321, PASS verdict — 1 FAIL iteration resolved; manual merge by PO after gate-1/review timing gap exposed by PR #321). Extended the automation plan (v3.4) to include PE-AUTO-13 (Gate 2 Re-trigger on Bot Review Approval). Opened PE-AUTO-13 with `infra-impl-claude` as Implementer and `infra-val-codex` as Validator per alternation rule. Dependency PE-AUTO-12 satisfied. | 2026-04-12 |
 | PM-CHORE-33  | Closed PE-AUTO-13 as superseded by Architecture v1.8 (PR #322 closed — scope blocked by `workflow` scope limitation of bot PAT; Gate 2 re-trigger resolved structurally under v1.8 as direct PM action). Adopted `ELIS_MultiAgent_Implementation_Plan_v1_8.md` as governing plan (Hybrid SLR Execution series). Transitioned release to "ELIS Hybrid SLR Execution Plan · v1.8". Opened PE-SLR-01 (Harvest Workflow Contract) with `prog-impl-claude` (Claude Code) as Implementer and `prog-val-codex` (CODEX) as Validator. Architecture v1.8 validated by Claude Code (adversarial independence rule restored, all other invariants confirmed). | 2026-04-12 |
 | PM-CHORE-34  | Adopted `ELIS_MultiAgent_Implementation_Plan_v1_8_1.md` as a patch revision to v1.8 while keeping PE-SLR-01 active. Added `PE-INFRA-SLR-01` (Role-Based Agent Surface Normalisation) after PE-SLR-02, shifted downstream default staffing to preserve structural alternation, and formalised provider-neutral workflow surfaces as an explicit release criterion. | 2026-04-13 |
+| PM-CHORE-35  | Adopted `ELIS_MultiAgent_Implementation_Plan_v1_8_2.md` as a patch revision to v1.8.1 while keeping PE-SLR-01 active. Added `PE-INFRA-SLR-02` (Distinct Review Identity Enforcement), formalised the requirement that validator-capable agents need distinct GitHub review identities on protected branches, and recorded `elis-gemini-bot` as the required onboarding path for recurring Gemini validator duty. | 2026-04-13 |
 
 Alternation rule:
 - For consecutive PEs in the same domain, the implementer engine must alternate (`codex` <-> `claude`).
