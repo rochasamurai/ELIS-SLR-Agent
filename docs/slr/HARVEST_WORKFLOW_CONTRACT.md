@@ -1,6 +1,7 @@
 # Harvest Workflow Contract
 
-This document defines the canonical Harvest contract for `PE-SLR-01`.
+This document defines the canonical Harvest contract.  It was established in
+`PE-SLR-01` and extended in `PE-SLR-02` with reliability and audit provisions.
 
 ## Canonical entrypoint
 
@@ -26,8 +27,7 @@ The following actions are workflow-only for the current architecture:
 - workflow-managed export and evidence bundling
 
 `elis-server` may inspect committed artefacts and workflow outputs after the
-fact, but it must not become the execution surface for Harvest acquisition in
-`PE-SLR-01`.
+fact, but it must not become the execution surface for Harvest acquisition.
 
 ## Storage contract
 
@@ -48,6 +48,7 @@ artifacts/harvest/<review_id>/
     merge_report.json
   evidence/
     harvest_evidence.json
+    harvest_audit_log.jsonl
 ```
 
 The workflow also publishes the canonical Appendix A output back to:
@@ -91,3 +92,72 @@ workflow:
 
 Expanding the governed source set is a later PE concern and must preserve this
 workflow and storage contract.
+
+---
+
+## Reliability contract (PE-SLR-02)
+
+The following reliability invariants are introduced by `PE-SLR-02` and are
+enforced by `elis/harvest_workflow.py`.
+
+### Audit log (AC-1)
+
+Every governed Harvest run that uses the Python-level reliability helpers MUST
+write a structured audit log to:
+
+```text
+artifacts/harvest/<review_id>/evidence/harvest_audit_log.jsonl
+```
+
+Each line is a JSON object (keys sorted) with at minimum:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `timestamp` | ISO 8601 string | UTC time of the attempt |
+| `review_id` | string | Harvest review identifier |
+| `source` | string | Data source name |
+| `step` | string | Logical step label (e.g. `"fetch"`, `"write"`) |
+| `status` | string | `"success"`, `"retry"`, or `"failure"` |
+| `attempt` | integer | Attempt number (1-based) |
+| `error` | string | Error message if `status` is `"retry"` or `"failure"` |
+
+This log is sufficient for audit replay: a reader can reconstruct the
+sequence of steps, their outcomes, and the first error for each failure.
+
+### Failure diagnostics (AC-2)
+
+When a harvest step fails after all retries, the error raised is
+`HarvestStepError` (from `elis.harvest_workflow`).  Its string
+representation is the operator-visible diagnostic:
+
+```
+[HARVEST FAILURE] review=<review_id> source=<source> step=<step> attempts=<N> cause=<exc>
+```
+
+This message is designed to be forwarded to operator channels (Discord,
+CI step summaries, logs) without further transformation.
+
+### Retry policy (AC-3)
+
+The default retry policy is defined by `HarvestRetryPolicy`:
+
+| Field | Default | Description |
+|-------|---------|-------------|
+| `max_attempts` | `3` | Total attempts including the first |
+| `backoff_seconds` | `2.0` | Wait between retries in seconds |
+
+The policy is a frozen dataclass and may be overridden per-call.  It is
+passed explicitly to `run_with_retry()` so there are no hidden global
+defaults.
+
+### Output packaging (AC-4)
+
+`package_harvest_output()` returns a deterministic, review-specific output
+manifest.  Reproducibility guarantees:
+
+- The `sources` list is always sorted.
+- All path values are derived from `HarvestWorkflowContract` path methods.
+- Calling this function twice with the same `sources` and `contract`
+  produces byte-for-byte identical JSON output.
+- The manifest is review-scoped: every path is under
+  `artifacts/harvest/<review_id>/`.
