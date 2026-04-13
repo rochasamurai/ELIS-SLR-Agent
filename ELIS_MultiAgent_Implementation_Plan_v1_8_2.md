@@ -96,7 +96,8 @@ The following Harvest PEs keep the same scope as v1.8.1, with one live staffing 
 
 **Live staffing note**
 
-- For the post-`PE-SLR-01` release handoff on 2026-04-13, `PE-SLR-02` is opened with `gemini-cli` as Implementer and `prog-val-codex` (CODEX on `elis-server`) as Validator.
+- For the post-`PE-SLR-01` release handoff on 2026-04-13, `PE-SLR-02` was initially opened with `gemini-cli` as Implementer and `prog-val-codex` (CODEX on `elis-server`) as Validator.
+- **PM update 2026-04-13:** Gemini CLI stopped mid-PE. `PE-SLR-02` is reassigned to `prog-impl-claude` (Claude Code) as Implementer. Validator unchanged: `prog-val-codex` (CODEX).
 
 ### Governance Bridge — Role-Based Agent Surface Alignment
 
@@ -161,7 +162,7 @@ Unchanged from v1.8.1:
 | Week | PE | Phase | Implementer | Parallel with |
 |------|----|-------|-------------|--------------|
 | 1 | PE-SLR-01: Harvest workflow contract | 1 | `prog-impl-claude` | — |
-| 1 | PE-SLR-02: Harvest workflow reliability and audit | 1 | `gemini-cli` | — |
+| 1 | PE-SLR-02: Harvest workflow reliability and audit | 1 | `prog-impl-claude` | — |
 | 2 | PE-INFRA-SLR-01: Role-based agent surface normalisation | 1b | `infra-impl-claude` | — |
 | 2 | PE-INFRA-SLR-02: Distinct review identity enforcement | 1c | `infra-impl-codex` | — |
 | 3 | PE-SLR-03: ASReview screening pilot | 2 | `infra-impl-codex` | — |
