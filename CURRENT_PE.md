@@ -35,9 +35,10 @@
 | Agent       | Role        |
 |-------------|-------------|
 | CODEX       | Implementer |
-| Claude Code | Validator   |
+| Gemini CLI  | Validator   |
 
-> PE-SLR-01: `prog-impl-codex` (CODEX) as Implementer · `prog-val-claude` (Claude Code) as Validator
+> PE-SLR-01: `prog-impl-codex` (CODEX) as Implementer · `gemini-cli` (Gemini CLI) as Validator
+> **PM exception:** Claude Code is unavailable for this PE validation round, so Gemini CLI is authorised as the temporary Validator for PR #323 only.
 
 ---
 
