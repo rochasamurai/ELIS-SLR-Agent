@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:elis:harvest-evidence:v1",
+  "title": "ELIS Harvest Evidence",
+  "description": "Representative evidence bundle metadata for a workflow-governed harvest run.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "review_id",
+    "workflow_path",
+    "search_config",
+    "tier",
+    "sources",
+    "canonical_output_path",
+    "canonical_manifest_path",
+    "merge_report_path"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "review_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "workflow_path": {
+      "type": "string",
+      "const": ".github/workflows/elis-agent-search.yml"
+    },
+    "search_config": {
+      "type": "string",
+      "minLength": 1
+    },
+    "tier": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["source", "output_path", "manifest_path"],
+        "properties": {
+          "source": {
+            "type": "string",
+            "minLength": 1
+          },
+          "output_path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "manifest_path": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "canonical_output_path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "canonical_manifest_path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "merge_report_path": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "additionalProperties": false
+}

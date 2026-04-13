@@ -8,6 +8,8 @@ Agent JSON files.
 - `appendix_b.schema.json`
 - `appendix_c.schema.json`
 - `appendix_a_harvester.schema.json`
+- `run_manifest.schema.json`
+- `harvest_evidence.schema.json`
 
 ## Local validation
 ```powershell
@@ -17,3 +19,4 @@ python scripts/validate_json.py json_jsonl/ELIS_Appendix_A_Search_rows.json
 
 ## Notes
 - The harvester subset schema is for standalone harvester outputs (no meta header).
+- `harvest_evidence.schema.json` captures the review-scoped Harvest evidence bundle.
