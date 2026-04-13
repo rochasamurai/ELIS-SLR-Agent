@@ -103,8 +103,8 @@ All of the following must be true before beginning the v1.8 series:
 |-------|-------|
 | Domain | SLR |
 | Track | Harvest |
-| Implementer | `prog-impl-claude` |
-| Validator | `prog-val-codex` |
+| Implementer | `prog-impl-codex` |
+| Validator | `prog-val-claude` |
 | Phase | 1 |
 | Depends On | — |
 | Status | Planned |

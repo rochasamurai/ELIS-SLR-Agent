@@ -41,6 +41,8 @@ This branch adds / modifies:
 
 ```text
 M  .github/workflows/elis-agent-search.yml
+M  CURRENT_PE.md
+M  ELIS_MultiAgent_Implementation_Plan_v1_8.md
 M  HANDOFF.md
 A  docs/slr/HARVEST_WORKFLOW_CONTRACT.md
 A  elis/harvest_contract.py
@@ -48,6 +50,7 @@ A  handoffs/HANDOFF_PE-SLR-01.md
 M  schemas/README.md
 A  schemas/harvest_evidence.schema.json
 A  tests/test_harvest_contract.py
+M  tests/test_verify_claude_auth.py
 ```
 
 ---
@@ -321,9 +324,63 @@ FAILED tests/test_verify_claude_auth.py::test_fails_when_claude_version_command_
 FAILED tests/test_verify_claude_auth.py::test_passes_without_leaking_token - ...
 ```
 
-Full-suite status: 787 passed, 5 failed, 17 warnings. The 5 failures are the
-pre-existing `tests/test_verify_claude_auth.py` regressions already present on
-`main`, and are outside the scope of PE-SLR-01.
+CI-fix iteration (after PR #323 checks reported failures):
+
+```text
+(.venv) $ /opt/elis/repo/.venv/bin/python scripts/check_current_pe.py
+CURRENT_PE.md OK — release context, roles, registry, and alternation valid.
+
+(.venv) $ /opt/elis/repo/.venv/bin/python -m pytest tests/test_verify_claude_auth.py -q
+......                                                                   [100%]
+
+(.venv) $ /opt/elis/repo/.venv/bin/python -m pytest -q
+........................................................................ [  9%]
+........................................................................ [ 18%]
+........................................................................ [ 27%]
+........................................................................ [ 36%]
+........................................................................ [ 45%]
+........................................................................ [ 54%]
+........................................................................ [ 63%]
+........................................................................ [ 72%]
+........................................................................ [ 81%]
+........................................................................ [ 90%]
+........................................................................ [ 99%]
+.....                                                                    [100%]
+=============================== warnings summary ===============================
+tests/test_elis_cli.py::test_screen_emits_manifest
+tests/test_elis_cli.py::test_screen_dry_run_does_not_emit_manifest
+tests/test_pipeline_merge.py::test_merge_output_validates_and_is_screen_compatible
+tests/test_pipeline_screen.py::TestScreenMain::test_dry_run
+tests/test_pipeline_screen.py::TestScreenMain::test_write_output
+  /opt/elis/ELIS_worktrees/pe-slr-01/elis/pipeline/screen.py:276: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    else g.get("year_to", dt.datetime.utcnow().year)
+
+tests/test_elis_cli.py::test_screen_emits_manifest
+tests/test_elis_cli.py::test_screen_dry_run_does_not_emit_manifest
+tests/test_pipeline_merge.py::test_merge_output_validates_and_is_screen_compatible
+tests/test_pipeline_screen.py::TestScreenMain::test_dry_run
+tests/test_pipeline_screen.py::TestScreenMain::test_write_output
+  /opt/elis/ELIS_worktrees/pe-slr-01/elis/pipeline/screen.py:30: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    return dt.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+
+tests/test_pipeline_search.py::TestBuildRunInputs::test_defaults
+tests/test_pipeline_search.py::TestSearchMain::test_dry_run_with_minimal_config
+tests/test_pipeline_search.py::TestSearchMain::test_dry_run_topic_with_name_not_id
+  /opt/elis/ELIS_worktrees/pe-slr-01/elis/pipeline/search.py:154: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    year_to = int(g.get("year_to", dt.datetime.utcnow().year))
+
+tests/test_pipeline_search.py::TestSearchMain::test_dry_run_with_minimal_config
+tests/test_pipeline_search.py::TestSearchMain::test_dry_run_topic_with_name_not_id
+  /opt/elis/ELIS_worktrees/pe-slr-01/elis/pipeline/search.py:405: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    y1 = int(config.get("global", {}).get("year_to", dt.datetime.utcnow().year))
+
+tests/test_pipeline_search.py::TestSearchMain::test_dry_run_with_minimal_config
+tests/test_pipeline_search.py::TestSearchMain::test_dry_run_topic_with_name_not_id
+  /opt/elis/ELIS_worktrees/pe-slr-01/elis/pipeline/search.py:43: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    return dt.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+```
 
 ---
 
