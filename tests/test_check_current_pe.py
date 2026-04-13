@@ -138,10 +138,10 @@ def test_invalid_branch_format_fails(tmp_path, monkeypatch):
     assert MODULE.main() == 1
 
 
-def test_active_pe_status_must_be_planning_or_implementing(tmp_path, monkeypatch):
+def test_active_pe_status_must_be_a_supported_live_status(tmp_path, monkeypatch):
     content = VALID_CURRENT_PE.replace(
         "| PE-AUTO-02  | infra  | infra-impl-codex    | infra-val-claude  | feature/pe-auto-02-current-pe-ci-validation  | implementing  | 2026-03-28   |",
-        "| PE-AUTO-02  | infra  | infra-impl-codex    | infra-val-claude  | feature/pe-auto-02-current-pe-ci-validation  | validating    | 2026-03-28   |",
+        "| PE-AUTO-02  | infra  | infra-impl-codex    | infra-val-claude  | feature/pe-auto-02-current-pe-ci-validation  | merged         | 2026-03-28   |",
     )
     path = _write_current_pe(tmp_path, content)
     monkeypatch.setenv("CURRENT_PE_PATH", str(path))
