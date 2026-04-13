@@ -89,7 +89,12 @@ jobs:
               print('@claude-code')
               sys.exit(0)
           validator_agent = row_match.group(1).strip().lower()
-          print('@codex' if 'codex' in validator_agent else '@claude-code')
+          if 'codex' in validator_agent:
+              print('@codex')
+          elif 'gemini' in validator_agent:
+              print('@gemini-cli')
+          else:
+              print('@claude-code')
           EOF
           )
           echo "mention=${mention}" >> "$GITHUB_OUTPUT"

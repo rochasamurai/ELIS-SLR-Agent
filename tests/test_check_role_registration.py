@@ -81,6 +81,68 @@ INVALID_PM_CHORE_NOT_MERGED = """\
 | PM-CHORE-99 | housekeeping | —                   | —                 | main (direct) | implementing | 2026-04-01   |
 """
 
+VALID_WITH_GEMINI_VALIDATOR = """\
+## Release context
+
+| Field          | Value                                |
+|----------------|--------------------------------------|
+| Release        | ELIS Hybrid SLR Execution Plan       |
+| Base branch    | main                                 |
+| Plan file      | ELIS_MultiAgent_Implementation_Plan_v1_8_1.md |
+| Plan location  | repo root                            |
+
+## Current PE
+
+| Field   | Value                                 |
+|---------|---------------------------------------|
+| PE      | PE-SLR-01                             |
+| Branch  | feature/pe-slr-01-harvest-workflow-contract |
+
+## Agent roles
+
+| Agent       | Role        |
+|-------------|-------------|
+| CODEX       | Implementer |
+| Gemini CLI  | Validator   |
+
+## Active PE Registry
+
+| PE-ID       | Domain       | Implementer-agentId | Validator-agentId | Branch                                      | Status          | Last-updated |
+|-------------|--------------|---------------------|-------------------|---------------------------------------------|-----------------|--------------|
+| PE-SLR-01   | slr          | prog-impl-codex     | gemini-cli        | feature/pe-slr-01-harvest-workflow-contract | gate-2-pending  | 2026-04-13   |
+"""
+
+INVALID_GEMINI_ROLE_MISMATCH = """\
+## Release context
+
+| Field          | Value                                |
+|----------------|--------------------------------------|
+| Release        | ELIS Hybrid SLR Execution Plan       |
+| Base branch    | main                                 |
+| Plan file      | ELIS_MultiAgent_Implementation_Plan_v1_8_1.md |
+| Plan location  | repo root                            |
+
+## Current PE
+
+| Field   | Value                                 |
+|---------|---------------------------------------|
+| PE      | PE-SLR-01                             |
+| Branch  | feature/pe-slr-01-harvest-workflow-contract |
+
+## Agent roles
+
+| Agent       | Role        |
+|-------------|-------------|
+| CODEX       | Validator   |
+| Gemini CLI  | Implementer |
+
+## Active PE Registry
+
+| PE-ID       | Domain       | Implementer-agentId | Validator-agentId | Branch                                      | Status          | Last-updated |
+|-------------|--------------|---------------------|-------------------|---------------------------------------------|-----------------|--------------|
+| PE-SLR-01   | slr          | prog-impl-codex     | gemini-cli        | feature/pe-slr-01-harvest-workflow-contract | gate-2-pending  | 2026-04-13   |
+"""
+
 
 def test_pm_chore_row_with_dash_agent_ids_passes(tmp_path, monkeypatch):
     """PM-CHORE rows with '—' agent IDs must not cause a failure when merged."""
@@ -94,5 +156,19 @@ def test_pm_chore_row_not_merged_fails(tmp_path, monkeypatch):
     """PM-CHORE rows with '—' agent IDs and non-merged status must fail."""
     pe_file = tmp_path / "CURRENT_PE.md"
     pe_file.write_text(INVALID_PM_CHORE_NOT_MERGED, encoding="utf-8")
+    monkeypatch.setenv("CURRENT_PE_PATH", str(pe_file))
+    assert MODULE.main() == 1
+
+
+def test_gemini_validator_role_registration_passes(tmp_path, monkeypatch):
+    pe_file = tmp_path / "CURRENT_PE.md"
+    pe_file.write_text(VALID_WITH_GEMINI_VALIDATOR, encoding="utf-8")
+    monkeypatch.setenv("CURRENT_PE_PATH", str(pe_file))
+    assert MODULE.main() == 0
+
+
+def test_role_table_must_match_registry_engines(tmp_path, monkeypatch):
+    pe_file = tmp_path / "CURRENT_PE.md"
+    pe_file.write_text(INVALID_GEMINI_ROLE_MISMATCH, encoding="utf-8")
     monkeypatch.setenv("CURRENT_PE_PATH", str(pe_file))
     assert MODULE.main() == 1

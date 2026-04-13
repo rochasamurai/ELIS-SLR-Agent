@@ -9,6 +9,13 @@ VALID_STATUSES = {
     "gate-2-pending",
     "merged",
     "blocked",
+    "superseded",
+}
+VALID_ROLES = {"Implementer", "Validator"}
+ENGINE_TO_AGENT = {
+    "codex": "CODEX",
+    "claude": "Claude Code",
+    "gemini": "Gemini CLI",
 }
 
 
@@ -38,9 +45,49 @@ def detect_role(content: str, agent: str) -> str | None:
     if len(matches) != 1:
         return None
     role = matches[0].strip()
-    if role not in {"Implementer", "Validator"}:
+    if role not in VALID_ROLES:
         return None
     return role
+
+
+def parse_roles_table(content: str) -> dict[str, str]:
+    lines = content.splitlines()
+    start = None
+    for idx, line in enumerate(lines):
+        if line.strip().lower() == "## agent roles":
+            start = idx + 1
+            break
+    if start is None:
+        return {}
+
+    table_lines: list[str] = []
+    for line in lines[start:]:
+        stripped = line.strip()
+        if not stripped:
+            if table_lines:
+                break
+            continue
+        if stripped.startswith("|"):
+            table_lines.append(stripped)
+            continue
+        if table_lines:
+            break
+
+    matches = []
+    for line in table_lines[2:]:
+        match = re.match(
+            r"^\|\s*(CODEX|Claude Code|Gemini CLI)\s*\|\s*([^|]+?)\s*\|$",
+            line,
+        )
+        if match:
+            matches.append(match.groups())
+    roles: dict[str, str] = {}
+    for agent, raw_role in matches:
+        role = raw_role.strip()
+        if role not in VALID_ROLES:
+            continue
+        roles[agent] = role
+    return roles
 
 
 def parse_active_registry(
@@ -87,6 +134,8 @@ def extract_engine(agent_id: str) -> str | None:
         return "codex"
     if "claude" in text:
         return "claude"
+    if "gemini" in text:
+        return "gemini"
     return None
 
 
@@ -111,18 +160,10 @@ def main() -> int:
     if not has_branch:
         return fail("ERROR: Branch field missing.")
 
-    agents = ["CODEX", "Claude Code"]
-    roles = {}
-
-    for agent in agents:
-        if agent not in content:
-            return fail(f"ERROR: Agent {agent} not listed in CURRENT_PE.md.")
-        role = detect_role(content, agent)
-        if role is None:
-            return fail(f"ERROR: Agent {agent} has no valid role.")
-        roles[agent] = role
-
-    if roles["CODEX"] == roles["Claude Code"]:
+    roles = parse_roles_table(content)
+    if len(roles) != 2:
+        return fail("ERROR: CURRENT_PE.md must define exactly two agent role rows.")
+    if len(set(roles.values())) != 2:
         return fail("ERROR: Both agents have the same role. Roles must differ.")
 
     required_release_fields = ["Release", "Base branch", "Plan file", "Plan location"]
@@ -150,6 +191,15 @@ def main() -> int:
 
     if not rows:
         return fail("ERROR: Active PE Registry has no rows.")
+
+    current_pe = None
+    current_branch = None
+    for line in lines:
+        parts = [p.strip() for p in line.split("|")]
+        if len(parts) >= 4 and parts[1] == "PE":
+            current_pe = parts[2]
+        if len(parts) >= 4 and parts[1] == "Branch":
+            current_branch = parts[2]
 
     active_rows: list[dict[str, str]] = []
     for row in rows:
@@ -194,6 +244,16 @@ def main() -> int:
 
         if status not in {"merged", "blocked"}:
             active_rows.append(row)
+
+        if pe_id == current_pe and branch == current_branch:
+            expected_roles = {
+                ENGINE_TO_AGENT[impl_engine]: "Implementer",
+                ENGINE_TO_AGENT[val_engine]: "Validator",
+            }
+            if roles != expected_roles:
+                return fail(
+                    "ERROR: Agent roles table does not match the active PE registry engines."
+                )
 
     previous_by_domain: dict[str, str] = {}
     for row in active_rows:
