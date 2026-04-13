@@ -110,6 +110,8 @@ An ADR is **not** required for:
 | [ADR-004](ADR-004-handoff-copy-not-symlink.md) | HANDOFF as generated copy, not symlink | Accepted | 2026-03-26 |
 | [ADR-005](ADR-005-agent-browser-rejected-for-auth.md) | Agent browser rejected for auth | Accepted | 2026-03-26 |
 | [ADR-006](ADR-006-openclaw-as-native-runtime.md) | OpenClaw as native orchestration runtime | Accepted | 2026-03-26 |
+| [ADR-007](ADR-007-adoption-of-multica-as-task-orchestration-layer.md) | Adoption of Multica as task orchestration layer | Accepted | 2026-04-11 |
+| [ADR-008](ADR-008-distinct-github-review-identities-for-active-agents.md) | Distinct GitHub review identities for active agents | Accepted | 2026-04-13 |
 
 ---
 

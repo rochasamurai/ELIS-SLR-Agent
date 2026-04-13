@@ -22,6 +22,14 @@ name: ELIS - Agent Search (Appendix A)
 on:
   workflow_dispatch:
     inputs:
+      review_id:
+        description: "Review identifier for the Harvest evidence bundle"
+        required: false
+        default: "electoral-integrity-demo"
+      search_config:
+        description: "Search config file used for the governed Harvest run"
+        required: false
+        default: "config/searches/electoral_integrity_search.yml"
       base_branch:
         description: "Base branch to PR into"
         required: false
@@ -91,6 +99,8 @@ jobs:
           BASE="${{ github.event.inputs.base_branch || 'main' }}"
           HEAD="${{ github.event.inputs.write_branch || 'ci/agent-search-autopr' }}"
           OPEN_PR="${{ github.event.inputs.open_pr || 'true' }}"
+          REVIEW_ID="${{ github.event.inputs.review_id || 'electoral-integrity-demo' }}"
+          SEARCH_CONFIG="${{ github.event.inputs.search_config || 'config/searches/electoral_integrity_search.yml' }}"
           CAP_PER_SOURCE="${{ github.event.inputs.cap_per_source || '100' }}"
           JOB_RESULT_CAP="${{ github.event.inputs.job_result_cap || '1000' }}"
           DRY_RUN="${{ github.event.inputs.dry_run || 'false' }}"
@@ -98,6 +108,8 @@ jobs:
           echo "base=$BASE" >> "$GITHUB_OUTPUT"
           echo "head=$HEAD" >> "$GITHUB_OUTPUT"
           echo "open_pr=$OPEN_PR" >> "$GITHUB_OUTPUT"
+          echo "review_id=$REVIEW_ID" >> "$GITHUB_OUTPUT"
+          echo "search_config=$SEARCH_CONFIG" >> "$GITHUB_OUTPUT"
           echo "cap_per_source=$CAP_PER_SOURCE" >> "$GITHUB_OUTPUT"
           echo "job_result_cap=$JOB_RESULT_CAP" >> "$GITHUB_OUTPUT"
           echo "dry_run=$DRY_RUN" >> "$GITHUB_OUTPUT"
@@ -135,16 +147,43 @@ jobs:
           pip install -r requirements.txt
           pip install -e . --no-deps
 
+      - name: Resolve Harvest contract paths
+        run: |
+          python - <<'PY'
+          import os
+          from elis.harvest_contract import HarvestWorkflowContract
+
+          review_id = "${{ steps.knobs.outputs.review_id }}"
+          contract = HarvestWorkflowContract(review_id=review_id)
+          env_path = os.environ["GITHUB_ENV"]
+          values = {
+              "HARVEST_BUNDLE_ROOT": str(contract.bundle_root()),
+              "HARVEST_RAW_DIR": str(contract.raw_dir()),
+              "HARVEST_CANONICAL_DIR": str(contract.canonical_dir()),
+              "HARVEST_EVIDENCE_DIR": str(contract.evidence_dir()),
+              "HARVEST_CANONICAL_OUTPUT": str(contract.canonical_output()),
+              "HARVEST_CANONICAL_MANIFEST": str(contract.canonical_manifest()),
+              "HARVEST_MERGE_REPORT": str(contract.merge_report()),
+              "HARVEST_EVIDENCE_JSON": str(contract.evidence_json()),
+              "PUBLISHED_APPENDIX_A": str(contract.published_appendix_a()),
+              "PUBLISHED_APPENDIX_A_MANIFEST": str(contract.published_appendix_a_manifest()),
+          }
+          with open(env_path, "a", encoding="utf-8") as fh:
+              for key, value in values.items():
+                  fh.write(f"{key}={value}\n")
+          PY
+
       - name: Patch search config from UI inputs
         env:
+          SEARCH_CONFIG:  ${{ steps.knobs.outputs.search_config }}
           CAP_PER_SOURCE:  ${{ steps.knobs.outputs.cap_per_source }}
           JOB_RESULT_CAP:  ${{ steps.knobs.outputs.job_result_cap }}
         run: |
           python - <<'PY'
           import yaml, sys, pathlib, os
-          src = pathlib.Path("config/elis_search_queries.yml")
+          src = pathlib.Path(os.environ["SEARCH_CONFIG"])
           if not src.exists():
-              print("Config file not found: config/elis_search_queries.yml", file=sys.stderr)
+              print(f"Config file not found: {src}", file=sys.stderr)
               sys.exit(2)
           with src.open("r", encoding="utf-8") as f:
               cfg = yaml.safe_load(f) or {}
@@ -158,6 +197,8 @@ jobs:
           g["job_result_cap"] = to_int(os.environ.get("JOB_RESULT_CAP", "1000"), 1000)
           out = pathlib.Path("/tmp/elis_config.yml")
           out.write_text(yaml.safe_dump(cfg, sort_keys=False, allow_unicode=True), encoding="utf-8")
+          with open(os.environ["GITHUB_ENV"], "a", encoding="utf-8") as env_fh:
+              env_fh.write(f"PATCHED_SEARCH_CONFIG={out}\n")
           print(f"Wrote patched config to {out}")
           PY
 
@@ -170,26 +211,40 @@ jobs:
           set -eux
           DRY="${{ steps.knobs.outputs.dry_run }}"
           MAX_RESULTS="${{ steps.knobs.outputs.cap_per_source }}"
-          mkdir -p json_jsonl
+          mkdir -p "$HARVEST_RAW_DIR" "$HARVEST_CANONICAL_DIR" "$HARVEST_EVIDENCE_DIR" json_jsonl
           if [ "$DRY" = "true" ]; then
             echo "[DRY RUN] Harvest skipped. Set dry_run=false to run harvests."
           else
             elis harvest crossref \
-              --search-config config/searches/electoral_integrity_search.yml \
+              --search-config "$PATCHED_SEARCH_CONFIG" \
               --max-results "$MAX_RESULTS" \
-              --output json_jsonl/harvest_crossref.json
+              --output "$HARVEST_RAW_DIR/crossref.json"
             elis harvest openalex \
-              --search-config config/searches/electoral_integrity_search.yml \
+              --search-config "$PATCHED_SEARCH_CONFIG" \
               --max-results "$MAX_RESULTS" \
-              --output json_jsonl/harvest_openalex.json
+              --output "$HARVEST_RAW_DIR/openalex.json"
             elis harvest scopus \
-              --search-config config/searches/electoral_integrity_search.yml \
+              --search-config "$PATCHED_SEARCH_CONFIG" \
               --max-results "$MAX_RESULTS" \
-              --output json_jsonl/harvest_scopus.json
+              --output "$HARVEST_RAW_DIR/scopus.json"
             elis merge \
-              --inputs json_jsonl/harvest_crossref.json json_jsonl/harvest_openalex.json json_jsonl/harvest_scopus.json \
-              --output json_jsonl/ELIS_Appendix_A_Search_rows.json \
-              --report json_jsonl/merge_report.json
+              --inputs "$HARVEST_RAW_DIR/crossref.json" "$HARVEST_RAW_DIR/openalex.json" "$HARVEST_RAW_DIR/scopus.json" \
+              --output "$HARVEST_CANONICAL_OUTPUT" \
+              --report "$HARVEST_MERGE_REPORT"
+            cp "$HARVEST_CANONICAL_OUTPUT" "$PUBLISHED_APPENDIX_A"
+            cp "$HARVEST_CANONICAL_MANIFEST" "$PUBLISHED_APPENDIX_A_MANIFEST"
+            python - <<'PY'
+            from elis.harvest_contract import HarvestWorkflowContract, WORKFLOW_HARVEST_SOURCES, write_harvest_evidence
+
+            contract = HarvestWorkflowContract(review_id="${{ steps.knobs.outputs.review_id }}")
+            write_harvest_evidence(
+                review_id="${{ steps.knobs.outputs.review_id }}",
+                search_config="${{ steps.knobs.outputs.search_config }}",
+                tier="workflow",
+                sources=WORKFLOW_HARVEST_SOURCES,
+                contract=contract,
+            )
+            PY
           fi
 
 
@@ -197,7 +252,7 @@ jobs:
         if: ${{ steps.knobs.outputs.dry_run != 'true' }}
         run: |
           set -eux
-          ARTIFACT="json_jsonl/ELIS_Appendix_A_Search_rows.json"
+          ARTIFACT="$HARVEST_CANONICAL_OUTPUT"
           
           # Check file exists
           if [ ! -f "$ARTIFACT" ]; then
@@ -216,25 +271,25 @@ jobs:
           
           echo "Artifact validation passed"
 
-      - name: Upload artefact (Appendix A JSON)
+      - name: Upload Harvest evidence bundle
         if: ${{ steps.knobs.outputs.dry_run != 'true' }}
         uses: actions/upload-artifact@v4
         with:
-          name: elis-agent-appendix-a
-          path: json_jsonl/ELIS_Appendix_A_Search_rows.json
+          name: harvest-${{ steps.knobs.outputs.review_id }}
+          path: artifacts/harvest/${{ steps.knobs.outputs.review_id }}
           retention-days: 14
 
       - name: Commit Appendix A
         if: ${{ steps.knobs.outputs.dry_run != 'true' }}
         run: |
           set -eux
-          git add -N json_jsonl/ELIS_Appendix_A_Search_rows.json || true
-          if git diff --name-only --exit-code -- json_jsonl/ELIS_Appendix_A_Search_rows.json; then
+          git add -N "$PUBLISHED_APPENDIX_A" "$PUBLISHED_APPENDIX_A_MANIFEST" || true
+          if git diff --name-only --exit-code -- "$PUBLISHED_APPENDIX_A" "$PUBLISHED_APPENDIX_A_MANIFEST"; then
             echo "No artefact diffs; skipping commit/push/PR."
             echo "skip_pr=true" >> "$GITHUB_ENV"
             exit 0
           fi
-          git add json_jsonl/ELIS_Appendix_A_Search_rows.json
+          git add "$PUBLISHED_APPENDIX_A" "$PUBLISHED_APPENDIX_A_MANIFEST"
           git commit -m "feat(search): update Appendix A results"
 
       - name: Force remote to App-token URL
@@ -290,10 +345,13 @@ jobs:
                 const prBody = '## Automated ELIS Agent Search Run\n\n' +
                   '**Branch:** `' + head + '`\n' +
                   '**Base:** `' + base + '`\n' +
+                  '**Review ID:** `${{ steps.knobs.outputs.review_id }}`\n' +
+                  '**Search config:** `${{ steps.knobs.outputs.search_config }}`\n' +
                   '**Triggered by:** @${{ github.actor }}\n' +
                   '**Run:** [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})\n\n' +
                   '### Changes\n' +
                   '- Updated Appendix A search results\n' +
+                  '- Uploaded review-scoped Harvest bundle and manifest evidence\n' +
                   '- Cap per source: ${{ steps.knobs.outputs.cap_per_source }}\n' +
                   '- Job result cap: ${{ steps.knobs.outputs.job_result_cap }}\n\n' +
                   '---\n' +
@@ -324,6 +382,8 @@ jobs:
           echo "## Configuration" >> $GITHUB_STEP_SUMMARY
           echo "- **Base Branch:** \`${{ steps.knobs.outputs.base }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Work Branch:** \`${{ steps.knobs.outputs.head }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Review ID:** \`${{ steps.knobs.outputs.review_id }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Search Config:** \`${{ steps.knobs.outputs.search_config }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- **Dry Run:** ${{ steps.knobs.outputs.dry_run }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Cap per Source:** ${{ steps.knobs.outputs.cap_per_source }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Job Result Cap:** ${{ steps.knobs.outputs.job_result_cap }}" >> $GITHUB_STEP_SUMMARY
