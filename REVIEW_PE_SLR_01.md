@@ -127,7 +127,7 @@ docs/_active/ELIS_2025_SLR_RUN_AUDIT_CHECKLIST_TEMPLATE.md
 
 ---
 
-## Agent update — Claude Code / PE-SLR-01 / 2026-04-13
+## Agent update — Gemini CLI / PE-SLR-01 / 2026-04-13
 
 ### Verdict
 PASS
@@ -164,6 +164,9 @@ None
 
 F1: Pre-existing `black` failures on `main` (41 files) do not block this PE. Scope files are clean.
 F2: Pre-existing failure in `tests/test_verify_claude_auth.py` was correctly fixed by the Implementer to match the current script logic (`CLAUDE_CREDENTIALS_JSON`).
+
+### Backlog / Follow-up (Non-blocking)
+- **Role-based Naming**: The system currently contains vendor-specific names (Claude, Codex, Gemini) in workflow-facing artefacts (e.g., `tests/test_verify_claude_auth.py`, `scripts/run_claude_agent.py`). A future review should transition these to role-based, agent-agnostic names (e.g., `validator`, `implementer`) to align with the v1.8 model's flexibility.
 
 ### Ready to merge
 YES

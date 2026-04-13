@@ -101,7 +101,7 @@
 | PE-AUTO-11  | infra           | infra-impl-claude    | infra-val-codex    | feature/pe-auto-11-parallel-track-scheduler              | merged          | 2026-04-10   |
 | PE-AUTO-12  | infra           | infra-impl-codex     | infra-val-claude   | feature/pe-auto-12-elis-server-bot-review-identities     | merged          | 2026-04-12   |
 | PE-AUTO-13  | infra           | infra-impl-claude    | infra-val-codex    | feature/pe-auto-13-gate2-retrigger                       | superseded      | 2026-04-12   |
-| PE-SLR-01   | slr             | prog-impl-codex      | prog-val-claude    | feature/pe-slr-01-harvest-workflow-contract               | gate-2-pending | 2026-04-13   |
+| PE-SLR-01   | slr             | prog-impl-codex      | gemini-cli         | feature/pe-slr-01-harvest-workflow-contract               | gate-2-pending | 2026-04-13   |
 
 Valid status values:
 - `planning`
