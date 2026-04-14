@@ -14,14 +14,14 @@ from pathlib import Path
 
 
 PE_SECTION_RE = r"### {pe_id}\b"
-PE_ROW_RE = re.compile(r"^\|\s*PE\s*\|\s*(PE-[A-Z]+-[0-9]+)\s*\|$", re.MULTILINE)
+PE_ROW_RE = re.compile(r"^\|\s*PE\s*\|\s*(PE-[A-Z0-9-]+-[0-9]+)\s*\|$", re.MULTILINE)
 FIELD_ROW_RE = re.compile(r"^\|\s*(?P<field>[^|]+?)\s*\|\s*(?P<value>[^|]+?)\s*\|$")
 AGENT_ROW_RE = re.compile(
     r"^\|\s*(?P<label>CODEX|Claude Code)\s*\|\s*(?P<role>Implementer|Validator)\s*\|$",
     re.MULTILINE,
 )
 REGISTRY_ROW_RE = re.compile(
-    r"^\|\s*(?P<pe>PE-[A-Z]+-[0-9]+)\s*\|\s*(?P<domain>[^|]+?)\s*\|"
+    r"^\|\s*(?P<pe>PE-[A-Z0-9-]+-[0-9]+)\s*\|\s*(?P<domain>[^|]+?)\s*\|"
     r"\s*(?P<implementer>[^|]+?)\s*\|\s*(?P<validator>[^|]+?)\s*\|"
     r"\s*(?P<branch>[^|]+?)\s*\|\s*(?P<status>[^|]+?)\s*\|"
     r"\s*(?P<updated>[^|]+?)\s*\|$",
