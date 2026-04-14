@@ -108,14 +108,14 @@ $ git branch --show-current
 feature/pe-slr-02-harvest-workflow-reliability-audit
 
 $ git rev-parse HEAD
-c23dc22b3c1711f733af9780a54cc8bd03c17b41
+e6d07f245b79c4180322800f6195c4ece5c85c92
 
 $ git log -5 --oneline --decorate
-c23dc22 (HEAD -> feature/pe-slr-02-harvest-workflow-reliability-audit) review(pe-slr-02): record validator round 1 fail
+e6d07f2 (HEAD -> feature/pe-slr-02-harvest-workflow-reliability-audit) review(pe-slr-02): record validator round 2 fail
+a485839 fix(pe-slr-02): address Validator r1 blocking findings
+c23dc22 review(pe-slr-02): record validator round 1 fail
 13ac360 docs(pe-slr-02): add HANDOFF.md
 29c20da feat(pe-slr-02): harvest workflow reliability and audit
-b51cd8b (origin/main) chore(pm): update v1.8.2 plan — reassign PE-SLR-02 implementer to Claude Code
-b260df8 chore(pm): reassign PE-SLR-02 implementer to Claude Code
 ```
 
 ### §6.3 Scope evidence (vs origin/main)
@@ -130,13 +130,13 @@ A	elis/harvest_workflow.py
 A	tests/test_harvest_workflow.py
 
 $ git diff --stat origin/main..HEAD
- HANDOFF.md                            | 472 +++++++-----------------------
- REVIEW_PE_SLR_02.md                   |  46 +++
+ HANDOFF.md                            | 507 +++++++++------------------------
+ REVIEW_PE_SLR_02.md                   |  63 ++++
  docs/slr/HARVEST_WORKFLOW_CONTRACT.md |  76 ++++-
  elis/harvest_contract.py              |   3 +
  elis/harvest_workflow.py              | 267 +++++++++++++++++
  tests/test_harvest_workflow.py        | 521 ++++++++++++++++++++++++++++++++++
- 6 files changed, 1017 insertions(+), 368 deletions(-)
+ 6 files changed, 1068 insertions(+), 369 deletions(-)
 ```
 
 Note: `REVIEW_PE_SLR_02.md` was committed by CODEX (Validator) to this branch.
