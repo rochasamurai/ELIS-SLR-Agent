@@ -19,6 +19,11 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+from elis.reviewer_identity import (
+    ReviewerIdentityError,
+    review_handle_for_engine,
+    review_login_for_engine,
+)
 from scripts.implementer_runner_common import (
     RunnerError,
     acceptance_criteria_for_pe,
@@ -178,7 +183,7 @@ def post_fail_assignment(pr_number: str, implementer_engine: str) -> None:
     The caller is responsible for setting ``GH_TOKEN`` to ``PM_BOT_TOKEN``
     before invoking this so the comment is attributed to ``elis-pm-bot``.
     """
-    mention = "@codex" if implementer_engine == "codex" else "@claude-code"
+    mention = review_handle_for_engine(implementer_engine)
     body = (
         "## Fail — fix assignment\n\n"
         f"{mention} — read the REVIEW file on this branch. "
@@ -255,9 +260,7 @@ def run_validator(argv: list[str], *, engine: str) -> int:
 
         ensure_expected_login(engine)
 
-        # Derive the expected bot login for the validator engine.
-        # codex validator → elis-codex-bot; claude validator → elis-claude-bot.
-        expected_reviewer = f"elis-{engine}-bot"
+        expected_reviewer = review_login_for_engine(engine)
 
         prompt = build_validator_prompt(
             engine=engine,
@@ -283,6 +286,6 @@ def run_validator(argv: list[str], *, engine: str) -> int:
             f"{engine} validator runner complete for {inputs.pe_id} — verdict: {verdict}"
         )
         return 0
-    except RunnerError as exc:
+    except (RunnerError, ReviewerIdentityError) as exc:
         print(f"FAIL: {exc}", file=sys.stderr)
         return 1

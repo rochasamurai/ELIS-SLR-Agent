@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "updated": "2026-04-14",
+    "purpose": "Protected-branch review identity mapping for ELIS agent workflows."
+  },
+  "agents": {
+    "CODEX": {
+      "role": "Implementer or Validator",
+      "engine": "codex",
+      "review_login": "elis-codex-bot",
+      "review_handle": "@codex",
+      "token_env": "CODEX_BOT_TOKEN",
+      "validator_capable_on_protected_branches": true
+    },
+    "Claude Code": {
+      "role": "Implementer or Validator",
+      "engine": "claude",
+      "review_login": "elis-claude-bot",
+      "review_handle": "@claude-code",
+      "token_env": "CLAUDE_BOT_TOKEN",
+      "validator_capable_on_protected_branches": true
+    },
+    "PM": {
+      "role": "Orchestrator",
+      "engine": "pm",
+      "review_login": "elis-pm-bot",
+      "review_handle": "@pm-agent",
+      "token_env": "PM_BOT_TOKEN",
+      "validator_capable_on_protected_branches": false
+    },
+    "Gemini CLI": {
+      "role": "Implementer or Validator",
+      "engine": "gemini",
+      "review_login": "elis-gemini-bot",
+      "review_handle": "@gemini-cli",
+      "token_env": "GEMINI_BOT_TOKEN",
+      "validator_capable_on_protected_branches": false,
+      "status": "deferred-by-pe-infra-slr-02"
+    }
+  }
+}

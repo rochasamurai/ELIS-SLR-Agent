@@ -1,0 +1,12 @@
+{
+  "tools": {
+    "sessions": {
+      "visibility": "all"
+    }
+  },
+  "notes": {
+    "purpose": "Enable PM cross-agent direct dispatch to assigned validator sessions.",
+    "pe": "PE-INFRA-SLR-02",
+    "updated": "2026-04-14"
+  }
+}

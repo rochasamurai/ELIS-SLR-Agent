@@ -116,16 +116,21 @@ Only then proceed with the commit.
 Gate 1 and Gate 2 are enforced by CI automation after PE-INFRA-04.
 
 **Gate 1 (Validator assignment):**
-- CI verifies Status Packet completeness, HANDOFF.md, role registration,
-  and quality gates automatically on every PR push.
-- On success, CI posts the Validator assignment comment. Agents treat this
-  comment as equivalent to a PM assignment.
-- On failure, CI flags the PR for manual PM review. Agents wait.
+- Default path: PM dispatches the validator assignment directly to the
+  active validator session (`sessions_send`) after Status Packet and gate checks.
+- If PM direct dispatch is unavailable, fallback to the validator-assignment
+  PR comment path (machine tag `<!-- validator-assignment -->`) so
+  `validator-dispatch.yml` can start the runner.
+- PO relay is a last-resort fallback only when both direct dispatch and
+  comment-triggered automation are unavailable.
 
 **Gate 2 (merge):**
 - CI reads the REVIEW file verdict after every push to a feature branch.
 - On PASS + CI green + no `pm-review-required` label → CI merges automatically.
 - On FAIL → CI posts the fix assignment comment to the Implementer.
+- A comment-only PASS signal does not satisfy required-review branch
+  protection; a formal GitHub approval review from the mapped reviewer
+  identity is mandatory.
 - PM retains full veto authority by adding the `pm-review-required` label
   to any PR at any time.
 
@@ -360,6 +365,7 @@ verified with pasted output. Never batch completions.
 10. Push validation commits to the **same branch** (validator-owned files only: `REVIEW_PE<N>.md` + adversarial tests).
 11. Deliver verdict + Status Packet using a **GitHub PR review comment** (`approve` for PASS, `request-changes` for FAIL) using the standard format (Section 9).
     - Single-account fallback: if reviewer and PR author are the same GitHub account, and GitHub blocks review actions, post verdicts as plain PR comments. For FAIL, explicitly request PM attention and apply `pm-review-required`.
+    - For PASS, plain PR comments are not sufficient on protected branches with required reviews; PASS requires a formal approval review from the mapped reviewer identity.
     - PM may still receive a direct summary message, but the PR review is the binding live handshake record.
     - `REVIEW_PE<N>.md` remains mandatory as the durable on-branch artifact.
 
@@ -605,6 +611,7 @@ Text instructions alone cannot guarantee compliance. The following structural co
 **Branch protection on the base branch declared in `CURRENT_PE.md`** _(configure in GitHub → Settings → Branches)_:
 - All CI status checks must pass before merge is allowed.
 - At least 1 approving review (PM) required.
+- Comment-only PASS signalling does not satisfy required-review branch protection.
 - Direct pushes blocked — PRs only.
 
 **Currently active CI checks** (`.github/workflows/ci.yml`):
