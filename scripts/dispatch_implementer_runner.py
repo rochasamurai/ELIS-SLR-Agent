@@ -6,6 +6,12 @@ import os
 import sys
 from pathlib import Path
 
+# Ensure repository root is importable when executed as
+# `python scripts/dispatch_implementer_runner.py` in CI.
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
 from scripts.implementer_runner_common import RunnerError, parse_current_pe
 
 
