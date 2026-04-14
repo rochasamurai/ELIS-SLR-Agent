@@ -26,7 +26,9 @@ jobs:
 
       - name: Resolve active PE from CURRENT_PE.md
         id: current
-        run: python scripts/dispatch_implementer_runner.py
+        run: |
+          export PYTHONPATH="${GITHUB_WORKSPACE}:${PYTHONPATH:-}"
+          python scripts/dispatch_implementer_runner.py
 
       - name: Dispatch implementer workflow
         if: steps.current.outputs.should_dispatch == 'true'
