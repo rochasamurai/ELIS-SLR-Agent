@@ -43,7 +43,7 @@ def main() -> int:
 
     content = current_pe_path.read_text(encoding="utf-8")
     match = re.search(
-        r"^\|\s*PE\s*\|\s*(PE-[A-Z]+-[0-9]+)\s*\|",
+        r"^\|\s*PE\s*\|\s*(PE-[A-Z0-9-]+-[0-9]+)\s*\|",
         content,
         re.MULTILINE,
     )
