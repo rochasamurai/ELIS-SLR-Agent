@@ -242,7 +242,7 @@ def main() -> int:
                 "ERROR: Active PE Registry row has same engine for implementer and validator."
             )
 
-        if status not in {"merged", "blocked"}:
+        if status not in {"merged", "blocked", "superseded"}:
             active_rows.append(row)
 
         if pe_id == current_pe and branch == current_branch:

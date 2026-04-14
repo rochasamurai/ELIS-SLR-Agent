@@ -76,7 +76,7 @@ jobs:
           from pathlib import Path
           content = Path('CURRENT_PE.md').read_text(encoding='utf-8')
           # Find the validator agent id from the Active PE Registry for the current PE.
-          pe_match = re.search(r'^\|\s*PE\s*\|\s*(PE-[A-Z]+-[0-9]+)\s*\|', content, re.MULTILINE)
+          pe_match = re.search(r'^\|\s*PE\s*\|\s*(PE(?:-[A-Z0-9]+)+)\s*\|', content, re.MULTILINE)
           if not pe_match:
               print('@claude-code')
               sys.exit(0)
