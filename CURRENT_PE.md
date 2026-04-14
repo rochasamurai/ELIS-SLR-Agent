@@ -19,13 +19,14 @@
 
 ## Current PE
 
-| Field   | Value                                              |
-|---------|----------------------------------------------------|
-| PE      | PE-SLR-02                                          |
-| Branch  | feature/pe-slr-02-harvest-workflow-reliability-audit |
+| Field   | Value                                                          |
+|---------|----------------------------------------------------------------|
+| PE      | PE-INFRA-SLR-01                                               |
+| Branch  | feature/pe-infra-slr-01-role-based-agent-surface-normalisation |
 
-> **Active PE.** PE-SLR-02 strengthens Harvest workflow reliability, audit replay, and
-> review-scoped output packaging after the workflow contract baseline established in PE-SLR-01.
+> **Active PE.** PE-INFRA-SLR-01 normalises active workflow-facing artefacts to use role-based
+> naming where provider-specific naming is not technically required, and establishes a committed
+> follow-up inventory for any deferred renames.
 
 ---
 
@@ -36,8 +37,7 @@
 | Claude Code | Implementer |
 | CODEX       | Validator   |
 
-> PE-SLR-02: `prog-impl-claude` (Claude Code) as Implementer · `prog-val-codex` (CODEX @ `elis-server`) as Validator.
-> **PM exception:** Gemini CLI stopped mid-PE and was replaced by Claude Code as Implementer from 2026-04-13.
+> PE-INFRA-SLR-01: `infra-impl-claude` (Claude Code) as Implementer · `infra-val-codex` (CODEX @ `elis-server`) as Validator.
 
 ---
 
@@ -101,7 +101,8 @@
 | PE-AUTO-12  | infra           | infra-impl-codex     | infra-val-claude   | feature/pe-auto-12-elis-server-bot-review-identities     | merged          | 2026-04-12   |
 | PE-AUTO-13  | infra           | infra-impl-claude    | infra-val-codex    | feature/pe-auto-13-gate2-retrigger                       | superseded      | 2026-04-12   |
 | PE-SLR-01   | slr             | prog-impl-codex      | gemini-cli         | feature/pe-slr-01-harvest-workflow-contract               | merged         | 2026-04-13   |
-| PE-SLR-02   | slr             | prog-impl-claude     | prog-val-codex     | feature/pe-slr-02-harvest-workflow-reliability-audit      | implementing   | 2026-04-13   |
+| PE-SLR-02      | slr             | prog-impl-claude     | prog-val-codex     | feature/pe-slr-02-harvest-workflow-reliability-audit           | merged        | 2026-04-14   |
+| PE-INFRA-SLR-01 | infra          | infra-impl-claude    | infra-val-codex    | feature/pe-infra-slr-01-role-based-agent-surface-normalisation | implementing  | 2026-04-14   |
 
 Valid status values:
 - `planning`
@@ -155,6 +156,7 @@ PM housekeeping entries (prefix `PM-CHORE-XX`):
 | PM-CHORE-34  | Adopted `ELIS_MultiAgent_Implementation_Plan_v1_8_1.md` as a patch revision to v1.8 while keeping PE-SLR-01 active. Added `PE-INFRA-SLR-01` (Role-Based Agent Surface Normalisation) after PE-SLR-02, shifted downstream default staffing to preserve structural alternation, and formalised provider-neutral workflow surfaces as an explicit release criterion. | 2026-04-13 |
 | PM-CHORE-35  | Adopted `ELIS_MultiAgent_Implementation_Plan_v1_8_2.md` as a patch revision to v1.8.1 while keeping PE-SLR-01 active. Added `PE-INFRA-SLR-02` (Distinct Review Identity Enforcement), formalised the requirement that validator-capable agents need distinct GitHub review identities on protected branches, and recorded `elis-gemini-bot` as the required onboarding path for recurring Gemini validator duty. | 2026-04-13 |
 | PM-CHORE-36  | Closed PE-SLR-01 as merged (PR #323, PASS verdict). Opened PE-SLR-02 (Harvest Workflow Reliability and Audit) with `gemini-cli` as Implementer and `prog-val-codex` (CODEX @ `elis-server`) as Validator for the next Harvest reliability round. | 2026-04-13 |
+| PM-CHORE-37  | Closed PE-SLR-02 as merged (PR #324, r3 PASS verdict — Claude Code as PM-authorised r3 Validator; admin merge after `gate-1` removed from required status checks to resolve structural timing gap). Opened PE-INFRA-SLR-01 (Role-Based Agent Surface Normalisation) with `infra-impl-claude` (Claude Code) as Implementer and `infra-val-codex` (CODEX) as Validator. Dependency PE-SLR-02 satisfied. | 2026-04-14 |
 
 Alternation rule:
 - For consecutive PEs in the same domain, the implementer engine must alternate (`codex` <-> `claude`).
