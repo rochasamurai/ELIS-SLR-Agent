@@ -88,10 +88,23 @@ Use these operator-facing rules:
 {
   "command_id": "cmd-20260414-001",
   "ack": "accepted",
+  "backend": "direct_session",
+  "state": "running",
+  "execution_ref": "openclaw://sessions/infra-impl-claude/abc123",
+  "ack_at": "2026-04-14T09:00:07Z"
+}
+```
+
+Runner-fallback example (degraded mode):
+
+```json
+{
+  "command_id": "cmd-20260414-002",
+  "ack": "accepted",
   "backend": "github_runner",
   "state": "running",
   "execution_ref": "gh://actions/runs/123456789",
-  "ack_at": "2026-04-14T09:00:07Z"
+  "ack_at": "2026-04-14T09:02:11Z"
 }
 ```
 
@@ -133,6 +146,8 @@ This contract is satisfied only if all checks pass:
 
 ## 7. Related Artifacts
 
+Existing in repository:
+
 - `openclaw/workspaces/workspace-pm/AGENTS.md`
 - `openclaw/workspaces/workspace-pm/MEMORY.md`
 - `.github/workflows/ci-current-pe.yml`
@@ -141,3 +156,8 @@ This contract is satisfied only if all checks pass:
 - `scripts/dispatch_implementer_runner.py`
 - `scripts/dispatch_validator_runner.py`
 
+Planned by implementation work (not yet present in repository):
+
+- `scripts/pm_orchestrator.py`
+- `scripts/check_agent_reachability.py`
+- `.github/workflows/pm-agent-dispatch.yml`

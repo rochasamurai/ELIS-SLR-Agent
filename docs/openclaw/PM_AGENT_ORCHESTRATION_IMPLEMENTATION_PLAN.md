@@ -17,6 +17,19 @@ Implement a reliable PM orchestration model where:
 
 ---
 
+## 1.1 Governance Anchor
+
+This implementation plan is scoped as follow-on governance work after the active
+`PE-INFRA-SLR-01` series item.
+
+- `PE-INFRA-SLR-01` remains focused on role-based workflow surface naming.
+- The orchestration hardening in this plan maps to `PE-INFRA-SLR-02` and related
+  follow-up infra tasks, not to `PE-INFRA-SLR-01` acceptance criteria.
+
+Until assigned in `CURRENT_PE.md`, this plan is design-ready but not in active execution.
+
+---
+
 ## 2. Scope
 
 In scope:
@@ -79,11 +92,17 @@ Acceptance:
 - every PM start command has a durable execution record
 - records can be traced from PM command to runner/session result
 
+Path policy note:
+
+- repo `.gitignore` currently ignores `runs/`, but not `reports/ops/agent_runs/`.
+- `reports/ops/agent_runs/` is therefore commit-safe under current ignore rules.
+- if ignore rules change, this path must be revalidated before rollout.
+
 ### WP-4: Workflow Integration
 
 Deliverables:
 
-- add `.github/workflows/pm-agent-dispatch.yml`
+- create new workflow `.github/workflows/pm-agent-dispatch.yml` (net-new file)
 - pass `command_id` through implementer/validator runners
 - post run links in PM evidence path
 
@@ -187,4 +206,3 @@ openclaw approvals get --gateway
 - `docs/openclaw/PM_SESSION_RESET.md`
 - `openclaw/workspaces/workspace-pm/AGENTS.md`
 - `openclaw/workspaces/workspace-pm/MEMORY.md`
-
