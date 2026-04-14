@@ -690,4 +690,69 @@ If a secret-pattern file is detected in context, the agent must:
 
 ---
 
+## 14) Role-Based Agent Surface Normalisation
+
+### 14.1 Terminology
+
+- **Workflow surface name** (also *agentId*): the compound identifier used in
+  `CURRENT_PE.md` registry columns `Implementer-agentId` and
+  `Validator-agentId`, e.g. `infra-impl-claude`.  It encodes both the
+  *role* and the *engine* assigned to run it.
+- **Role name**: the provider-neutral part of the surface name, obtained by
+  stripping the engine suffix.  The role name defines *what* the agent does;
+  the engine suffix records *who* runs it at a given PE.
+- **Engine suffix**: the provider token appended after the final hyphen:
+  `claude`, `codex`, or `gemini`.
+
+### 14.2 Canonical surface-to-role mapping
+
+| Workflow surface name | Role name    | Domain        | Responsibility          |
+|-----------------------|--------------|---------------|-------------------------|
+| `infra-impl-claude`   | `infra-impl` | Infrastructure | Implementer             |
+| `infra-impl-codex`    | `infra-impl` | Infrastructure | Implementer             |
+| `infra-val-claude`    | `infra-val`  | Infrastructure | Validator               |
+| `infra-val-codex`     | `infra-val`  | Infrastructure | Validator               |
+| `prog-impl-claude`    | `prog-impl`  | Programme      | Implementer             |
+| `prog-impl-codex`     | `prog-impl`  | Programme      | Implementer             |
+| `prog-val-claude`     | `prog-val`   | Programme      | Validator               |
+| `prog-val-codex`      | `prog-val`   | Programme      | Validator               |
+| `slr-impl-claude`     | `slr-impl`   | SLR            | Implementer             |
+| `slr-impl-codex`      | `slr-impl`   | SLR            | Implementer             |
+| `slr-val-claude`      | `slr-val`    | SLR            | Validator               |
+| `slr-val-codex`       | `slr-val`    | SLR            | Validator               |
+
+One-off or guest surfaces (e.g. `gemini-cli`) do not follow this convention.
+They are explicitly noted in the relevant PE row and are not subject to the
+alternation rule.
+
+### 14.3 Deriving a role name from a surface name
+
+The derivation rule is:
+
+1. Split the surface name on `-`.
+2. Drop the last token (the engine suffix).
+3. Re-join the remaining tokens with `-`.
+
+Example: `infra-val-codex` → tokens `["infra", "val", "codex"]`
+→ drop `"codex"` → join → `"infra-val"`.
+
+This rule is implemented in `elis/role_surface.py` and validated by
+`tests/test_pe_infra_slr_01.py`.
+
+### 14.4 Governance rules
+
+- Acceptance criteria, HANDOFF files, and REVIEW files **must** use the full
+  surface name (e.g. `infra-impl-claude`) to record which engine ran the
+  role, while referring to the agent's responsibility by its role name
+  (e.g. "the `infra-impl` role").
+- The alternation rule (§2.1) applies to *roles*, not engines.  If
+  `infra-impl-claude` implemented PE-N, then `infra-impl-codex` must
+  implement PE-N+1, regardless of which engine is active.
+- Tooling that parses `CURRENT_PE.md` must accept both `<role>-claude` and
+  `<role>-codex` surface names and resolve them to the same role.
+- New surface names require PM authorisation and a corresponding row in the
+  mapping table above.
+
+---
+
 End of AGENTS.md
