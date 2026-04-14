@@ -21,12 +21,12 @@
 
 | Field   | Value                                                          |
 |---------|----------------------------------------------------------------|
-| PE      | PE-INFRA-SLR-01                                               |
-| Branch  | feature/pe-infra-slr-01-role-based-agent-surface-normalisation |
+| PE      | PE-INFRA-SLR-02                                               |
+| Branch  | feature/pe-infra-slr-02-distinct-review-identity-enforcement  |
 
-> **Active PE.** PE-INFRA-SLR-01 normalises active workflow-facing artefacts to use role-based
-> naming where provider-specific naming is not technically required, and establishes a committed
-> follow-up inventory for any deferred renames.
+> **Active PE.** PE-INFRA-SLR-02 enforces distinct GitHub review identities for all active
+> validator-capable agents, onboards `elis-gemini-bot`, and ensures review automation routes
+> approval actions through the correct bot identity for the currently assigned validator.
 
 ---
 
@@ -34,10 +34,10 @@
 
 | Agent       | Role        |
 |-------------|-------------|
-| Claude Code | Implementer |
-| CODEX       | Validator   |
+| CODEX       | Implementer |
+| Claude Code | Validator   |
 
-> PE-INFRA-SLR-01: `infra-impl-claude` (Claude Code) as Implementer · `infra-val-codex` (CODEX @ `elis-server`) as Validator.
+> PE-INFRA-SLR-02: `infra-impl-codex` (CODEX @ `elis-server`) as Implementer · `infra-val-claude` (Claude Code) as Validator.
 
 ---
 
@@ -102,8 +102,8 @@
 | PE-AUTO-13  | infra           | infra-impl-claude    | infra-val-codex    | feature/pe-auto-13-gate2-retrigger                       | superseded      | 2026-04-12   |
 | PE-SLR-01   | slr             | prog-impl-codex      | gemini-cli         | feature/pe-slr-01-harvest-workflow-contract               | merged         | 2026-04-13   |
 | PE-SLR-02      | slr             | prog-impl-claude     | prog-val-codex     | feature/pe-slr-02-harvest-workflow-reliability-audit           | merged        | 2026-04-14   |
-| PE-INFRA-SLR-01 | infra          | infra-impl-claude    | infra-val-codex    | feature/pe-infra-slr-01-role-based-agent-surface-normalisation | implementing   | 2026-04-14   |
-| PE-INFRA-SLR-02 | infra          | infra-impl-codex     | infra-val-claude   | feature/pe-infra-slr-02-distinct-review-identity-enforcement   | planning       | 2026-04-14   |
+| PE-INFRA-SLR-01 | infra          | infra-impl-claude    | infra-val-codex    | feature/pe-infra-slr-01-role-based-agent-surface-normalisation | merged         | 2026-04-14   |
+| PE-INFRA-SLR-02 | infra          | infra-impl-codex     | infra-val-claude   | feature/pe-infra-slr-02-distinct-review-identity-enforcement   | implementing   | 2026-04-14   |
 | PE-INFRA-SLR-03 | infra          | infra-impl-claude    | infra-val-codex    | feature/pe-infra-slr-03-pm-control-plane-dispatch-hardening    | planning       | 2026-04-14   |
 
 Valid status values:
@@ -160,6 +160,7 @@ PM housekeeping entries (prefix `PM-CHORE-XX`):
 | PM-CHORE-36  | Closed PE-SLR-01 as merged (PR #323, PASS verdict). Opened PE-SLR-02 (Harvest Workflow Reliability and Audit) with `gemini-cli` as Implementer and `prog-val-codex` (CODEX @ `elis-server`) as Validator for the next Harvest reliability round. | 2026-04-13 |
 | PM-CHORE-37  | Closed PE-SLR-02 as merged (PR #324, r3 PASS verdict — Claude Code as PM-authorised r3 Validator; admin merge after `gate-1` removed from required status checks to resolve structural timing gap). Opened PE-INFRA-SLR-01 (Role-Based Agent Surface Normalisation) with `infra-impl-claude` (Claude Code) as Implementer and `infra-val-codex` (CODEX) as Validator. Dependency PE-SLR-02 satisfied. | 2026-04-14 |
 | PM-CHORE-38  | Adopted `ELIS_MultiAgent_Implementation_Plan_v1_8_3.md` as a patch revision to v1.8.2 while keeping PE-INFRA-SLR-01 active (`implementing`). Added `PE-INFRA-SLR-03` (PM Control-Plane Dispatch Hardening) with six orchestration reliability improvements: cross-agent visibility, direct PM dispatch with ACK contract, reachability/heartbeat gate, command contract, automatic runner fallback, and auditable event trail. Formalised Step 0 runtime evidence requirement for PE-INFRA-SLR-03: proof that PM cross-agent messaging is enabled (`tools.sessions.visibility=all` or equivalent) and one successful PM→validator dispatch/ACK exchange must appear in the opening Status Packet and PR comments before implementation starts. Registered PE-INFRA-SLR-02 and PE-INFRA-SLR-03 in Active PE Registry as `planning`. | 2026-04-14 |
+| PM-CHORE-39  | Closed PE-INFRA-SLR-01 as merged (PR #328, PO-merged after formal APPROVE review). Opened PE-INFRA-SLR-02 (Distinct Review Identity Enforcement) with `infra-impl-codex` (CODEX) as Implementer and `infra-val-claude` (Claude Code) as Validator per alternation rule. Dependency PE-INFRA-SLR-01 satisfied. | 2026-04-14 |
 
 Alternation rule:
 - For consecutive PEs in the same domain, the implementer engine must alternate (`codex` <-> `claude`).
