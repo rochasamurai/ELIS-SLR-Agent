@@ -25,7 +25,7 @@ VALID_REGISTRY_STATUSES = {
     "merged",
     "blocked",
 }
-PE_ID_RE = re.compile(r"^PE-[A-Z]+-[0-9]+$")
+PE_ID_RE = re.compile(r"^PE(?:-[A-Z]+)+-[0-9]+$")
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 BRANCH_RE = re.compile(r"^(feature/pe-[a-z0-9-]+|chore/[a-z0-9-]+)$")
 REQUIRED_RELEASE_FIELDS = ("Release", "Base branch", "Plan file", "Plan location")
