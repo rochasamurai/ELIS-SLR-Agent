@@ -48,6 +48,9 @@ class HarvestWorkflowContract:
     def evidence_json(self) -> Path:
         return self.evidence_dir() / "harvest_evidence.json"
 
+    def audit_log(self) -> Path:
+        return self.evidence_dir() / "harvest_audit_log.jsonl"
+
     def published_appendix_a(self) -> Path:
         return Path("json_jsonl/ELIS_Appendix_A_Search_rows.json")
 
