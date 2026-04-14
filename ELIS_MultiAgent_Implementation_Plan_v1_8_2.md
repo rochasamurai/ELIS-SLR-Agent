@@ -259,3 +259,16 @@ Operational rule:
 ---
 
 *ELIS SLR Agent — Multi-Agent Implementation Plan · v1.8.2 · April 2026 · Hybrid SLR Execution · Host: ELIS MiniServer NUC8i7BEH (`elis-server`)*
+
+
+### PE-INFRA-SLR-01
+
+#### Acceptance Criteria
+
+| AC | Criterion |
+|----|-----------|
+| AC-1 | Add a Role-Based Agent Surface Normalisation section and explicit mapping for workflow surface names to role names. |
+| AC-2 | Commit the updated handoff template in handoffs/HANDOFF_PE-INFRA-SLR-01.md. |
+| AC-3 | Update tests to validate role-based naming and run `pytest tests/test_pe_infra_slr_01.py` (placeholder). |
+
+---
