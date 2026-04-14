@@ -117,22 +117,24 @@ The following governance PE is unchanged from v1.8.2:
 | Validator | `infra-val-claude` |
 | Phase | 1c |
 | Depends On | PE-INFRA-SLR-01 |
-| Status | Planned |
+| Status | Implementing |
 
 **Scope**
 
-Make distinct GitHub review identities a first-class governance requirement for active validator-capable agents, onboard `elis-gemini-bot`, and ensure review automation uses the correct bot account for the currently assigned validator.
+Make distinct GitHub review identities a first-class governance requirement for active validator-capable agents (`elis-codex-bot` and `elis-claude-bot`), and ensure review automation uses the correct bot account for the currently assigned validator. `elis-gemini-bot` onboarding is deferred to a later PE by PM/PO sequencing decision (2026-04-14).
 
 **Acceptance Criteria**
 
-| AC | Criterion |
-|----|-----------|
-| AC-1 | Workflow documentation states explicitly that comment-only PASS signalling does not satisfy required-review branch protection |
-| AC-2 | A committed agent-to-reviewer identity map exists for `CODEX`, `Claude Code`, `PM`, and `Gemini CLI` |
-| AC-3 | `elis-gemini-bot` is provisioned as the GitHub review identity for `Gemini CLI` when Gemini is validator-capable on protected branches |
-| AC-4 | Safe review automation or runbook commands can execute approvals/comments through the correct bot identity without falling back to the PR author account |
-| AC-5 | Validator assignment and review workflows handle non-default validators without hardcoded provider-specific assumptions |
-| AC-6 | `python -m pytest tests/test_validator_identity_mapping.py -v` passes |
+| AC | Criterion | Status |
+|----|-----------|--------|
+| AC-1 | Workflow documentation states explicitly that comment-only PASS signalling does not satisfy required-review branch protection | In scope |
+| AC-2 | A committed agent-to-reviewer identity map exists for `CODEX`, `Claude Code`, and `PM` | In scope |
+| AC-3 | `elis-gemini-bot` is provisioned as the GitHub review identity for `Gemini CLI` when Gemini is validator-capable on protected branches | **DEFERRED** — out of scope for this PE; moved to a dedicated later PE by PM/PO sequencing decision 2026-04-14 |
+| AC-4 | Safe review automation or runbook commands can execute approvals/comments through the correct bot identity without falling back to the PR author account | In scope |
+| AC-5 | Validator assignment and review workflows handle non-default validators without hardcoded provider-specific assumptions | In scope |
+| AC-6 | `python -m pytest tests/test_validator_identity_mapping.py -v` passes | In scope |
+
+**PASS criteria:** AC-1, AC-2, AC-4, AC-5, AC-6 all satisfied. AC-3 DEFERRED does not block PASS.
 
 ### Governance Bridge — PM Cross-Agent Dispatch Enablement
 

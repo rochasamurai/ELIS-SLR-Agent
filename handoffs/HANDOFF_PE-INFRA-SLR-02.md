@@ -43,10 +43,17 @@ Branch protection requires a **formal GitHub APPROVE review** from a write-capab
 | AC-5 | Validator assignment handles non-default validators without hardcoded provider assumptions | Verify AGENTS.md validator dispatch section is provider-neutral |
 | AC-6 | `pytest tests/test_validator_identity_mapping.py -v` passes | Write and pass new test suite |
 
+### Scope update — PM/PO authorised (2026-04-14)
+
+| Change | Detail |
+|--------|--------|
+| AC-3 status | **DEFERRED** — `elis-gemini-bot` onboarding moved to a later dedicated PE by PM/PO sequencing decision. Not BLOCKED. |
+| In-scope identities | `elis-codex-bot` and `elis-claude-bot` only |
+| PASS criteria | AC-1, AC-2, AC-4, AC-5, AC-6 all passing |
+
 ### Known constraints
 
-- `elis-gemini-bot` account does not yet exist — AC-3 requires PO action (GitHub account creation)
-- If `elis-gemini-bot` cannot be created within this PE, AC-3 may be deferred with explicit `BLOCKED` record
+- AC-3 is DEFERRED by PM/PO decision — `elis-gemini-bot` is out of scope for this PE
 - All review bot commands must use the correct PAT per identity; mixed-identity commits are not acceptable
 
 ### Verdict
