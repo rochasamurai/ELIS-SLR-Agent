@@ -9,6 +9,7 @@ This file records the durable corrections that must survive session drift.
 - Read governance through workspace entrypoints, not ad-hoc host paths.
 - `CURRENT_PE.md` is the source for active PE and release metadata.
 - `PLAN_CURRENT.md` is the source for active plan details.
+- If `/opt/elis/repo` is dirty, PM PE-status answers must be read from `origin/main:CURRENT_PE.md`, not the local working copy.
 - Worktrees must be reported only from `git -C /opt/elis/repo worktree list`.
 - PR status must be reported only from `gh pr`.
 - Registry branch names do not prove worktrees exist — always verify with `git worktree list`.
@@ -20,6 +21,7 @@ This file records the durable corrections that must survive session drift.
 - The observability dashboard is posted hourly to `#pe-status` from
   `scripts/generate_pe_status_report.py`; it must stay sourced from `CURRENT_PE.md`,
   the active plan, review files, and `LESSONS_LEARNED.md`.
+- PE start does not require a direct implementer chat session. PM starts assigned PEs by moving status to `implementing` on `main` and verifying dispatcher evidence (`ci-current-pe` -> `implementer-runner`).
 
 ---
 

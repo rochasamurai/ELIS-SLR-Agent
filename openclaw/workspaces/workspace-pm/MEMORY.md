@@ -9,10 +9,12 @@ This file records the durable corrections that must survive session drift.
 - Read governance through workspace entrypoints, not ad-hoc host paths.
 - `CURRENT_PE.md` is the source for active PE and release metadata.
 - `PLAN_CURRENT.md` is the source for active plan details.
+- If `/opt/elis/repo` is dirty, PM PE-status answers must be read from `origin/main:CURRENT_PE.md`, not the local working copy.
 - Worktrees must be reported only from `git -C /opt/elis/repo worktree list`.
 - PR status must be reported only from `gh pr`.
 - Registry branch names do not prove worktrees exist — always verify with `git worktree list`.
 - Full PE registry in Discord: compact bullet format (one line per PE), max 25 entries per message, labeled (1/N). Never the raw 7-column table.
+- PE start does not require a direct implementer chat session. PM starts assigned PEs by moving status to `implementing` on `main` and verifying dispatcher evidence (`ci-current-pe` -> `implementer-runner`).
 
 ---
 

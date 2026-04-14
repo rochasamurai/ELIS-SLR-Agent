@@ -31,6 +31,24 @@ At the start of every session, before responding to any PO message:
 
 If any required file is unavailable, notify the PO immediately and do not proceed with PE operations.
 
+### 2.1 Authoritative State Guard (Mandatory)
+
+Before reporting PE status or role assignment, verify whether the host checkout is clean:
+
+```bash
+git -C /opt/elis/repo status --short
+```
+
+If the output is non-empty, treat the working tree as drifted and read authoritative governance
+state from upstream:
+
+```bash
+git -C /opt/elis/repo fetch origin
+git -C /opt/elis/repo show origin/main:CURRENT_PE.md
+```
+
+Do not answer PE-status questions from a dirty local `CURRENT_PE.md`.
+
 ---
 
 ## 3. PE Assignment Workflow
@@ -48,6 +66,35 @@ When the PO requests a new PE:
 6. Generate the next PE ID and branch name.
 7. Update `CURRENT_PE.md` with status `planning`.
 8. Report PE ID, branch, implementer agent ID, and validator agent ID to the PO.
+
+### 3.1 Starting an Assigned PE (Mandatory)
+
+If a PE is assigned and the PO asks PM to start implementation, PM must not wait for a
+directly reachable agent chat session. Use workflow dispatch as the primary start path.
+
+Required start actions:
+
+1. Update active PE status in `CURRENT_PE.md` to `implementing` on `main`.
+2. Push to `origin/main` (this triggers `ci-current-pe.yml`, which dispatches `implementer-runner.yml`).
+3. Verify dispatch evidence in GitHub Actions.
+4. Verify durable implementation evidence:
+   - feature branch exists on origin
+   - branch commits appear and/or draft PR opens
+
+Fallback:
+
+- If automatic dispatch is unavailable, trigger implementer manually:
+
+```bash
+gh workflow run implementer-runner.yml \
+  -f pe_id=<PE_ID> \
+  -f branch=<BRANCH> \
+  -f engine=<codex|claude> \
+  -f plan_file=<PLAN_FILE> \
+  -f base_branch=<BASE_BRANCH>
+```
+
+PM must report the run URL (or run ID), branch evidence, and PR evidence to the PO.
 
 ---
 
@@ -92,7 +139,7 @@ When the PO asks a question, use the correct source:
 
 | Question type | Source | Command |
 |---|---|---|
-| PE / registry status | `CURRENT_PE.md` | `cat ~/openclaw/workspace-pm/CURRENT_PE.md` |
+| PE / registry status | authoritative base-branch state | `git -C /opt/elis/repo show origin/main:CURRENT_PE.md` (or workspace entrypoint only when host repo is clean) |
 | Release-plan details | Active plan file | `cat ~/openclaw/workspace-pm/docs/PLAN_CURRENT.md` |
 | Active worktrees | Host git evidence | `git -C /opt/elis/repo worktree list` |
 | PR state | GitHub | `gh pr list --state open` / `gh pr view <number>` |
@@ -214,6 +261,8 @@ cat ~/openclaw/workspace-pm/docs/PLAN_CURRENT.md
 cat ~/openclaw/workspace-pm/docs/AGENTS.md
 cat ~/openclaw/workspace-pm/docs/*
 ls ~/openclaw/workspace-pm/
+git -C /opt/elis/repo fetch origin
+git -C /opt/elis/repo show origin/main:CURRENT_PE.md
 git -C /opt/elis/repo worktree list
 git -C /opt/elis/repo log --oneline -10
 git -C /opt/elis/repo status --short
@@ -245,6 +294,8 @@ Write or restart commands require PO/operator approval:
 openclaw config set <path> <value>
 git -C /opt/elis/repo commit
 git -C /opt/elis/repo push
+gh workflow run implementer-runner.yml
+gh workflow run validator-runner.yml
 systemctl --user restart openclaw-gateway
 ```
 
