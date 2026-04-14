@@ -107,15 +107,22 @@ $ git fetch --all --prune
 $ git branch --show-current
 feature/pe-slr-02-harvest-workflow-reliability-audit
 
-$ git rev-parse HEAD
-e6d07f245b79c4180322800f6195c4ece5c85c92
+$ git rev-parse HEAD   # implementer submission state before validator-owned review-file updates
+e20c2a09d2d256ea0cb1b7f15de2fbf2961a91ff
 
-$ git log -5 --oneline --decorate
-e6d07f2 (HEAD -> feature/pe-slr-02-harvest-workflow-reliability-audit) review(pe-slr-02): record validator round 2 fail
+$ git log -5 --oneline --decorate   # latest implementer / PM-visible branch history before validator follow-up commits
+e20c2a0 fix(pe-slr-02): update HANDOFF Status Packet to current HEAD
+e6d07f2 review(pe-slr-02): record validator round 2 fail
 a485839 fix(pe-slr-02): address Validator r1 blocking findings
 c23dc22 review(pe-slr-02): record validator round 1 fail
 13ac360 docs(pe-slr-02): add HANDOFF.md
-29c20da feat(pe-slr-02): harvest workflow reliability and audit
+```
+
+Validator-owned commits may advance the branch after the implementer handoff is submitted.
+At the time of this handoff update, the latest validator-only review-file commit is:
+
+```
+6c39f56 review(pe-slr-02): reformat review file for CI
 ```
 
 ### §6.3 Scope evidence (vs origin/main)
