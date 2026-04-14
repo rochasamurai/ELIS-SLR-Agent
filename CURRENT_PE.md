@@ -102,7 +102,7 @@
 | PE-AUTO-13  | infra           | infra-impl-claude    | infra-val-codex    | feature/pe-auto-13-gate2-retrigger                       | superseded      | 2026-04-12   |
 | PE-SLR-01   | slr             | prog-impl-codex      | gemini-cli         | feature/pe-slr-01-harvest-workflow-contract               | merged         | 2026-04-13   |
 | PE-SLR-02      | slr             | prog-impl-claude     | prog-val-codex     | feature/pe-slr-02-harvest-workflow-reliability-audit           | merged        | 2026-04-14   |
-| PE-INFRA-SLR-01 | infra          | infra-impl-claude    | infra-val-codex    | feature/pe-infra-slr-01-role-based-agent-surface-normalisation | planning       | 2026-04-14   |
+| PE-INFRA-SLR-01 | infra          | infra-impl-claude    | infra-val-codex    | feature/pe-infra-slr-01-role-based-agent-surface-normalisation | implementing   | 2026-04-14   |
 
 Valid status values:
 - `planning`
