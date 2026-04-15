@@ -91,7 +91,7 @@ jobs:
               reviewerTokenSecret = 'CLAUDE_BOT_TOKEN';
             } else if (author === 'elis-claude-bot') {
               reviewerTokenSecret = 'CODEX_BOT_TOKEN';
-            } else if (author === 'elis-pm-bot') {
+            } else if (author === 'elis-pm-bot' || author === 'rochasamurai') {
               reviewerTokenSecret = 'CODEX_BOT_TOKEN';
             } else {
               core.setOutput('eligible', 'false');
