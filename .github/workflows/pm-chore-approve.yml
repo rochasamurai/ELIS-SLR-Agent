@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       pr_number:
-        description: 'PR number to manually trigger auto-approve'
+        description: "PR number to manually trigger auto-approve"
         required: true
 
 permissions:
@@ -154,4 +154,5 @@ jobs:
 
       - name: Note skipped policy outcome
         if: steps.policy.outputs.eligible != 'true'
-        run: echo "PM-CHORE auto-approve skipped: ${{ steps.policy.outputs.reason }}"
+        run: |
+          echo "PM-CHORE auto-approve skipped: ${{ steps.policy.outputs.reason }}"
