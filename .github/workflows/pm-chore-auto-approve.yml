@@ -1,9 +1,14 @@
 name: PM-CHORE Auto-Approve
 
 on:
-  pull_request_target:
-    types: [opened, synchronize, reopened]
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number to manually trigger auto-approve'
+        required: true
 
 permissions:
   contents: read
@@ -20,9 +25,25 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const pr = context.payload.pull_request;
             const owner = context.repo.owner;
             const repo = context.repo.repo;
+
+            // Resolve PR number from pull_request event or workflow_dispatch input.
+            let prNumber, pr;
+            if (context.eventName === 'workflow_dispatch') {
+              prNumber = parseInt(context.payload.inputs?.pr_number, 10);
+              if (!prNumber) {
+                core.setOutput('eligible', 'false');
+                core.setOutput('reason', 'workflow_dispatch triggered without pr_number input.');
+                return;
+              }
+              const { data } = await github.rest.pulls.get({ owner, repo, pull_number: prNumber });
+              pr = data;
+            } else {
+              pr = context.payload.pull_request;
+              prNumber = pr.number;
+            }
+
             const headRef = pr.head?.ref || '';
             const isDraft = Boolean(pr.draft);
 
@@ -49,7 +70,7 @@ jobs:
             // Restrict file scope to governance transition files only.
             const files = await github.paginate(
               github.rest.pulls.listFiles,
-              { owner, repo, pull_number: pr.number, per_page: 100 }
+              { owner, repo, pull_number: prNumber, per_page: 100 }
             );
             const changed = files.map((f) => f.filename);
             const allowed = changed.every((path) => (
@@ -81,7 +102,7 @@ jobs:
             // Avoid duplicate approvals if already approved.
             const reviews = await github.paginate(
               github.rest.pulls.listReviews,
-              { owner, repo, pull_number: pr.number, per_page: 100 }
+              { owner, repo, pull_number: prNumber, per_page: 100 }
             );
             const hasApproval = reviews.some((r) => String(r.state).toUpperCase() === 'APPROVED');
             if (hasApproval) {
@@ -92,6 +113,7 @@ jobs:
 
             core.setOutput('eligible', 'true');
             core.setOutput('reviewer_token_secret', reviewerTokenSecret);
+            core.setOutput('pr_number', String(prNumber));
             core.setOutput('reason', 'Eligible PM-CHORE PR.');
 
       - name: Approve as mapped reviewer bot (CLAUDE)
@@ -99,13 +121,15 @@ jobs:
         uses: actions/github-script@v7
         env:
           REVIEWER_TOKEN: ${{ secrets.CLAUDE_BOT_TOKEN }}
+          PR_NUMBER: ${{ steps.policy.outputs.pr_number }}
         with:
           github-token: ${{ env.REVIEWER_TOKEN }}
           script: |
+            const prNumber = parseInt(process.env.PR_NUMBER, 10);
             await github.rest.pulls.createReview({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              pull_number: context.payload.pull_request.number,
+              pull_number: prNumber,
               event: 'APPROVE',
               body: 'PASS — PM-CHORE governance transition approved automatically (mapped reviewer identity).'
             });
@@ -115,13 +139,15 @@ jobs:
         uses: actions/github-script@v7
         env:
           REVIEWER_TOKEN: ${{ secrets.CODEX_BOT_TOKEN }}
+          PR_NUMBER: ${{ steps.policy.outputs.pr_number }}
         with:
           github-token: ${{ env.REVIEWER_TOKEN }}
           script: |
+            const prNumber = parseInt(process.env.PR_NUMBER, 10);
             await github.rest.pulls.createReview({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              pull_number: context.payload.pull_request.number,
+              pull_number: prNumber,
               event: 'APPROVE',
               body: 'PASS — PM-CHORE governance transition approved automatically (mapped reviewer identity).'
             });
