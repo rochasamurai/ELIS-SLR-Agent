@@ -18,7 +18,7 @@
 | v1.8 | Apr 2026 | Hybrid SLR execution plan: Harvest remains workflow-governed; Screening and lightweight support move local-first; Extraction and Synthesis stay off-host pending future validation |
 | v1.8.1 | Apr 2026 | Patch revision preserving the v1.8 hybrid architecture while adding `PE-INFRA-SLR-01` for role-based, agent-agnostic workflow-surface alignment |
 | v1.8.2 | Apr 2026 | Patch revision adding distinct GitHub review identities as a first-class workflow requirement, plus `PE-INFRA-SLR-02` for validator-review identity enforcement and Gemini-bot onboarding |
-| v1.8.3 | Apr 2026 | Patch revision adding `PE-INFRA-SLR-03` for PM cross-agent dispatch enablement, plus Step 0 runtime evidence requirement: cross-agent messaging proof and successful PM→validator ACK exchange must appear in the opening Status Packet and PR comments before implementation starts |
+| v1.8.3 | Apr 2026 | Patch revision adding `PE-INFRA-SLR-03` for PM cross-agent dispatch enablement, plus Step 0 runtime evidence requirement; AC-6 adds evidence-gated status transition guard; AC-7 adds CI check blocking parallel governance PRs |
 
 ---
 
@@ -174,6 +174,8 @@ Enable and verify the PM agent's ability to dispatch Gate 1 (and Gate 2) notific
 | AC-3 | At least one PM→validator dispatch/ACK exchange is recorded as a committed artefact (log excerpt, transcript, or session evidence file) |
 | AC-4 | Gate 1 automation path in `AGENTS.md` is updated to reflect PM-direct dispatch as the default (PO relay demoted to fallback) |
 | AC-5 | `python -m pytest tests/test_pm_cross_agent_dispatch.py -v` passes |
+| AC-6 | A transition guard is defined in `workspace-pm/AGENTS.md`: each status transition (`implementing → validating → gate-2-pending → merged`) requires explicit named evidence fields (CI check link, formal review link, merge link respectively) before PM may advance the status |
+| AC-7 | A CI check exists that fails if a PR modifies only `CURRENT_PE.md` while an open PR for the same PE's feature branch is already present; PM-CHORE commits to `main` are exempt from this check |
 
 ### Phase 2 — Local Screening on `elis-server`
 

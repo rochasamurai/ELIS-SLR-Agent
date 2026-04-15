@@ -112,7 +112,18 @@ If all three are true:
 
 > `@<validator-agent-id> — assigned as Validator for <PE-ID>. Begin review.`
 
-Update PE status in `CURRENT_PE.md` to `validating`.
+Update PE status in `CURRENT_PE.md` to `validating` via **direct commit to `main`**:
+
+```bash
+git -C /opt/elis/repo fetch origin
+git -C /opt/elis/repo checkout main
+# edit CURRENT_PE.md: set status to validating, add PM-CHORE entry
+git -C /opt/elis/repo add CURRENT_PE.md
+git -C /opt/elis/repo commit -m "chore(pm): PM-CHORE-NN — advance <PE-ID> to validating"
+git -C /opt/elis/repo push origin main
+```
+
+**Never open a PR for a PM-CHORE governance update.** PM-CHOREs are direct commits to `main`. A PR is only opened for PE feature branches and infrastructure fix branches.
 
 ### Gate 2 — Merge
 
@@ -122,7 +133,9 @@ Check automatically when a `REVIEW_PE<N>.md` file is updated on a branch:
 - CI status is green
 - no `pm-review-required` label is present
 
-If all three are true, approve merge and update PE status through `gate-2-pending` to `merged`.
+If all three are true, approve merge and update PE status through `gate-2-pending` to `merged` via **direct commit to `main`** using the same pattern as Gate 1.
+
+**Never open a PR for a PM-CHORE governance update.** Status transitions, PM-CHORE entries, and CURRENT_PE.md housekeeping are always direct commits to `main`.
 
 ### Escalate Instead of Auto-Approving
 
@@ -242,12 +255,18 @@ Rules:
 - PM must not write to project stores without explicit PO approval and operator execution
 - PM-authored writes to project stores are a policy violation
 
-Write or restart commands require PO/operator approval:
+PM-CHORE governance commits are **pre-approved** — no per-action PO confirmation required:
+
+```bash
+git -C /opt/elis/repo add CURRENT_PE.md
+git -C /opt/elis/repo commit -m "chore(pm): PM-CHORE-NN — <description>"
+git -C /opt/elis/repo push origin main
+```
+
+These are the only pre-approved write operations. All others require PO/operator approval:
 
 ```bash
 openclaw config set <path> <value>
-git -C /opt/elis/repo commit
-git -C /opt/elis/repo push
 gh workflow run implementer-runner.yml
 gh workflow run validator-runner.yml
 systemctl --user restart openclaw-gateway
