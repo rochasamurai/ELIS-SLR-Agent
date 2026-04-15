@@ -1,5 +1,7 @@
 # Current PE Assignment
 
+<!-- PM-CHORE smoke test: auto-approve verification -->
+
 > Maintained by PM. Update ALL fields at the start of every new PE or release.
 > Both agents read this file as Step 0. It is the only file that needs editing
 > when switching release lines.
