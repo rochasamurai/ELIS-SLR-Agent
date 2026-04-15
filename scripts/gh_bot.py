@@ -24,6 +24,8 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+from elis.reviewer_identity import ReviewerIdentityError, entry_for_engine
+
 
 @dataclass(frozen=True)
 class BotIdentity:
@@ -33,26 +35,23 @@ class BotIdentity:
     config_dir_name: str
 
 
-_BOTS: dict[str, BotIdentity] = {
-    "codex": BotIdentity(
-        bot="codex",
-        env_var="CODEX_BOT_TOKEN",
-        expected_login="elis-codex-bot",
-        config_dir_name="codex",
-    ),
-    "claude": BotIdentity(
-        bot="claude",
-        env_var="CLAUDE_BOT_TOKEN",
-        expected_login="elis-claude-bot",
-        config_dir_name="claude",
-    ),
-    "pm": BotIdentity(
-        bot="pm",
-        env_var="PM_BOT_TOKEN",
-        expected_login="elis-pm-bot",
-        config_dir_name="pm",
-    ),
-}
+def _load_bots() -> dict[str, BotIdentity]:
+    bots: dict[str, BotIdentity] = {}
+    for engine in ("codex", "claude", "pm"):
+        try:
+            entry = entry_for_engine(engine)
+        except ReviewerIdentityError as exc:
+            raise RuntimeError(f"Invalid reviewer identity map for '{engine}': {exc}")
+        bots[engine] = BotIdentity(
+            bot=engine,
+            env_var=str(entry.get("token_env", "")).strip(),
+            expected_login=str(entry.get("review_login", "")).strip(),
+            config_dir_name=engine,
+        )
+    return bots
+
+
+_BOTS = _load_bots()
 
 
 def _config_dir(identity: BotIdentity) -> Path:

@@ -12,6 +12,8 @@ from datetime import datetime, timezone
 from dataclasses import dataclass
 from pathlib import Path
 
+from elis.reviewer_identity import ReviewerIdentityError, review_login_for_engine
+
 
 PE_SECTION_RE = r"### {pe_id}\b"
 PE_ROW_RE = re.compile(r"^\|\s*PE\s*\|\s*(PE-[A-Z0-9-]+-[0-9]+)\s*\|$", re.MULTILINE)
@@ -194,11 +196,10 @@ def ensure_budget(
 
 
 def expected_login(engine: str) -> str:
-    if engine == "codex":
-        return "elis-codex-bot"
-    if engine == "claude":
-        return "elis-claude-bot"
-    raise RunnerError(f"Unsupported engine '{engine}'.")
+    try:
+        return review_login_for_engine(engine)
+    except ReviewerIdentityError as exc:
+        raise RunnerError(str(exc)) from exc
 
 
 def gh_login() -> str:
