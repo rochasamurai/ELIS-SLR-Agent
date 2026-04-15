@@ -21,12 +21,12 @@
 
 | Field   | Value                                                          |
 |---------|----------------------------------------------------------------|
-| PE      | PE-INFRA-SLR-02                                               |
-| Branch  | feature/pe-infra-slr-02-distinct-review-identity-enforcement  |
+| PE      | PE-INFRA-SLR-03                                               |
+| Branch  | feature/pe-infra-slr-03-pm-control-plane-dispatch-hardening   |
 
-> **Active PE.** PE-INFRA-SLR-02 enforces distinct GitHub review identities for all active
-> validator-capable agents, onboards `elis-gemini-bot`, and ensures review automation routes
-> approval actions through the correct bot identity for the currently assigned validator.
+> **Active PE.** PE-INFRA-SLR-03 hardens PM control-plane dispatch so PM can reliably
+> notify assigned validators directly (with auditable ACK evidence), reducing manual relay
+> dependency and stabilising autonomous gate progression.
 
 ---
 
@@ -34,10 +34,10 @@
 
 | Agent       | Role        |
 |-------------|-------------|
-| CODEX       | Implementer |
-| Claude Code | Validator   |
+| Claude Code | Implementer |
+| CODEX       | Validator   |
 
-> PE-INFRA-SLR-02: `infra-impl-codex` (CODEX @ `elis-server`) as Implementer · `infra-val-claude` (Claude Code) as Validator.
+> PE-INFRA-SLR-03: `infra-impl-claude` (Claude Code) as Implementer · `infra-val-codex` (CODEX @ `elis-server`) as Validator.
 
 ---
 
@@ -103,8 +103,9 @@
 | PE-SLR-01   | slr             | prog-impl-codex      | gemini-cli         | feature/pe-slr-01-harvest-workflow-contract               | merged         | 2026-04-13   |
 | PE-SLR-02      | slr             | prog-impl-claude     | prog-val-codex     | feature/pe-slr-02-harvest-workflow-reliability-audit           | merged        | 2026-04-14   |
 | PE-INFRA-SLR-01 | infra          | infra-impl-claude    | infra-val-codex    | feature/pe-infra-slr-01-role-based-agent-surface-normalisation | merged         | 2026-04-14   |
-| PE-INFRA-SLR-02 | infra          | infra-impl-codex     | infra-val-claude   | feature/pe-infra-slr-02-distinct-review-identity-enforcement   | validating     | 2026-04-15   |
-| PE-INFRA-SLR-03 | infra          | infra-impl-claude    | infra-val-codex    | feature/pe-infra-slr-03-pm-control-plane-dispatch-hardening    | planning       | 2026-04-14   |
+| PE-INFRA-SLR-02 | infra          | infra-impl-codex     | infra-val-claude   | feature/pe-infra-slr-02-distinct-review-identity-enforcement   | merged         | 2026-04-15   |
+| PE-INFRA-SLR-03 | infra          | infra-impl-claude    | infra-val-codex    | feature/pe-infra-slr-03-pm-control-plane-dispatch-hardening    | implementing   | 2026-04-15   |
+| PE-INFRA-SLR-04 | infra          | infra-impl-codex     | infra-val-claude   | feature/pe-infra-slr-04-model-agnostic-agent-naming-governance | planning       | 2026-04-15   |
 
 Valid status values:
 - `planning`
@@ -162,6 +163,8 @@ PM housekeeping entries (prefix `PM-CHORE-XX`):
 | PM-CHORE-38  | Adopted `ELIS_MultiAgent_Implementation_Plan_v1_8_3.md` as a patch revision to v1.8.2 while keeping PE-INFRA-SLR-01 active (`implementing`). Added `PE-INFRA-SLR-03` (PM Control-Plane Dispatch Hardening) with six orchestration reliability improvements: cross-agent visibility, direct PM dispatch with ACK contract, reachability/heartbeat gate, command contract, automatic runner fallback, and auditable event trail. Formalised Step 0 runtime evidence requirement for PE-INFRA-SLR-03: proof that PM cross-agent messaging is enabled (`tools.sessions.visibility=all` or equivalent) and one successful PM→validator dispatch/ACK exchange must appear in the opening Status Packet and PR comments before implementation starts. Registered PE-INFRA-SLR-02 and PE-INFRA-SLR-03 in Active PE Registry as `planning`. | 2026-04-14 |
 | PM-CHORE-39  | Closed PE-INFRA-SLR-01 as merged (PR #328, PO-merged after formal APPROVE review). Opened PE-INFRA-SLR-02 (Distinct Review Identity Enforcement) with `infra-impl-codex` (CODEX) as Implementer and `infra-val-claude` (Claude Code) as Validator per alternation rule. Dependency PE-INFRA-SLR-01 satisfied. | 2026-04-14 |
 | PM-CHORE-40  | PE-INFRA-SLR-02 scope update by PM/PO decision: AC-3 (`elis-gemini-bot` onboarding) moved to DEFERRED — out of scope for this PE, to be addressed in a dedicated later PE. PASS criteria for PE-INFRA-SLR-02 are AC-1, AC-2, AC-4, AC-5, and AC-6 using `elis-codex-bot` and `elis-claude-bot` identities only. Plan v1.8.3 AC table updated to reflect DEFERRED status. PR #329 opening Status Packet revised accordingly. | 2026-04-14 |
+| PM-CHORE-41  | Added PE-INFRA-SLR-04 (Model-Agnostic Agent Naming Governance) to plan v1.8.3 and registered it as `planning`. Scope: replace model/provider-coupled agent IDs with role-capability naming, add migration map and policy enforcement, and keep runtime dispatch compatibility. Dependency: PE-INFRA-SLR-03. | 2026-04-15 |
+| PM-CHORE-42  | Closed PE-INFRA-SLR-02 as merged (PR #329). Opened PE-INFRA-SLR-03 (PM Control-Plane Dispatch Hardening) with `infra-impl-claude` as Implementer and `infra-val-codex` as Validator per alternation rule. Dependency PE-INFRA-SLR-02 satisfied. | 2026-04-15 |
 
 Alternation rule:
 - For consecutive PEs in the same domain, the implementer engine must alternate (`codex` <-> `claude`).
