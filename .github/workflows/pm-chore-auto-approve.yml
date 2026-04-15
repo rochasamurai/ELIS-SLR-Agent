@@ -1,8 +1,8 @@
 name: PM-CHORE Auto-Approve
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review, edited]
     branches: [main]
 
 permissions:
@@ -13,9 +13,6 @@ jobs:
   auto-approve:
     name: Auto-approve eligible PM-CHORE PR
     runs-on: ubuntu-latest
-    if: |
-      github.event.pull_request.draft == false &&
-      startsWith(github.event.pull_request.head.ref, 'chore/pm-chore-')
 
     steps:
       - name: Check eligibility and choose reviewer identity
@@ -26,6 +23,20 @@ jobs:
             const pr = context.payload.pull_request;
             const owner = context.repo.owner;
             const repo = context.repo.repo;
+            const headRef = pr.head?.ref || '';
+            const isDraft = Boolean(pr.draft);
+
+            if (isDraft) {
+              core.setOutput('eligible', 'false');
+              core.setOutput('reason', 'PR is draft.');
+              return;
+            }
+
+            if (!headRef.startsWith('chore/pm-chore-')) {
+              core.setOutput('eligible', 'false');
+              core.setOutput('reason', `Head branch '${headRef}' is not PM-CHORE.`);
+              return;
+            }
 
             // Restrict to PM-CHORE style governance PRs only.
             const titleOk = /^chore\(pm\):/i.test(pr.title || '');
@@ -81,6 +92,7 @@ jobs:
 
             core.setOutput('eligible', 'true');
             core.setOutput('reviewer_token_secret', reviewerTokenSecret);
+            core.setOutput('reason', 'Eligible PM-CHORE PR.');
 
       - name: Approve as mapped reviewer bot (CLAUDE)
         if: steps.policy.outputs.eligible == 'true' && steps.policy.outputs.reviewer_token_secret == 'CLAUDE_BOT_TOKEN'
