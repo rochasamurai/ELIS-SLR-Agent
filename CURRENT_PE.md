@@ -185,3 +185,5 @@ Alternation rule:
 - Step 0: read `Release context` to know the base branch and plan file for this session.
 - Never hardcode specific branch names or plan filenames — always resolve from this file.
 - If a field in this file is blank or missing, stop and notify PM.
+
+<!-- PM-CHORE smoke test only; do not merge -->
