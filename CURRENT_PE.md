@@ -1,3 +1,4 @@
+<!-- PM-CHORE bot-authored smoke test -->
 # Current PE Assignment
 
 <!-- PM-CHORE smoke test: auto-approve verification -->
