@@ -88,7 +88,21 @@ All changes are in-scope for PE-INFRA-SLR-03.
 
 ---
 
-## 6) Notes for Validator
+## 6) Round 2 — FAIL fixes (2026-04-18)
+
+CODEX FAIL verdict identified two blocking findings:
+
+**Finding 1 (AC-2/AC-3):** Dispatch evidence referenced `infra-val-claude` (PE-INFRA-SLR-02's validator). Fixed: `PM_CROSS_AGENT_DISPATCH_EVIDENCE.md` updated to show `infra-val-codex` as the dispatch target, with dispatch_id `dispatch-20260418-001` and PR #343 reference.
+
+**Finding 2 (AC-7):** `check_parallel_governance_pr.py` had three silent-pass paths on API failure: `curl` without `-f`, non-list responses silently became `[]`, empty `changed` returned PASS. Fixed:
+- `_gh_api()` now uses `curl -f` and raises `ApiError` on non-zero exit or non-JSON response.
+- `get_changed_files()` and `get_open_prs()` raise `ApiError` on non-list response.
+- `main()` wraps both calls in try/except and returns exit code 2 on `ApiError`.
+- Four new tests cover these failure paths.
+
+---
+
+## 7) Notes for Validator
 
 - `test_verify_claude_auth.py` has 2 pre-existing failures on `main` unrelated to this PE.
 - The dispatch evidence (`PM_CROSS_AGENT_DISPATCH_EVIDENCE.md`) was established in

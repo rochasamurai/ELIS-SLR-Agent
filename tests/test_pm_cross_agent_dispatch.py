@@ -120,3 +120,64 @@ def test_current_pe_id_extracted_from_current_pe_md() -> None:
 def test_workflow_file_exists() -> None:
     wf = REPO_ROOT / ".github" / "workflows" / "check-parallel-governance-pr.yml"
     assert wf.exists(), f"Missing workflow file {wf}"
+
+
+def test_api_error_on_curl_failure_raises() -> None:
+    mod = _load_check_script()
+    import unittest.mock as mock
+    # Simulate curl returning non-zero exit code (e.g. HTTP 401)
+    fake = mock.MagicMock()
+    fake.returncode = 22
+    fake.stderr = "The requested URL returned error: 401"
+    fake.stdout = ""
+    with mock.patch("subprocess.run", return_value=fake):
+        with mock.patch.dict("os.environ", {"GH_TOKEN": "x", "REPO": "a/b"}):
+            try:
+                mod._gh_api("pulls/1/files")
+                assert False, "Expected ApiError"
+            except mod.ApiError:
+                pass
+
+
+def test_api_error_on_non_list_changed_files_raises() -> None:
+    mod = _load_check_script()
+    import unittest.mock as mock
+    import json as _json
+    fake = mock.MagicMock()
+    fake.returncode = 0
+    fake.stdout = _json.dumps({"message": "Not Found"})
+    fake.stderr = ""
+    with mock.patch("subprocess.run", return_value=fake):
+        with mock.patch.dict("os.environ", {"GH_TOKEN": "x", "REPO": "a/b"}):
+            try:
+                mod.get_changed_files("999")
+                assert False, "Expected ApiError"
+            except mod.ApiError:
+                pass
+
+
+def test_api_error_on_non_list_open_prs_raises() -> None:
+    mod = _load_check_script()
+    import unittest.mock as mock
+    import json as _json
+    fake = mock.MagicMock()
+    fake.returncode = 0
+    fake.stdout = _json.dumps({"message": "Bad credentials"})
+    fake.stderr = ""
+    with mock.patch("subprocess.run", return_value=fake):
+        with mock.patch.dict("os.environ", {"GH_TOKEN": "x", "REPO": "a/b"}):
+            try:
+                mod.get_open_prs("main")
+                assert False, "Expected ApiError"
+            except mod.ApiError:
+                pass
+
+
+def test_dispatch_evidence_targets_infra_val_codex() -> None:
+    """The dispatch command in the evidence file must target infra-val-codex,
+    not the PE-INFRA-SLR-02 validator (infra-val-claude)."""
+    text = EVIDENCE_PATH.read_text(encoding="utf-8")
+    # The sessions_send command must reference infra-val-codex
+    assert "--session infra-val-codex" in text
+    # The sessions_send command must NOT reference the wrong validator
+    assert "--session infra-val-claude" not in text

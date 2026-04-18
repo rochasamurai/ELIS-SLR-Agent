@@ -24,11 +24,13 @@ Required setting:
 
 ## PM -> Validator Dispatch/ACK Excerpt
 
-```text
-$ openclaw sessions_send --session infra-val-claude --message "Gate 1 PASS on PR #329. Begin validation."
-{"ok":true,"dispatch_id":"dispatch-20260414-001","session":"infra-val-claude"}
+Validator for PE-INFRA-SLR-03: `infra-val-codex` (CODEX @ elis-server)
 
-[infra-val-claude] ACK dispatch-20260414-001
+```text
+$ openclaw sessions_send --session infra-val-codex --message "Gate 1 PASS on PR #343. Begin validation."
+{"ok":true,"dispatch_id":"dispatch-20260418-001","session":"infra-val-codex"}
+
+[infra-val-codex] ACK dispatch-20260418-001
 Status Packet received. Starting AGENTS.md §5.2 validation sequence.
 ```
 
@@ -37,3 +39,4 @@ Status Packet received. Starting AGENTS.md §5.2 validation sequence.
 - The PM dispatch path above is the default Gate 1 assignment path.
 - If direct dispatch is unavailable, fallback is the machine-tagged PR comment
   path used by `validator-dispatch.yml`.
+- Validator identity for this PE: `infra-val-codex` (not `infra-val-claude`, which was PE-INFRA-SLR-02).

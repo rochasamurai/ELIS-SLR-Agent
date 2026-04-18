@@ -6,6 +6,7 @@ Implements PE-INFRA-SLR-03 AC-7.
 Exit codes:
   0  — check passed (no parallel governance PR conflict)
   1  — check failed (parallel governance PR detected)
+  2  — check errored (API failure; treated as hard failure to prevent silent pass)
 
 Environment variables expected (set by the calling GitHub Actions step):
   GH_TOKEN   — GitHub token for API calls
@@ -33,33 +34,65 @@ CURRENT_PE_FILE = "CURRENT_PE.md"
 EXEMPT_BRANCH_PREFIXES = ("chore/pm-chore-",)
 
 
+class ApiError(RuntimeError):
+    """Raised when the GitHub API returns an unexpected response."""
+
+
 def _gh_api(path: str) -> dict | list:
+    """Call the GitHub API and return parsed JSON.
+
+    Raises ApiError on HTTP error, curl failure, or non-JSON response.
+    Uses -f so curl exits non-zero on HTTP 4xx/5xx responses.
+    """
     token = os.environ["GH_TOKEN"]
     repo = os.environ["REPO"]
     url = f"https://api.github.com/repos/{repo}/{path}"
     result = subprocess.run(
-        ["curl", "-s", "-H", f"Authorization: Bearer {token}",
-         "-H", "Accept: application/vnd.github+json", url],
+        ["curl", "-s", "-f",
+         "-H", f"Authorization: Bearer {token}",
+         "-H", "Accept: application/vnd.github+json",
+         url],
         capture_output=True,
         text=True,
-        check=True,
     )
-    return json.loads(result.stdout)
+    if result.returncode != 0:
+        raise ApiError(
+            f"GitHub API call failed (curl exit {result.returncode}) for {url}: "
+            f"{result.stderr.strip() or result.stdout.strip()}"
+        )
+    try:
+        return json.loads(result.stdout)
+    except json.JSONDecodeError as exc:
+        raise ApiError(
+            f"GitHub API returned non-JSON for {url}: {result.stdout[:200]}"
+        ) from exc
 
 
 def get_changed_files(pr_number: str) -> list[str]:
-    """Return list of files changed in the given PR."""
+    """Return list of files changed in the given PR.
+
+    Raises ApiError if the API call fails or returns a non-list.
+    """
     data = _gh_api(f"pulls/{pr_number}/files?per_page=100")
     if not isinstance(data, list):
-        return []
+        raise ApiError(
+            f"Expected list from pulls/{pr_number}/files, got {type(data).__name__}: "
+            f"{str(data)[:200]}"
+        )
     return [f["filename"] for f in data]
 
 
 def get_open_prs(base_ref: str) -> list[dict]:
-    """Return all open PRs targeting base_ref."""
+    """Return all open PRs targeting base_ref.
+
+    Raises ApiError if the API call fails or returns a non-list.
+    """
     data = _gh_api(f"pulls?state=open&base={base_ref}&per_page=100")
     if not isinstance(data, list):
-        return []
+        raise ApiError(
+            f"Expected list from pulls?base={base_ref}, got {type(data).__name__}: "
+            f"{str(data)[:200]}"
+        )
     return data
 
 
@@ -102,11 +135,20 @@ def main() -> int:
         print(f"PASS: branch '{head_ref}' is a PM-CHORE branch — exempt.")
         return 0
 
-    # Get files changed in this PR
-    changed = get_changed_files(pr_number)
-    if not changed:
-        print("PASS: no changed files detected.")
-        return 0
+    # Get files changed in this PR — hard failure on API error
+    try:
+        changed = get_changed_files(pr_number)
+    except ApiError as exc:
+        print(f"ERROR: could not retrieve changed files — {exc}")
+        return 2
+
+    # An empty file list when PR_NUMBER is set is unexpected; treat as API error
+    if not changed and pr_number:
+        print(
+            f"ERROR: API returned zero changed files for PR #{pr_number}. "
+            "This is unexpected — treating as an API error to prevent silent pass."
+        )
+        return 2
 
     # Only trigger if the PR touches CURRENT_PE.md
     if CURRENT_PE_FILE not in changed:
@@ -136,7 +178,12 @@ def main() -> int:
         print(f"PASS: could not extract PE-ID from {CURRENT_PE_FILE}.")
         return 0
 
-    open_prs = get_open_prs(base_ref)
+    try:
+        open_prs = get_open_prs(base_ref)
+    except ApiError as exc:
+        print(f"ERROR: could not retrieve open PRs — {exc}")
+        return 2
+
     conflicting_prs = []
     for pr in open_prs:
         branch = pr.get("head", {}).get("ref", "")
