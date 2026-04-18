@@ -1,7 +1,4 @@
-<!-- PM-CHORE bot-authored smoke test -->
 # Current PE Assignment
-
-<!-- PM-CHORE smoke test: auto-approve verification -->
 
 > Maintained by PM. Update ALL fields at the start of every new PE or release.
 > Both agents read this file as Step 0. It is the only file that needs editing
@@ -168,6 +165,7 @@ PM housekeeping entries (prefix `PM-CHORE-XX`):
 | PM-CHORE-40  | PE-INFRA-SLR-02 scope update by PM/PO decision: AC-3 (`elis-gemini-bot` onboarding) moved to DEFERRED — out of scope for this PE, to be addressed in a dedicated later PE. PASS criteria for PE-INFRA-SLR-02 are AC-1, AC-2, AC-4, AC-5, and AC-6 using `elis-codex-bot` and `elis-claude-bot` identities only. Plan v1.8.3 AC table updated to reflect DEFERRED status. PR #329 opening Status Packet revised accordingly. | 2026-04-14 |
 | PM-CHORE-41  | Added PE-INFRA-SLR-04 (Model-Agnostic Agent Naming Governance) to plan v1.8.3 and registered it as `planning`. Scope: replace model/provider-coupled agent IDs with role-capability naming, add migration map and policy enforcement, and keep runtime dispatch compatibility. Dependency: PE-INFRA-SLR-03. | 2026-04-15 |
 | PM-CHORE-42  | Closed PE-INFRA-SLR-02 as merged (PR #329). Opened PE-INFRA-SLR-03 (PM Control-Plane Dispatch Hardening) with `infra-impl-claude` as Implementer and `infra-val-codex` as Validator per alternation rule. Dependency PE-INFRA-SLR-02 satisfied. | 2026-04-15 |
+| PM-CHORE-43  | Removed stale HTML comment pollution from `CURRENT_PE.md` header (bot-authored smoke-test residue from PRs #339–#342). No governance state changed. | 2026-04-18 |
 
 Alternation rule:
 - For consecutive PEs in the same domain, the implementer engine must alternate (`codex` <-> `claude`).
