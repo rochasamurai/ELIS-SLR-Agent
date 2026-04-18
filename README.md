@@ -1,7 +1,8 @@
-# ELIS SLR Agent
+# ELIS Multi AI Agent Platform
 
-ELIS SLR Agent is a reproducible pipeline for systematic literature reviews on electoral integrity.
-Release `2.0` consolidates the workflow behind one CLI: `elis`.
+ELIS Multi AI Agent Platform is a multi-agent AI platform for ELIS research and engineering workflows, with reproducible pipelines, orchestration, validation, and auditability.
+
+Release 2.0 consolidates the current operational workflow behind one CLI: `elis`.
 
 ## Current Release Line
 
@@ -10,11 +11,11 @@ Release `2.0` consolidates the workflow behind one CLI: `elis`.
 - Canonical pipeline output: `runs/<run_id>/...`
 - Backward-compatibility export view: `json_jsonl/` (copy-only via `elis export-latest`)
 
-## Canonical CLI
+## Current CLI Surface
 
 Primary commands:
 
-```powershell
+```bash
 elis harvest <source> --search-config <path>
 elis merge --inputs <harvest_outputs...>
 elis dedup --input <appendix_a.json>
@@ -25,7 +26,7 @@ elis export-latest --run-id <run_id>
 
 Optional sidecar workflow:
 
-```powershell
+```bash
 elis agentic asta discover --query "..." --run-id <run_id>
 elis agentic asta enrich --input <dedup_output> --run-id <run_id>
 ```
@@ -38,9 +39,18 @@ Implemented adapters:
 - `crossref`
 - `scopus`
 
-Planned for later releases: Web of Science, IEEE Xplore, Semantic Scholar, CORE, Google Scholar, ScienceDirect.
+Planned for later releases:
+
+- Web of Science
+- IEEE Xplore
+- Semantic Scholar
+- CORE
+- Google Scholar
+- ScienceDirect
 
 ## Quick Start
+
+Create and activate a virtual environment, then install the project in editable mode:
 
 ```powershell
 python -m venv .venv
@@ -51,7 +61,7 @@ pip install -e ".[dev]"
 
 Check command surface:
 
-```powershell
+```bash
 elis --help
 elis harvest --help
 elis merge --help
@@ -80,7 +90,14 @@ elis validate --help
 ## Legacy Scripts
 
 Legacy script entrypoints are archived under `scripts/_archive/` and are retained for traceability.
+
 Active workflows for `release/2.0` are expected to use `elis` CLI commands.
+
+## Positioning Note
+
+The repository name now reflects the broader platform direction: ELIS is evolving from a narrowly framed SLR agent repository into a multi-agent AI platform for reproducible research and engineering workflows.
+
+For continuity and stability, the current package namespace and CLI remain `elis`.
 
 ## License
 
