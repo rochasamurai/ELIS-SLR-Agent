@@ -21,12 +21,11 @@
 
 | Field   | Value                                                          |
 |---------|----------------------------------------------------------------|
-| PE      | PE-INFRA-SLR-03                                               |
-| Branch  | feature/pe-infra-slr-03-pm-control-plane-dispatch-hardening   |
+| PE      | PE-INFRA-SLR-04                                               |
+| Branch  | feature/pe-infra-slr-04-model-agnostic-agent-naming-governance |
 
-> **Active PE.** PE-INFRA-SLR-03 hardens PM control-plane dispatch so PM can reliably
-> notify assigned validators directly (with auditable ACK evidence), reducing manual relay
-> dependency and stabilising autonomous gate progression.
+> **Active PE.** PE-INFRA-SLR-04 replaces model/provider-coupled agent identifiers
+> with role-capability identifiers, preserving dispatch reliability and audit continuity.
 
 ---
 
@@ -34,10 +33,10 @@
 
 | Agent       | Role        |
 |-------------|-------------|
-| Claude Code | Implementer |
-| CODEX       | Validator   |
+| CODEX       | Implementer |
+| Claude Code | Validator   |
 
-> PE-INFRA-SLR-03: `infra-impl-claude` (Claude Code) as Implementer · `infra-val-codex` (CODEX @ `elis-server`) as Validator.
+> PE-INFRA-SLR-04: `infra-impl-codex` (CODEX @ `elis-server`) as Implementer · `infra-val-claude` (Claude Code) as Validator.
 
 ---
 
@@ -104,8 +103,8 @@
 | PE-SLR-02      | slr             | prog-impl-claude     | prog-val-codex     | feature/pe-slr-02-harvest-workflow-reliability-audit           | merged        | 2026-04-14   |
 | PE-INFRA-SLR-01 | infra          | infra-impl-claude    | infra-val-codex    | feature/pe-infra-slr-01-role-based-agent-surface-normalisation | merged         | 2026-04-14   |
 | PE-INFRA-SLR-02 | infra          | infra-impl-codex     | infra-val-claude   | feature/pe-infra-slr-02-distinct-review-identity-enforcement   | merged         | 2026-04-15   |
-| PE-INFRA-SLR-03 | infra          | infra-impl-claude    | infra-val-codex    | feature/pe-infra-slr-03-pm-control-plane-dispatch-hardening    | implementing   | 2026-04-15   |
-| PE-INFRA-SLR-04 | infra          | infra-impl-codex     | infra-val-claude   | feature/pe-infra-slr-04-model-agnostic-agent-naming-governance | planning       | 2026-04-15   |
+| PE-INFRA-SLR-03 | infra          | infra-impl-claude    | infra-val-codex    | feature/pe-infra-slr-03-pm-control-plane-dispatch-hardening    | merged         | 2026-04-19   |
+| PE-INFRA-SLR-04 | infra          | infra-impl-codex     | infra-val-claude   | feature/pe-infra-slr-04-model-agnostic-agent-naming-governance | implementing   | 2026-04-19   |
 
 Valid status values:
 - `planning`
@@ -166,6 +165,7 @@ PM housekeeping entries (prefix `PM-CHORE-XX`):
 | PM-CHORE-41  | Added PE-INFRA-SLR-04 (Model-Agnostic Agent Naming Governance) to plan v1.8.3 and registered it as `planning`. Scope: replace model/provider-coupled agent IDs with role-capability naming, add migration map and policy enforcement, and keep runtime dispatch compatibility. Dependency: PE-INFRA-SLR-03. | 2026-04-15 |
 | PM-CHORE-42  | Closed PE-INFRA-SLR-02 as merged (PR #329). Opened PE-INFRA-SLR-03 (PM Control-Plane Dispatch Hardening) with `infra-impl-claude` as Implementer and `infra-val-codex` as Validator per alternation rule. Dependency PE-INFRA-SLR-02 satisfied. | 2026-04-15 |
 | PM-CHORE-43  | Removed stale HTML comment pollution from `CURRENT_PE.md` header (bot-authored smoke-test residue from PRs #339–#342). No governance state changed. | 2026-04-18 |
+| PM-CHORE-44  | Closed PE-INFRA-SLR-03 as merged (PR #343, r2 PASS verdict — elis-codex-bot APPROVED; PO-merged after auto-merge deadlock caused by Gate 2 automation gap documented in issue #344). Opened PE-INFRA-SLR-04 (Model-Agnostic Agent Naming Governance) with `infra-impl-codex` (CODEX) as Implementer and `infra-val-claude` (Claude Code) as Validator per alternation rule. Dependency PE-INFRA-SLR-03 satisfied. | 2026-04-19 |
 
 Alternation rule:
 - For consecutive PEs in the same domain, the implementer engine must alternate (`codex` <-> `claude`).
