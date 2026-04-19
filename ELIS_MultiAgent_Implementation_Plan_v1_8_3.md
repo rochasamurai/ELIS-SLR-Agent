@@ -4,7 +4,7 @@
 > **Status:** Active patch revision proposed from v1.8.2
 > **Default Agent Pairing:** CODEX + Claude Code (default staffing only; any ELIS-compliant agent may fill either role when governance requirements are met)
 > **Delivers:** Hybrid SLR execution with explicit multi-identity GitHub review governance and verified PM cross-agent dispatch capability
-> **Phases:** 4 Phases · 13 PEs
+> **Phases:** 4 Phases · 15 PEs
 > **Governing Architecture:** `ELIS_SLR_AI_Platform_Conceptual_Architecture_v1_8.md`
 > **Host:** ELIS MiniServer — NUC8i7BEH · Ubuntu 24.04.4 LTS · `elis-server`
 > **Supersedes:** `ELIS_MultiAgent_Implementation_Plan_v1_8_2.md`
@@ -18,7 +18,8 @@
 | v1.8 | Apr 2026 | Hybrid SLR execution plan: Harvest remains workflow-governed; Screening and lightweight support move local-first; Extraction and Synthesis stay off-host pending future validation |
 | v1.8.1 | Apr 2026 | Patch revision preserving the v1.8 hybrid architecture while adding `PE-INFRA-SLR-01` for role-based, agent-agnostic workflow-surface alignment |
 | v1.8.2 | Apr 2026 | Patch revision adding distinct GitHub review identities as a first-class workflow requirement, plus `PE-INFRA-SLR-02` for validator-review identity enforcement and Gemini-bot onboarding |
-| v1.8.3 | Apr 2026 | Patch revision adding `PE-INFRA-SLR-03` for PM cross-agent dispatch enablement, plus Step 0 runtime evidence requirement; AC-6 adds evidence-gated status transition guard; AC-7 adds CI check blocking parallel governance PRs |
+| v1.8.3 | Apr 2026 | Patch revision adding `PE-INFRA-SLR-03` for PM cross-agent dispatch enablement and `PE-INFRA-SLR-04` for model-agnostic agent naming governance, plus Step 0 runtime evidence requirement; AC-6 adds evidence-gated status transition guard; AC-7 adds CI check blocking parallel governance PRs |
+| v1.8.3.1 | Apr 2026 | Adds `PE-INFRA-SLR-05` for Gate 2 auto-merge alignment: update `auto-merge-on-pass.yml` to trigger on mapped-bot approval review instead of `REVIEW_PE*.md` push event, resolving the approval-without-merge deadlock first observed on PR #343 (issue #344) |
 
 ---
 
@@ -51,9 +52,10 @@ v1.8.3 therefore preserves the full v1.8.2 architecture and adds one governance 
 
 ### What v1.8.3 changes
 
-v1.8.3 adds one governance PE on top of v1.8.2:
+v1.8.3 adds two governance PEs on top of v1.8.2:
 
 - `PE-INFRA-SLR-03` · PM Cross-Agent Dispatch Enablement
+- `PE-INFRA-SLR-04` · Model-Agnostic Agent Naming Governance
 - Step 0 runtime evidence requirement for PE-INFRA-SLR-03: the opening Status Packet and PR comments must include proof of cross-agent messaging being enabled and one successful PM→validator dispatch/ACK exchange before implementation starts
 
 ### What remains unchanged
@@ -177,6 +179,69 @@ Enable and verify the PM agent's ability to dispatch Gate 1 (and Gate 2) notific
 | AC-6 | A transition guard is defined in `workspace-pm/AGENTS.md`: each status transition (`implementing → validating → gate-2-pending → merged`) requires explicit named evidence fields (CI check link, formal review link, merge link respectively) before PM may advance the status |
 | AC-7 | A CI check exists that fails if a PR modifies only `CURRENT_PE.md` while an open PR for the same PE's feature branch is already present; PM-CHORE commits to `main` are exempt from this check |
 
+### Governance Bridge — Model-Agnostic Agent Naming Governance
+
+#### PE-INFRA-SLR-04 · Model-Agnostic Agent Naming Governance
+
+| Field | Value |
+|-------|-------|
+| Domain | Infrastructure |
+| Track | Workflow governance |
+| Implementer | `infra-impl-codex` |
+| Validator | `infra-val-claude` |
+| Phase | 1e |
+| Depends On | PE-INFRA-SLR-03 |
+| Status | Planned |
+
+**Scope**
+
+Replace model/provider-coupled agent identifiers with role-capability identifiers, while preserving dispatch reliability and audit continuity. Agent IDs must no longer encode model families (`claude`, `codex`, `gemini`, `gpt`) in active governance surfaces.
+
+**Acceptance Criteria**
+
+| AC | Criterion |
+|----|-----------|
+| AC-1 | A normative naming rule is committed and referenced by PM workflow docs for all active agent IDs (`<domain>-<role>-<slot>` or explicit equivalent) |
+| AC-2 | A committed migration map exists (old ID → new ID) for all active infra/prog/slr agent IDs used by PM, implementer, and validator workflows |
+| AC-3 | `CURRENT_PE.md`, active plan references, and OpenClaw runtime config are updated to use the new model-agnostic IDs |
+| AC-4 | Dispatch and validation scripts that resolve agent IDs are updated to accept the new IDs; legacy IDs are allowed only as an explicit temporary compatibility path |
+| AC-5 | A CI/policy check fails if new model-coupled naming is introduced into active agent-ID surfaces |
+| AC-6 | `python -m pytest tests/test_agent_id_naming_policy.py -v` passes |
+
+### Governance Bridge — Gate 2 Auto-Merge Alignment
+
+#### PE-INFRA-SLR-05 · Gate 2 Auto-Merge Alignment
+
+| Field | Value |
+|-------|-------|
+| Domain | Infrastructure |
+| Track | Workflow governance |
+| Implementer | `infra-impl-claude` |
+| Validator | `infra-val-codex` |
+| Phase | 1f |
+| Depends On | PE-INFRA-SLR-04 |
+| Status | Planned |
+
+**Scope**
+
+Align Gate 2 auto-merge automation with the formal approval review model established in PE-INFRA-SLR-02. The current `auto-merge-on-pass.yml` workflow only triggers on `push` events and parses a `REVIEW_PE*.md` file for `PASS`, creating a deadlock when a mapped bot identity submits an approval review but no subsequent push occurs. This PE eliminates that deadlock by making the formal approval review the canonical Gate 2 merge signal.
+
+**Evidence of Problem**
+
+PR #343 demonstrated the failure: `elis-codex-bot` submitted a formal `APPROVED` review, required CI was green, no `pm-review-required` label was present — yet the PR did not auto-merge. Root cause is the `push`-only trigger and `REVIEW_PE*.md` parse dependency in `auto-merge-on-pass.yml`. Documented in issue #344.
+
+**Acceptance Criteria**
+
+| AC | Criterion |
+|----|-----------|
+| AC-1 | `auto-merge-on-pass.yml` adds a `pull_request_review: submitted` trigger so Gate 2 re-evaluates when a review is submitted |
+| AC-2 | The merge condition requires all of: approval from the mapped bot identity for the PE's validator role, green required CI on the current PR head, no `pm-review-required` label, and `mergeable_state == 'clean'` |
+| AC-3 | The workflow verifies that the approving identity matches the mapped reviewer for the PE's validator role (per `config/reviewer_identity_map.json`), not just any approver |
+| AC-4 | `REVIEW_PE<N>.md` remains a required audit artefact; a dedicated compliance check validates its presence and `check_review.py` pass, but it is no longer the sole trigger for merge |
+| AC-5 | A PR with green required checks and mapped-bot approval merges automatically without requiring an additional push after the review |
+| AC-6 | A PR with `pm-review-required` label does not auto-merge even if all other conditions are met |
+| AC-7 | `python -m pytest tests/test_gate2_auto_merge.py -v` passes |
+
 ### Phase 2 — Local Screening on `elis-server`
 
 Unchanged from v1.8.2:
@@ -211,6 +276,8 @@ Unchanged from v1.8.2:
 | 2 | PE-INFRA-SLR-01: Role-based agent surface normalisation | 1b | `infra-impl-claude` | — |
 | 2 | PE-INFRA-SLR-02: Distinct review identity enforcement | 1c | `infra-impl-codex` | — |
 | 2 | PE-INFRA-SLR-03: PM cross-agent dispatch enablement | 1d | `infra-impl-claude` | — |
+| 2 | PE-INFRA-SLR-04: Model-agnostic agent naming governance | 1e | `infra-impl-codex` | — |
+| 2 | PE-INFRA-SLR-05: Gate 2 auto-merge alignment | 1f | `infra-impl-claude` | — |
 | 3 | PE-SLR-03: ASReview screening pilot | 2 | `infra-impl-codex` | — |
 | 3 | PE-SLR-04: Local screening governance and evidence | 2 | `infra-impl-claude` | — |
 | 4 | PE-SLR-05: Metadata triage and query refinement | 3 | `prog-impl-codex` | — |
@@ -295,6 +362,7 @@ Operational rule:
 | R-09 | Provider-bound workflow naming drifts faster than staffing flexibility can absorb | Medium | `PE-INFRA-SLR-01` normalises active workflow surfaces and logs deferred renames explicitly |
 | R-10 | Validator substitution is represented in workflow text but cannot satisfy branch protection because no distinct GitHub review identity exists | High | `PE-INFRA-SLR-02`, bot-per-agent review mapping, and safe approval verification on protected test PRs |
 | R-11 | PM cannot dispatch gate notifications to validators without PO relay, blocking autonomous gate progression | High | `PE-INFRA-SLR-03` with Step 0 runtime evidence before implementation starts |
+| R-12 | Model-coupled agent IDs force repeated governance edits on staffing/model swaps and increase dispatch drift risk | Medium | `PE-INFRA-SLR-04` with model-agnostic naming rule, migration map, and policy enforcement |
 
 ---
 
@@ -312,7 +380,8 @@ Operational rule:
 10. `elis-server` capacity and throttling policy is committed and operator-usable.
 11. One representative hybrid SLR flow is validated end to end.
 12. No architectural invariant requires `elis-server` to run all SLR agents concurrently.
-13. The resulting system preserves governance, reproducibility, auditability, provider neutrality, and branch-protection compliance across all execution surfaces.
+13. Active agent identities used in PM/Imp/Val workflows are model-agnostic and policy-enforced.
+14. The resulting system preserves governance, reproducibility, auditability, provider neutrality, and branch-protection compliance across all execution surfaces.
 
 ---
 
