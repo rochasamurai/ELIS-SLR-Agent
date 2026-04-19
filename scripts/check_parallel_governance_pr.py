@@ -48,10 +48,16 @@ def _gh_api(path: str) -> dict | list:
     repo = os.environ["REPO"]
     url = f"https://api.github.com/repos/{repo}/{path}"
     result = subprocess.run(
-        ["curl", "-s", "-f",
-         "-H", f"Authorization: Bearer {token}",
-         "-H", "Accept: application/vnd.github+json",
-         url],
+        [
+            "curl",
+            "-s",
+            "-f",
+            "-H",
+            f"Authorization: Bearer {token}",
+            "-H",
+            "Accept: application/vnd.github+json",
+            url,
+        ],
         capture_output=True,
         text=True,
     )
@@ -109,6 +115,7 @@ def extract_pe_id_from_branch(branch: str) -> str | None:
       feature/pe-oc-07-gate-automation         → PE-OC-07
     """
     import re
+
     # pe + one-or-more letter-segments + one digit-segment + (- or end)
     m = re.match(r"feature/(pe(?:-[a-z]+)+-\d+)(?:-|$)", branch, re.IGNORECASE)
     if not m:
@@ -119,9 +126,8 @@ def extract_pe_id_from_branch(branch: str) -> str | None:
 def extract_pe_id_from_current_pe(content: str) -> str | None:
     """Extract the current active PE-ID from CURRENT_PE.md content."""
     import re
-    m = re.search(
-        r"^\|\s*PE\s*\|\s*(PE(?:-[A-Z0-9]+)+)\s*\|", content, re.MULTILINE
-    )
+
+    m = re.search(r"^\|\s*PE\s*\|\s*(PE(?:-[A-Z0-9]+)+)\s*\|", content, re.MULTILINE)
     return m.group(1) if m else None
 
 
@@ -201,9 +207,7 @@ def main() -> int:
         )
         return 1
 
-    print(
-        f"PASS: no conflicting open feature-branch PR found for {active_pe_id}."
-    )
+    print(f"PASS: no conflicting open feature-branch PR found for {active_pe_id}.")
     return 0
 
 

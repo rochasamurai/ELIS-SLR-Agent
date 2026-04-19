@@ -18,6 +18,7 @@ CHECK_SCRIPT = REPO_ROOT / "scripts" / "check_parallel_governance_pr.py"
 # AC-1 / AC-3 / AC-4 — original tests
 # ---------------------------------------------------------------------------
 
+
 def test_dispatch_visibility_is_all_in_tracked_config() -> None:
     config = json.loads(VISIBILITY_PATH.read_text(encoding="utf-8"))
     assert config["tools"]["sessions"]["visibility"] == "all"
@@ -39,6 +40,7 @@ def test_agents_gate_1_defaults_to_pm_direct_dispatch_with_fallback() -> None:
 # ---------------------------------------------------------------------------
 # AC-6 — transition guard in workspace-pm/AGENTS.md
 # ---------------------------------------------------------------------------
+
 
 def test_transition_guard_section_exists_in_pm_agents() -> None:
     text = PM_AGENTS_PATH.read_text(encoding="utf-8")
@@ -105,14 +107,16 @@ def test_feature_branch_two_segment_pe_id() -> None:
 
 def test_current_pe_id_extracted_from_current_pe_md() -> None:
     mod = _load_check_script()
-    content = textwrap.dedent("""\
+    content = textwrap.dedent(
+        """\
         ## Current PE
 
         | Field   | Value                                                          |
         |---------|----------------------------------------------------------------|
         | PE      | PE-INFRA-SLR-03                                               |
         | Branch  | feature/pe-infra-slr-03-pm-control-plane-dispatch-hardening   |
-    """)
+    """
+    )
     pe_id = mod.extract_pe_id_from_current_pe(content)
     assert pe_id == "PE-INFRA-SLR-03"
 
@@ -125,6 +129,7 @@ def test_workflow_file_exists() -> None:
 def test_api_error_on_curl_failure_raises() -> None:
     mod = _load_check_script()
     import unittest.mock as mock
+
     # Simulate curl returning non-zero exit code (e.g. HTTP 401)
     fake = mock.MagicMock()
     fake.returncode = 22
@@ -143,6 +148,7 @@ def test_api_error_on_non_list_changed_files_raises() -> None:
     mod = _load_check_script()
     import unittest.mock as mock
     import json as _json
+
     fake = mock.MagicMock()
     fake.returncode = 0
     fake.stdout = _json.dumps({"message": "Not Found"})
@@ -160,6 +166,7 @@ def test_api_error_on_non_list_open_prs_raises() -> None:
     mod = _load_check_script()
     import unittest.mock as mock
     import json as _json
+
     fake = mock.MagicMock()
     fake.returncode = 0
     fake.stdout = _json.dumps({"message": "Bad credentials"})
