@@ -6,7 +6,7 @@
   },
   "notes": {
     "purpose": "Enable PM cross-agent direct dispatch to assigned validator sessions.",
-    "pe": "PE-INFRA-SLR-02",
-    "updated": "2026-04-14"
+    "pe": "PE-INFRA-SLR-03",
+    "updated": "2026-04-18"
   }
 }

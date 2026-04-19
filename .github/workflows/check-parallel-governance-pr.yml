@@ -1,0 +1,40 @@
+name: ELIS - Check Parallel Governance PR
+
+# Fails if a PR modifies only CURRENT_PE.md while an open feature-branch PR
+# for the same PE is already present. PM-CHORE commits to main are exempt.
+# Implements PE-INFRA-SLR-03 AC-7.
+
+on:
+  pull_request:
+    paths:
+      - "CURRENT_PE.md"
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  check-parallel-governance:
+    name: Block parallel governance PR
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run parallel-governance-PR check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          REPO: ${{ github.repository }}
+        run: |
+          export PYTHONPATH="${GITHUB_WORKSPACE}:${PYTHONPATH:-}"
+          python scripts/check_parallel_governance_pr.py

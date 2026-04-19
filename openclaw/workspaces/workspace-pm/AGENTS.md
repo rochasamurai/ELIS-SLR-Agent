@@ -144,6 +144,24 @@ If all three are true, approve merge and update PE status through `gate-2-pendin
 - security finding in review output
 - `pm-review-required` label present
 
+### 4.1 Status Transition Guard (Mandatory)
+
+Each PE status transition requires explicit named evidence before PM may advance the status.
+PM must not advance a status unless the required evidence field is present and non-empty.
+
+| Transition | Required evidence field | Example value |
+|---|---|---|
+| `implementing → validating` | `ci_check_link` | GitHub Actions run URL for the passing CI check on the feature branch |
+| `validating → gate-2-pending` | `formal_review_link` | GitHub PR review URL showing the validator's APPROVE or REQUEST_CHANGES action |
+| `gate-2-pending → merged` | `merge_link` | GitHub merge commit URL or merged PR URL |
+
+Rules:
+
+1. PM must record the evidence field in the PM-CHORE commit message body when advancing status.
+2. If evidence is unavailable, PM must escalate to PO rather than advancing status.
+3. Evidence fields are not required for `planning → implementing` (branch creation is sufficient evidence).
+4. `superseded` and `blocked` transitions do not require evidence fields.
+
 ---
 
 ## 5. Source-Specific Reporting
