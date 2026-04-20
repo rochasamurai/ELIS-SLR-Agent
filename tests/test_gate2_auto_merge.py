@@ -140,6 +140,48 @@ def reviewer_map(tmp_path: Path) -> Path:
     return p
 
 
+@pytest.fixture()
+def reviewer_map_ambiguous_engine(tmp_path: Path) -> Path:
+    """Map with two validator-capable codex entries to test ambiguity guard."""
+    p = tmp_path / "reviewer_identity_map.json"
+    p.write_text(
+        json.dumps(
+            {
+                "agents": {
+                    "CODEX": {
+                        "engine": "codex",
+                        "review_login": "elis-codex-bot",
+                        "validator_capable_on_protected_branches": True,
+                    },
+                    "Codex Alt": {
+                        "engine": "codex",
+                        "review_login": "elis-codex-bot-alt",
+                        "validator_capable_on_protected_branches": True,
+                    },
+                    "Claude Code": {
+                        "engine": "claude",
+                        "review_login": "elis-claude-bot",
+                        "validator_capable_on_protected_branches": True,
+                    },
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+    return p
+
+
+@pytest.fixture()
+def pe_file_val_unknown_slot(tmp_path: Path) -> Path:
+    """CURRENT_PE.md with unknown slot to force engine-only fallback path."""
+    p = tmp_path / "CURRENT_PE.md"
+    p.write_text(
+        "> PE-TEST: `infra-impl-a` (CODEX) as Implementer · `infra-val-x` (CODEX) as Validator.\n",
+        encoding="utf-8",
+    )
+    return p
+
+
 # ─── AC-1: pull_request_review trigger ────────────────────────────────────────
 
 
@@ -230,6 +272,31 @@ def test_ac3_script_called_from_workflow():
     assert (
         "check_reviewer_identity.py" in _workflow_text()
     ), "workflow must call check_reviewer_identity.py"
+
+
+def test_ac3_slot_mapping_preferred_even_with_engine_duplicates(
+    pe_file_val_a, reviewer_map_ambiguous_engine
+):
+    """AC-3: canonical slot mapping should resolve reviewer deterministically."""
+    result = _run_identity_script(
+        "elis-codex-bot",
+        pe_file_val_a,
+        reviewer_map_ambiguous_engine,
+    )
+    assert result.returncode == 0, result.stderr
+
+
+def test_ac3_engine_fallback_rejects_ambiguous_matches(
+    pe_file_val_unknown_slot, reviewer_map_ambiguous_engine
+):
+    """AC-3: engine fallback must fail when multiple validator-capable matches exist."""
+    result = _run_identity_script(
+        "elis-codex-bot",
+        pe_file_val_unknown_slot,
+        reviewer_map_ambiguous_engine,
+    )
+    assert result.returncode != 0
+    assert "Could not resolve a unique validator mapped bot login" in result.stderr
 
 
 # ─── AC-4: REVIEW compliance check remains mandatory ─────────────────────────
