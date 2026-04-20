@@ -172,11 +172,31 @@ def reviewer_map_ambiguous_engine(tmp_path: Path) -> Path:
 
 
 @pytest.fixture()
-def pe_file_val_unknown_slot(tmp_path: Path) -> Path:
-    """CURRENT_PE.md with unknown slot to force engine-only fallback path."""
-    p = tmp_path / "CURRENT_PE.md"
+def reviewer_map_engine_fallback_ambiguous(tmp_path: Path) -> Path:
+    """Map with no canonical CODEX key to force engine fallback ambiguity."""
+    p = tmp_path / "reviewer_identity_map.json"
     p.write_text(
-        "> PE-TEST: `infra-impl-a` (CODEX) as Implementer · `infra-val-x` (CODEX) as Validator.\n",
+        json.dumps(
+            {
+                "agents": {
+                    "Codex Alt 1": {
+                        "engine": "codex",
+                        "review_login": "elis-codex-bot",
+                        "validator_capable_on_protected_branches": True,
+                    },
+                    "Codex Alt 2": {
+                        "engine": "codex",
+                        "review_login": "elis-codex-bot-alt",
+                        "validator_capable_on_protected_branches": True,
+                    },
+                    "Claude Code": {
+                        "engine": "claude",
+                        "review_login": "elis-claude-bot",
+                        "validator_capable_on_protected_branches": True,
+                    },
+                }
+            }
+        ),
         encoding="utf-8",
     )
     return p
@@ -287,13 +307,13 @@ def test_ac3_slot_mapping_preferred_even_with_engine_duplicates(
 
 
 def test_ac3_engine_fallback_rejects_ambiguous_matches(
-    pe_file_val_unknown_slot, reviewer_map_ambiguous_engine
+    pe_file_val_a, reviewer_map_engine_fallback_ambiguous
 ):
     """AC-3: engine fallback must fail when multiple validator-capable matches exist."""
     result = _run_identity_script(
         "elis-codex-bot",
-        pe_file_val_unknown_slot,
-        reviewer_map_ambiguous_engine,
+        pe_file_val_a,
+        reviewer_map_engine_fallback_ambiguous,
     )
     assert result.returncode != 0
     assert "Could not resolve a unique validator mapped bot login" in result.stderr
