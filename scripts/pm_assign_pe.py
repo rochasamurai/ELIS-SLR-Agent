@@ -27,6 +27,8 @@ import re
 import subprocess
 import sys
 
+from elis.agent_id import canonical_surface, engine_from_agent_id
+
 # ---------------------------------------------------------------------------
 # Registry parsing (mirrored from scripts/check_role_registration.py)
 # ---------------------------------------------------------------------------
@@ -81,12 +83,10 @@ def parse_active_registry(
 
 
 def extract_engine(agent_id: str) -> str | None:
-    text = agent_id.strip().lower()
-    if "codex" in text:
-        return "codex"
-    if "claude" in text:
-        return "claude"
-    return None
+    try:
+        return engine_from_agent_id(agent_id)
+    except ValueError:
+        return None
 
 
 # ---------------------------------------------------------------------------
@@ -159,8 +159,8 @@ def make_registry_row(
 ) -> str:
     prefix = agent_prefix(domain)
     other = "claude" if engine == "codex" else "codex"
-    impl = f"{prefix}-impl-{engine}"
-    val = f"{prefix}-val-{other}"
+    impl = canonical_surface(f"{prefix}-impl", engine)
+    val = canonical_surface(f"{prefix}-val", other)
     return (
         f"| {pe_id:<11} | {domain:<15} | {impl:<19} | {val:<17}"
         f" | {branch:<54} | planning     | {date}   |"
@@ -282,8 +282,8 @@ def main() -> int:
 
     prefix = agent_prefix(args.domain)
     other_engine = "claude" if new_engine == "codex" else "codex"
-    impl_id = f"{prefix}-impl-{new_engine}"
-    val_id = f"{prefix}-val-{other_engine}"
+    impl_id = canonical_surface(f"{prefix}-impl", new_engine)
+    val_id = canonical_surface(f"{prefix}-val", other_engine)
 
     print(f"{args.pe.upper()} assigned.")
     print(f"Domain: {args.domain}")

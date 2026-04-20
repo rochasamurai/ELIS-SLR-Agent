@@ -1,0 +1,47 @@
+{
+  "naming_rule": "<domain>-<role>-<slot>",
+  "provider_tokens": [
+    "claude",
+    "codex",
+    "gemini",
+    "gpt"
+  ],
+  "slots": {
+    "a": {
+      "engine": "codex",
+      "description": "Primary active engine slot"
+    },
+    "b": {
+      "engine": "claude",
+      "description": "Secondary active engine slot"
+    },
+    "c": {
+      "engine": "gemini",
+      "description": "Guest or overflow engine slot"
+    }
+  },
+  "legacy_to_canonical": {
+    "infra-impl-codex": "infra-impl-a",
+    "infra-impl-claude": "infra-impl-b",
+    "infra-val-codex": "infra-val-a",
+    "infra-val-claude": "infra-val-b",
+    "prog-impl-codex": "prog-impl-a",
+    "prog-impl-claude": "prog-impl-b",
+    "prog-val-codex": "prog-val-a",
+    "prog-val-claude": "prog-val-b",
+    "slr-impl-codex": "slr-impl-a",
+    "slr-impl-claude": "slr-impl-b",
+    "slr-val-codex": "slr-val-a",
+    "slr-val-claude": "slr-val-b",
+    "harvest-impl-codex": "harvest-impl-a",
+    "harvest-val-claude": "harvest-val-b",
+    "screen-impl-claude": "screen-impl-b",
+    "screen-val-codex": "screen-val-a",
+    "extract-impl-codex": "extract-impl-a",
+    "extract-val-claude": "extract-val-b",
+    "synth-impl-claude": "synth-impl-b",
+    "synth-val-codex": "synth-val-a",
+    "prisma-impl-claude": "prisma-impl-b",
+    "prisma-val-codex": "prisma-val-a"
+  }
+}

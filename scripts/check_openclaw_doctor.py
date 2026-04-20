@@ -8,22 +8,26 @@ import pathlib
 import sys
 
 REQUIRED_SLR_PHASE_IDS = {
-    "harvest-impl-codex",
-    "harvest-val-claude",
-    "screen-impl-claude",
-    "screen-val-codex",
-    "extract-impl-codex",
-    "extract-val-claude",
-    "synth-impl-claude",
-    "synth-val-codex",
-    "prisma-impl-claude",
-    "prisma-val-codex",
+    "harvest-impl-a",
+    "harvest-val-b",
+    "screen-impl-b",
+    "screen-val-a",
+    "extract-impl-a",
+    "extract-val-b",
+    "synth-impl-b",
+    "synth-val-a",
+    "prisma-impl-b",
+    "prisma-val-a",
 }
 LEGACY_SLR_IDS = {
     "slr-impl-codex",
     "slr-impl-claude",
     "slr-val-codex",
     "slr-val-claude",
+    "slr-impl-a",
+    "slr-impl-b",
+    "slr-val-a",
+    "slr-val-b",
 }
 
 

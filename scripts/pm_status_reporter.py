@@ -19,6 +19,8 @@ import re
 import shutil
 import sys
 
+from elis.agent_id import engine_from_agent_id
+
 # ---------------------------------------------------------------------------
 # Registry parsing (verbatim from scripts/pm_assign_pe.py)
 # ---------------------------------------------------------------------------
@@ -94,11 +96,10 @@ def _engine_display(agent_id: str) -> str:
         prog-impl-codex  → CODEX
         infra-val-claude → Claude Code
     """
-    lower = agent_id.lower()
-    for key, display in _ENGINE_MAP.items():
-        if lower.endswith(key):
-            return display
-    return agent_id
+    try:
+        return _ENGINE_MAP[engine_from_agent_id(agent_id)]
+    except (KeyError, ValueError):
+        return agent_id
 
 
 def _role_display(agent_id: str) -> str:

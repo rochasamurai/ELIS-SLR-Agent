@@ -36,7 +36,7 @@
 | CODEX       | Implementer |
 | Claude Code | Validator   |
 
-> PE-INFRA-SLR-04: `infra-impl-codex` (CODEX @ `elis-server`) as Implementer · `infra-val-claude` (Claude Code) as Validator.
+> PE-INFRA-SLR-04: `infra-impl-a` (CODEX @ `elis-server`) as Implementer · `infra-val-b` (Claude Code) as Validator.
 
 ---
 
@@ -104,8 +104,8 @@
 | PE-INFRA-SLR-01 | infra          | infra-impl-claude    | infra-val-codex    | feature/pe-infra-slr-01-role-based-agent-surface-normalisation | merged         | 2026-04-14   |
 | PE-INFRA-SLR-02 | infra          | infra-impl-codex     | infra-val-claude   | feature/pe-infra-slr-02-distinct-review-identity-enforcement   | merged         | 2026-04-15   |
 | PE-INFRA-SLR-03 | infra          | infra-impl-claude    | infra-val-codex    | feature/pe-infra-slr-03-pm-control-plane-dispatch-hardening    | merged         | 2026-04-19   |
-| PE-INFRA-SLR-04 | infra          | infra-impl-codex     | infra-val-claude   | feature/pe-infra-slr-04-model-agnostic-agent-naming-governance | implementing   | 2026-04-19   |
-| PE-INFRA-SLR-05 | infra          | infra-impl-claude    | infra-val-codex    | feature/pe-infra-slr-05-gate2-auto-merge-alignment             | planning       | 2026-04-19   |
+| PE-INFRA-SLR-04 | infra          | infra-impl-a         | infra-val-b        | feature/pe-infra-slr-04-model-agnostic-agent-naming-governance | implementing   | 2026-04-19   |
+| PE-INFRA-SLR-05 | infra          | infra-impl-b         | infra-val-a        | feature/pe-infra-slr-05-gate2-auto-merge-alignment             | planning       | 2026-04-19   |
 
 Valid status values:
 - `planning`

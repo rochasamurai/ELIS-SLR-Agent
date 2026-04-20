@@ -1,6 +1,8 @@
 import os
 import re
 
+from elis.agent_id import engine_from_agent_id
+
 VALID_STATUSES = {
     "planning",
     "implementing",
@@ -129,14 +131,10 @@ def parse_active_registry(
 
 
 def extract_engine(agent_id: str) -> str | None:
-    text = agent_id.strip().lower()
-    if "codex" in text:
-        return "codex"
-    if "claude" in text:
-        return "claude"
-    if "gemini" in text:
-        return "gemini"
-    return None
+    try:
+        return engine_from_agent_id(agent_id)
+    except ValueError:
+        return None
 
 
 def main() -> int:
