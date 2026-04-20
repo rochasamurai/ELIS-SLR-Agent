@@ -1,118 +1,142 @@
 {
-    "agents": {
-        "list": [
-            {
-                "id": "pm",
-                "workspace": "/home/samurai/openclaw/workspace-pm",
-                "model": "openai/gpt-5-mini",
-                "tools": {
-                    "elevated": {
-                        "enabled": true,
-                        "allowFrom": {"discord": ["1485180911619408014"]},
-                    }
-                },
-            },
-            {
-                "id": "harvest-impl-a",
-                "workspace": "/home/samurai/openclaw/workspace-slr-harvest",
-                "model": "openai/gpt-5.1-codex",
-            },
-            {
-                "id": "harvest-val-b",
-                "workspace": "/home/samurai/openclaw/workspace-slr-harvest",
-                "model": "anthropic/claude-sonnet-4-6",
-            },
-            {
-                "id": "screen-impl-b",
-                "workspace": "/home/samurai/openclaw/workspace-slr-screen",
-                "model": "anthropic/claude-opus-4-6",
-            },
-            {
-                "id": "screen-val-a",
-                "workspace": "/home/samurai/openclaw/workspace-slr-screen",
-                "model": "openai/gpt-5.1-codex",
-            },
-            {
-                "id": "extract-impl-a",
-                "workspace": "/home/samurai/openclaw/workspace-slr-extract",
-                "model": "openai/gpt-5.1-codex",
-            },
-            {
-                "id": "extract-val-b",
-                "workspace": "/home/samurai/openclaw/workspace-slr-extract",
-                "model": "anthropic/claude-opus-4-6",
-            },
-            {
-                "id": "synth-impl-b",
-                "workspace": "/home/samurai/openclaw/workspace-slr-synth",
-                "model": "anthropic/claude-opus-4-6",
-            },
-            {
-                "id": "synth-val-a",
-                "workspace": "/home/samurai/openclaw/workspace-slr-synth",
-                "model": "openai/gpt-5.1-codex",
-            },
-            {
-                "id": "prisma-impl-b",
-                "workspace": "/home/samurai/openclaw/workspace-slr-prisma",
-                "model": "anthropic/claude-sonnet-4-6",
-            },
-            {
-                "id": "prisma-val-a",
-                "workspace": "/home/samurai/openclaw/workspace-slr-prisma",
-                "model": "openai/gpt-5.1-codex",
-            },
-            {
-                "id": "prog-impl-a",
-                "workspace": "/home/samurai/openclaw/workspace-prog-impl",
-                "model": "openai/gpt-5.1-codex",
-            },
-            {
-                "id": "prog-impl-b",
-                "workspace": "/home/samurai/openclaw/workspace-prog-impl",
-                "model": "anthropic/claude-sonnet-4-6",
-            },
-            {
-                "id": "prog-val-a",
-                "workspace": "/home/samurai/openclaw/workspace-prog-val",
-                "model": "openai/gpt-5.1-codex",
-            },
-            {
-                "id": "prog-val-b",
-                "workspace": "/home/samurai/openclaw/workspace-prog-val",
-                "model": "anthropic/claude-sonnet-4-6",
-            },
-            {
-                "id": "infra-impl-a",
-                "workspace": "/home/samurai/openclaw/workspace-infra-impl",
-                "model": "openai/gpt-5.1-codex",
-            },
-            {
-                "id": "infra-impl-b",
-                "workspace": "/home/samurai/openclaw/workspace-infra-impl",
-                "model": "anthropic/claude-sonnet-4-6",
-            },
-            {
-                "id": "infra-val-a",
-                "workspace": "/home/samurai/openclaw/workspace-infra-val",
-                "model": "openai/gpt-5.1-codex",
-            },
-            {
-                "id": "infra-val-b",
-                "workspace": "/home/samurai/openclaw/workspace-infra-val",
-                "model": "anthropic/claude-sonnet-4-6",
-            },
-        ]
+  "agents": {
+    "list": [
+      {
+        "id": "pm",
+        "workspace": "/home/samurai/openclaw/workspace-pm",
+        "model": "openai/gpt-5-mini",
+        "tools": {
+          "elevated": {
+            "enabled": true,
+            "allowFrom": {
+              "discord": [
+                "1485180911619408014"
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": "harvest-impl-a",
+        "workspace": "/home/samurai/openclaw/workspace-slr-harvest",
+        "model": "openai/gpt-5.1-codex"
+      },
+      {
+        "id": "harvest-val-b",
+        "workspace": "/home/samurai/openclaw/workspace-slr-harvest",
+        "model": "anthropic/claude-sonnet-4-6"
+      },
+      {
+        "id": "screen-impl-b",
+        "workspace": "/home/samurai/openclaw/workspace-slr-screen",
+        "model": "anthropic/claude-opus-4-6"
+      },
+      {
+        "id": "screen-val-a",
+        "workspace": "/home/samurai/openclaw/workspace-slr-screen",
+        "model": "openai/gpt-5.1-codex"
+      },
+      {
+        "id": "extract-impl-a",
+        "workspace": "/home/samurai/openclaw/workspace-slr-extract",
+        "model": "openai/gpt-5.1-codex"
+      },
+      {
+        "id": "extract-val-b",
+        "workspace": "/home/samurai/openclaw/workspace-slr-extract",
+        "model": "anthropic/claude-opus-4-6"
+      },
+      {
+        "id": "synth-impl-b",
+        "workspace": "/home/samurai/openclaw/workspace-slr-synth",
+        "model": "anthropic/claude-opus-4-6"
+      },
+      {
+        "id": "synth-val-a",
+        "workspace": "/home/samurai/openclaw/workspace-slr-synth",
+        "model": "openai/gpt-5.1-codex"
+      },
+      {
+        "id": "prisma-impl-b",
+        "workspace": "/home/samurai/openclaw/workspace-slr-prisma",
+        "model": "anthropic/claude-sonnet-4-6"
+      },
+      {
+        "id": "prisma-val-a",
+        "workspace": "/home/samurai/openclaw/workspace-slr-prisma",
+        "model": "openai/gpt-5.1-codex"
+      },
+      {
+        "id": "prog-impl-a",
+        "workspace": "/home/samurai/openclaw/workspace-prog-impl",
+        "model": "openai/gpt-5.1-codex"
+      },
+      {
+        "id": "prog-impl-b",
+        "workspace": "/home/samurai/openclaw/workspace-prog-impl",
+        "model": "anthropic/claude-sonnet-4-6"
+      },
+      {
+        "id": "prog-val-a",
+        "workspace": "/home/samurai/openclaw/workspace-prog-val",
+        "model": "openai/gpt-5.1-codex"
+      },
+      {
+        "id": "prog-val-b",
+        "workspace": "/home/samurai/openclaw/workspace-prog-val",
+        "model": "anthropic/claude-sonnet-4-6"
+      },
+      {
+        "id": "infra-impl-a",
+        "workspace": "/home/samurai/openclaw/workspace-infra-impl",
+        "model": "openai/gpt-5.1-codex"
+      },
+      {
+        "id": "infra-impl-b",
+        "workspace": "/home/samurai/openclaw/workspace-infra-impl",
+        "model": "anthropic/claude-sonnet-4-6"
+      },
+      {
+        "id": "infra-val-a",
+        "workspace": "/home/samurai/openclaw/workspace-infra-val",
+        "model": "openai/gpt-5.1-codex"
+      },
+      {
+        "id": "infra-val-b",
+        "workspace": "/home/samurai/openclaw/workspace-infra-val",
+        "model": "anthropic/claude-sonnet-4-6"
+      }
+    ]
+  },
+  "bindings": [
+    {
+      "agentId": "pm",
+      "match": {
+        "channel": "telegram",
+        "accountId": "8508429120"
+      }
     },
-    "bindings": [
-        {"agentId": "pm", "match": {"channel": "telegram", "accountId": "8508429120"}},
-        {
-            "agentId": "pm",
-            "match": {"channel": "discord", "accountId": "1484943999470141702"},
-        },
-    ],
-    "commands": {"bash": true, "native": "auto", "nativeSkills": "auto"},
-    "plugins": {
-        "entries": {"telegram": {"enabled": true}, "discord": {"enabled": true}}
-    },
+    {
+      "agentId": "pm",
+      "match": {
+        "channel": "discord",
+        "accountId": "1484943999470141702"
+      }
+    }
+  ],
+  "commands": {
+    "bash": true,
+    "native": "auto",
+    "nativeSkills": "auto"
+  },
+  "plugins": {
+    "entries": {
+      "telegram": {
+        "enabled": true
+      },
+      "discord": {
+        "enabled": true
+      }
+    }
+  }
 }
