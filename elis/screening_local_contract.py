@@ -187,10 +187,10 @@ def run_bounded_screening_pilot(
     report = {
         "review_id": contract.review_id,
         "stage": "screening-pilot",
-        "appendix_a_input_path": str(appendix_a_path),
-        "appendix_b_output_path": str(contract.appendix_b_output()),
-        "appendix_a_schema_path": str(contract.appendix_a_schema()),
-        "appendix_b_schema_path": str(contract.appendix_b_schema()),
+        "appendix_a_input_path": appendix_a_path.as_posix(),
+        "appendix_b_output_path": contract.appendix_b_output().as_posix(),
+        "appendix_a_schema_path": contract.appendix_a_schema().as_posix(),
+        "appendix_b_schema_path": contract.appendix_b_schema().as_posix(),
         "record_cap": int(record_cap),
         "records_seen": len(records),
         "records_processed": len(bounded_records),
@@ -209,8 +209,8 @@ def run_bounded_screening_pilot(
         "pilot_mode": "bounded",
         "record_cap": int(record_cap),
         "artefacts": {
-            "appendix_b_output": str(contract.appendix_b_output()),
-            "pilot_report": str(contract.pilot_report()),
+            "appendix_b_output": contract.appendix_b_output().as_posix(),
+            "pilot_report": contract.pilot_report().as_posix(),
         },
         "generated_at": now_utc_iso(),
     }
