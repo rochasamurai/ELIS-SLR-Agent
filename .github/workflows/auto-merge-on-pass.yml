@@ -1,11 +1,19 @@
 name: Auto-merge on Validator PASS
 
+# Gate 2 triggers on two independent signals:
+#   push       — Validator commits REVIEW_PE*.md to the feature branch
+#                (existing path; REVIEW verdict drives merge authorisation)
+#   pull_request_review/submitted — mapped bot submits a formal APPROVED review
+#                (new path; PE-INFRA-SLR-05; approval IS the merge signal,
+#                 REVIEW file presence/validity is still checked as AC-4 compliance)
 on:
   push:
     branches:
       - 'feature/**'
       - 'chore/**'
       - 'hotfix/**'
+  pull_request_review:
+    types: [submitted]
 
 jobs:
   gate-2:
@@ -23,91 +31,187 @@ jobs:
         with:
           python-version: '3.11'
 
+      # ── Step 1: Resolve trigger context ──────────────────────────────────────
+      # Outputs: type (push|review), branch, pr_number, reviewer, proceed
+      - name: Resolve trigger context
+        id: ctx
+        run: |
+          trigger="${{ github.event_name }}"
+          echo "trigger=$trigger" >> "$GITHUB_OUTPUT"
+
+          if [ "$trigger" = "pull_request_review" ]; then
+            echo "type=review" >> "$GITHUB_OUTPUT"
+            echo "branch=${{ github.event.pull_request.head.ref }}" >> "$GITHUB_OUTPUT"
+            echo "pr_number=${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
+            echo "reviewer=${{ github.event.review.user.login }}" >> "$GITHUB_OUTPUT"
+            review_state="${{ github.event.review.state }}"
+            echo "review_state=$review_state" >> "$GITHUB_OUTPUT"
+            if [ "$review_state" = "approved" ]; then
+              echo "proceed=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "proceed=false" >> "$GITHUB_OUTPUT"
+              echo "Skipping: review state is '$review_state', not 'approved'."
+            fi
+          else
+            echo "type=push" >> "$GITHUB_OUTPUT"
+            echo "branch=$GITHUB_REF_NAME" >> "$GITHUB_OUTPUT"
+            echo "pr_number=" >> "$GITHUB_OUTPUT"
+            echo "reviewer=" >> "$GITHUB_OUTPUT"
+            echo "review_state=" >> "$GITHUB_OUTPUT"
+            echo "proceed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # ── Step 2: Verify reviewer identity (review trigger only) ───────────────
+      # Checks that the approving login matches the mapped bot for this PE's
+      # validator role (config/reviewer_identity_map.json + CURRENT_PE.md).
+      - name: Verify reviewer is mapped bot identity
+        id: reviewer_check
+        if: steps.ctx.outputs.proceed == 'true' && steps.ctx.outputs.type == 'review'
+        continue-on-error: true
+        run: python scripts/check_reviewer_identity.py
+        env:
+          REVIEWER_LOGIN: ${{ steps.ctx.outputs.reviewer }}
+
+      # ── Step 3: Find REVIEW file on this branch ───────────────────────────────
       - name: Determine REVIEW file for this branch
         id: review
+        if: steps.ctx.outputs.proceed == 'true'
         run: |
-          # Find REVIEW_*.md files that are new or modified on this branch vs base.
-          # Uses the branch name published by the push event.
-          base=$(gh pr list --head "$GITHUB_REF_NAME" --json baseRefName -q '.[0].baseRefName' 2>/dev/null || echo "main")
+          branch="${{ steps.ctx.outputs.branch }}"
+          base=$(gh pr list --head "$branch" --json baseRefName -q '.[0].baseRefName' 2>/dev/null || echo "main")
           git fetch origin "$base" --depth=1 2>/dev/null || true
           review_file=$(git diff --name-only "origin/$base" -- 'REVIEW_*.md' 2>/dev/null | head -1)
           if [ -z "$review_file" ]; then
-            echo "No REVIEW file found on this branch vs $base. Verdict will be IN_PROGRESS."
+            echo "No REVIEW file found on this branch vs $base."
             review_file=""
           else
             echo "Found REVIEW file: $review_file"
           fi
           echo "file=$review_file" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ github.token }}
 
+      # ── Step 4: Parse verdict from REVIEW file ────────────────────────────────
+      # Push path: verdict drives merge authorisation.
+      # Review path: verdict is informational only; bot approval IS the signal.
       - name: Parse verdict from REVIEW file
         id: verdict
+        if: steps.ctx.outputs.proceed == 'true'
         run: |
           if [ -z "${{ steps.review.outputs.file }}" ]; then
-            echo "No REVIEW file selected for this branch diff. Verdict set to IN_PROGRESS."
+            echo "No REVIEW file on branch diff. Verdict: IN_PROGRESS."
             echo "verdict=IN_PROGRESS" >> "$GITHUB_OUTPUT"
-            echo "review_file=" >> "$GITHUB_OUTPUT"
           else
             python scripts/parse_verdict.py
           fi
         env:
           REVIEW_FILE: ${{ steps.review.outputs.file }}
-        # Outputs: verdict=PASS|FAIL|IN_PROGRESS, review_file=REVIEW_PEN.md
+        # Outputs: verdict=PASS|FAIL|IN_PROGRESS
 
+      # ── Step 5: Determine merge authorisation ────────────────────────────────
+      # Push path:   verdict == PASS  → authorised
+      # Review path: mapped bot APPROVED → authorised
+      - name: Determine merge authorisation
+        id: auth
+        if: steps.ctx.outputs.proceed == 'true'
+        run: |
+          trigger="${{ steps.ctx.outputs.type }}"
+          verdict="${{ steps.verdict.outputs.verdict }}"
+          reviewer_ok="${{ steps.reviewer_check.outcome }}"
+
+          if [ "$trigger" = "push" ] && [ "$verdict" = "PASS" ]; then
+            echo "authorized=true" >> "$GITHUB_OUTPUT"
+            echo "reason=REVIEW verdict PASS on push" >> "$GITHUB_OUTPUT"
+          elif [ "$trigger" = "review" ] && [ "$reviewer_ok" = "success" ]; then
+            echo "authorized=true" >> "$GITHUB_OUTPUT"
+            echo "reason=Mapped bot approved on review trigger" >> "$GITHUB_OUTPUT"
+          else
+            echo "authorized=false" >> "$GITHUB_OUTPUT"
+            echo "reason=Not authorised (trigger=$trigger verdict=$verdict reviewer_ok=$reviewer_ok)" >> "$GITHUB_OUTPUT"
+          fi
+
+      # ── Step 6a: Gate 2b — validate REVIEW evidence (AC-4) ───────────────────
+      # Runs whenever merge is authorised. Verifies REVIEW file exists and passes
+      # check_review.py whether the signal came from push or review trigger.
       - name: Gate 2b — validate REVIEW evidence
         id: gate2b
-        if: steps.verdict.outputs.verdict == 'PASS'
+        if: steps.auth.outputs.authorized == 'true'
         continue-on-error: true
         run: python scripts/check_review.py
         env:
           REVIEW_FILE: ${{ steps.review.outputs.file }}
 
+      # ── Step 6b: Notify validator when REVIEW evidence is missing ─────────────
       - name: Gate 2b — notify validator to add evidence
-        if: |
-          steps.verdict.outputs.verdict == 'PASS' &&
-          steps.gate2b.outcome == 'failure'
+        if: steps.auth.outputs.authorized == 'true' && steps.gate2b.outcome == 'failure'
         uses: actions/github-script@v7
         with:
           script: |
-            const { data: prs } = await github.rest.pulls.list({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              head: `${context.repo.owner}:${process.env.GITHUB_REF_NAME}`,
-              state: 'open'
-            });
-            if (prs.length === 0) { return; }
+            const branch = process.env.BRANCH;
+            const knownPr = parseInt(process.env.PR_NUMBER || '0');
+            let prNumber = knownPr;
+            if (!prNumber) {
+              const { data: prs } = await github.rest.pulls.list({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                head: `${context.repo.owner}:${branch}`,
+                state: 'open'
+              });
+              if (prs.length === 0) return;
+              prNumber = prs[0].number;
+            }
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: prs[0].number,
-              body: 'Gate 2b — REVIEW file missing evidence section. Validator must update REVIEW file with command outputs before merge.'
+              issue_number: prNumber,
+              body: 'Gate 2b — REVIEW file missing or failing evidence check. Validator must update REVIEW file with command outputs before merge.'
             });
+        env:
+          BRANCH: ${{ steps.ctx.outputs.branch }}
+          PR_NUMBER: ${{ steps.ctx.outputs.pr_number }}
 
+      # ── Step 6c: Fail workflow when REVIEW evidence is missing ────────────────
       - name: Gate 2b — fail workflow on missing evidence
-        if: |
-          steps.verdict.outputs.verdict == 'PASS' &&
-          steps.gate2b.outcome == 'failure'
+        if: steps.auth.outputs.authorized == 'true' && steps.gate2b.outcome == 'failure'
         run: exit 1
 
+      # ── Step 7: Check for PM veto label ──────────────────────────────────────
       - name: Check for PM veto label
         id: labels
+        if: steps.auth.outputs.authorized == 'true' && steps.gate2b.outcome == 'success'
         uses: actions/github-script@v7
         with:
           script: |
-            const { data: pr } = await github.rest.pulls.list({
+            const branch = process.env.BRANCH;
+            const knownPr = parseInt(process.env.PR_NUMBER || '0');
+            let prNumber = knownPr;
+            if (!prNumber) {
+              const { data: prs } = await github.rest.pulls.list({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                head: `${context.repo.owner}:${branch}`,
+                state: 'open'
+              });
+              if (prs.length === 0) { core.setOutput('veto', 'no-pr'); return; }
+              prNumber = prs[0].number;
+            }
+            const { data: pr } = await github.rest.pulls.get({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              head: `${context.repo.owner}:${process.env.GITHUB_REF_NAME}`,
-              state: 'open'
+              pull_number: prNumber,
             });
-            if (pr.length === 0) { core.setOutput('veto', 'no-pr'); return; }
-            const labels = pr[0].labels.map(l => l.name);
+            const labels = pr.labels.map(l => l.name);
             core.setOutput('veto', labels.includes('pm-review-required') ? 'true' : 'false');
-            core.setOutput('pr_number', String(pr[0].number));
+            core.setOutput('pr_number', String(prNumber));
+        env:
+          BRANCH: ${{ steps.ctx.outputs.branch }}
+          PR_NUMBER: ${{ steps.ctx.outputs.pr_number }}
 
+      # ── Step 8: Check PR is mergeable (CI green + required reviews satisfied) ─
       - name: Check PR is mergeable (CI green)
         id: mergeable
         if: |
-          steps.verdict.outputs.verdict == 'PASS' &&
+          steps.auth.outputs.authorized == 'true' &&
           steps.gate2b.outcome == 'success' &&
           steps.labels.outputs.veto == 'false'
         uses: actions/github-script@v7
@@ -125,9 +229,15 @@ jobs:
               core.warning(`PR mergeable_state is '${state}' (not 'clean') — CI may still be running or checks are failing.`);
             }
 
-      - name: Auto-merge if PASS, no veto, and CI green
+      # ── Step 9: Auto-merge ────────────────────────────────────────────────────
+      # Conditions (AC-2):
+      #   - merge authorised (push PASS verdict OR review-path mapped-bot approval)
+      #   - REVIEW file present and check_review.py clean (AC-4)
+      #   - no pm-review-required label (AC-6)
+      #   - mergeable_state == 'clean' (CI green + required reviews satisfied)
+      - name: Auto-merge if authorised, REVIEW valid, no veto, CI green
         if: |
-          steps.verdict.outputs.verdict == 'PASS' &&
+          steps.auth.outputs.authorized == 'true' &&
           steps.gate2b.outcome == 'success' &&
           steps.labels.outputs.veto == 'false' &&
           steps.mergeable.outputs.state == 'clean'
@@ -135,6 +245,7 @@ jobs:
         with:
           script: |
             const prNumber = parseInt('${{ steps.labels.outputs.pr_number }}');
+            const reason = process.env.AUTH_REASON;
             await github.rest.pulls.merge({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -146,12 +257,15 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: prNumber,
-              body: '## ✅ Gate 2 — auto-merged\n\nValidator PASS verdict confirmed. PR merged automatically.\nPM audit trail: REVIEW file committed on branch.'
+              body: `## ✅ Gate 2 — auto-merged\n\nValidator PASS verdict confirmed. PR merged automatically.\nMerge signal: ${reason}\nPM audit trail: REVIEW file committed on branch.`
             });
+        env:
+          AUTH_REASON: ${{ steps.auth.outputs.reason }}
 
+      # ── Step 10: Notify PM — veto label present ───────────────────────────────
       - name: Notify PM — veto label present
         if: |
-          steps.verdict.outputs.verdict == 'PASS' &&
+          steps.auth.outputs.authorized == 'true' &&
           steps.gate2b.outcome == 'success' &&
           steps.labels.outputs.veto == 'true'
         uses: actions/github-script@v7
@@ -165,15 +279,30 @@ jobs:
               body: '## 🔒 Gate 2 — PM approval required\n\nValidator PASS confirmed but `pm-review-required` label is set.\nPM must manually approve and merge.'
             });
 
+      # ── Step 11: Notify PM — FAIL verdict (push path only) ───────────────────
       - name: Notify PM — FAIL verdict
         id: fail_notify
         if: |
-          steps.verdict.outputs.verdict == 'FAIL' &&
-          steps.labels.outputs.veto != 'no-pr'
+          steps.ctx.outputs.proceed == 'true' &&
+          steps.ctx.outputs.type == 'push' &&
+          steps.verdict.outputs.verdict == 'FAIL'
         uses: actions/github-script@v7
         with:
           script: |
-            const prNumber = parseInt('${{ steps.labels.outputs.pr_number }}');
+            // Resolve PR number independently — labels step may not have run on FAIL path.
+            const branch = process.env.BRANCH;
+            const knownPr = parseInt(process.env.PR_NUMBER || '0');
+            let prNumber = knownPr;
+            if (!prNumber) {
+              const { data: prs } = await github.rest.pulls.list({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                head: `${context.repo.owner}:${branch}`,
+                state: 'open'
+              });
+              if (prs.length === 0) return;
+              prNumber = prs[0].number;
+            }
 
             // Count existing fail-round-* labels to determine current round.
             const { data: pr } = await github.rest.pulls.get({
@@ -210,15 +339,14 @@ jobs:
               labels: [newLabel],
             });
 
-            // Determine implementer mention from CURRENT_PE.md validator field.
-            // (Implementer is opposite of validator.)
+            // Determine implementer mention from CURRENT_PE.md.
             let mention = '@codex';
             try {
               const { data: file } = await github.rest.repos.getContent({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 path: 'CURRENT_PE.md',
-                ref: process.env.GITHUB_REF_NAME,
+                ref: process.env.BRANCH,
               });
               const content = Buffer.from(file.content, 'base64').toString('utf-8');
               const m = content.match(/^\|\s*Implementer\s*\|\s*([^|]+?)\s*\|/m);
@@ -259,3 +387,6 @@ jobs:
               issue_number: prNumber,
               body,
             });
+        env:
+          BRANCH: ${{ steps.ctx.outputs.branch }}
+          PR_NUMBER: ${{ steps.ctx.outputs.pr_number }}
