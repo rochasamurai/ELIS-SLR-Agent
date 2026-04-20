@@ -17,92 +17,92 @@
         }
       },
       {
-        "id": "harvest-impl-codex",
+        "id": "harvest-impl-a",
         "workspace": "/home/samurai/openclaw/workspace-slr-harvest",
         "model": "openai/gpt-5.1-codex"
       },
       {
-        "id": "harvest-val-claude",
+        "id": "harvest-val-b",
         "workspace": "/home/samurai/openclaw/workspace-slr-harvest",
         "model": "anthropic/claude-sonnet-4-6"
       },
       {
-        "id": "screen-impl-claude",
+        "id": "screen-impl-b",
         "workspace": "/home/samurai/openclaw/workspace-slr-screen",
         "model": "anthropic/claude-opus-4-6"
       },
       {
-        "id": "screen-val-codex",
+        "id": "screen-val-a",
         "workspace": "/home/samurai/openclaw/workspace-slr-screen",
         "model": "openai/gpt-5.1-codex"
       },
       {
-        "id": "extract-impl-codex",
+        "id": "extract-impl-a",
         "workspace": "/home/samurai/openclaw/workspace-slr-extract",
         "model": "openai/gpt-5.1-codex"
       },
       {
-        "id": "extract-val-claude",
+        "id": "extract-val-b",
         "workspace": "/home/samurai/openclaw/workspace-slr-extract",
         "model": "anthropic/claude-opus-4-6"
       },
       {
-        "id": "synth-impl-claude",
+        "id": "synth-impl-b",
         "workspace": "/home/samurai/openclaw/workspace-slr-synth",
         "model": "anthropic/claude-opus-4-6"
       },
       {
-        "id": "synth-val-codex",
+        "id": "synth-val-a",
         "workspace": "/home/samurai/openclaw/workspace-slr-synth",
         "model": "openai/gpt-5.1-codex"
       },
       {
-        "id": "prisma-impl-claude",
+        "id": "prisma-impl-b",
         "workspace": "/home/samurai/openclaw/workspace-slr-prisma",
         "model": "anthropic/claude-sonnet-4-6"
       },
       {
-        "id": "prisma-val-codex",
+        "id": "prisma-val-a",
         "workspace": "/home/samurai/openclaw/workspace-slr-prisma",
         "model": "openai/gpt-5.1-codex"
       },
       {
-        "id": "prog-impl-codex",
+        "id": "prog-impl-a",
         "workspace": "/home/samurai/openclaw/workspace-prog-impl",
         "model": "openai/gpt-5.1-codex"
       },
       {
-        "id": "prog-impl-claude",
+        "id": "prog-impl-b",
         "workspace": "/home/samurai/openclaw/workspace-prog-impl",
         "model": "anthropic/claude-sonnet-4-6"
       },
       {
-        "id": "prog-val-codex",
+        "id": "prog-val-a",
         "workspace": "/home/samurai/openclaw/workspace-prog-val",
         "model": "openai/gpt-5.1-codex"
       },
       {
-        "id": "prog-val-claude",
+        "id": "prog-val-b",
         "workspace": "/home/samurai/openclaw/workspace-prog-val",
         "model": "anthropic/claude-sonnet-4-6"
       },
       {
-        "id": "infra-impl-codex",
+        "id": "infra-impl-a",
         "workspace": "/home/samurai/openclaw/workspace-infra-impl",
         "model": "openai/gpt-5.1-codex"
       },
       {
-        "id": "infra-impl-claude",
+        "id": "infra-impl-b",
         "workspace": "/home/samurai/openclaw/workspace-infra-impl",
         "model": "anthropic/claude-sonnet-4-6"
       },
       {
-        "id": "infra-val-codex",
+        "id": "infra-val-a",
         "workspace": "/home/samurai/openclaw/workspace-infra-val",
         "model": "openai/gpt-5.1-codex"
       },
       {
-        "id": "infra-val-claude",
+        "id": "infra-val-b",
         "workspace": "/home/samurai/openclaw/workspace-infra-val",
         "model": "anthropic/claude-sonnet-4-6"
       }

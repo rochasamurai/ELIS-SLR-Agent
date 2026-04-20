@@ -15,6 +15,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from elis.agent_id import engine_from_agent_id
+
 # ---------------------------------------------------------------------------
 # Schema path
 # ---------------------------------------------------------------------------
@@ -157,15 +159,10 @@ def validate_dag(pes: list[dict[str, Any]]) -> list[str]:
 
 
 def _engine(agent_id: str) -> str:
-    lower = agent_id.lower()
-    if "codex" in lower:
-        return "codex"
-    if "claude" in lower:
-        return "claude"
-    raise LoaderError(
-        f"Cannot infer engine from agent id '{agent_id}'. "
-        "Expected 'codex' or 'claude' in the agent ID."
-    )
+    try:
+        return engine_from_agent_id(agent_id)
+    except ValueError as exc:
+        raise LoaderError(str(exc)) from exc
 
 
 def validate_alternation(pes: list[dict[str, Any]], topo_order: list[str]) -> None:

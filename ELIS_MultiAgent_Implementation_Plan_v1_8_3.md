@@ -115,8 +115,8 @@ The following governance PE is unchanged from v1.8.2:
 |-------|-------|
 | Domain | Infrastructure |
 | Track | Workflow governance |
-| Implementer | `infra-impl-codex` |
-| Validator | `infra-val-claude` |
+| Implementer | `infra-impl-a` |
+| Validator | `infra-val-b` |
 | Phase | 1c |
 | Depends On | PE-INFRA-SLR-01 |
 | Status | Implementing |
@@ -146,8 +146,8 @@ Make distinct GitHub review identities a first-class governance requirement for 
 |-------|-------|
 | Domain | Infrastructure |
 | Track | Workflow governance |
-| Implementer | `infra-impl-claude` |
-| Validator | `infra-val-codex` |
+| Implementer | `infra-impl-b` |
+| Validator | `infra-val-a` |
 | Phase | 1d |
 | Depends On | PE-INFRA-SLR-02 |
 | Status | Planned |
@@ -187,8 +187,8 @@ Enable and verify the PM agent's ability to dispatch Gate 1 (and Gate 2) notific
 |-------|-------|
 | Domain | Infrastructure |
 | Track | Workflow governance |
-| Implementer | `infra-impl-codex` |
-| Validator | `infra-val-claude` |
+| Implementer | `infra-impl-a` |
+| Validator | `infra-val-b` |
 | Phase | 1e |
 | Depends On | PE-INFRA-SLR-03 |
 | Status | Planned |
@@ -216,8 +216,8 @@ Replace model/provider-coupled agent identifiers with role-capability identifier
 |-------|-------|
 | Domain | Infrastructure |
 | Track | Workflow governance |
-| Implementer | `infra-impl-claude` |
-| Validator | `infra-val-codex` |
+| Implementer | `infra-impl-b` |
+| Validator | `infra-val-a` |
 | Phase | 1f |
 | Depends On | PE-INFRA-SLR-04 |
 | Status | Planned |
@@ -276,8 +276,8 @@ Unchanged from v1.8.2:
 | 2 | PE-INFRA-SLR-01: Role-based agent surface normalisation | 1b | `infra-impl-claude` | — |
 | 2 | PE-INFRA-SLR-02: Distinct review identity enforcement | 1c | `infra-impl-codex` | — |
 | 2 | PE-INFRA-SLR-03: PM cross-agent dispatch enablement | 1d | `infra-impl-claude` | — |
-| 2 | PE-INFRA-SLR-04: Model-agnostic agent naming governance | 1e | `infra-impl-codex` | — |
-| 2 | PE-INFRA-SLR-05: Gate 2 auto-merge alignment | 1f | `infra-impl-claude` | — |
+| 2 | PE-INFRA-SLR-04: Model-agnostic agent naming governance | 1e | `infra-impl-a` | — |
+| 2 | PE-INFRA-SLR-05: Gate 2 auto-merge alignment | 1f | `infra-impl-b` | — |
 | 3 | PE-SLR-03: ASReview screening pilot | 2 | `infra-impl-codex` | — |
 | 3 | PE-SLR-04: Local screening governance and evidence | 2 | `infra-impl-claude` | — |
 | 4 | PE-SLR-05: Metadata triage and query refinement | 3 | `prog-impl-codex` | — |

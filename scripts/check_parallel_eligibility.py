@@ -14,19 +14,15 @@ from pathlib import Path
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from elis.agent_id import engine_from_agent_id
 from scripts.pe_sequencer import PlanPE, SequencerError, parse_plan
 
 
 def _engine(agent_id: str) -> str:
-    lowered = agent_id.lower()
-    if "codex" in lowered:
-        return "codex"
-    if "claude" in lowered:
-        return "claude"
-    raise SequencerError(
-        f"Cannot infer engine from agent id '{agent_id}'. "
-        "Expected 'codex' or 'claude' in the agent ID."
-    )
+    try:
+        return engine_from_agent_id(agent_id)
+    except ValueError as exc:
+        raise SequencerError(str(exc)) from exc
 
 
 def _has_transitive_dependency(

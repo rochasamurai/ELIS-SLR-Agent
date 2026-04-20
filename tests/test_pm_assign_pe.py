@@ -201,7 +201,7 @@ def test_domain_prefix_dict_complete() -> None:
 
 def test_insert_registry_row() -> None:
     content = _make_current_pe([_ROW_PROG_CODEX])
-    new_row = "| PE-PROG-02  | programs | prog-impl-claude | prog-val-codex | feature/pe-prog-02 | planning | 2026-02-01 |"
+    new_row = "| PE-PROG-02  | programs | prog-impl-b | prog-val-a | feature/pe-prog-02 | planning | 2026-02-01 |"
     updated = insert_registry_row(content, new_row)
     lines = updated.splitlines()
     # Find the last | line in the registry
@@ -242,8 +242,8 @@ def test_make_registry_row_programs_codex() -> None:
     row = make_registry_row(
         "PE-PROG-08", "programs", "codex", "feature/pe-prog-08-pdf-export", "2026-02-22"
     )
-    assert "prog-impl-codex" in row
-    assert "prog-val-claude" in row
+    assert "prog-impl-a" in row
+    assert "prog-val-b" in row
     assert "planning" in row
     assert "PE-PROG-08" in row
 
@@ -252,8 +252,8 @@ def test_make_registry_row_infra_claude() -> None:
     row = make_registry_row(
         "PE-INFRA-10", "infra", "claude", "feature/pe-infra-10-x", "2026-02-22"
     )
-    assert "infra-impl-claude" in row
-    assert "infra-val-codex" in row
+    assert "infra-impl-b" in row
+    assert "infra-val-a" in row
 
 
 # ---------------------------------------------------------------------------
@@ -316,8 +316,8 @@ def test_main_writes_row(tmp_path: pathlib.Path, capsys: pytest.CaptureFixture) 
     assert rc == 0
     updated = current_pe.read_text(encoding="utf-8")
     assert "PE-PROG-08" in updated
-    assert "prog-impl-claude" in updated  # codex prev → claude
-    assert "prog-val-codex" in updated
+    assert "prog-impl-b" in updated  # codex prev → slot b / Claude
+    assert "prog-val-a" in updated
     assert "planning" in updated
     assert "feature/pe-prog-08-pdf-export" in updated
 
@@ -382,8 +382,8 @@ def test_main_first_in_domain_defaults_codex(
 
     assert rc == 0
     out = capsys.readouterr().out
-    assert "prog-impl-codex" in out
-    assert "prog-val-claude" in out
+    assert "prog-impl-a" in out
+    assert "prog-val-b" in out
 
 
 # ---------------------------------------------------------------------------

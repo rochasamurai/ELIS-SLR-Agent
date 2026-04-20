@@ -11,12 +11,11 @@ from __future__ import annotations
 import pytest
 
 from elis.role_surface import (
-    ENGINE_SUFFIXES,
+    SLOT_SUFFIXES,
     SURFACE_ROLE_MAP,
     is_structured_surface,
     role_from_surface,
 )
-
 
 # ---------------------------------------------------------------------------
 # Mapping completeness
@@ -27,18 +26,18 @@ class TestSurfaceRoleMap:
     """SURFACE_ROLE_MAP must cover all canonical surfaces from AGENTS.md §14.2."""
 
     EXPECTED_SURFACES = [
-        "infra-impl-claude",
-        "infra-impl-codex",
-        "infra-val-claude",
-        "infra-val-codex",
-        "prog-impl-claude",
-        "prog-impl-codex",
-        "prog-val-claude",
-        "prog-val-codex",
-        "slr-impl-claude",
-        "slr-impl-codex",
-        "slr-val-claude",
-        "slr-val-codex",
+        "infra-impl-a",
+        "infra-impl-b",
+        "infra-val-a",
+        "infra-val-b",
+        "prog-impl-a",
+        "prog-impl-b",
+        "prog-val-a",
+        "prog-val-b",
+        "slr-impl-a",
+        "slr-impl-b",
+        "slr-val-a",
+        "slr-val-b",
     ]
 
     def test_all_canonical_surfaces_present(self):
@@ -55,18 +54,18 @@ class TestSurfaceRoleMap:
     @pytest.mark.parametrize(
         "surface,expected_role",
         [
-            ("infra-impl-claude", "infra-impl"),
-            ("infra-impl-codex", "infra-impl"),
-            ("infra-val-claude", "infra-val"),
-            ("infra-val-codex", "infra-val"),
-            ("prog-impl-claude", "prog-impl"),
-            ("prog-impl-codex", "prog-impl"),
-            ("prog-val-claude", "prog-val"),
-            ("prog-val-codex", "prog-val"),
-            ("slr-impl-claude", "slr-impl"),
-            ("slr-impl-codex", "slr-impl"),
-            ("slr-val-claude", "slr-val"),
-            ("slr-val-codex", "slr-val"),
+            ("infra-impl-a", "infra-impl"),
+            ("infra-impl-b", "infra-impl"),
+            ("infra-val-a", "infra-val"),
+            ("infra-val-b", "infra-val"),
+            ("prog-impl-a", "prog-impl"),
+            ("prog-impl-b", "prog-impl"),
+            ("prog-val-a", "prog-val"),
+            ("prog-val-b", "prog-val"),
+            ("slr-impl-a", "slr-impl"),
+            ("slr-impl-b", "slr-impl"),
+            ("slr-val-a", "slr-val"),
+            ("slr-val-b", "slr-val"),
         ],
     )
     def test_explicit_mapping_values(self, surface: str, expected_role: str):
@@ -84,12 +83,12 @@ class TestRoleFromSurface:
     @pytest.mark.parametrize(
         "surface,expected_role",
         [
-            ("infra-impl-claude", "infra-impl"),
-            ("infra-val-codex", "infra-val"),
-            ("prog-impl-codex", "prog-impl"),
-            ("prog-val-claude", "prog-val"),
-            ("slr-impl-claude", "slr-impl"),
-            ("slr-val-codex", "slr-val"),
+            ("infra-impl-a", "infra-impl"),
+            ("infra-val-b", "infra-val"),
+            ("prog-impl-a", "prog-impl"),
+            ("prog-val-b", "prog-val"),
+            ("slr-impl-b", "slr-impl"),
+            ("slr-val-a", "slr-val"),
         ],
     )
     def test_known_surfaces(self, surface: str, expected_role: str):
@@ -97,7 +96,7 @@ class TestRoleFromSurface:
 
     def test_fallback_for_unknown_structured_surface(self):
         """Unlisted but structured surfaces fall back to the derivation rule."""
-        assert role_from_surface("slr-val-gemini") == "slr-val"
+        assert role_from_surface("slr-val-c") == "slr-val"
 
     def test_unstructured_surface_raises(self):
         """One-off surfaces without an engine suffix raise ValueError."""
@@ -113,7 +112,7 @@ class TestRoleFromSurface:
             role_from_surface("infra")
 
     def test_same_role_for_both_engines(self):
-        """Both engine variants of a surface map to the same role."""
+        """Both active slots of a surface map to the same role."""
         for prefix in (
             "infra-impl",
             "infra-val",
@@ -122,9 +121,9 @@ class TestRoleFromSurface:
             "slr-impl",
             "slr-val",
         ):
-            role_claude = role_from_surface(f"{prefix}-claude")
-            role_codex = role_from_surface(f"{prefix}-codex")
-            assert role_claude == role_codex == prefix
+            role_a = role_from_surface(f"{prefix}-a")
+            role_b = role_from_surface(f"{prefix}-b")
+            assert role_a == role_b == prefix
 
 
 # ---------------------------------------------------------------------------
@@ -136,11 +135,11 @@ class TestIsStructuredSurface:
     @pytest.mark.parametrize(
         "surface,expected",
         [
-            ("infra-impl-claude", True),
-            ("infra-val-codex", True),
-            ("slr-val-gemini", True),
+            ("infra-impl-a", True),
+            ("infra-val-b", True),
+            ("slr-val-c", True),
             ("gemini-cli", False),
-            ("codex", False),
+            ("slot-a", False),
             ("", False),
             ("infra-impl", False),
         ],
@@ -154,20 +153,20 @@ class TestIsStructuredSurface:
 # ---------------------------------------------------------------------------
 
 
-class TestEngineSuffixes:
-    def test_canonical_engines_present(self):
-        assert "claude" in ENGINE_SUFFIXES
-        assert "codex" in ENGINE_SUFFIXES
-        assert "gemini" in ENGINE_SUFFIXES
+class TestSlotSuffixes:
+    def test_canonical_slots_present(self):
+        assert "a" in SLOT_SUFFIXES
+        assert "b" in SLOT_SUFFIXES
+        assert "c" in SLOT_SUFFIXES
 
     def test_no_provider_specific_terms_in_role_names(self):
-        """Role names must not contain engine suffixes."""
+        """Role names must not contain slot suffixes."""
         for role in SURFACE_ROLE_MAP.values():
             parts = role.split("-")
-            for engine in ENGINE_SUFFIXES:
+            for slot in SLOT_SUFFIXES:
                 assert (
-                    engine not in parts
-                ), f"Role name {role!r} contains engine suffix {engine!r}"
+                    slot not in parts
+                ), f"Role name {role!r} contains slot suffix {slot!r}"
 
 
 # ---------------------------------------------------------------------------

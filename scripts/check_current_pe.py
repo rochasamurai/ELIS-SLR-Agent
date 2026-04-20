@@ -5,8 +5,14 @@ from __future__ import annotations
 import os
 import re
 import sys
+from importlib import import_module
 from pathlib import Path
 
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+engine_from_agent_id = import_module("elis.agent_id").engine_from_agent_id
 
 VALID_ACTIVE_STATUSES = {
     "planning",
@@ -120,14 +126,10 @@ def _parse_registry(content: str) -> tuple[list[str], list[dict[str, str]]]:
 
 
 def _engine(agent_id: str) -> str | None:
-    lowered = agent_id.lower()
-    if "codex" in lowered:
-        return "codex"
-    if "claude" in lowered:
-        return "claude"
-    if "gemini" in lowered:
-        return "gemini"
-    return None
+    try:
+        return engine_from_agent_id(agent_id)
+    except ValueError:
+        return None
 
 
 def _validate_release_context(lines: list[str]) -> None:
