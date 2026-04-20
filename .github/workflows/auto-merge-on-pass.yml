@@ -285,12 +285,24 @@ jobs:
         if: |
           steps.ctx.outputs.proceed == 'true' &&
           steps.ctx.outputs.type == 'push' &&
-          steps.verdict.outputs.verdict == 'FAIL' &&
-          steps.labels.outputs.veto != 'no-pr'
+          steps.verdict.outputs.verdict == 'FAIL'
         uses: actions/github-script@v7
         with:
           script: |
-            const prNumber = parseInt('${{ steps.labels.outputs.pr_number }}');
+            // Resolve PR number independently — labels step may not have run on FAIL path.
+            const branch = process.env.BRANCH;
+            const knownPr = parseInt(process.env.PR_NUMBER || '0');
+            let prNumber = knownPr;
+            if (!prNumber) {
+              const { data: prs } = await github.rest.pulls.list({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                head: `${context.repo.owner}:${branch}`,
+                state: 'open'
+              });
+              if (prs.length === 0) return;
+              prNumber = prs[0].number;
+            }
 
             // Count existing fail-round-* labels to determine current round.
             const { data: pr } = await github.rest.pulls.get({
@@ -377,3 +389,4 @@ jobs:
             });
         env:
           BRANCH: ${{ steps.ctx.outputs.branch }}
+          PR_NUMBER: ${{ steps.ctx.outputs.pr_number }}

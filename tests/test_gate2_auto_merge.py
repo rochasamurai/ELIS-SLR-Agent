@@ -316,4 +316,52 @@ def test_ac6_veto_notify_step_present():
     assert "veto" in text and "pm-review-required" in text
 
 
+# ─── FAIL path: PR number resolved independently (fix for CODEX finding) ─────
+
+
+def test_fail_notify_does_not_use_labels_pr_number():
+    """FAIL notify step must not reference steps.labels.outputs.pr_number.
+
+    On push+FAIL the labels step is skipped (authorized=false), so
+    steps.labels.outputs.pr_number is empty.  The fail_notify step must
+    resolve the PR number independently via ctx outputs.
+    """
+    wf = _load_workflow()
+    steps = wf["jobs"]["gate-2"]["steps"]
+    fail_steps = [
+        s
+        for s in steps
+        if "fail" in s.get("name", "").lower() and "notify" in s.get("name", "").lower()
+    ]
+    assert fail_steps, "No FAIL notify step found"
+    for s in fail_steps:
+        script = s.get("with", {}).get("script", "")
+        assert (
+            "labels.outputs.pr_number" not in script
+        ), "FAIL notify step must not use steps.labels.outputs.pr_number (empty on FAIL path)"
+        assert "PR_NUMBER" in s.get("env", {}) or "PR_NUMBER" in str(
+            s.get("env", "")
+        ), "FAIL notify step must have PR_NUMBER in env from ctx outputs"
+
+
+def test_fail_notify_condition_does_not_require_labels_veto():
+    """FAIL notify step condition must not gate on labels.outputs.veto.
+
+    On push+FAIL the labels step is skipped, so labels outputs are empty.
+    """
+    wf = _load_workflow()
+    steps = wf["jobs"]["gate-2"]["steps"]
+    fail_steps = [
+        s
+        for s in steps
+        if "fail" in s.get("name", "").lower() and "notify" in s.get("name", "").lower()
+    ]
+    assert fail_steps, "No FAIL notify step found"
+    for s in fail_steps:
+        cond = s.get("if", "")
+        assert (
+            "labels.outputs" not in cond
+        ), f"FAIL notify step condition must not reference labels outputs, got: {cond!r}"
+
+
 # ─── AC-7 is satisfied by running this file with pytest -v ────────────────────
