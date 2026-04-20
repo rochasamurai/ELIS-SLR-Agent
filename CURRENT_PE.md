@@ -21,11 +21,12 @@
 
 | Field   | Value                                                          |
 |---------|----------------------------------------------------------------|
-| PE      | PE-INFRA-SLR-04                                               |
-| Branch  | feature/pe-infra-slr-04-model-agnostic-agent-naming-governance |
+| PE      | PE-INFRA-SLR-05                                               |
+| Branch  | feature/pe-infra-slr-05-gate2-auto-merge-alignment             |
 
-> **Active PE.** PE-INFRA-SLR-04 replaces model/provider-coupled agent identifiers
-> with role-capability identifiers, preserving dispatch reliability and audit continuity.
+> **Active PE.** PE-INFRA-SLR-05 updates `auto-merge-on-pass.yml` to trigger on
+> mapped-bot approval review, eliminating the approval-without-merge deadlock
+> documented in issue #344.
 
 ---
 
@@ -33,10 +34,10 @@
 
 | Agent       | Role        |
 |-------------|-------------|
-| CODEX       | Implementer |
-| Claude Code | Validator   |
+| Claude Code | Implementer |
+| CODEX       | Validator   |
 
-> PE-INFRA-SLR-04: `infra-impl-a` (CODEX @ `elis-server`) as Implementer · `infra-val-b` (Claude Code) as Validator.
+> PE-INFRA-SLR-05: `infra-impl-b` (Claude Code) as Implementer · `infra-val-a` (CODEX @ `elis-server`) as Validator.
 
 ---
 
@@ -104,8 +105,8 @@
 | PE-INFRA-SLR-01 | infra          | infra-impl-claude    | infra-val-codex    | feature/pe-infra-slr-01-role-based-agent-surface-normalisation | merged         | 2026-04-14   |
 | PE-INFRA-SLR-02 | infra          | infra-impl-codex     | infra-val-claude   | feature/pe-infra-slr-02-distinct-review-identity-enforcement   | merged         | 2026-04-15   |
 | PE-INFRA-SLR-03 | infra          | infra-impl-claude    | infra-val-codex    | feature/pe-infra-slr-03-pm-control-plane-dispatch-hardening    | merged         | 2026-04-19   |
-| PE-INFRA-SLR-04 | infra          | infra-impl-a         | infra-val-b        | feature/pe-infra-slr-04-model-agnostic-agent-naming-governance | implementing   | 2026-04-19   |
-| PE-INFRA-SLR-05 | infra          | infra-impl-b         | infra-val-a        | feature/pe-infra-slr-05-gate2-auto-merge-alignment             | planning       | 2026-04-19   |
+| PE-INFRA-SLR-04 | infra          | infra-impl-a         | infra-val-b        | feature/pe-infra-slr-04-model-agnostic-agent-naming-governance | merged         | 2026-04-20   |
+| PE-INFRA-SLR-05 | infra          | infra-impl-b         | infra-val-a        | feature/pe-infra-slr-05-gate2-auto-merge-alignment             | implementing   | 2026-04-20   |
 
 Valid status values:
 - `planning`
@@ -168,6 +169,7 @@ PM housekeeping entries (prefix `PM-CHORE-XX`):
 | PM-CHORE-43  | Removed stale HTML comment pollution from `CURRENT_PE.md` header (bot-authored smoke-test residue from PRs #339–#342). No governance state changed. | 2026-04-18 |
 | PM-CHORE-44  | Closed PE-INFRA-SLR-03 as merged (PR #343, r2 PASS verdict — elis-codex-bot APPROVED; PO-merged after auto-merge deadlock caused by Gate 2 automation gap documented in issue #344). Opened PE-INFRA-SLR-04 (Model-Agnostic Agent Naming Governance) with `infra-impl-codex` (CODEX) as Implementer and `infra-val-claude` (Claude Code) as Validator per alternation rule. Dependency PE-INFRA-SLR-03 satisfied. | 2026-04-19 |
 | PM-CHORE-45  | Added PE-INFRA-SLR-05 (Gate 2 Auto-Merge Alignment) to plan v1.8.3 (patch v1.8.3.1) and registered it as `planning`. Scope: update `auto-merge-on-pass.yml` to trigger on mapped-bot approval review, eliminating the approval-without-merge deadlock documented in issue #344. Dependency: PE-INFRA-SLR-04. Staffed `infra-impl-claude` / `infra-val-codex` per alternation rule. | 2026-04-19 |
+| PM-CHORE-46  | Closed PE-INFRA-SLR-04 as merged (PR #345, PASS verdict — PO-merged after auto-merge deadlock; Gate 2 alignment is PE-INFRA-SLR-05's subject). Opened PE-INFRA-SLR-05 (Gate 2 Auto-Merge Alignment) with `infra-impl-b` (Claude Code) as Implementer and `infra-val-a` (CODEX) as Validator per alternation rule. Dependency PE-INFRA-SLR-04 satisfied. | 2026-04-20 |
 
 Alternation rule:
 - For consecutive PEs in the same domain, the implementer engine must alternate (`codex` <-> `claude`).
