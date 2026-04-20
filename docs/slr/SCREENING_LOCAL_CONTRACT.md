@@ -56,3 +56,12 @@ The pilot is successful when:
 - run completes without exception
 - output/report/manifest files are written in the review-scoped contract paths
 - report confirms `stored_outside_runtime_state = true`
+
+CLI runner:
+
+```bash
+python scripts/run_screening_local_pilot.py \
+  --review-id review-001 \
+  --appendix-a json_jsonl/ELIS_Appendix_A_Search_rows.json \
+  --record-cap 100
+```
