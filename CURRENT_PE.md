@@ -21,12 +21,12 @@
 
 | Field   | Value                                                          |
 |---------|----------------------------------------------------------------|
-| PE      | PE-SLR-05                                                      |
-| Branch  | feature/pe-slr-05-metadata-triage-and-query-refinement         |
+| PE      | PE-SLR-06                                                      |
+| Branch  | feature/pe-slr-06-bibliometric-clustering-and-discrepancy-pre-analysis |
 
-> **Active PE.** PE-SLR-05 implements a lightweight metadata triage and query
-> refinement agent to improve record quality and search coverage for local SLR
-> runs on `elis-server`. Dependency PE-SLR-04 satisfied.
+> **Active PE.** PE-SLR-06 implements bibliometric clustering and discrepancy
+> pre-analysis to identify duplicate or conflicting records before full screening.
+> Dependency PE-SLR-05 satisfied.
 
 ---
 
@@ -34,10 +34,10 @@
 
 | Agent       | Role        |
 |-------------|-------------|
-| CODEX       | Implementer |
-| Claude Code | Validator   |
+| Claude Code | Implementer |
+| CODEX       | Validator   |
 
-> PE-SLR-05: `slr-impl-a` (CODEX @ `elis-server`) as Implementer · `slr-val-b` (Claude Code) as Validator.
+> PE-SLR-06: `slr-impl-b` (Claude Code) as Implementer · `slr-val-a` (CODEX @ `elis-server`) as Validator.
 
 ---
 
@@ -109,7 +109,8 @@
 | PE-INFRA-SLR-05 | infra          | infra-impl-b         | infra-val-a        | feature/pe-infra-slr-05-gate2-auto-merge-alignment             | merged         | 2026-04-20   |
 | PE-SLR-03       | slr            | slr-impl-a           | slr-val-b          | feature/pe-slr-03-asreview-screening-pilot                     | merged         | 2026-04-21   |
 | PE-SLR-04       | slr            | slr-impl-b           | slr-val-a          | feature/pe-slr-04-local-screening-governance-and-evidence      | merged         | 2026-04-21   |
-| PE-SLR-05       | slr            | slr-impl-a           | slr-val-b          | feature/pe-slr-05-metadata-triage-and-query-refinement         | implementing   | 2026-04-21   |
+| PE-SLR-05       | slr            | slr-impl-a           | slr-val-b          | feature/pe-slr-05-metadata-triage-and-query-refinement         | merged         | 2026-04-21   |
+| PE-SLR-06       | slr            | slr-impl-b           | slr-val-a          | feature/pe-slr-06-bibliometric-clustering-and-discrepancy-pre-analysis | implementing   | 2026-04-21   |
 
 Valid status values:
 - `planning`
@@ -176,6 +177,7 @@ PM housekeeping entries (prefix `PM-CHORE-XX`):
 | PM-CHORE-47  | Closed PE-INFRA-SLR-05 as merged (PR #346, PASS verdict — mapped-bot approval review trigger and reviewer-identity alignment validated). Opened PE-SLR-03 (ASReview Screening Pilot) with `slr-impl-a` (CODEX @ `elis-server`) as Implementer and `slr-val-b` (Claude Code) as Validator per alternation rule for SLR Phase 2 progression. | 2026-04-20 |
 | PM-CHORE-48  | Closed PE-SLR-03 as merged (PR #348, r2 PASS verdict — Claude Code Validator; AC-1 and AC-4 deferred to post-merge elis-server deployment by PO decision). Opened PE-SLR-04 (Local Screening Governance and Evidence) with `slr-impl-b` (Claude Code) as Implementer and `slr-val-a` (CODEX @ `elis-server`) as Validator per alternation rule. Dependency PE-SLR-03 satisfied. | 2026-04-21 |
 | PM-CHORE-49  | Closed PE-SLR-04 as merged (PR #350, PASS verdict pending — PO-merged). Opened PE-SLR-05 (Metadata Triage and Query Refinement Agent) with `slr-impl-a` (CODEX @ `elis-server`) as Implementer and `slr-val-b` (Claude Code) as Validator per alternation rule. Dependency PE-SLR-04 satisfied. | 2026-04-21 |
+| PM-CHORE-50  | Closed PE-SLR-05 as merged. Opened PE-SLR-06 (Bibliometric Clustering and Discrepancy Pre-analysis) with `slr-impl-b` (Claude Code) as Implementer and `slr-val-a` (CODEX @ `elis-server`) as Validator per alternation rule. Dependency PE-SLR-05 satisfied. | 2026-04-21 |
 
 Alternation rule:
 - For consecutive PEs in the same domain, the implementer engine must alternate (`codex` <-> `claude`).
