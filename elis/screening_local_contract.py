@@ -22,8 +22,11 @@ RUNTIME_STATE_DIR_NAMES = {".openclaw", ".claude", ".codex", ".config"}
 
 def now_utc_iso() -> str:
     """Return current UTC timestamp in ISO format with `Z` suffix."""
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace(
-        "+00:00", "Z"
+    return (
+        datetime.now(timezone.utc)
+        .replace(microsecond=0)
+        .isoformat()
+        .replace("+00:00", "Z")
     )
 
 

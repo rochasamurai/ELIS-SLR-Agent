@@ -1,4 +1,4 @@
-## Agent update — Claude Code / PE-SLR-03 / 2026-04-20
+## Agent update — Claude Code / PE-SLR-03 / 2026-04-20 (r1)
 
 ### Verdict
 FAIL
@@ -80,3 +80,83 @@ cat HANDOFF.md | head -5
 #### Non-blocking observation
 
 N1: `str(Path("schemas/appendix_b.schema.json"))` returns OS-native separators on Windows. Test failure is Windows-local only; CI (ubuntu-latest) and elis-server (Linux) pass. Consider using `.as_posix()` in `run_bounded_screening_pilot` report serialisation for cross-platform reproducibility.
+
+---
+
+## Agent update — Claude Code / PE-SLR-03 / 2026-04-20 (r2)
+
+### Verdict
+PASS
+
+### Gate results
+black: PASS
+ruff: PASS
+pytest tests/test_screening_local_contract.py: 5/5 PASS
+
+### Scope
+M	HANDOFF.md
+A	REVIEW_PE_SLR_03.md
+A	docs/slr/SCREENING_LOCAL_CONTRACT.md
+A	elis/screening_local_contract.py
+A	scripts/run_screening_local_pilot.py
+A	tests/test_screening_local_contract.py
+
+### Required fixes
+None.
+
+### Evidence
+
+#### Validator formatting fix applied
+
+`now_utc_iso()` method chain in `elis/screening_local_contract.py` and one
+over-long line in `tests/test_screening_local_contract.py` reformatted as
+minimal Validator scope fix (CODEX confirmed black was unavailable locally).
+
+#### Commands run
+
+```text
+python -m black --check .
+All done! ✨ 🍰 ✨
+184 files would be left unchanged.   rc: 0
+```
+
+```text
+python -m ruff check .
+All checks passed!   rc: 0
+```
+
+```text
+python -m pytest tests/test_screening_local_contract.py -v
+============================= test session starts =============================
+platform win32 -- Python 3.14.0, pytest-9.0.1, pluggy-1.6.0
+collected 5 items
+
+tests\test_screening_local_contract.py .....                            [100%]
+
+5 passed in 0.15s   rc: 0
+```
+
+```text
+git diff --name-status origin/main...HEAD
+M	HANDOFF.md
+A	REVIEW_PE_SLR_03.md
+A	docs/slr/SCREENING_LOCAL_CONTRACT.md
+A	elis/screening_local_contract.py
+A	scripts/run_screening_local_pilot.py
+A	tests/test_screening_local_contract.py
+```
+
+#### AC evaluation
+
+| AC | Criterion | Result |
+|----|-----------|--------|
+| AC-1 | ASReview installed and runnable on `elis-server` | DEFERRED — code delivers `detect_asreview_installation()`; runtime confirmation pending post-merge deployment on `elis-server` (HANDOFF §4) |
+| AC-2 | Review-specific workspace contract defined | PASS — `ScreeningWorkspaceContract` with `review_id` scoping |
+| AC-3 | Inputs/outputs schema-bound and auditable | PASS — schema paths, record counts, and timestamps in report/manifest; paths normalised to POSIX via `.as_posix()` |
+| AC-4 | Bounded pilot run completes on `elis-server` | DEFERRED — `run_bounded_screening_pilot()` fully implemented and tested; live run pending post-merge deployment |
+| AC-5 | Artefacts stored outside runtime state directories | PASS — `assert_non_runtime_storage` enforced in `ensure_dirs()` and pilot function |
+| AC-6 | `pytest tests/test_screening_local_contract.py -v` passes | PASS — 5/5 |
+
+**PM note:** AC-1 and AC-4 require elis-server runtime execution post-merge.
+HANDOFF.md states deferral by PO decision. PM should confirm or schedule
+PE-SLR-04 scope to include AC-1/AC-4 evidence if required.

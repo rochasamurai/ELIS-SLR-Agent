@@ -103,9 +103,7 @@ def test_bounded_pilot_writes_schema_bound_auditable_outputs(tmp_path: Path) -> 
     assert report_payload["records_processed"] == 3
     assert report_payload["appendix_b_schema_path"] == "schemas/appendix_b.schema.json"
 
-    manifest_payload = json.loads(
-        contract.pilot_manifest().read_text(encoding="utf-8")
-    )
+    manifest_payload = json.loads(contract.pilot_manifest().read_text(encoding="utf-8"))
     assert manifest_payload["stage"] == "screening"
     assert manifest_payload["pilot_mode"] == "bounded"
     assert manifest_payload["record_cap"] == 3
