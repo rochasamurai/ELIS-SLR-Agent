@@ -21,12 +21,12 @@
 
 | Field   | Value                                                          |
 |---------|----------------------------------------------------------------|
-| PE      | PE-SLR-07                                                      |
-| Branch  | feature/pe-slr-07-extraction-off-host-contract                 |
+| PE      | PE-SLR-08                                                      |
+| Branch  | feature/pe-slr-08-synthesis-off-host-contract                  |
 
-> **Active PE.** PE-SLR-07 defines the extraction off-host contract: workflow
-> envelopes, quality controls, and future migration criteria for keeping
-> Extraction deliberately off-host. Dependency PE-SLR-06 satisfied.
+> **Active PE.** PE-SLR-08 defines the synthesis off-host contract: workflow
+> envelopes, quality controls, and governance enforcement for keeping
+> Synthesis deliberately off-host. Dependency PE-SLR-07 satisfied.
 
 ---
 
@@ -34,10 +34,10 @@
 
 | Agent       | Role        |
 |-------------|-------------|
-| CODEX       | Implementer |
-| Claude Code | Validator   |
+| Claude Code | Implementer |
+| CODEX       | Validator   |
 
-> PE-SLR-07: `slr-impl-a` (CODEX @ `elis-server`) as Implementer · `slr-val-b` (Claude Code) as Validator.
+> PE-SLR-08: `slr-impl-b` (Claude Code) as Implementer · `slr-val-a` (CODEX @ `elis-server`) as Validator.
 
 ---
 
@@ -111,7 +111,8 @@
 | PE-SLR-04       | slr            | slr-impl-b           | slr-val-a          | feature/pe-slr-04-local-screening-governance-and-evidence      | merged         | 2026-04-21   |
 | PE-SLR-05       | slr            | slr-impl-a           | slr-val-b          | feature/pe-slr-05-metadata-triage-and-query-refinement         | merged         | 2026-04-21   |
 | PE-SLR-06       | slr            | slr-impl-b           | slr-val-a          | feature/pe-slr-06-bibliometric-clustering-and-discrepancy-pre-analysis | merged         | 2026-04-21   |
-| PE-SLR-07       | slr            | slr-impl-a           | slr-val-b          | feature/pe-slr-07-extraction-off-host-contract                         | implementing   | 2026-04-21   |
+| PE-SLR-07       | slr            | slr-impl-a           | slr-val-b          | feature/pe-slr-07-extraction-off-host-contract                         | merged         | 2026-04-21   |
+| PE-SLR-08       | slr            | slr-impl-b           | slr-val-a          | feature/pe-slr-08-synthesis-off-host-contract                          | implementing   | 2026-04-21   |
 
 Valid status values:
 - `planning`
@@ -180,6 +181,7 @@ PM housekeeping entries (prefix `PM-CHORE-XX`):
 | PM-CHORE-49  | Closed PE-SLR-04 as merged (PR #350, PASS verdict pending — PO-merged). Opened PE-SLR-05 (Metadata Triage and Query Refinement Agent) with `slr-impl-a` (CODEX @ `elis-server`) as Implementer and `slr-val-b` (Claude Code) as Validator per alternation rule. Dependency PE-SLR-04 satisfied. | 2026-04-21 |
 | PM-CHORE-50  | Closed PE-SLR-05 as merged. Opened PE-SLR-06 (Bibliometric Clustering and Discrepancy Pre-analysis) with `slr-impl-b` (Claude Code) as Implementer and `slr-val-a` (CODEX @ `elis-server`) as Validator per alternation rule. Dependency PE-SLR-05 satisfied. | 2026-04-21 |
 | PM-CHORE-51  | Closed PE-SLR-06 as merged (PR #353, PASS verdict — CODEX Validator). Opened PE-SLR-07 (Extraction Off-Host Contract) with `slr-impl-a` (CODEX @ `elis-server`) as Implementer and `slr-val-b` (Claude Code) as Validator per alternation rule. Dependency PE-SLR-06 satisfied. | 2026-04-21 |
+| PM-CHORE-52  | Closed PE-SLR-07 as merged (PR #355, PASS verdict — Claude Code Validator; elis-claude-bot formal approval). Opened PE-SLR-08 (Synthesis Off-Host Contract) with `slr-impl-b` (Claude Code) as Implementer and `slr-val-a` (CODEX @ `elis-server`) as Validator per alternation rule. Dependency PE-SLR-07 satisfied. | 2026-04-21 |
 
 Alternation rule:
 - For consecutive PEs in the same domain, the implementer engine must alternate (`codex` <-> `claude`).
