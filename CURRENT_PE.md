@@ -21,12 +21,12 @@
 
 | Field   | Value                                                          |
 |---------|----------------------------------------------------------------|
-| PE      | PE-SLR-03                                                      |
-| Branch  | feature/pe-slr-03-asreview-screening-pilot                     |
+| PE      | PE-SLR-04                                                      |
+| Branch  | feature/pe-slr-04-local-screening-governance-and-evidence      |
 
-> **Active PE.** PE-SLR-03 runs the ASReview screening pilot on `elis-server`,
-> establishing local-first screening evidence and governance guardrails for
-> Phase 2 of the v1.8.3 hybrid execution series.
+> **Active PE.** PE-SLR-04 adds audit, discrepancy, and evidence rules for local
+> screening so outputs are governed rather than merely convenient. Dependency
+> PE-SLR-03 satisfied.
 
 ---
 
@@ -34,10 +34,10 @@
 
 | Agent       | Role        |
 |-------------|-------------|
-| CODEX       | Implementer |
-| Claude Code | Validator   |
+| Claude Code | Implementer |
+| CODEX       | Validator   |
 
-> PE-SLR-03: `slr-impl-a` (CODEX @ `elis-server`) as Implementer · `slr-val-b` (Claude Code) as Validator.
+> PE-SLR-04: `slr-impl-b` (Claude Code) as Implementer · `slr-val-a` (CODEX @ `elis-server`) as Validator.
 
 ---
 
@@ -107,7 +107,8 @@
 | PE-INFRA-SLR-03 | infra          | infra-impl-claude    | infra-val-codex    | feature/pe-infra-slr-03-pm-control-plane-dispatch-hardening    | merged         | 2026-04-19   |
 | PE-INFRA-SLR-04 | infra          | infra-impl-a         | infra-val-b        | feature/pe-infra-slr-04-model-agnostic-agent-naming-governance | merged         | 2026-04-20   |
 | PE-INFRA-SLR-05 | infra          | infra-impl-b         | infra-val-a        | feature/pe-infra-slr-05-gate2-auto-merge-alignment             | merged         | 2026-04-20   |
-| PE-SLR-03       | slr            | slr-impl-a           | slr-val-b          | feature/pe-slr-03-asreview-screening-pilot                     | implementing   | 2026-04-20   |
+| PE-SLR-03       | slr            | slr-impl-a           | slr-val-b          | feature/pe-slr-03-asreview-screening-pilot                     | merged         | 2026-04-21   |
+| PE-SLR-04       | slr            | slr-impl-b           | slr-val-a          | feature/pe-slr-04-local-screening-governance-and-evidence      | implementing   | 2026-04-21   |
 
 Valid status values:
 - `planning`
@@ -172,6 +173,7 @@ PM housekeeping entries (prefix `PM-CHORE-XX`):
 | PM-CHORE-45  | Added PE-INFRA-SLR-05 (Gate 2 Auto-Merge Alignment) to plan v1.8.3 (patch v1.8.3.1) and registered it as `planning`. Scope: update `auto-merge-on-pass.yml` to trigger on mapped-bot approval review, eliminating the approval-without-merge deadlock documented in issue #344. Dependency: PE-INFRA-SLR-04. Staffed `infra-impl-claude` / `infra-val-codex` per alternation rule. | 2026-04-19 |
 | PM-CHORE-46  | Closed PE-INFRA-SLR-04 as merged (PR #345, PASS verdict — PO-merged after auto-merge deadlock; Gate 2 alignment is PE-INFRA-SLR-05's subject). Opened PE-INFRA-SLR-05 (Gate 2 Auto-Merge Alignment) with `infra-impl-b` (Claude Code) as Implementer and `infra-val-a` (CODEX) as Validator per alternation rule. Dependency PE-INFRA-SLR-04 satisfied. | 2026-04-20 |
 | PM-CHORE-47  | Closed PE-INFRA-SLR-05 as merged (PR #346, PASS verdict — mapped-bot approval review trigger and reviewer-identity alignment validated). Opened PE-SLR-03 (ASReview Screening Pilot) with `slr-impl-a` (CODEX @ `elis-server`) as Implementer and `slr-val-b` (Claude Code) as Validator per alternation rule for SLR Phase 2 progression. | 2026-04-20 |
+| PM-CHORE-48  | Closed PE-SLR-03 as merged (PR #348, r2 PASS verdict — Claude Code Validator; AC-1 and AC-4 deferred to post-merge elis-server deployment by PO decision). Opened PE-SLR-04 (Local Screening Governance and Evidence) with `slr-impl-b` (Claude Code) as Implementer and `slr-val-a` (CODEX @ `elis-server`) as Validator per alternation rule. Dependency PE-SLR-03 satisfied. | 2026-04-21 |
 
 Alternation rule:
 - For consecutive PEs in the same domain, the implementer engine must alternate (`codex` <-> `claude`).
