@@ -172,16 +172,22 @@ def run_hybrid_slr_flow(
         raise RuntimeError("Screening was unexpectedly deferred during hybrid flow")
 
     # Phase 3 — local support-agent (bibliometric clustering)
-    #   Runs as a local workload; must not promote extraction/synthesis locally.
-    _support_agent_admission = enforce_local_workload_request(
+    #   Screening is sequential and has completed; the local slot is free.
+    #   Honour the admission result: only run clustering if admitted.
+    support_agent_admission = enforce_local_workload_request(
         "bibliometric-preanalysis",
         requested_concurrency=1,
-        current_local_jobs=1,  # screening slot is occupied
+        current_local_jobs=0,
         policy=policy,
     )
-    clusters = cluster_by_title_similarity(
-        screening_records, threshold=0.5, max_records=policy.max_local_concurrency * 500
-    )
+    if support_agent_admission["allowed"]:
+        clusters = cluster_by_title_similarity(
+            screening_records,
+            threshold=0.5,
+            max_records=policy.max_local_concurrency * 500,
+        )
+    else:
+        clusters = []
 
     # Phase 4a — off-host extraction
     extraction_envelope = ExtractionWorkflowEnvelope(

@@ -28,7 +28,7 @@ Harvest (off-host) → Screening (local) → support-agent (local) → Extractio
 | File | Change |
 |------|--------|
 | `elis/hybrid_slr_validation.py` | New module implementing hybrid flow runner, surface registry, invariant checks, reproducibility validation, and PM reporting |
-| `tests/test_hybrid_slr_validation.py` | New test suite with 10 tests covering AC-1 to AC-5 |
+| `tests/test_hybrid_slr_execution.py` | New test suite with 14 tests covering AC-1 to AC-5 |
 | `docs/slr/HYBRID_SLR_VALIDATION.md` | New documentation for hybrid flow, surface registry, and invariants |
 
 ---
@@ -102,4 +102,4 @@ the results.
    `execution_surface="off-host-workflow"` and `local_execution_allowed=False`.
 4. Confirm `validate_audit_reproducibility` returns `True`.
 5. Confirm `assert_surface_invariants` raises on a mismatched policy.
-6. Run `python -m pytest tests/test_hybrid_slr_validation.py -v` and verify all pass.
+6. Run `python -m pytest tests/test_hybrid_slr_execution.py -v` and verify all pass.
