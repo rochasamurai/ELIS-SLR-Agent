@@ -10,7 +10,7 @@
 
 | Field          | Value                                                          |
 |----------------|----------------------------------------------------------------|
-| Release        | GitHub Actions CI Authority Plan · Phase A                     |
+| Release        | GitHub Actions CI Authority Plan · complete                    |
 | Base branch    | main                                                           |
 | Plan file      | GITHUB_ACTIONS_TEST_IMPROVEMENT_PLAN.md                        |
 | Plan location  | docs/_active/                                                  |
@@ -19,23 +19,23 @@
 
 ## Current PE
 
-| Field   | Value                                                          |
-|---------|----------------------------------------------------------------|
-| PE      | PE-GHA-02                                                      |
-| Branch  | feature/pe-gha-02-workflow-classification-and-branch-protection |
+| Field   | Value |
+|---------|-------|
+| PE      | —     |
+| Branch  | —     |
 
-> **Active PE.** PE-GHA-02 implements Phases B, C, and D of the GitHub Actions CI Authority Plan: classify workflows as CI or orchestration, expand branch protection to require all portable-gate CI jobs, and validate the hardened merge gate. Dependency PE-GHA-01 satisfied.
+> **No active PE.** GitHub Actions CI Authority Plan complete (PE-GHA-01 and PE-GHA-02 merged). Awaiting PM assignment of next plan.
 
 ---
 
 ## Agent roles
 
-| Agent       | Role        |
-|-------------|-------------|
-| Claude Code | Implementer |
-| CODEX       | Validator   |
+| Agent       | Role |
+|-------------|------|
+| Claude Code | —    |
+| CODEX       | —    |
 
-> PE-GHA-02: `gha-impl-b` (Claude Code) as Implementer · `gha-val-a` (CODEX @ `elis-server`) as Validator.
+> No active PE.
 
 ---
 
@@ -114,7 +114,7 @@
 | PE-SLR-09       | slr            | slr-impl-a           | slr-val-b          | feature/pe-slr-09-elis-server-capacity-placement-policy                | merged         | 2026-04-21   |
 | PE-SLR-10       | slr            | slr-impl-b           | slr-val-a          | feature/pe-slr-10-end-to-end-hybrid-slr-validation                     | merged         | 2026-04-22   |
 | PE-GHA-01       | ci             | gha-impl-a           | gha-val-b          | feature/pe-gha-01-agents-md-ci-authority                                | merged         | 2026-04-22   |
-| PE-GHA-02       | ci             | gha-impl-b           | gha-val-a          | feature/pe-gha-02-workflow-classification-and-branch-protection          | implementing   | 2026-04-22   |
+| PE-GHA-02       | ci             | gha-impl-b           | gha-val-a          | feature/pe-gha-02-workflow-classification-and-branch-protection          | merged         | 2026-04-22   |
 
 Valid status values:
 - `planning`
@@ -190,6 +190,7 @@ PM housekeeping entries (prefix `PM-CHORE-XX`):
 | PM-CHORE-56  | Adopted `docs/_active/GITHUB_ACTIONS_TEST_IMPROVEMENT_PLAN.md` as governing plan for the GitHub Actions CI Authority series. Opened PE-GHA-01 (Phase A — AGENTS.md CI Authority and elis-server Preflight Documentation) with `gha-impl-a` (CODEX @ `elis-server`) as Implementer and `gha-val-b` (Claude Code) as Validator. Dependency: plan validation by Claude Code (2026-04-22) satisfied. Acceptance criteria: §7 of the plan (AC-1 through AC-6). | 2026-04-22 |
 | PM-CHORE-57  | Closed PE-GHA-01 as merged (PR #364, r2 PASS verdict — Claude Code Validator; elis-codex-bot formal approval). Phase A of the GitHub Actions CI Authority Plan complete: `AGENTS.md` updated, ADR-011 recorded. No active PE. Awaiting PM assignment of Phase B or next plan. | 2026-04-22 |
 | PM-CHORE-58  | Opened PE-GHA-02 (Phases B+C+D — Workflow Classification, Branch Protection Hardening, Gate Regression Test) with `gha-impl-b` (Claude Code) as Implementer and `gha-val-a` (CODEX @ `elis-server`) as Validator per alternation rule. Dependency PE-GHA-01 satisfied. | 2026-04-22 |
+| PM-CHORE-59  | Closed PE-GHA-02 as merged (PR #367, r2 PASS verdict — CODEX Validator; elis-codex-bot formal approval). GitHub Actions CI Authority Plan complete — all 2 GHA PEs merged (PE-GHA-01 and PE-GHA-02). Branch protection on `main` now requires all 7 portable-gate CI checks. No active PE. Awaiting PM assignment of next plan. | 2026-04-22 |
 
 Alternation rule:
 - For consecutive PEs in the same domain, the implementer engine must alternate (`codex` <-> `claude`).
