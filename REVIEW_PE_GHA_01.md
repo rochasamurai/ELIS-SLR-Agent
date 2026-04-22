@@ -35,8 +35,11 @@ python -m black --check . (local preflight)
 python -m ruff check . (local preflight)
 → All checks passed!
 
-python -m pytest -q (local — PermissionError on stale Windows temp dirs)
-→ pre-existing environment artefact; CI tests: pass
+python -m pytest -q --basetemp=.tmp/gha01-pytest-clean --cache-clear (local preflight)
+→ 2 failed, remainder passed
+  FAILED tests/test_verify_claude_auth.py::test_fails_when_credentials_file_missing
+  FAILED tests/test_verify_claude_auth.py::test_fails_when_credentials_file_lacks_oauth_key
+  (2 pre-existing failures unrelated to PE-GHA-01; CI tests: pass)
 ```
 
 ---
@@ -48,11 +51,12 @@ git diff --name-status origin/main..HEAD
 
 M  AGENTS.md
 M  HANDOFF.md
+A  REVIEW_PE_GHA_01.md
 A  docs/decisions/ADR-011-github-actions-authority-for-portable-gates.md
 M  docs/decisions/README.md
 ```
 
-4 files. Scope matches HANDOFF.md. No unrelated changes.
+5 files. Scope matches HANDOFF.md. No unrelated changes.
 
 ---
 
@@ -101,9 +105,16 @@ docs/decisions/README.md
 → | ADR-011 | GitHub Actions authority for portable gates | Accepted | 2026-04-22 |
 ```
 
-**Local pytest PermissionError**
+**pytest pre-existing failures**
 
-The collection errors are caused by stale inaccessible temp directories
-(`.pytest-temp-check-current-pe`, `pytest-cache-files-*`) left in the worktree
-by prior PE runs. The PE-GHA-01 changes are pure documentation — they cannot
-affect test collection or execution. CI `tests` is green. Not a blocking finding.
+The 2 failures in `test_verify_claude_auth.py` are pre-existing and unrelated
+to PE-GHA-01. The PE changes are pure documentation and cannot affect test
+execution. CI `tests` is green. Not a blocking finding.
+
+---
+
+**Re-validation round 2 — 2026-04-22**
+
+HANDOFF updated at `97404a1` with refreshed pytest evidence (`--cache-clear`
+cleared the prior PermissionError). Scope and AC status unchanged. PASS
+verdict confirmed.
