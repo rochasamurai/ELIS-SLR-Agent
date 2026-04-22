@@ -1,3 +1,4 @@
+# Classification: Orchestration — dispatches agent sessions, manages PRs/labels, or pushes commits; may use bot tokens; not a code-validation gate.
 name: ELIS - Validator Dispatcher
 
 on:
