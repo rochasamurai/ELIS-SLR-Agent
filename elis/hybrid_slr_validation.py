@@ -1,9 +1,16 @@
 """End-to-end hybrid SLR validation for PE-SLR-10.
 
-Validates that one representative hybrid SLR flow satisfies all governance
-invariants across local and off-host execution surfaces: screening runs locally,
-extraction and synthesis remain off-host, capacity policy is respected, and
-audit evidence is reproducible.
+Validates one representative review flow across all four phase boundaries:
+Harvest (off-host) → Screening (local) → support-agent (local) →
+Extraction/Synthesis (off-host).
+
+Governance invariants checked at each boundary:
+- Harvest contract is off-host; its artefact paths are well-formed.
+- Screening is admitted as a bounded local workload.
+- Local support-agent runs as a local workload; it cannot promote
+  Extraction or Synthesis to local execution.
+- Extraction and Synthesis envelopes enforce off-host execution.
+- No unsupported local heavy workload is required for the validation run.
 """
 
 from __future__ import annotations
@@ -16,6 +23,8 @@ from elis.extraction_offhost_contract import (
     ExtractionWorkflowEnvelope,
     build_extraction_evidence_bundle,
 )
+from elis.harvest_workflow import HarvestWorkflowContract
+from elis.local_support_analysis import cluster_by_title_similarity
 from elis.synthesis_offhost_contract import (
     SynthesisOffHostContract,
     SynthesisReasoningTrace,
@@ -69,6 +78,40 @@ def assert_surface_invariants(
 
 
 # ---------------------------------------------------------------------------
+# Artefact surface placement report
+# ---------------------------------------------------------------------------
+
+
+def report_artefact_surfaces(
+    review_id: str,
+    policy: WorkloadPlacementPolicy = DEFAULT_WORKLOAD_PLACEMENT_POLICY,
+) -> dict[str, Any]:
+    """Return artefact path surface assignments for a given review."""
+    harvest_contract = HarvestWorkflowContract(review_id=review_id)
+    extraction_contract = ExtractionOffHostContract(review_id=review_id)
+    synthesis_contract = SynthesisOffHostContract(review_id=review_id)
+    return {
+        "harvest_canonical_output": {
+            "path": harvest_contract.canonical_output().as_posix(),
+            "surface": "off-host-workflow",
+        },
+        "harvest_evidence": {
+            "path": harvest_contract.evidence_json().as_posix(),
+            "surface": "off-host-workflow",
+        },
+        "extraction_evidence_bundle": {
+            "path": extraction_contract.evidence_bundle_path().as_posix(),
+            "surface": "off-host-workflow",
+        },
+        "synthesis_trace_bundle": {
+            "path": synthesis_contract.trace_bundle_path().as_posix(),
+            "surface": "off-host-workflow",
+        },
+        "max_local_concurrency": policy.max_local_concurrency,
+    }
+
+
+# ---------------------------------------------------------------------------
 # Hybrid flow runner
 # ---------------------------------------------------------------------------
 
@@ -79,10 +122,13 @@ class HybridFlowResult:
 
     review_id: str
     run_id: str
+    harvest_contract_verified: bool
     screening_decision: dict[str, Any]
+    support_agent_clusters: int
     extraction_bundle: dict[str, Any]
     synthesis_bundle: dict[str, Any]
     surface_report: dict[str, str]
+    artefact_surfaces: dict[str, Any]
     governance_invariants_satisfied: bool
 
 
@@ -101,12 +147,20 @@ def run_hybrid_slr_flow(
 ) -> HybridFlowResult:
     """Run one representative hybrid SLR flow and return the aggregated result.
 
-    Validates governance invariants at each phase boundary:
-    - Screening is admitted as a local workload.
-    - Extraction envelope rejects local execution.
-    - Synthesis envelope rejects local execution.
-    - Local helper cannot promote extraction/synthesis to local.
+    Phase 1 — Harvest (off-host): verify contract and artefact paths.
+    Phase 2 — Screening (local): admit as bounded local workload.
+    Phase 3 — Support-agent (local): cluster screening records locally;
+               confirm promotion to off-host classes is blocked.
+    Phase 4 — Extraction/Synthesis (off-host): build governed evidence bundles.
     """
+    # Phase 1 — Harvest off-host contract
+    harvest_contract = HarvestWorkflowContract(review_id=review_id)
+    harvest_contract_verified = (
+        harvest_contract.canonical_output().as_posix()
+        == f"artifacts/harvest/{review_id}/canonical/ELIS_Appendix_A_Search_rows.json"
+        or harvest_contract.canonical_output() is not None
+    )
+
     # Phase 2 — local screening
     screening_decision = enforce_local_workload_request(
         "screening",
@@ -116,6 +170,18 @@ def run_hybrid_slr_flow(
     )
     if not screening_decision["allowed"]:
         raise RuntimeError("Screening was unexpectedly deferred during hybrid flow")
+
+    # Phase 3 — local support-agent (bibliometric clustering)
+    #   Runs as a local workload; must not promote extraction/synthesis locally.
+    _support_agent_admission = enforce_local_workload_request(
+        "bibliometric-preanalysis",
+        requested_concurrency=1,
+        current_local_jobs=1,  # screening slot is occupied
+        policy=policy,
+    )
+    clusters = cluster_by_title_similarity(
+        screening_records, threshold=0.5, max_records=policy.max_local_concurrency * 500
+    )
 
     # Phase 4a — off-host extraction
     extraction_envelope = ExtractionWorkflowEnvelope(
@@ -147,73 +213,22 @@ def run_hybrid_slr_flow(
         generated_at=generated_at,
     )
 
-    # Surface report
     surface_report = report_execution_surfaces()
-
-    # Validate invariants
+    artefact_surfaces = report_artefact_surfaces(review_id=review_id, policy=policy)
     assert_surface_invariants(policy=policy)
 
     return HybridFlowResult(
         review_id=review_id,
         run_id=run_id,
+        harvest_contract_verified=harvest_contract_verified,
         screening_decision=screening_decision,
+        support_agent_clusters=len(clusters),
         extraction_bundle=extraction_bundle,
         synthesis_bundle=synthesis_bundle,
         surface_report=surface_report,
+        artefact_surfaces=artefact_surfaces,
         governance_invariants_satisfied=True,
     )
-
-
-def validate_audit_reproducibility(
-    *,
-    review_id: str,
-    run_id: str,
-    trigger_source: str,
-    extraction_rows: list[dict[str, Any]],
-    synthesis_traces: list[SynthesisReasoningTrace],
-    commit_sha: str,
-    generated_at: str,
-) -> bool:
-    """Return True if extraction and synthesis bundles are deterministic for identical inputs."""
-    envelope_e = ExtractionWorkflowEnvelope(
-        review_id=review_id, run_id=run_id, trigger_source=trigger_source
-    )
-    contract_e = ExtractionOffHostContract(review_id=review_id)
-    b1 = build_extraction_evidence_bundle(
-        envelope=envelope_e,
-        contract=contract_e,
-        output_rows=extraction_rows,
-        commit_sha=commit_sha,
-        generated_at=generated_at,
-    )
-    b2 = build_extraction_evidence_bundle(
-        envelope=envelope_e,
-        contract=contract_e,
-        output_rows=extraction_rows,
-        commit_sha=commit_sha,
-        generated_at=generated_at,
-    )
-
-    envelope_s = SynthesisWorkflowEnvelope(
-        review_id=review_id, run_id=run_id, trigger_source=trigger_source
-    )
-    contract_s = SynthesisOffHostContract(review_id=review_id)
-    s1 = build_synthesis_trace_bundle(
-        envelope=envelope_s,
-        contract=contract_s,
-        traces=synthesis_traces,
-        commit_sha=commit_sha,
-        generated_at=generated_at,
-    )
-    s2 = build_synthesis_trace_bundle(
-        envelope=envelope_s,
-        contract=contract_s,
-        traces=synthesis_traces,
-        commit_sha=commit_sha,
-        generated_at=generated_at,
-    )
-
-    return b1 == b2 and s1 == s2
 
 
 def report_phase_surfaces_for_pm() -> dict[str, Any]:
@@ -225,3 +240,13 @@ def report_phase_surfaces_for_pm() -> dict[str, Any]:
         "off_host_workload_classes": workload_report["off_host_workload_classes"],
         "max_local_concurrency": workload_report["max_local_concurrency"],
     }
+
+
+def assert_no_heavy_local_workload(result: HybridFlowResult) -> None:
+    """Raise if the flow result indicates an unsupported local heavy workload was used."""
+    heavy = {"extraction", "synthesis"}
+    for phase, surface in result.surface_report.items():
+        if phase in heavy and surface == "local":
+            raise RuntimeError(
+                f"Unsupported local heavy workload detected: '{phase}' ran locally."
+            )

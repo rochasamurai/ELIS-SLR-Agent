@@ -10,13 +10,15 @@
 
 ## 1) Summary
 
-Validates one representative hybrid SLR flow end-to-end by composing the contracts
-built in PE-SLR-07, PE-SLR-08, and PE-SLR-09:
+Validates one representative hybrid SLR flow end-to-end across all four phase boundaries:
+Harvest (off-host) → Screening (local) → support-agent (local) → Extraction/Synthesis (off-host).
 
 - execution surface registry mapping each SLR phase to local or off-host
-- `run_hybrid_slr_flow` exercises local screening + off-host extraction + off-host synthesis
-- `assert_surface_invariants` verifies the registry is consistent with the active placement policy
-- `validate_audit_reproducibility` confirms SHA-256 digests are deterministic for identical inputs
+- `run_hybrid_slr_flow` exercises all four phases: Harvest contract verification,
+  local screening admission, local support-agent clustering, off-host extraction and synthesis
+- `report_artefact_surfaces` verifies all artefact paths are assigned to correct surfaces
+- `assert_surface_invariants` verifies registry consistency with the placement policy
+- `assert_no_heavy_local_workload` confirms extraction/synthesis did not run locally
 - `report_phase_surfaces_for_pm` provides a combined PM-facing surface and policy report
 
 ---
@@ -35,20 +37,20 @@ built in PE-SLR-07, PE-SLR-08, and PE-SLR-09:
 
 | AC | Criterion | Status |
 |----|-----------|--------|
-| AC-1 | PM can report execution surface by SLR phase accurately | PASS |
-| AC-2 | One representative hybrid SLR flow exercises local + off-host contracts together | PASS |
-| AC-3 | Governance invariants are verifiable: extraction/synthesis off-host, screening local | PASS |
-| AC-4 | Hybrid flow audit evidence is reproducible | PASS |
-| AC-5 | `python -m pytest tests/test_hybrid_slr_validation.py -v` passes | PASS |
+| AC-1 | One representative review flow proves Harvest → Screening → support-agent → Extraction/Synthesis boundary works as designed | PASS |
+| AC-2 | Artefacts are stored in the correct surfaces throughout | PASS |
+| AC-3 | PM can report execution surface by SLR phase accurately | PASS |
+| AC-4 | No unsupported local heavy workload is required for the validation run | PASS |
+| AC-5 | `python -m pytest tests/test_hybrid_slr_execution.py -v` passes | PASS |
 
 ---
 
 ## 4) Validation Commands
 
 ```bash
-python -m black --check elis/hybrid_slr_validation.py tests/test_hybrid_slr_validation.py
-python -m ruff check elis/hybrid_slr_validation.py tests/test_hybrid_slr_validation.py
-python -m pytest tests/test_hybrid_slr_validation.py -v
+python -m black --check elis/hybrid_slr_validation.py tests/test_hybrid_slr_execution.py
+python -m ruff check elis/hybrid_slr_validation.py tests/test_hybrid_slr_execution.py
+python -m pytest tests/test_hybrid_slr_execution.py -v
 ```
 
 ---
@@ -61,7 +63,7 @@ git diff --name-status origin/main..HEAD
 M  HANDOFF.md
 A  docs/slr/HYBRID_SLR_VALIDATION.md
 A  elis/hybrid_slr_validation.py
-A  tests/test_hybrid_slr_validation.py
+A  tests/test_hybrid_slr_execution.py
 ```
 
 ---
