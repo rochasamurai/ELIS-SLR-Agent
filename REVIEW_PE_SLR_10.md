@@ -275,3 +275,104 @@ HANDOFF.md:30-32
 HANDOFF.md:105
 6. Run `python -m pytest tests/test_hybrid_slr_validation.py -v` and verify all pass.
 ```
+
+---
+
+**Re-validation round 3:** 2026-04-22
+
+### Verdict
+
+PASS
+
+### Gate results
+
+```bash
+python -m black --check elis/hybrid_slr_validation.py tests/test_hybrid_slr_execution.py
+→ All done! ✨ 🍰 ✨
+  2 files would be left unchanged.
+
+python -m ruff check elis/hybrid_slr_validation.py tests/test_hybrid_slr_execution.py
+→ All checks passed!
+
+python -m pytest tests/test_hybrid_slr_execution.py -v
+→ ============================= test session starts =============================
+  platform win32 -- Python 3.14.0, pytest-9.0.1, pluggy-1.6.0
+  collected 14 items
+  .worktrees\pe-slr-10\tests\test_hybrid_slr_execution.py ..............   [100%]
+  ======================== 14 passed, 1 warning in 0.36s ========================
+
+gh pr checks 361
+→ quality pass
+  tests pass
+  slr-quality-check pass
+  validate pass
+```
+
+### Scope
+
+```bash
+git diff --name-status origin/main..HEAD
+
+M	HANDOFF.md
+A	REVIEW_PE_SLR_10.md
+A	docs/slr/HYBRID_SLR_VALIDATION.md
+A	elis/hybrid_slr_validation.py
+A	tests/test_hybrid_slr_execution.py
+```
+
+### Required fixes
+
+None.
+
+### Evidence
+
+The round-2 blocker is resolved in code. The support-agent stage now uses a
+sequential model (`current_local_jobs=0`) and only runs clustering when the
+admission result is allowed:
+
+```text
+elis/hybrid_slr_validation.py:174-188
+
+support_agent_admission = enforce_local_workload_request(
+    "bibliometric-preanalysis",
+    requested_concurrency=1,
+    current_local_jobs=0,
+    policy=policy,
+)
+if support_agent_admission["allowed"]:
+    clusters = cluster_by_title_similarity(
+        screening_records,
+        threshold=0.5,
+        max_records=policy.max_local_concurrency * 500,
+    )
+else:
+    clusters = []
+```
+
+The stale HANDOFF references are also aligned to the renamed PE test artefact:
+
+```text
+HANDOFF.md:28-32
+| `elis/hybrid_slr_validation.py` | New module implementing hybrid flow runner, surface registry, invariant checks, reproducibility validation, and PM reporting |
+| `tests/test_hybrid_slr_execution.py` | New test suite with 14 tests covering AC-1 to AC-5 |
+| `docs/slr/HYBRID_SLR_VALIDATION.md` | New documentation for hybrid flow, surface registry, and invariants |
+
+HANDOFF.md:104
+6. Run `python -m pytest tests/test_hybrid_slr_execution.py -v` and verify all pass.
+```
+
+Fresh validator execution confirms the governing PE command now passes and CI is
+green:
+
+```bash
+python -m pytest tests/test_hybrid_slr_execution.py -v
+→ 14 passed, 1 warning in 0.36s
+
+gh pr checks 361
+→ quality pass
+  tests pass
+  slr-quality-check pass
+  validate pass
+```
+
+No new blocking findings were discovered in this round.
