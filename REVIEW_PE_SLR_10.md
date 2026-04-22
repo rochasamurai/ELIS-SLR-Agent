@@ -157,3 +157,121 @@ not exist on the branch:
 python -m pytest tests/test_hybrid_slr_execution.py -v
 → ERROR: file or directory not found: tests/test_hybrid_slr_execution.py
 ```
+
+---
+
+**Re-validation round 2:** 2026-04-22
+
+### Verdict
+
+FAIL
+
+### Gate results
+
+```bash
+python -m black --check elis/hybrid_slr_validation.py tests/test_hybrid_slr_execution.py
+→ All done! ✨ 🍰 ✨
+  2 files would be left unchanged.
+
+python -m ruff check elis/hybrid_slr_validation.py tests/test_hybrid_slr_execution.py
+→ All checks passed!
+
+python -m pytest tests/test_hybrid_slr_execution.py -v
+→ ============================= test session starts =============================
+  platform win32 -- Python 3.14.0, pytest-9.0.1, pluggy-1.6.0
+  collected 14 items
+  .worktrees\pe-slr-10\tests\test_hybrid_slr_execution.py ..............   [100%]
+  ======================== 14 passed, 1 warning in 0.12s ========================
+
+gh pr checks 361
+→ quality pass
+  tests pass
+  slr-quality-check pass
+  validate pass
+```
+
+### Scope
+
+```bash
+git diff --name-status origin/main..HEAD
+
+M	HANDOFF.md
+A	REVIEW_PE_SLR_10.md
+A	docs/slr/HYBRID_SLR_VALIDATION.md
+A	elis/hybrid_slr_validation.py
+A	tests/test_hybrid_slr_execution.py
+```
+
+### Required fixes
+
+- Honour the local-capacity admission result for the support-agent stage. If `bibliometric-preanalysis` is denied because the screening slot is occupied, the hybrid flow must defer or serialise that work instead of running clustering anyway.
+- Finish the remaining HANDOFF alignment to the renamed test artefact so validator-facing instructions and deliverables no longer point to `tests/test_hybrid_slr_validation.py`.
+
+### Evidence
+
+The updated branch now addresses the first-round contract mismatch: Harvest and
+local support-agent code are imported and the governing plan's pytest command
+exists and passes.
+
+```text
+elis/hybrid_slr_validation.py:21-38
+
+from elis.harvest_workflow import HarvestWorkflowContract
+from elis.local_support_analysis import cluster_by_title_similarity
+...
+from elis.workload_placement_policy import (
+    DEFAULT_WORKLOAD_PLACEMENT_POLICY,
+    WorkloadPlacementPolicy,
+    enforce_local_workload_request,
+    report_workload_classes,
+)
+```
+
+```bash
+python -m pytest tests/test_hybrid_slr_execution.py -v
+→ 14 passed, 1 warning in 0.12s
+```
+
+However, the support-agent phase still bypasses the placement policy. The code
+requests admission for `bibliometric-preanalysis` with `current_local_jobs=1`
+while the policy cap is 1, stores the result in `_support_agent_admission`, and
+then runs `cluster_by_title_similarity(...)` regardless of whether admission was
+denied.
+
+```text
+elis/hybrid_slr_validation.py:174-184
+
+_support_agent_admission = enforce_local_workload_request(
+    "bibliometric-preanalysis",
+    requested_concurrency=1,
+    current_local_jobs=1,  # screening slot is occupied
+    policy=policy,
+)
+clusters = cluster_by_title_similarity(
+    screening_records, threshold=0.5, max_records=policy.max_local_concurrency * 500
+)
+```
+
+The policy function returns a defer decision in exactly that situation:
+
+```bash
+python -c "from elis.workload_placement_policy import enforce_local_workload_request; print(enforce_local_workload_request('bibliometric-preanalysis', requested_concurrency=1, current_local_jobs=1))"
+→ {'allowed': False, 'workload_class': 'bibliometric-preanalysis', 'effective_concurrency': 0, 'throttled': True, 'reason': 'local capacity reached', 'recommended_action': 'defer'}
+```
+
+That means the representative flow still runs a local support step even when
+the active capacity policy says it should defer, so the bounded local-governance
+behaviour is not yet proved end to end.
+
+There is also remaining HANDOFF drift after the rename. The deliverables table
+and validator note still reference the old test filename:
+
+```text
+HANDOFF.md:30-32
+| `elis/hybrid_slr_validation.py` | New module implementing hybrid flow runner, surface registry, invariant checks, reproducibility validation, and PM reporting |
+| `tests/test_hybrid_slr_validation.py` | New test suite with 10 tests covering AC-1 to AC-5 |
+| `docs/slr/HYBRID_SLR_VALIDATION.md` | New documentation for hybrid flow, surface registry, and invariants |
+
+HANDOFF.md:105
+6. Run `python -m pytest tests/test_hybrid_slr_validation.py -v` and verify all pass.
+```
