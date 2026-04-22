@@ -64,10 +64,13 @@ Before starting any work on a PE, every agent MUST read:
 
 ### 2.4 Evidence‑first reporting (no "trust me")
 - Every agent update to the PM MUST include the **Status Packet** (Section 6).
-- If a claim is not supported by pasted command output, it is not considered done.
+- If a claim is not supported by pasted command output or GitHub Actions check evidence, it is not considered done.
 - Within a session, each step in the agent's task list must be confirmed with pasted
   command output before marking it complete. A step marked done without output evidence
   is a workflow violation.
+- For portable blocking gates (`black`, `ruff`, lint/validation, and `pytest`), the
+  authoritative pass/fail source is GitHub Actions CI. Local runs on `elis-server`
+  are supported as preflight checks for fast feedback, but they do not override CI.
 
 ### 2.4.1 REVIEW file evidence requirement (hard)
 - Every `REVIEW_PE<N>.md` file MUST contain a `### Evidence` section with at least one
@@ -283,6 +286,8 @@ EOF
    python -m ruff check .
    python -m pytest tests/<pe-specific>.py -v
    ```
+   For portable blocking gates, treat these local runs as preflight on `elis-server`.
+   GitHub Actions remains the authoritative merge gate.
 6. **Post milestone PR comments** on the draft PR at each significant step:
    - After implementation commit: `"feat commit <sha> — <brief summary of what changed>"`
    - After quality gates pass: `"Quality gates green — black/ruff clean, pytest N passed"`
@@ -292,7 +297,8 @@ EOF
    - complete changed-file list
    - design decisions
    - acceptance criteria checklist (PASS/FAIL for each)
-   - exact validation commands and their output (pasted verbatim — not paraphrased)
+   - exact validation commands and their output (pasted verbatim — not paraphrased), or
+     the corresponding GitHub Actions check names / run links for portable blocking gates
 8. **Session-end check**: `git status -sb` must be clean before any push.
 9. Commit `HANDOFF.md` as the **last commit** on the branch (§2.7), then convert draft to ready:
    ```bash
@@ -355,6 +361,8 @@ verified with pasted output. Never batch completions.
    - determinism / idempotence
    - invalid inputs / edge cases specific to the PE
 6. Run full quality gates (Section 6.3).
+   Local runs on `elis-server` remain useful for preflight and targeted debugging, but
+   CI is the authoritative pass/fail source for portable blocking gates.
 7. Write verdict in `REVIEW_PE<N>.md` using the standard format (Section 9).
 8. **Before committing the REVIEW file**, verify it passes the local check:
    ```bash
@@ -421,6 +429,9 @@ Repeat until verdict is PASS. If more than two iterations occur, the PM may call
 ## 6) Status Packet (mandatory in every agent update)
 
 Paste command outputs exactly (no paraphrase). Run from the relevant worktree.
+For portable blocking gates, GitHub Actions check names and run links are valid primary
+evidence. Local `elis-server` command output remains valid for preflight, targeted
+spot-checks, and environment-specific diagnostics.
 
 ### 6.1 Working‑tree state (catches uncommitted work)
 ```bash
@@ -452,6 +463,9 @@ python -m ruff check .
 python -m pytest -q
 ```
 > Include PE-specific test count alongside full-suite count.
+> For portable blocking gates, cite the corresponding GitHub Actions results as the
+> authoritative merge evidence. Local runs on `elis-server` are the preferred preflight
+> environment for maintainers and agents, but they are advisory for merge authority.
 
 ### 6.5 PR evidence (if applicable)
 ```bash
@@ -618,6 +632,8 @@ Text instructions alone cannot guarantee compliance. The following structural co
 - `python -m black --check .` — formatting gate.
 - `python -m ruff check .` — lint gate.
 - `python -m pytest -q` — full test suite.
+- These GitHub Actions jobs are the authoritative execution surface for portable
+  blocking gates on protected branches.
 
 **Planned CI checks** _(not yet implemented — add to `ci.yml`)_:
 - HANDOFF.md presence and section check: verify that `HANDOFF.md` contains required
@@ -627,6 +643,8 @@ Text instructions alone cannot guarantee compliance. The following structural co
 **Planned: pre-commit hooks** (`.pre-commit-config.yaml`) _(not yet implemented)_:
 - Run black, ruff, and pytest on every local `git commit`.
 - Prevents "fix later" drift between commits and the final push.
+- Local execution is still recommended on `elis-server` as a preflight environment,
+  but merge authority remains with GitHub Actions CI.
 
 ### 12.2 Tier 2 — Structural prompting (reduces drift)
 

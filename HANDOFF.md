@@ -1,25 +1,26 @@
-# HANDOFF — PE-SLR-10 · End-to-End Hybrid SLR Validation
+# HANDOFF — PE-GHA-01 · GitHub Actions CI Authority and `elis-server` Preflight Documentation
 
 **Date:** 2026-04-22
-**PE:** `PE-SLR-10`
-**Branch:** `feature/pe-slr-10-end-to-end-hybrid-slr-validation`
-**Implementer:** `slr-impl-b` (Claude Code)
-**Validator:** `slr-val-a` (CODEX @ `elis-server`)
+**PE:** `PE-GHA-01`
+**Branch:** `feature/pe-gha-01-agents-md-ci-authority`
+**Implementer:** `gha-impl-a` (CODEX @ `elis-server`)
+**Validator:** `gha-val-b` (Claude Code)
 
 ---
 
 ## 1) Summary
 
-Validates one representative hybrid SLR flow end-to-end across all four phase boundaries:
-Harvest (off-host) → Screening (local) → support-agent (local) → Extraction/Synthesis (off-host).
+Documents the Phase A testing policy in the canonical workflow guide.
 
-- execution surface registry mapping each SLR phase to local or off-host
-- `run_hybrid_slr_flow` exercises all four phases: Harvest contract verification,
-  local screening admission, local support-agent clustering, off-host extraction and synthesis
-- `report_artefact_surfaces` verifies all artefact paths are assigned to correct surfaces
-- `assert_surface_invariants` verifies registry consistency with the placement policy
-- `assert_no_heavy_local_workload` confirms extraction/synthesis did not run locally
-- `report_phase_surfaces_for_pm` provides a combined PM-facing surface and policy report
+- `AGENTS.md` now states that GitHub Actions is the authoritative execution
+  surface for portable blocking gates (`black`, `ruff`, lint/validation, and
+  `pytest`)
+- `AGENTS.md` now records `elis-server` as the supported local preflight
+  environment for maintainers and agents
+- local command output remains valid for targeted diagnostics and
+  environment-specific checks, but no longer overrides CI for merge authority
+- ADR-011 records the workflow decision so the CI-authority model has durable
+  architectural history
 
 ---
 
@@ -27,9 +28,10 @@ Harvest (off-host) → Screening (local) → support-agent (local) → Extractio
 
 | File | Change |
 |------|--------|
-| `elis/hybrid_slr_validation.py` | New module implementing hybrid flow runner, surface registry, invariant checks, reproducibility validation, and PM reporting |
-| `tests/test_hybrid_slr_execution.py` | New test suite with 14 tests covering AC-1 to AC-5 |
-| `docs/slr/HYBRID_SLR_VALIDATION.md` | New documentation for hybrid flow, surface registry, and invariants |
+| `AGENTS.md` | Updated workflow guidance for evidence, quality gates, status packets, and CI authority |
+| `docs/decisions/ADR-011-github-actions-authority-for-portable-gates.md` | New ADR recording GitHub Actions as the authoritative gate for portable checks and `elis-server` as local preflight |
+| `docs/decisions/README.md` | Added ADR-011 to the ADR index |
+| `HANDOFF.md` | Replaced prior PE handoff with the PE-GHA-01 implementation record |
 
 ---
 
@@ -37,21 +39,44 @@ Harvest (off-host) → Screening (local) → support-agent (local) → Extractio
 
 | AC | Criterion | Status |
 |----|-----------|--------|
-| AC-1 | One representative review flow proves Harvest → Screening → support-agent → Extraction/Synthesis boundary works as designed | PASS |
-| AC-2 | Artefacts are stored in the correct surfaces throughout | PASS |
-| AC-3 | PM can report execution surface by SLR phase accurately | PASS |
-| AC-4 | No unsupported local heavy workload is required for the validation run | PASS |
-| AC-5 | `python -m pytest tests/test_hybrid_slr_execution.py -v` passes | PASS |
+| AC-4 | Repository guidance states CI is authoritative | PASS |
+| AC-5 | `elis-server` documented as local preflight environment | PASS |
 
 ---
 
 ## 4) Validation Commands
 
 ```bash
-python -m black --check elis/hybrid_slr_validation.py tests/test_hybrid_slr_execution.py
-python -m ruff check elis/hybrid_slr_validation.py tests/test_hybrid_slr_execution.py
-python -m pytest tests/test_hybrid_slr_execution.py -v
+python scripts/check_agent_scope.py
+python -m black --check .
+python -m ruff check .
+python -m pytest -q --basetemp=.tmp\gha01-pytest-clean
 ```
+
+### Command output
+
+```text
+Agent scope clean — no secret-pattern files detected in worktree.
+
+All done! ✨ 🍰 ✨
+196 files would be left unchanged.
+
+All checks passed!
+
+==================================== ERRORS ====================================
+________________ ERROR collecting pytest-cache-files-3qz73ozv _________________
+E   PermissionError: [WinError 5] Access is denied: 'C:\\Users\\carlo\\ELIS-SLR-Agent\\.worktrees\\pe-gha-01\\pytest-cache-files-3qz73ozv'
+________________ ERROR collecting pytest-cache-files-yjhmqdtu _________________
+E   PermissionError: [WinError 5] Access is denied: 'C:\\Users\\carlo\\ELIS-SLR-Agent\\.worktrees\\pe-gha-01\\pytest-cache-files-yjhmqdtu'
+!!!!!!!!!!!!!!!!!!! Interrupted: 2 errors during collection !!!!!!!!!!!!!!!!!!!
+```
+
+### Gate note
+
+`pytest` is blocked locally by stale inaccessible temp directories already present
+in the PE worktree. This does not affect the PE-GHA-01 document change itself,
+and the updated policy intentionally makes GitHub Actions the authoritative
+portable-gate surface for merge decisions.
 
 ---
 
@@ -59,47 +84,50 @@ python -m pytest tests/test_hybrid_slr_execution.py -v
 
 ```bash
 git diff --name-status origin/main..HEAD
+```
 
+```text
+```
+
+Working-tree delta for this implementation:
+
+```text
+M  AGENTS.md
 M  HANDOFF.md
-A  docs/slr/HYBRID_SLR_VALIDATION.md
-A  elis/hybrid_slr_validation.py
-A  tests/test_hybrid_slr_execution.py
+A  docs/decisions/ADR-011-github-actions-authority-for-portable-gates.md
+M  docs/decisions/README.md
 ```
 
 ---
 
 ## 6) Design Notes
 
-### Composition over re-implementation
+### CI authority is explicit, not inferred
 
-`hybrid_slr_validation.py` imports and composes the contracts from PE-SLR-07
-(`ExtractionWorkflowEnvelope`, `build_extraction_evidence_bundle`), PE-SLR-08
-(`SynthesisWorkflowEnvelope`, `build_synthesis_trace_bundle`), and PE-SLR-09
-(`enforce_local_workload_request`, `WorkloadPlacementPolicy`). No governance
-logic is duplicated.
+The policy is written directly into `AGENTS.md` sections already used by both
+implementer and validator prompts (`§2.4`, `§5.1`, `§5.2`, `§6`, and `§12.1`),
+so the guidance propagates from the canonical workflow file rather than relying
+on side documentation alone.
 
-### Surface registry as the single source of truth
+### `elis-server` remains part of the workflow
 
-`_PHASE_SURFACES` maps every SLR phase to its canonical execution surface.
-`assert_surface_invariants` cross-checks this map against the active placement
-policy, so any future policy change that contradicts the registry is caught
-immediately.
+This PE does not remove local testing. It formalises `elis-server` as the
+preferred local preflight environment while keeping merge authority with GitHub
+Actions for portable gates.
 
-### Reproducibility by construction
+### ADR coverage avoids policy drift
 
-Both extraction and synthesis bundles use canonical JSON + SHA-256, so
-`validate_audit_reproducibility` simply calls each builder twice and compares
-the results.
+Because the decision changes how PEs, agents, and CI interact, ADR-011 captures
+the rationale and trade-offs so future workflow changes have a clear baseline.
 
 ---
 
 ## 7) Notes for Validator
 
-1. Confirm `report_execution_surfaces()` returns correct surface for each phase.
-2. Confirm `run_hybrid_slr_flow` completes without error and returns
-   `governance_invariants_satisfied=True`.
-3. Confirm extraction and synthesis bundles in the flow result have
-   `execution_surface="off-host-workflow"` and `local_execution_allowed=False`.
-4. Confirm `validate_audit_reproducibility` returns `True`.
-5. Confirm `assert_surface_invariants` raises on a mismatched policy.
-6. Run `python -m pytest tests/test_hybrid_slr_execution.py -v` and verify all pass.
+1. Confirm `AGENTS.md` permits GitHub Actions check evidence as primary evidence
+   for portable blocking gates.
+2. Confirm `AGENTS.md` explicitly names `elis-server` as the supported local
+   preflight environment.
+3. Confirm the ADR exists and is indexed in `docs/decisions/README.md`.
+4. Treat the local `pytest` PermissionError as an environment artefact unless
+   you find evidence that the PE-GHA-01 document changes caused it.
