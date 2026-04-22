@@ -21,10 +21,10 @@
 
 | Field   | Value                                                          |
 |---------|----------------------------------------------------------------|
-| PE      | PE-GHA-01                                                      |
-| Branch  | feature/pe-gha-01-agents-md-ci-authority                       |
+| PE      | —                                                              |
+| Branch  | —                                                              |
 
-> **Active PE.** PE-GHA-01 implements Phase A of the GitHub Actions CI Authority Plan: update `AGENTS.md` so GitHub Actions is the authoritative execution surface for portable blocking gates (`black`, `ruff`, `pytest`), and document `elis-server` as the supported local preflight environment. Dependency: plan validation by Claude Code (2026-04-22) satisfied.
+> **Phase A complete.** PE-GHA-01 merged. GitHub Actions is now the documented authoritative gate for portable blocking checks; `elis-server` is the documented local preflight environment. No active PE. Awaiting PM assignment of Phase B or next plan.
 
 ---
 
@@ -32,10 +32,10 @@
 
 | Agent       | Role        |
 |-------------|-------------|
-| Claude Code | Validator   |
-| CODEX       | Implementer |
+| Claude Code | —           |
+| CODEX       | —           |
 
-> PE-GHA-01: `gha-impl-a` (CODEX @ `elis-server`) as Implementer · `gha-val-b` (Claude Code) as Validator.
+> No active PE. Roles unassigned pending next assignment.
 
 ---
 
@@ -113,7 +113,7 @@
 | PE-SLR-08       | slr            | slr-impl-b           | slr-val-a          | feature/pe-slr-08-synthesis-off-host-contract                          | merged         | 2026-04-21   |
 | PE-SLR-09       | slr            | slr-impl-a           | slr-val-b          | feature/pe-slr-09-elis-server-capacity-placement-policy                | merged         | 2026-04-21   |
 | PE-SLR-10       | slr            | slr-impl-b           | slr-val-a          | feature/pe-slr-10-end-to-end-hybrid-slr-validation                     | merged         | 2026-04-22   |
-| PE-GHA-01       | ci             | gha-impl-a           | gha-val-b          | feature/pe-gha-01-agents-md-ci-authority                                | implementing   | 2026-04-22   |
+| PE-GHA-01       | ci             | gha-impl-a           | gha-val-b          | feature/pe-gha-01-agents-md-ci-authority                                | merged         | 2026-04-22   |
 
 Valid status values:
 - `planning`
@@ -187,6 +187,7 @@ PM housekeeping entries (prefix `PM-CHORE-XX`):
 | PM-CHORE-54  | Closed PE-SLR-09 as merged (PR #359, PASS verdict — Claude Code Validator; elis-claude-bot formal approval). Opened PE-SLR-10 (End-to-End Hybrid SLR Validation) with `slr-impl-b` (Claude Code) as Implementer and `slr-val-a` (CODEX @ `elis-server`) as Validator per alternation rule. Dependency PE-SLR-09 satisfied. Final PE in v1.8.3 series. | 2026-04-21 |
 | PM-CHORE-55  | Closed PE-SLR-10 as merged (PR #361, r3 PASS verdict — CODEX Validator; elis-claude-bot formal approval; PM-authorised independent gate confirmation). ELIS Hybrid SLR Execution Plan v1.8.3 complete — all 10 SLR PEs merged (PE-SLR-01 through PE-SLR-10). No active PE. Platform ready for deployment to elis-server (`git pull` on `main`). | 2026-04-22 |
 | PM-CHORE-56  | Adopted `docs/_active/GITHUB_ACTIONS_TEST_IMPROVEMENT_PLAN.md` as governing plan for the GitHub Actions CI Authority series. Opened PE-GHA-01 (Phase A — AGENTS.md CI Authority and elis-server Preflight Documentation) with `gha-impl-a` (CODEX @ `elis-server`) as Implementer and `gha-val-b` (Claude Code) as Validator. Dependency: plan validation by Claude Code (2026-04-22) satisfied. Acceptance criteria: §7 of the plan (AC-1 through AC-6). | 2026-04-22 |
+| PM-CHORE-57  | Closed PE-GHA-01 as merged (PR #364, r2 PASS verdict — Claude Code Validator; elis-codex-bot formal approval). Phase A of the GitHub Actions CI Authority Plan complete: `AGENTS.md` updated, ADR-011 recorded. No active PE. Awaiting PM assignment of Phase B or next plan. | 2026-04-22 |
 
 Alternation rule:
 - For consecutive PEs in the same domain, the implementer engine must alternate (`codex` <-> `claude`).
