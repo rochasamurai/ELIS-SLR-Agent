@@ -50,7 +50,7 @@ Documents the Phase A testing policy in the canonical workflow guide.
 python scripts/check_agent_scope.py
 python -m black --check .
 python -m ruff check .
-python -m pytest -q --basetemp=.tmp\gha01-pytest-clean
+python -m pytest -q --basetemp=.tmp\gha01-pytest-clean --cache-clear
 ```
 
 ### Command output
@@ -63,20 +63,25 @@ All done! ✨ 🍰 ✨
 
 All checks passed!
 
-==================================== ERRORS ====================================
-________________ ERROR collecting pytest-cache-files-3qz73ozv _________________
-E   PermissionError: [WinError 5] Access is denied: 'C:\\Users\\carlo\\ELIS-SLR-Agent\\.worktrees\\pe-gha-01\\pytest-cache-files-3qz73ozv'
-________________ ERROR collecting pytest-cache-files-yjhmqdtu _________________
-E   PermissionError: [WinError 5] Access is denied: 'C:\\Users\\carlo\\ELIS-SLR-Agent\\.worktrees\\pe-gha-01\\pytest-cache-files-yjhmqdtu'
-!!!!!!!!!!!!!!!!!!! Interrupted: 2 errors during collection !!!!!!!!!!!!!!!!!!!
+........................................................................ [ 99%]
+.                                                                        [100%]
+
+=================================== FAILURES ===================================
+FAILED tests/test_verify_claude_auth.py::test_fails_when_credentials_file_missing
+FAILED tests/test_verify_claude_auth.py::test_fails_when_credentials_file_lacks_oauth_key
+
+short test summary info:
+2 failed, remainder passed
 ```
 
 ### Gate note
 
-`pytest` is blocked locally by stale inaccessible temp directories already present
-in the PE worktree. This does not affect the PE-GHA-01 document change itself,
-and the updated policy intentionally makes GitHub Actions the authoritative
-portable-gate surface for merge decisions.
+The original temp-directory block in this worktree was cleared. Full-suite local
+`pytest` now runs and reveals two remaining failures in
+`tests/test_verify_claude_auth.py`, triggered by the existing Windows CLI
+invocation path in `scripts/verify_claude_auth.py`. Those failures are outside
+the PE-GHA-01 documentation scope; the updated policy still makes GitHub
+Actions the authoritative portable-gate surface for merge decisions.
 
 ---
 
@@ -129,5 +134,6 @@ the rationale and trade-offs so future workflow changes have a clear baseline.
 2. Confirm `AGENTS.md` explicitly names `elis-server` as the supported local
    preflight environment.
 3. Confirm the ADR exists and is indexed in `docs/decisions/README.md`.
-4. Treat the local `pytest` PermissionError as an environment artefact unless
-   you find evidence that the PE-GHA-01 document changes caused it.
+4. Note that local full-suite `pytest` now reaches execution cleanly; the only
+   remaining failures are two existing Windows-specific Claude auth tests
+   outside PE-GHA-01 scope.
