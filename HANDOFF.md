@@ -79,7 +79,7 @@ Implements Phases B, C, and D of the GitHub Actions CI Authority Plan.
 | AC-3 | Agent-token workflows limited to orchestration/mutation | PASS — all 35 workflow files carry `# Classification:` headers making the boundary explicit |
 | AC-4 | Repository guidance states CI is authoritative | PASS (PE-GHA-01) |
 | AC-5 | `elis-server` documented as local preflight environment | PASS (PE-GHA-01) |
-| AC-6 | Branch protection relies on GitHub Actions alone | PARTIAL — 3 of 7 portable-gate jobs required; Phase C PM action documents the 4 remaining additions |
+| AC-6 | Branch protection relies on GitHub Actions alone | PASS — all 7 checks required on main: quality, tests, validate, current-pe-check, secrets-scope-check, review-evidence-check, slr-quality-check |
 
 ---
 
@@ -174,7 +174,8 @@ M  HANDOFF.md
 2. Confirm ADR-012 exists and is indexed in `docs/decisions/README.md`.
 3. Confirm `docs/_active/PE_GHA_02_PHASE_C_PM_ACTION.md` contains actionable
    branch protection steps for PM.
-4. AC-1 through AC-5 satisfied; AC-6 partial — pending PM Phase C action
-   (admin PAT required; bot accounts lack branch protection write access).
+4. AC-1 through AC-6 all satisfied. Branch protection verified via:
+   `gh api repos/rochasamurai/ELIS-Multi-AI-Agent-Platform/branches/main --jq '.protection.required_status_checks.checks[].context'`
+   → quality, tests, validate, current-pe-check, secrets-scope-check, review-evidence-check, slr-quality-check
 5. Check CI green on this PR as Phase D gate regression evidence.
 6. The 2 pytest failures are pre-existing (`test_verify_claude_auth.py`).
