@@ -1,26 +1,25 @@
-# HANDOFF — PE-GHA-01 · GitHub Actions CI Authority and `elis-server` Preflight Documentation
+# HANDOFF — PE-GHA-02 · Workflow Classification and Branch Protection Hardening
 
 **Date:** 2026-04-22
-**PE:** `PE-GHA-01`
-**Branch:** `feature/pe-gha-01-agents-md-ci-authority`
-**Implementer:** `gha-impl-a` (CODEX @ `elis-server`)
-**Validator:** `gha-val-b` (Claude Code)
+**PE:** `PE-GHA-02`
+**Branch:** `feature/pe-gha-02-workflow-classification-and-branch-protection`
+**Implementer:** `gha-impl-b` (Claude Code)
+**Validator:** `gha-val-a` (CODEX @ `elis-server`)
 
 ---
 
 ## 1) Summary
 
-Documents the Phase A testing policy in the canonical workflow guide.
+Implements Phases B, C, and D of the GitHub Actions CI Authority Plan.
 
-- `AGENTS.md` now states that GitHub Actions is the authoritative execution
-  surface for portable blocking gates (`black`, `ruff`, lint/validation, and
-  `pytest`)
-- `AGENTS.md` now records `elis-server` as the supported local preflight
-  environment for maintainers and agents
-- local command output remains valid for targeted diagnostics and
-  environment-specific checks, but no longer overrides CI for merge authority
-- ADR-011 records the workflow decision so the CI-authority model has durable
-  architectural history
+- **Phase B** — each key workflow file in `.github/workflows/` now carries a
+  `# Classification:` header (CI / CI Advisory / Mixed / Orchestration) making
+  the CI-vs-orchestration boundary self-documenting. ADR-012 records the rule.
+- **Phase C** — branch protection hardening requires PM admin action (bot
+  accounts lack branch protection write access). Exact steps are documented in
+  `docs/_active/PE_GHA_02_PHASE_C_PM_ACTION.md`.
+- **Phase D** — gate regression evidence is in §4: CI is already the sole
+  blocking gate; no local agent claim can override a failing CI status.
 
 ---
 
@@ -28,10 +27,16 @@ Documents the Phase A testing policy in the canonical workflow guide.
 
 | File | Change |
 |------|--------|
-| `AGENTS.md` | Updated workflow guidance for evidence, quality gates, status packets, and CI authority |
-| `docs/decisions/ADR-011-github-actions-authority-for-portable-gates.md` | New ADR recording GitHub Actions as the authoritative gate for portable checks and `elis-server` as local preflight |
-| `docs/decisions/README.md` | Added ADR-011 to the ADR index |
-| `HANDOFF.md` | Replaced prior PE handoff with the PE-GHA-01 implementation record |
+| `.github/workflows/ci.yml` | Added `# Classification: CI` header |
+| `.github/workflows/deep-review.yml` | Added `# Classification: CI / Advisory` header |
+| `.github/workflows/autoformat.yml` | Added `# Classification: Mixed` header |
+| `.github/workflows/implementer-runner.yml` | Added `# Classification: Orchestration` header |
+| `.github/workflows/validator-runner.yml` | Added `# Classification: Orchestration` header |
+| `.github/workflows/auto-merge-on-pass.yml` | Added `# Classification: Orchestration` header |
+| `docs/decisions/ADR-012-workflow-classification.md` | New ADR recording CI vs Orchestration classification rule |
+| `docs/decisions/README.md` | Added ADR-012 to index |
+| `docs/_active/PE_GHA_02_PHASE_C_PM_ACTION.md` | PM action doc: exact steps to add 4 checks to branch protection |
+| `HANDOFF.md` | This file |
 
 ---
 
@@ -39,8 +44,12 @@ Documents the Phase A testing policy in the canonical workflow guide.
 
 | AC | Criterion | Status |
 |----|-----------|--------|
-| AC-4 | Repository guidance states CI is authoritative | PASS |
-| AC-5 | `elis-server` documented as local preflight environment | PASS |
+| AC-1 | Every portable blocking gate runs in GitHub Actions | PASS (pre-existing; confirmed) |
+| AC-2 | No agent token required for blocking CI path | PASS (pre-existing; confirmed) |
+| AC-3 | Agent-token workflows limited to orchestration/mutation | PASS — classification headers make the boundary explicit |
+| AC-4 | Repository guidance states CI is authoritative | PASS (PE-GHA-01) |
+| AC-5 | `elis-server` documented as local preflight environment | PASS (PE-GHA-01) |
+| AC-6 | Branch protection relies on GitHub Actions alone | PARTIAL — 3 of 7 portable-gate jobs required; Phase C PM action documents the 4 remaining additions |
 
 ---
 
@@ -48,9 +57,9 @@ Documents the Phase A testing policy in the canonical workflow guide.
 
 ```bash
 python scripts/check_agent_scope.py
-python -m black --check .
+python -m black --check --include "\.py$" elis/ tests/ scripts/
 python -m ruff check .
-python -m pytest -q --basetemp=.tmp\gha01-pytest-clean --cache-clear
+python -m pytest tests/ --basetemp=.tmp/pe-gha-02 --tb=no
 ```
 
 ### Command output
@@ -59,81 +68,52 @@ python -m pytest -q --basetemp=.tmp\gha01-pytest-clean --cache-clear
 Agent scope clean — no secret-pattern files detected in worktree.
 
 All done! ✨ 🍰 ✨
-196 files would be left unchanged.
+178 files would be left unchanged.
 
 All checks passed!
 
-........................................................................ [ 99%]
-.                                                                        [100%]
-
-=================================== FAILURES ===================================
+2 failed, 1014 passed, 17 warnings in 12.89s
 FAILED tests/test_verify_claude_auth.py::test_fails_when_credentials_file_missing
 FAILED tests/test_verify_claude_auth.py::test_fails_when_credentials_file_lacks_oauth_key
-
-short test summary info:
-2 failed, remainder passed
+(2 pre-existing failures unrelated to PE-GHA-02)
 ```
 
-### Gate note
+### Phase D — gate regression evidence
 
-The original temp-directory block in this worktree was cleared. Full-suite local
-`pytest` now runs and reveals two remaining failures in
-`tests/test_verify_claude_auth.py`, triggered by the existing Windows CLI
-invocation path in `scripts/verify_claude_auth.py`. Those failures are outside
-the PE-GHA-01 documentation scope; the updated policy still makes GitHub
-Actions the authoritative portable-gate surface for merge decisions.
+`auto-merge-on-pass.yml` Step 8 checks `mergeable_state == 'clean'` before
+merging. That state requires all required CI checks to pass. A PR with local
+agent claims but failing CI cannot reach `clean` and cannot auto-merge. CI is
+already the sole blocking gate.
 
 ---
 
 ## 5) Scope Gate
 
-```bash
+```text
 git diff --name-status origin/main..HEAD
-```
 
-```text
-```
-
-Working-tree delta for this implementation:
-
-```text
-M  AGENTS.md
-M  HANDOFF.md
-A  docs/decisions/ADR-011-github-actions-authority-for-portable-gates.md
+M  .github/workflows/auto-merge-on-pass.yml
+M  .github/workflows/autoformat.yml
+M  .github/workflows/ci.yml
+M  .github/workflows/deep-review.yml
+M  .github/workflows/implementer-runner.yml
+M  .github/workflows/validator-runner.yml
+A  docs/_active/PE_GHA_02_PHASE_C_PM_ACTION.md
+A  docs/decisions/ADR-012-workflow-classification.md
 M  docs/decisions/README.md
+M  HANDOFF.md
 ```
 
----
-
-## 6) Design Notes
-
-### CI authority is explicit, not inferred
-
-The policy is written directly into `AGENTS.md` sections already used by both
-implementer and validator prompts (`§2.4`, `§5.1`, `§5.2`, `§6`, and `§12.1`),
-so the guidance propagates from the canonical workflow file rather than relying
-on side documentation alone.
-
-### `elis-server` remains part of the workflow
-
-This PE does not remove local testing. It formalises `elis-server` as the
-preferred local preflight environment while keeping merge authority with GitHub
-Actions for portable gates.
-
-### ADR coverage avoids policy drift
-
-Because the decision changes how PEs, agents, and CI interact, ADR-011 captures
-the rationale and trade-offs so future workflow changes have a clear baseline.
+10 files. All within Phase B/C/D scope.
 
 ---
 
-## 7) Notes for Validator
+## 6) Notes for Validator
 
-1. Confirm `AGENTS.md` permits GitHub Actions check evidence as primary evidence
-   for portable blocking gates.
-2. Confirm `AGENTS.md` explicitly names `elis-server` as the supported local
-   preflight environment.
-3. Confirm the ADR exists and is indexed in `docs/decisions/README.md`.
-4. Note that local full-suite `pytest` now reaches execution cleanly; the only
-   remaining failures are two existing Windows-specific Claude auth tests
-   outside PE-GHA-01 scope.
+1. Confirm the 6 workflow files carry correct `# Classification:` headers.
+2. Confirm ADR-012 exists and is indexed in `docs/decisions/README.md`.
+3. Confirm `docs/_active/PE_GHA_02_PHASE_C_PM_ACTION.md` contains actionable
+   branch protection steps for PM.
+4. AC-1 through AC-5 satisfied; AC-6 partial — pending PM Phase C action.
+5. Check CI green on this PR as Phase D gate regression evidence.
+6. The 2 pytest failures are pre-existing (`test_verify_claude_auth.py`).

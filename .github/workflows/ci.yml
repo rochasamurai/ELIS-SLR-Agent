@@ -1,3 +1,4 @@
+# Classification: CI — portable blocking gates; no bot token required; authoritative merge surface.
 name: ELIS - CI
 
 on:
