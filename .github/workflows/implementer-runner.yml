@@ -1,3 +1,4 @@
+# Classification: Orchestration — dispatches agent sessions and mutates repo; uses bot tokens; not a code-validation gate.
 name: Implementer Agent Runner
 
 on:

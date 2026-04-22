@@ -1,3 +1,4 @@
+# Classification: Orchestration — merge gate automation; reads REVIEW verdict and CI state; uses github.token for repo mutations only.
 name: Auto-merge on Validator PASS
 
 # Gate 2 triggers on two independent signals:

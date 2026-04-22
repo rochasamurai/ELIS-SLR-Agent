@@ -1,3 +1,4 @@
+# Classification: Orchestration — dispatches agent sessions, manages PRs/labels, or pushes commits; may use bot tokens; not a code-validation gate.
 name: Benchmark 2 - Phase 1 Execution (Tai & Awasthi 2025)
 
 on:

@@ -1,3 +1,4 @@
+# Classification: Mixed — runs portable checks as pre-mutation validation, then pushes auto-fix via GitHub App token; advisory, not a blocking merge gate.
 name: ELIS - Autoformat
 # =============================================================================
 # Purpose
