@@ -1,6 +1,6 @@
 # ELIS End-to-End Multi-Agent Process — Test Plan
 
-**Version:** 1.1
+**Version:** 1.2
 **Date:** 2026-04-23
 **Author:** PM / Claude Code
 **Scope:** Full PE lifecycle from plan ingestion to auto-merge and PM housekeeping
@@ -105,7 +105,7 @@
 | 6.2 | `check_review.py` passes | All required sections present; fenced code block in `### Evidence` |
 | 6.3 | PR comment posted | Verdict summary and blocking findings (if any) visible on PR |
 | 6.4 | Standard path: formal GitHub review submitted | `approve` for PASS; `request-changes` for FAIL |
-| 6.5 | Single-account fallback: GitHub blocks self-review | FAIL posted as plain PR comment + `pm-review-required` label applied; PASS posted as plain comment (no formal approval possible) |
+| 6.5 | Single-account fallback: GitHub blocks self-review | FAIL only: posted as plain PR comment + `pm-review-required` label applied; PASS is never acceptable as a plain comment — formal approval from the mapped reviewer bot identity is always required for PASS regardless of account overlap |
 | 6.6 | FAIL path (either 6.4 or 6.5): Agent2 posts FAIL | PR not auto-merged; Implementer receives required fixes |
 | 6.7 | FAIL path: Agent1 fixes and re-pushes | CI re-runs; Validator re-validates |
 
