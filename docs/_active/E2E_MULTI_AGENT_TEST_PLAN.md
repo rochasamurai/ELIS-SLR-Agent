@@ -1,7 +1,7 @@
 # ELIS End-to-End Multi-Agent Process — Test Plan
 
-**Version:** 1.0
-**Date:** 2026-04-22
+**Version:** 1.1
+**Date:** 2026-04-23
 **Author:** PM / Claude Code
 **Scope:** Full PE lifecycle from plan ingestion to auto-merge and PM housekeeping
 
@@ -16,9 +16,9 @@
 | 3 | GitHub Actions | `implementer-runner.yml` dispatches Agent1 (Implementer) session on elis-server |
 | 4 | Agent1 | Implements the PE on a feature branch; commits `HANDOFF.md`; pushes; opens PR |
 | 5 | GitHub Actions | CI runs portable blocking gates: `black`, `ruff`, `pytest`, `current-pe-check`, `secrets-scope-check`, `review-evidence-check`, `slr-quality-check` |
-| 6 | GitHub Actions | Gate 1: CI bot posts Validator assignment comment on the PR |
+| 6 | PM / GitHub Actions | Gate 1: PM dispatches Validator assignment directly via `sessions_send` (default); fallback — PM posts validator-assignment comment on PR triggering `validator-dispatch.yml`; last resort — PO relay |
 | 7 | GitHub Actions | `validator-runner.yml` dispatches Agent2 (Validator) session on elis-server |
-| 8 | Agent2 | Reviews the PR; writes `REVIEW_PE_XX.md`; posts PR comment + formal GitHub review (PASS or FAIL) |
+| 8 | Agent2 | Reviews the PR; writes `REVIEW_PE_XX.md`; posts PR comment + formal GitHub review (`approve` / `request-changes`); single-account fallback: plain comment + `pm-review-required` label |
 | 9 | GitHub Actions | `auto-merge-on-pass.yml` checks: PASS verdict + CI green + `mergeable_state == clean` → auto-merges PR |
 | 10 | PM | Closes PE in `CURRENT_PE.md` (PM-CHORE), opens next PE; cycle repeats |
 
@@ -71,7 +71,7 @@
 |---|--------|-----------------|
 | 4.1 | PR opened | CI triggers automatically |
 | 4.2 | `quality` job | `black` and `ruff` pass |
-| 4.3 | `tests` job | `pytest` passes (pre-existing failures documented in HANDOFF) |
+| 4.3 | `tests` job | CI `tests` job is green — all pre-existing failures are either excluded from the CI run or marked `xfail`; any new failure blocks the PR regardless of HANDOFF documentation |
 | 4.4 | `validate` job | Schema/manifest validation passes |
 | 4.5 | `current-pe-check` | PE metadata consistent with `CURRENT_PE.md` |
 | 4.6 | `secrets-scope-check` | No secret-pattern files in worktree |
@@ -83,13 +83,15 @@
 
 ### TC-05 — Gate 1 and Validator Dispatch
 
-**Objective:** Validator is assigned and dispatched without PM manual intervention.
+**Objective:** Validator is assigned and dispatched via one of the three governed paths; Agent2 does not self-start.
 
 | # | Action | Expected Result |
 |---|--------|-----------------|
-| 5.1 | CI green + PR open | CI bot posts Gate 1 assignment comment naming Agent2 as Validator |
-| 5.2 | `validator-runner.yml` triggers | GitHub Actions job starts; Agent2 session appears on elis-server |
-| 5.3 | Agent2 reads Step 0 without self-starting | Session log confirms assignment came from Gate 1 comment, not self-initiated |
+| 5.1 | Default path: PM sends Validator assignment via `sessions_send` | Agent2 session receives assignment message; `validator-runner.yml` starts |
+| 5.2 | Fallback path: PM posts `<!-- validator-assignment -->` PR comment | `validator-dispatch.yml` triggers; Agent2 session appears on elis-server |
+| 5.3 | Last-resort path: PO relay comment on PR | Agent2 session starts; PM records relay event |
+| 5.4 | `validator-runner.yml` triggers (any path) | GitHub Actions job starts without error |
+| 5.5 | Agent2 reads Step 0 without self-starting | Session log confirms assignment came from PM or Gate 1 trigger, not self-initiated |
 
 ---
 
@@ -102,9 +104,10 @@
 | 6.1 | Agent2 reviews PR | `REVIEW_PE_XX.md` committed on feature branch |
 | 6.2 | `check_review.py` passes | All required sections present; fenced code block in `### Evidence` |
 | 6.3 | PR comment posted | Verdict summary and blocking findings (if any) visible on PR |
-| 6.4 | Formal GitHub review submitted | `approve` for PASS; `request-changes` for FAIL |
-| 6.5 | FAIL path: Agent2 posts FAIL | PR not auto-merged; Implementer receives required fixes |
-| 6.6 | FAIL path: Agent1 fixes and re-pushes | CI re-runs; Validator re-validates |
+| 6.4 | Standard path: formal GitHub review submitted | `approve` for PASS; `request-changes` for FAIL |
+| 6.5 | Single-account fallback: GitHub blocks self-review | FAIL posted as plain PR comment + `pm-review-required` label applied; PASS posted as plain comment (no formal approval possible) |
+| 6.6 | FAIL path (either 6.4 or 6.5): Agent2 posts FAIL | PR not auto-merged; Implementer receives required fixes |
+| 6.7 | FAIL path: Agent1 fixes and re-pushes | CI re-runs; Validator re-validates |
 
 ---
 
