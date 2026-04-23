@@ -12,6 +12,7 @@ from datetime import datetime, timezone
 from dataclasses import dataclass
 from pathlib import Path
 
+from elis.agent_id import engine_from_agent_id
 from elis.reviewer_identity import ReviewerIdentityError, review_login_for_engine
 
 
@@ -76,12 +77,10 @@ def _extract_table_value(content: str, heading: str, field: str) -> str:
 
 
 def _engine(agent_id: str) -> str:
-    lowered = agent_id.lower()
-    if "codex" in lowered:
-        return "codex"
-    if "claude" in lowered:
-        return "claude"
-    raise RunnerError(f"Cannot infer engine from agent id '{agent_id}'.")
+    try:
+        return engine_from_agent_id(agent_id)
+    except ValueError as exc:
+        raise RunnerError(str(exc)) from exc
 
 
 def parse_current_pe(path: Path) -> CurrentPEContext:
