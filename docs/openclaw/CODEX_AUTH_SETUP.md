@@ -12,9 +12,9 @@ Running `codex auth login` on a machine with a browser completes an OAuth flow
 and persists credentials in `~/.codex/auth.json`.
 
 On a headless GitHub Actions runner, browser-based login is not possible.
-The solution is to store the full `~/.codex/auth.json` from a one-time local login
-as a GitHub Secret named `CODEX_AUTH_JSON`.
-Runners then write it to `~/.codex/auth.json` before invoking `codex`.
+The solution is to extract the `OPENAI_API_KEY` from a one-time local login
+and store it as a GitHub Secret. Runners then inject it as an environment
+variable before invoking `codex`.
 
 **Pre-verification results (2026-03-26, PO machine `carlo-notebook`):**
 
@@ -77,22 +77,45 @@ Expected output confirms:
 
 ```
 auth_mode          : chatgpt
-tokens sub-keys    : [...]
-access_token present : True
-refresh_token present: True
-Recommended mechanism: store the full Codex auth.json as GitHub Secret 'CODEX_AUTH_JSON'.
+OPENAI_API_KEY present : True
+refresh_token present  : True
+Recommended mechanism: store OPENAI_API_KEY as GitHub Secret 'OPENAI_API_KEY'.
 ```
 
-### Step 5 — Store as GitHub Secret
+### Step 5 — Extract OPENAI_API_KEY (PO eyes only — never paste in logs or chat)
+
+**Windows (PowerShell) — copies value to clipboard:**
+
+```powershell
+(Get-Content "$env:USERPROFILE\.codex\auth.json" | ConvertFrom-Json).OPENAI_API_KEY | Set-Clipboard
+```
+
+**Linux:**
+
+```bash
+python -c "import json,os,subprocess; d=json.load(open(os.path.expanduser('~/.codex/auth.json'))); subprocess.run(['xclip','-selection','clipboard'], input=d['OPENAI_API_KEY'], text=True)"
+```
+
+**macOS:**
+
+```bash
+python -c "import json,os,subprocess; d=json.load(open(os.path.expanduser('~/.codex/auth.json'))); subprocess.run(['pbcopy'], input=d['OPENAI_API_KEY'], text=True)"
+```
+
+> The value goes to the clipboard only — it is never printed to stdout or shell
+> history. After pasting into GitHub Secrets, clear the clipboard and purge
+> terminal history: `history -c` (bash/zsh) or `Clear-History` (PowerShell).
+
+### Step 6 — Store as GitHub Secret
 
 1. Navigate to the repository → **Settings** → **Secrets and variables** → **Actions**
 2. Click **New repository secret**
-3. Name: `CODEX_AUTH_JSON`
-4. Value: paste the entire `~/.codex/auth.json` file contents from the local login
+3. Name: `OPENAI_API_KEY`
+4. Value: paste the key extracted in Step 5
 5. Click **Add secret**
 
-> **AC-2:** The secret value must never appear in any CI log. The workflow must
-> use `${{ secrets.CODEX_AUTH_JSON }}` and write it to `~/.codex/auth.json` — never echo the secret.
+> **AC-2:** The key value must never appear in any CI log. The workflow must
+> use `${{ secrets.OPENAI_API_KEY }}` — never hardcode or echo the value.
 
 ---
 
@@ -104,18 +127,14 @@ Add to any workflow that invokes `codex`:
 - name: Install Codex CLI
   run: npm install -g @openai/codex
 
-- name: Write Codex auth.json from secret
-  env:
-    CODEX_AUTH_JSON: ${{ secrets.CODEX_AUTH_JSON }}
-  run: |
-    mkdir -p ~/.codex
-    printf '%s' "$CODEX_AUTH_JSON" > ~/.codex/auth.json
-    chmod 600 ~/.codex/auth.json
-
 - name: Verify Codex auth
+  env:
+    OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
   run: python scripts/verify_codex_auth.py
 
 - name: Run Codex agent
+  env:
+    OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
   run: codex <your-task>
 ```
 
@@ -123,12 +142,12 @@ Add to any workflow that invokes `codex`:
 
 ## Token renewal
 
-The `CODEX_AUTH_JSON` derived from a local Codex OAuth login is subject to
+The `OPENAI_API_KEY` derived from a ChatGPT Plus session is subject to
 OpenAI's token expiry policy. Renewal procedure:
 
 1. On your local machine, run `codex auth login` again (browser flow).
-2. Run `python scripts/extract_codex_token.py` to confirm a fresh auth.json is present.
-3. Re-export the full `~/.codex/auth.json` contents and update the GitHub Secret.
+2. Run `python scripts/extract_codex_token.py` to confirm a fresh key is present.
+3. Extract the new value (Step 5 above) and update the GitHub Secret (Step 6).
 
 **Recommended renewal cadence:** before each major PE series or when a runner
 reports authentication failures.

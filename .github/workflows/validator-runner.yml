@@ -78,22 +78,26 @@ jobs:
         if: inputs.engine == 'claude'
         run: curl -fsSL https://claude.ai/install.sh | bash
 
-      - name: Write Codex auth.json (OAuth mode)
-        if: inputs.engine == 'codex'
-        env:
-          CODEX_AUTH_JSON: ${{ secrets.CODEX_AUTH_JSON }}
-        run: |
-          mkdir -p ~/.codex
-          printf '%s' "$CODEX_AUTH_JSON" > ~/.codex/auth.json
-          chmod 600 ~/.codex/auth.json
-
       - name: Verify Codex auth
         if: inputs.engine == 'codex'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: python scripts/verify_codex_auth.py
+
+      - name: Write Codex auth.json (apikey mode)
+        if: inputs.engine == 'codex'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          mkdir -p ~/.codex
+          python -c "import json,os; json.dump({'auth_mode':'apikey','OPENAI_API_KEY':os.environ['OPENAI_API_KEY']},open(os.path.expanduser('~/.codex/auth.json'),'w'))"
+          python -c "import json,os; d=json.load(open(os.path.expanduser('~/.codex/auth.json'))); print('auth.json OK — auth_mode:',d['auth_mode'],'key_len:',len(d.get('OPENAI_API_KEY','')))"
 
       - name: Smoke-test Codex CLI
         if: inputs.engine == 'codex'
         continue-on-error: true
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: codex --version && codex exec --skip-git-repo-check --dangerously-bypass-approvals-and-sandbox "echo SMOKE_OK" < /dev/null
 
       - name: Write Claude credentials file
@@ -117,6 +121,7 @@ jobs:
         if: inputs.engine == 'codex'
         env:
           GH_TOKEN: ${{ secrets.CODEX_BOT_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           python -m scripts.run_codex_validator \
             --pe-id "${{ inputs.pe_id }}" \
