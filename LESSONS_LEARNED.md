@@ -1,7 +1,7 @@
 # LESSONS_LEARNED.md — Agent Error Log
 
 Both agents read this file at Step 0 (after `AGENTS.md`).
-Each entry records an error pattern observed during the PE-OC series,
+Each entry records an error pattern observed during PE work,
 the rule added to prevent recurrence, and how it was detected.
 
 ---
@@ -251,3 +251,97 @@ docker exec openclaw node openclaw.mjs channels add --channel telegram --token $
 ```
 
 PO pairing survives token rotation — no re-pairing is needed.
+
+---
+
+## LL-12 — ADR coverage claim must match delivered scope exactly
+
+| Field | Value |
+|---|---|
+| First seen | PE-GHA-02 (2026-04-22) |
+| Agent | Claude Code (Implementer) |
+| AGENTS.md rule | §2.9 — mid-session checkpoint: confirm scope before every commit |
+
+**Error:** ADR-012 stated "every workflow file carries a `# Classification:` comment on its first line" but only 6 of 35 workflow files had the header when the PR was opened. CODEX issued a FAIL verdict specifically because the ADR's universal claim was not satisfied.
+
+**Root cause:** ADR was written to describe the intended final state; implementation only addressed the workflows the Implementer touched directly, leaving 29 files unclassified.
+
+**Detection:** Validator ran `head -1` on all workflow files and compared against the ADR claim.
+
+**Rule added:** Before committing an ADR (or any document that makes a universal claim about repo state), verify the claim is true by checking every instance. "Every X has Y" means every X — not "the ones I touched."
+
+---
+
+## LL-13 — HANDOFF AC status must reflect actual implementation state
+
+| Field | Value |
+|---|---|
+| First seen | PE-GHA-02 (2026-04-22) |
+| Agent | Claude Code (Implementer) |
+| AGENTS.md rule | §2.7 — HANDOFF.md must accurately represent the delivered state |
+
+**Error:** HANDOFF marked AC-6 (branch protection) as `PARTIAL` while other ACs were `PASS`. CODEX issued a FAIL because the HANDOFF stated a known incomplete state without a PM-authorised re-scope. The Validator correctly required either full implementation or explicit PM re-scope before issuing PASS.
+
+**Root cause:** Implementer treated PARTIAL as an acceptable HANDOFF state. It is not — every AC must be either PASS, explicitly re-scoped by PM (with evidence), or BLOCKED with a named dependency.
+
+**Detection:** Validator read the AC table and cross-checked against actual repo state.
+
+**Rule added:** Never mark an AC as PARTIAL in a final HANDOFF. Use PASS (fully met), BLOCKED (named external dependency with PM acknowledgement), or open a PM re-scope before submitting the HANDOFF.
+
+---
+
+## LL-14 — Black and pytest fail on stale temp dirs on Windows
+
+| Field | Value |
+|---|---|
+| First seen | PE-GHA-02 (2026-04-22) |
+| Agent | Claude Code |
+| AGENTS.md rule | §6.4 — quality gate commands must produce clean, trustworthy output |
+
+**Error:** Running `python -m black --check .` and `python -m pytest` on the full repo from a Windows working directory raised `PermissionError: [WinError 5] Access is denied` on stale pytest temp directories (`.pytest-temp-*`, `tmp*`), causing the commands to exit non-zero even when all Python files and tests were valid.
+
+**Root cause:** Previous PE sessions left temp directories in the repo root that Windows file locking prevented black and pytest from scanning.
+
+**Detection:** PermissionError lines in command output pointing to `.pytest-temp-*` and `tmp*` directories.
+
+**Fix (Windows only):**
+- Black: `python -m black --check --include "\.py$" elis/ tests/ scripts/` — target Python source directories directly.
+- Pytest: `python -m pytest tests/ --basetemp=.tmp/pe-<id> --tb=no` — redirect temp output to a fresh path.
+
+These workarounds are not needed on elis-server (Ubuntu).
+
+---
+
+## LL-15 — Branch protection updates require admin PAT; bot accounts return 404
+
+| Field | Value |
+|---|---|
+| First seen | PE-GHA-02 (2026-04-22) |
+| Agent | Claude Code |
+| AGENTS.md rule | §3.4 — verify prerequisites and access rights before attempting privileged operations |
+
+**Error:** Claude Code and CODEX (elis-claude-bot, elis-codex-bot) both received HTTP 404 when attempting `gh api repos/.../branches/main/protection --method PUT`. The operation silently appeared to fail rather than returning 403.
+
+**Root cause:** Bot accounts have write collaborator access but not admin rights. The GitHub branch protection API returns 404 (not 403) for non-admin tokens, masking the true cause.
+
+**Detection:** HTTP 404 response from the branch protection endpoint.
+
+**Rule added:** Any operation touching branch protection rules requires the PO/admin account. Bot accounts cannot read or write branch protection settings — 404 from this endpoint always means insufficient privilege, not a missing resource. Document such operations as PM actions and provide the exact command for the PO to run.
+
+---
+
+## LL-16 — REVIEW Evidence section must contain a fenced code block
+
+| Field | Value |
+|---|---|
+| First seen | PE-GHA series (2026-04-22) |
+| Agent | Claude Code (Validator) |
+| AGENTS.md rule | §5.2 — Validator verdict delivery; `check_review.py` must pass before pushing |
+
+**Error:** `check_review.py` rejected a REVIEW file because the `### Evidence` section contained only prose and inline code, with no fenced code block (` ``` `). The script requires at least one fenced block in that section.
+
+**Root cause:** Validator wrote evidence as descriptive text without wrapping command output in a fenced block.
+
+**Detection:** `python scripts/check_review.py` exits non-zero with message indicating missing fenced block in Evidence.
+
+**Rule added:** Always run `REVIEW_FILE=REVIEW_PE_<ID>.md python scripts/check_review.py` before pushing the REVIEW file. The `### Evidence` section must contain at least one fenced code block enclosing actual command output — prose description alone is not sufficient.
