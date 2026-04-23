@@ -21,10 +21,10 @@
 
 | Field   | Value |
 |---------|-------|
-| PE      | —     |
-| Branch  | —     |
+| PE      | PE-E2E-01 |
+| Branch  | feature/pe-e2e-01-smoke |
 
-> **No active PE.** GitHub Actions CI Authority Plan complete (PE-GHA-01 and PE-GHA-02 merged). Awaiting PM assignment of next plan.
+> **Active disposable E2E PE.** Running end-to-end multi-agent drill per E2E_MULTI_AGENT_TEST_PLAN.md.
 
 ---
 
@@ -32,10 +32,10 @@
 
 | Agent       | Role |
 |-------------|------|
-| Claude Code | —    |
-| CODEX       | —    |
+| Claude Code | validator (claude) |
+| CODEX       | implementer (codex) |
 
-> No active PE.
+> Active PE roles: CODEX = Implementer, Claude Code = Validator (alternation enforced).
 
 ---
 
