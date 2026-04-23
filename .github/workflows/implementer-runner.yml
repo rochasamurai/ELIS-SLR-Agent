@@ -85,19 +85,18 @@ jobs:
         if: inputs.engine == 'claude'
         run: curl -fsSL https://claude.ai/install.sh | bash
 
-      - name: Verify Codex auth
+      - name: Write Codex auth.json (OAuth mode)
         if: inputs.engine == 'codex'
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: python scripts/verify_codex_auth.py
-
-      - name: Write Codex auth.json (apikey mode)
-        if: inputs.engine == 'codex'
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          CODEX_AUTH_JSON: ${{ secrets.CODEX_AUTH_JSON }}
         run: |
           mkdir -p ~/.codex
-          python -c "import json,os; json.dump({'auth_mode':'apikey','OPENAI_API_KEY':os.environ['OPENAI_API_KEY']},open(os.path.expanduser('~/.codex/auth.json'),'w'))"
+          printf '%s' "$CODEX_AUTH_JSON" > ~/.codex/auth.json
+          chmod 600 ~/.codex/auth.json
+
+      - name: Verify Codex auth
+        if: inputs.engine == 'codex'
+        run: python scripts/verify_codex_auth.py
 
       - name: Write Claude credentials file
         if: inputs.engine == 'claude'
@@ -150,7 +149,6 @@ jobs:
         if: inputs.engine == 'codex'
         env:
           GH_TOKEN: ${{ secrets.CODEX_BOT_TOKEN }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           python scripts/run_codex_agent.py \
             --pe-id "${{ inputs.pe_id }}" \

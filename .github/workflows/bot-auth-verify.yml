@@ -5,7 +5,7 @@ name: PE-AUTO-01 — Bot Auth Verification
 # Purpose
 #   Verify that:
 #   - The Codex CLI auth chain works on a headless runner (AC-3a):
-#       OPENAI_API_KEY set + codex on PATH + codex --version exits 0
+#       Codex auth.json secret set + codex on PATH + codex --version exits 0
 #   - The Claude Code auth chain works on a headless runner (AC-3b):
 #       CLAUDE_SETUP_TOKEN set, ANTHROPIC_API_KEY absent + claude --version exits 0
 #   - Bot tokens wire correctly for GitHub operations (AC-4):
@@ -44,9 +44,15 @@ jobs:
       - name: Install Codex CLI
         run: npm install -g @openai/codex
 
-      - name: Verify Codex auth
+      - name: Write Codex auth.json from secret
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          CODEX_AUTH_JSON: ${{ secrets.CODEX_AUTH_JSON }}
+        run: |
+          mkdir -p ~/.codex
+          printf '%s' "$CODEX_AUTH_JSON" > ~/.codex/auth.json
+          chmod 600 ~/.codex/auth.json
+
+      - name: Verify Codex auth
         run: python scripts/verify_codex_auth.py
 
   verify-claude-auth:

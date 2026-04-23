@@ -54,19 +54,14 @@ def main() -> int:
     has_api_key = bool(data.get("OPENAI_API_KEY"))
     has_refresh = isinstance(tokens, dict) and bool(tokens.get("refresh_token"))
     print()
-    print(f"OPENAI_API_KEY present : {has_api_key}")
-    print(f"refresh_token present  : {has_refresh}")
+    print(f"legacy OPENAI_API_KEY field present : {has_api_key}")
+    print(f"refresh_token present              : {has_refresh}")
 
-    if has_api_key:
-        print()
-        print(
-            "Recommended mechanism: store OPENAI_API_KEY as GitHub Secret 'OPENAI_API_KEY'."
-        )
-        print("Runners set: export OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}")
-    elif has_refresh:
-        print()
-        print("Fallback mechanism: store refresh_token as 'CODEX_REFRESH_TOKEN'.")
-        print("Runner must exchange it for an access_token before invoking codex.")
+    print()
+    print("Recommended mechanism: store the full Codex auth.json as GitHub Secret 'CODEX_AUTH_JSON'.")
+    print("Runner should write that secret to ~/.codex/auth.json before invoking codex.")
+    if has_refresh:
+        print("The local file already contains OAuth refresh_token material.")
 
     return 0
 
