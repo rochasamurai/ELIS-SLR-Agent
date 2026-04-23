@@ -17,7 +17,7 @@ from scripts.pm_status_reporter import auth_status_summary
 _DEFAULT_CURRENT_PE = pathlib.Path("CURRENT_PE.md")
 _DEFAULT_LESSONS = pathlib.Path("LESSONS_LEARNED.md")
 _REVIEW_FILE_GLOB = "REVIEW_PE*.md"
-_PE_ID_RE = re.compile(r"^PE-[A-Z]+-[0-9]+$")
+_PE_ID_RE = re.compile(r"^PE(?:-[A-Z0-9]+)+-[0-9]+$")
 
 
 @dataclass(frozen=True)

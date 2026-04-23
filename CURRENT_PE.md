@@ -32,8 +32,8 @@
 
 | Agent       | Role |
 |-------------|------|
-| Claude Code | validator (claude) |
-| CODEX       | implementer (codex) |
+| Claude Code | Validator |
+| CODEX       | Implementer |
 
 > Active PE roles: CODEX = Implementer, Claude Code = Validator (alternation enforced).
 
@@ -115,6 +115,7 @@
 | PE-SLR-10       | slr            | slr-impl-b           | slr-val-a          | feature/pe-slr-10-end-to-end-hybrid-slr-validation                     | merged         | 2026-04-22   |
 | PE-GHA-01       | ci             | gha-impl-a           | gha-val-b          | feature/pe-gha-01-agents-md-ci-authority                                | merged         | 2026-04-22   |
 | PE-GHA-02       | ci             | gha-impl-b           | gha-val-a          | feature/pe-gha-02-workflow-classification-and-branch-protection          | merged         | 2026-04-22   |
+| PE-E2E-01       | e2e            | e2e-impl-a           | e2e-val-b          | feature/pe-e2e-01-smoke                                                 | implementing    | 2026-04-23   |
 
 Valid status values:
 - `planning`
