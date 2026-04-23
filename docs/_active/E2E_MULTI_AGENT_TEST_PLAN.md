@@ -24,6 +24,22 @@
 
 ---
 
+### PE-E2E-01
+
+**Objective:** Validate the full disposable E2E drill from plan ingestion through PM housekeeping.
+
+| AC | Acceptance criteria |
+|----|---------------------|
+| AC-1 | PM reads `docs/_active/E2E_MULTI_AGENT_TEST_PLAN.md`, opens `PE-E2E-01` in `CURRENT_PE.md`, and sets the disposable branch to `feature/pe-e2e-01-smoke`. |
+| AC-2 | `Implementer Agent Runner` starts successfully for `PE-E2E-01` on `main` using the Codex implementer path. |
+| AC-3 | The implementer session appears on elis-server and reads `CURRENT_PE.md` as Step 0 without role drift. |
+| AC-4 | The implementer commits `HANDOFF.md` before opening the PR, and the PR targets `main`. |
+| AC-5 | CI runs the required gates and all required checks pass on the happy path. |
+| AC-6 | Gate 1 assigns the Validator and the validator session starts without self-initiation. |
+| AC-7 | The Validator writes `REVIEW_PE_E2E_01.md`, includes evidence, and submits the formal review verdict. |
+| AC-8 | Auto-merge fires only on PASS + green CI + clean mergeability state. |
+| AC-9 | PM housekeeping updates `CURRENT_PE.md` to merged and opens the next PE with alternated roles. |
+
 ## 2) Test Cases
 
 ### TC-01 — Plan Ingestion
