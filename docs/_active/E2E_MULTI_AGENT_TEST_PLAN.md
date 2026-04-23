@@ -18,7 +18,7 @@
 | 5 | GitHub Actions | CI runs portable blocking gates: `black`, `ruff`, `pytest`, `current-pe-check`, `secrets-scope-check`, `review-evidence-check`, `slr-quality-check` |
 | 6 | PM / GitHub Actions | Gate 1: PM dispatches Validator assignment directly via `sessions_send` (default); fallback — PM posts validator-assignment comment on PR triggering `validator-dispatch.yml`; last resort — PO relay |
 | 7 | GitHub Actions | `validator-runner.yml` dispatches Agent2 (Validator) session on elis-server |
-| 8 | Agent2 | Reviews the PR; writes `REVIEW_PE_XX.md`; posts PR comment + formal GitHub review (`approve` for PASS, `request-changes` for FAIL); single-account fallback (FAIL only): plain PR comment + `pm-review-required` label — PASS always requires a formal approval from the mapped reviewer bot identity |
+| 8 | Agent2 | Reviews the PR; writes `REVIEW_PE_XX.md`; posts PR comment + formal GitHub review (`approve` for PASS, `request-changes` for FAIL); single-account fallback — FAIL only: plain PR comment + `pm-review-required` label; PASS is never acceptable as a plain comment — formal approval from the mapped reviewer bot identity is always required |
 | 9 | GitHub Actions | `auto-merge-on-pass.yml` checks: PASS verdict + CI green + `mergeable_state == clean` → auto-merges PR |
 | 10 | PM | Closes PE in `CURRENT_PE.md` (PM-CHORE), opens next PE; cycle repeats |
 
