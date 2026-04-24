@@ -346,16 +346,11 @@ def mark_pr_ready(branch: str, base_branch: str) -> None:
 
 def default_cli_command(engine: str, prompt: str) -> list[str]:
     if engine == "codex":
-        # --dangerously-bypass-approvals-and-sandbox is required for headless
-        # CI runners where bubblewrap kernel namespacing is not available.
-        # GitHub Actions and similar are externally sandboxed at the VM level.
-        return [
-            "codex",
-            "exec",
-            "--skip-git-repo-check",
-            "--dangerously-bypass-approvals-and-sandbox",
-            prompt,
-        ]
+        # Prompt is delivered via stdin (see run_cli) so that Codex exits cleanly
+        # when stdin closes. Passing the prompt as a positional arg to `codex exec`
+        # causes Codex v0.118.0 to wait for interactive continuation after completing
+        # the task, then fail with "Reading additional input from stdin..." on EOF.
+        return ["codex", "--dangerously-bypass-approvals-and-sandbox"]
     if engine == "claude":
         return ["claude", "-p", prompt, "--dangerously-skip-permissions"]
     raise RunnerError(f"Unsupported engine '{engine}'.")
@@ -371,10 +366,18 @@ def cli_command(engine: str, prompt: str) -> list[str]:
     return shlex.split(rendered)
 
 
+def _codex_uses_stdin(engine: str) -> bool:
+    """True when Codex should receive its prompt via stdin rather than in args."""
+    return engine == "codex" and not os.environ.get("AGENT_RUNNER_TEMPLATE", "").strip()
+
+
 def run_cli(engine: str, prompt: str, *, timeout: int | None = None) -> None:
+    cmd = cli_command(engine, prompt)
+    use_stdin = _codex_uses_stdin(engine)
     result = subprocess.run(
-        cli_command(engine, prompt),
-        stdin=subprocess.DEVNULL,
+        cmd,
+        input=prompt if use_stdin else None,
+        stdin=subprocess.PIPE if use_stdin else subprocess.DEVNULL,
         capture_output=True,
         text=True,
         timeout=timeout,
