@@ -145,6 +145,50 @@ Gate 1 and Gate 2 are enforced by CI automation after PE-INFRA-04.
 - Agent role rotation
 - Any CI job that exits with the `pm-escalation` flag
 
+### 2.10.1 Workflow state machine contract
+
+Every PE moves through the canonical workflow state machine. The human-readable
+contract is `docs/workflow/PE_STATE_MACHINE.md`; the machine-readable mirror is
+`elis/workflow_state_machine.py`.
+
+Canonical states:
+
+| State | Meaning |
+|-------|---------|
+| `planning` | PE is defined, but no implementer work has started yet. |
+| `implementing` | Implementer is actively coding on `elis-server`. |
+| `gate-1-pending` | Implementer has finished; `HANDOFF.md` and Status Packet evidence are complete; ready for validator assignment. |
+| `validating` | Validator is actively reviewing on `elis-server`. |
+| `gate-2-pending` | Validator has posted evidence and verdict; awaiting formal approval or merge automation. |
+| `merged` | PR merged; PE complete. |
+| `blocked` | A guard failed, a runner is unavailable, or an external dependency prevents progress. |
+| `superseded` | PE was replaced by a newer governance decision. |
+
+Allowed transitions:
+
+```text
+planning -> implementing
+implementing -> gate-1-pending
+gate-1-pending -> validating
+gate-1-pending -> blocked
+validating -> gate-2-pending
+gate-2-pending -> merged
+gate-2-pending -> blocked
+any active state -> superseded
+```
+
+Transition guards:
+
+- Implementer completion (`implementing -> gate-1-pending`) requires `HANDOFF.md` is present and complete, Status Packet sections are complete, handoff artefacts are committed on the PE branch, and the runner observes a matching PE/branch pair.
+- Validator authorisation (`gate-1-pending -> validating`) requires explicit PM authorisation is recorded, validator assignment evidence is present, and the PE remains active in `CURRENT_PE.md`.
+- Review completion (`validating -> gate-2-pending`) requires REVIEW evidence is present, a formal verdict is recorded in the REVIEW file, and CI gates are not broken by validator artefacts.
+- Merge approval (`gate-2-pending -> merged`) requires CI is green, required review approval is satisfied, and no `pm-review-required` veto label is present.
+
+GitHub Actions may observe state, validate guards, post audit evidence, and
+dispatch bounded workflow steps. GitHub Actions must not perform agent coding
+unless the current state explicitly permits that action and the active
+execution-surface policy allows it.
+
 ### 2.11 Language standard
 - All repository-facing content must use **UK English** by default.
 - This applies to:

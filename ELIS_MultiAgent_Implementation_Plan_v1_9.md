@@ -44,6 +44,27 @@ Before PE work begins, the following must be true:
 - Review artefacts resolve via `docs/reviews/README.md` and `docs/reviews/archive/`.
 - No secret-bearing files are present in the worktree.
 
+### 2.1 Workflow state-machine reference
+
+All PEs in this plan use the canonical workflow states documented in
+`docs/workflow/PE_STATE_MACHINE.md` and mirrored in
+`elis/workflow_state_machine.py`:
+
+`planning`, `implementing`, `gate-1-pending`, `validating`,
+`gate-2-pending`, `merged`, `blocked`, `superseded`.
+
+Future PE handoffs, reviews, registry updates, and GitHub Actions orchestration
+must use these exact state labels. The governing transition guards are:
+
+- Implementer completion: `implementing -> gate-1-pending`
+- Validator authorisation: `gate-1-pending -> validating`
+- Review completion: `validating -> gate-2-pending`
+- Merge approval: `gate-2-pending -> merged`
+
+GitHub Actions may observe guards and dispatch bounded workflow steps; it must
+not perform agent coding unless the current state and execution-surface policy
+permit it.
+
 ---
 
 ## 3. PE Implementation Series

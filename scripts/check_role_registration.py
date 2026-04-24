@@ -1,18 +1,17 @@
 import os
 import re
+import sys
+from importlib import import_module
+from pathlib import Path
 
-from elis.agent_id import engine_from_agent_id
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
-VALID_STATUSES = {
-    "planning",
-    "implementing",
-    "gate-1-pending",
-    "validating",
-    "gate-2-pending",
-    "merged",
-    "blocked",
-    "superseded",
-}
+engine_from_agent_id = import_module("elis.agent_id").engine_from_agent_id
+workflow_state_machine = import_module("elis.workflow_state_machine")
+
+VALID_STATUSES = set(workflow_state_machine.CANONICAL_STATES)
 VALID_ROLES = {"Implementer", "Validator"}
 ENGINE_TO_AGENT = {
     "codex": "CODEX",
