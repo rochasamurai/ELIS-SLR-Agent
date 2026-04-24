@@ -5,7 +5,7 @@
 **Implementer:** Claude Code (`infra-impl-b`)  
 **Date:** 2026-04-24  
 **Base branch:** main  
-**Implementation commit:** `3b5ad0d`
+**Implementation commit:** `3b5ad0d` (fix commit: `5ea5e1d`)
 
 ---
 
@@ -25,9 +25,12 @@ The implementation:
 - corrects AGENTS.md §5.2 step 8 and the do-not list to show the full archive path in
   the `REVIEW_FILE=` command example;
 - updates `docs/reviews/README.md` to point to the actual latest PE review file;
+- updates `docs/DOCUMENT_CLASSIFICATION.md` to v1.2: §3.3.1 boundary table, scope
+  line, and §8 readiness signal now reference `/docs/reviews/archive/` not repo root;
 - updates the pre-existing `test_validator_runner_common.py` tests whose mocks and
   assertions assumed root-level paths; and
-- adds `tests/test_review_archive_paths.py` with 11 targeted tests covering AC-4.
+- adds `tests/test_review_archive_paths.py` with 12 targeted tests covering AC-4
+  (including a test for the DOCUMENT_CLASSIFICATION.md fix).
 
 ---
 
@@ -41,7 +44,8 @@ The implementation:
 | `.github/workflows/validator-runner.yml` | Prepend `docs/reviews/archive/` to constructed `review_file` path |
 | `AGENTS.md` | Update §5.2 step 8 and do-not list: `REVIEW_FILE=docs/reviews/archive/REVIEW_PE<N>.md` |
 | `docs/reviews/README.md` | Correct stale pointer: `archive/REVIEW_PE6.md` → `archive/REVIEW_PE_INFRA_06.md` |
-| `tests/test_review_archive_paths.py` | New: 11 targeted AC-4 tests |
+| `tests/test_review_archive_paths.py` | New: 12 targeted AC-4 tests (includes DOCUMENT_CLASSIFICATION check) |
+| `docs/DOCUMENT_CLASSIFICATION.md` | Bump to v1.2: §3.3.1 boundary, scope line, §8 readiness signal reference `/docs/reviews/archive/` |
 | `tests/test_validator_runner_common.py` | Update existing tests: read_verdict, verify_review_committed, build_validator_prompt mocks/assertions use archive paths |
 
 ---
@@ -66,8 +70,8 @@ The implementation:
 | AC-1 | Root `REVIEW.md` replaced by `docs/reviews/README.md` as review index. | PASS — `docs/reviews/README.md` exists; no root `REVIEW.md` present. |
 | AC-2 | Root `REVIEW_*.md` files archived under `docs/reviews/archive/`. | PASS — all PE REVIEW files are under archive; test confirms no root `REVIEW_PE*.md`. |
 | AC-3 | `scripts/check_review.py` discovers archived review files correctly. | PASS — `rglob("REVIEW_PE*.md")` was already recursive; `check_review.py` passes on the archive layout. |
-| AC-4 | Review-related docs and workflow guidance reference the new archive path. | PASS — `validator_runner_common.py`, all three workflow files, AGENTS.md §5.2 and §8, and `docs/reviews/README.md` now reference `docs/reviews/archive/`; 11 targeted tests verify this. |
-| AC-5 | Review validation tests pass with the archived file layout. | PASS — 37/37 tests in targeted suite pass; 1029/1031 in full suite (2 pre-existing `test_verify_claude_auth.py` failures unrelated to this PE). |
+| AC-4 | Review-related docs and workflow guidance reference the new archive path. | PASS — `validator_runner_common.py`, all three workflow files, AGENTS.md §5.2 and §8, `docs/reviews/README.md`, and `docs/DOCUMENT_CLASSIFICATION.md` v1.2 all reference `docs/reviews/archive/`; 12 targeted tests verify this. |
+| AC-5 | Review validation tests pass with the archived file layout. | PASS — 38 targeted tests pass; 1030/1032 in full suite (2 pre-existing `test_verify_claude_auth.py` failures unrelated to this PE). |
 
 ---
 
@@ -138,15 +142,15 @@ All checks passed!
 
 ```
 python -m pytest tests/test_review_archive_paths.py tests/test_validator_runner_common.py tests/test_check_review.py -q
-.....................................                                    [100%]
-37 passed in 0.XX s
+......................................                                   [100%]
+38 passed
 ```
 
 ### Full Test Suite
 
 ```
 python -m pytest tests/ -q
-2 failed, 1029 passed, 17 warnings in 9.76s
+2 failed, 1030 passed, 17 warnings in 10.65s
 
 FAILED tests/test_verify_claude_auth.py::test_fails_when_credentials_file_missing
 FAILED tests/test_verify_claude_auth.py::test_fails_when_credentials_file_lacks_oauth_key
@@ -169,5 +173,7 @@ git diff --name-status -- tests/test_verify_claude_auth.py scripts/verify_claude
 - Start with `tests/test_review_archive_paths.py` — it is the PE-specific validation surface.
 - `test_review_file_path_*` tests verify the new helper returns forward-slash archive paths.
 - `test_no_review_pe_files_at_repo_root` performs a real filesystem glob — it will catch any regression.
-- `test_*_references_archive_path` tests read the actual workflow YAML files from disk.
+- `test_*_references_archive_path` tests read the actual workflow YAML and doc files from disk.
+- `test_document_classification_references_archive_path` confirms DOCUMENT_CLASSIFICATION.md §3.3.1 no longer says "repo root".
+- `REVIEW_IMPLEMENTATION_ALIGNMENT_v1.md` is an immutable historical artifact (written when PE reviews were still at root); it must not be modified. Gap 7 in that document is the finding PE-INFRA-SLR-07 resolves.
 - The two full-suite failures are unrelated to this PE and pre-date it; treat them separately.
