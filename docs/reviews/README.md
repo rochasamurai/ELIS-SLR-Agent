@@ -1,3 +1,3 @@
 # Review Index
 
-Latest validation report: `archive/REVIEW_PE6.md`
+Latest validation report: `archive/REVIEW_PE_INFRA_06.md`

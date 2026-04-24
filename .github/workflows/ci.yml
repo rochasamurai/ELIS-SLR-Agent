@@ -163,9 +163,9 @@ jobs:
             exit 0
           fi
           git fetch origin "$base"
-          review_files="$(git diff --name-only "origin/$base...HEAD" -- 'REVIEW_*.md')"
+          review_files="$(git diff --name-only "origin/$base...HEAD" -- 'docs/reviews/archive/REVIEW_*.md')"
           if [ -z "$review_files" ]; then
-            echo "No REVIEW_*.md files changed in this PR. Skipping."
+            echo "No docs/reviews/archive/REVIEW_*.md files changed in this PR. Skipping."
             exit 0
           fi
           for file in $review_files; do

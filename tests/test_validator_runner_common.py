@@ -115,12 +115,16 @@ def test_review_file_name_other_domain():
 
 
 def test_read_verdict_pass(tmp_path):
-    (tmp_path / "REVIEW_PE_AUTO_05.md").write_text(REVIEW_PASS, encoding="utf-8")
+    archive = tmp_path / "docs" / "reviews" / "archive"
+    archive.mkdir(parents=True)
+    (archive / "REVIEW_PE_AUTO_05.md").write_text(REVIEW_PASS, encoding="utf-8")
     assert common.read_verdict(tmp_path, "PE-AUTO-05") == "PASS"
 
 
 def test_read_verdict_fail(tmp_path):
-    (tmp_path / "REVIEW_PE_AUTO_05.md").write_text(REVIEW_FAIL, encoding="utf-8")
+    archive = tmp_path / "docs" / "reviews" / "archive"
+    archive.mkdir(parents=True)
+    (archive / "REVIEW_PE_AUTO_05.md").write_text(REVIEW_FAIL, encoding="utf-8")
     assert common.read_verdict(tmp_path, "PE-AUTO-05") == "FAIL"
 
 
@@ -150,7 +154,7 @@ def test_build_validator_prompt_contains_required_elements(tmp_path):
     )
 
     assert "You are the ELIS CODEX Validator runner for PE-AUTO-05." in prompt
-    assert "REVIEW_PE_AUTO_05.md" in prompt
+    assert "docs/reviews/archive/REVIEW_PE_AUTO_05.md" in prompt
     assert "gh pr review 312" in prompt
     assert "Validator triggers automatically" in prompt
     assert "AGENTS BODY" in prompt
@@ -252,7 +256,10 @@ def test_verify_review_committed_passes_when_file_in_log(monkeypatch):
         common.subprocess,
         "run",
         lambda *_a, **_kw: subprocess.CompletedProcess(
-            [], 0, stdout="REVIEW_PE_AUTO_05.md\nsome_other.py\n", stderr=""
+            [],
+            0,
+            stdout="docs/reviews/archive/REVIEW_PE_AUTO_05.md\nsome_other.py\n",
+            stderr="",
         ),
     )
     common.verify_review_committed("PE-AUTO-05", "main")  # must not raise
