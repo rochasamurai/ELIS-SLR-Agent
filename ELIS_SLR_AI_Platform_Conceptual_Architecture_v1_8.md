@@ -174,6 +174,9 @@ Implication:
 ## 5.1 Development Domain
 
 Development agents for PM, Programs, and Infrastructure are local-first on `elis-server`.
+Operationally, that means Implementer and Validator sessions run on an `elis-server`
+self-hosted runner or equivalent local execution surface; GitHub-hosted runners are
+reserved for bounded CI gates, not agent coding.
 
 Rationale:
 - persistent repo/worktree context

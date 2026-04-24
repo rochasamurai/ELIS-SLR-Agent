@@ -1,4 +1,4 @@
-# Classification: Orchestration — dispatches agent sessions and mutates repo; uses bot tokens; not a code-validation gate.
+# Classification: Orchestration — dispatches agent sessions on the elis-server self-hosted runner; may use bot tokens; not a code-validation gate.
 name: Validator Agent Runner
 
 on:
@@ -33,7 +33,7 @@ permissions:
 jobs:
   run-validator:
     name: Run validator for ${{ inputs.pe_id }}
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, elis-server]
     timeout-minutes: 120
 
     steps:
