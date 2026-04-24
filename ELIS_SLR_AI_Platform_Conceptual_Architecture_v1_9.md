@@ -167,6 +167,15 @@ The development workflow is a **state machine**. Each PE must occupy exactly one
 state at a time, and every automation step must be a valid transition between
 states.
 
+Contract sources:
+
+- Human-readable state and guard contract: `docs/workflow/PE_STATE_MACHINE.md`
+- Machine-readable state and guard mirror: `elis/workflow_state_machine.py`
+- Agent operating guidance: `AGENTS.md`
+
+These sources must use the same canonical labels and guard names. If a state or
+guard changes, update all three in the same PE and add targeted validation.
+
 ### Canonical states
 
 | State | Meaning |

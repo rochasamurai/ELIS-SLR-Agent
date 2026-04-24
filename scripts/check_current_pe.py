@@ -13,24 +13,10 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 engine_from_agent_id = import_module("elis.agent_id").engine_from_agent_id
+workflow_state_machine = import_module("elis.workflow_state_machine")
 
-VALID_ACTIVE_STATUSES = {
-    "planning",
-    "implementing",
-    "gate-1-pending",
-    "validating",
-    "gate-2-pending",
-    "blocked",
-}
-VALID_REGISTRY_STATUSES = {
-    "planning",
-    "implementing",
-    "gate-1-pending",
-    "validating",
-    "gate-2-pending",
-    "merged",
-    "blocked",
-}
+VALID_ACTIVE_STATUSES = set(workflow_state_machine.ACTIVE_STATES)
+VALID_REGISTRY_STATUSES = set(workflow_state_machine.CANONICAL_STATES)
 PE_ID_RE = re.compile(r"^PE(?:-[A-Z0-9]+)+-[0-9]+$")
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 BRANCH_RE = re.compile(r"^(feature/pe-[a-z0-9-]+|chore/[a-z0-9-]+)$")

@@ -23,7 +23,9 @@ import sys
 from pathlib import Path
 
 from scripts.check_handoff import REQUIRED_SECTIONS as HANDOFF_REQUIRED_SECTIONS
-from scripts.check_status_packet import REQUIRED_SECTIONS as STATUS_PACKET_REQUIRED_SECTIONS
+from scripts.check_status_packet import (
+    REQUIRED_SECTIONS as STATUS_PACKET_REQUIRED_SECTIONS,
+)
 from scripts.implementer_runner_common import (
     CurrentPEContext,
     RunnerError,

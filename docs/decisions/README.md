@@ -116,6 +116,7 @@ An ADR is **not** required for:
 | [ADR-010](ADR-010-gate2-review-trigger.md) | Gate 2 triggered by mapped-bot approval review | Accepted | 2026-04-20 |
 | [ADR-011](ADR-011-github-actions-authority-for-portable-gates.md) | GitHub Actions authority for portable gates | Accepted | 2026-04-22 |
 | [ADR-012](ADR-012-workflow-classification.md) | Workflow classification — CI vs Orchestration | Accepted | 2026-04-22 |
+| [ADR-013](ADR-013-workflow-state-machine-contract.md) | Workflow state machine contract | Accepted | 2026-04-24 |
 
 ---
 
