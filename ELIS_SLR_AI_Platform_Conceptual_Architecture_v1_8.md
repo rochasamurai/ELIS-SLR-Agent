@@ -161,7 +161,65 @@ Implication:
 - agents perform reasoning
 - workflows provide orchestration, logging, retries, and audit trail
 
-## 4.3 Human Authority Boundary
+## 4.3 Workflow State Machine
+
+The development workflow is a **state machine**. Each PE must occupy exactly one
+state at a time, and every automation step must be a valid transition between
+states.
+
+### Canonical states
+
+| State | Meaning |
+|-------|---------|
+| `planning` | PE is defined, but no implementer work has started yet |
+| `implementing` | Implementer is actively coding on `elis-server` |
+| `gate-1-pending` | Implementer has finished; HANDOFF/Status Packet are complete; ready for validator assignment |
+| `validating` | Validator is actively reviewing on `elis-server` |
+| `gate-2-pending` | Validator has posted evidence and verdict; awaiting formal approval or merge automation |
+| `merged` | PR merged; PE complete |
+| `blocked` | A guard failed, a runner is unavailable, or an external dependency prevents progress |
+| `superseded` | PE was replaced by a newer governance decision |
+
+### Allowed transitions
+
+```text
+planning → implementing
+implementing → gate-1-pending
+gate-1-pending → validating
+gate-1-pending → blocked
+validating → gate-2-pending
+gate-2-pending → merged
+gate-2-pending → blocked
+any active state → superseded
+```
+
+### Transition guards
+
+- `implementing → gate-1-pending` requires:
+  - the Implementer has committed the handoff artefacts
+  - `HANDOFF.md` is present and complete
+  - the Status Packet sections are complete
+  - the runner can observe a matching PE/branch pair
+- `gate-1-pending → validating` requires:
+  - explicit PM authorisation
+  - validator assignment evidence
+  - the PE is still the active PE in `CURRENT_PE.md`
+- `validating → gate-2-pending` requires:
+  - REVIEW evidence present
+  - a formal verdict recorded in the REVIEW file
+  - CI gates not broken by the validator artefact
+- `gate-2-pending → merged` requires:
+  - CI green
+  - required review approval satisfied
+  - no `pm-review-required` veto label
+
+### Automation rule
+
+GitHub Actions may observe the state machine, validate guards, and dispatch the
+next bounded workflow step. GitHub Actions must not perform agent coding unless
+the current state explicitly authorises that action.
+
+## 4.4 Human Authority Boundary
 
 - PM governs development orchestration and execution-surface policy.
 - Human researcher retains authority over protocol, inclusion policy, and final interpretive judgement.
