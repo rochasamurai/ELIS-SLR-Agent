@@ -34,6 +34,8 @@ from scripts.implementer_runner_common import (
 
 _VERDICT_RE = re.compile(r"^(PASS|FAIL|IN PROGRESS)\b")
 
+REVIEW_ARCHIVE_DIR = Path("docs/reviews/archive")
+
 
 @dataclass(frozen=True)
 class ValidatorInputs:
@@ -53,6 +55,16 @@ def review_file_name(pe_id: str) -> str:
     return "REVIEW_" + pe_id.replace("-", "_") + ".md"
 
 
+def review_file_path(pe_id: str) -> str:
+    """Return the repo-relative REVIEW file path for a given PE ID.
+
+    Always uses forward slashes (suitable for git commands and CI shell scripts).
+
+    Example: ``PE-AUTO-05`` -> ``docs/reviews/archive/REVIEW_PE_AUTO_05.md``
+    """
+    return f"docs/reviews/archive/{review_file_name(pe_id)}"
+
+
 def build_validator_prompt(
     *,
     engine: str,
@@ -67,7 +79,7 @@ def build_validator_prompt(
     current_pe_text = current_pe_path.read_text(encoding="utf-8")
     criteria = acceptance_criteria_for_pe(plan_path, pe_id)
     criteria_block = "\n".join(f"- {criterion}" for criterion in criteria)
-    review_fname = review_file_name(pe_id)
+    review_fpath = review_file_path(pe_id)
 
     return (
         f"You are the ELIS {engine.upper()} Validator runner for {pe_id}.\n\n"
@@ -77,14 +89,14 @@ def build_validator_prompt(
         "2. Run quality gates: black --check, ruff check, pytest -q.\n"
         "3. Validate each acceptance criterion below against the implementation.\n"
         "4. Add adversarial tests for any weaknesses found.\n"
-        f"5. Write '{review_fname}' at the repo root with sections:\n"
+        f"5. Write '{review_fpath}' (under docs/reviews/archive/) with sections:\n"
         "   ### Verdict (first body line must be PASS or FAIL)\n"
         "   ### Gate results\n"
         "   ### Scope\n"
         "   ### Required fixes (say 'None.' for PASS; list findings for FAIL)\n"
         "   ### Evidence (must contain at least one fenced code block)\n"
         "6. Verify the file: `REVIEW_FILE="
-        + review_fname
+        + review_fpath
         + " python scripts/check_review.py`\n"
         "7. Commit the REVIEW file and any adversarial tests. Push to this branch.\n"
         f"8. Post a formal GitHub review on PR #{pr_number}:\n"
@@ -104,7 +116,7 @@ def build_validator_prompt(
 
 def read_verdict(repo_root: Path, pe_id: str) -> str:
     """Return 'PASS', 'FAIL', 'IN PROGRESS', or 'NOT_FOUND' from the REVIEW file."""
-    review_path = repo_root / review_file_name(pe_id)
+    review_path = repo_root / REVIEW_ARCHIVE_DIR / review_file_name(pe_id)
     if not review_path.exists():
         return "NOT_FOUND"
     content = review_path.read_text(encoding="utf-8")
@@ -122,7 +134,7 @@ def read_verdict(repo_root: Path, pe_id: str) -> str:
 
 def verify_review_committed(pe_id: str, base_branch: str) -> None:
     """Raise RunnerError if the REVIEW file is not in the git log vs base branch."""
-    fname = review_file_name(pe_id)
+    fpath = review_file_path(pe_id)
     result = subprocess.run(
         ["git", "log", "--name-only", "--format=", f"origin/{base_branch}..HEAD"],
         capture_output=True,
@@ -133,9 +145,9 @@ def verify_review_committed(pe_id: str, base_branch: str) -> None:
     if result.returncode != 0:
         raise RunnerError(result.stderr.strip() or "git log failed.")
     committed = {line.strip() for line in result.stdout.splitlines() if line.strip()}
-    if fname not in committed:
+    if fpath not in committed:
         raise RunnerError(
-            f"{fname!r} not found in commits on this branch vs {base_branch}. "
+            f"{fpath!r} not found in commits on this branch vs {base_branch}. "
             "Agent did not commit the REVIEW file."
         )
 
@@ -278,7 +290,7 @@ def run_validator(argv: list[str], *, engine: str) -> int:
         verdict = read_verdict(repo_root, inputs.pe_id)
         if verdict == "NOT_FOUND":
             raise RunnerError(
-                f"REVIEW file {review_file_name(inputs.pe_id)!r} not found after "
+                f"REVIEW file {review_file_path(inputs.pe_id)!r} not found after "
                 "agent run — agent did not complete correctly."
             )
 

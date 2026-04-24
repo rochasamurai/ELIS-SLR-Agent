@@ -166,7 +166,7 @@ jobs:
       - name: Read verdict from REVIEW file
         id: verdict
         run: |
-          review_file="REVIEW_$(echo '${{ inputs.pe_id }}' | tr '-' '_').md"
+          review_file="docs/reviews/archive/REVIEW_$(echo '${{ inputs.pe_id }}' | tr '-' '_').md"
           REVIEW_FILE="$review_file" python scripts/parse_verdict.py
 
       - name: Post fail assignment (elis-pm-bot)

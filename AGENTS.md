@@ -410,7 +410,7 @@ verified with pasted output. Never batch completions.
 7. Write verdict in `REVIEW_PE<N>.md` using the standard format (Section 9).
 8. **Before committing the REVIEW file**, verify it passes the local check:
    ```bash
-   REVIEW_FILE=REVIEW_PE<N>.md python scripts/check_review.py
+   REVIEW_FILE=docs/reviews/archive/REVIEW_PE<N>.md python scripts/check_review.py
    ```
    Required sections: `### Verdict`, `### Gate results`, `### Scope`, `### Required fixes`, `### Evidence` (must contain a fenced code block). Do not push a REVIEW file that fails this check.
 9. If any newly discovered pre-existing defect is not already in §11, add it now.
@@ -547,7 +547,7 @@ See `AUDITS.md` for the full audit spec and report templates.
 - Do not start a PE without creating a dedicated worktree for its branch (§3.3).
 - Do not refactor unrelated code while inside a PE.
 - Do not touch `REVIEW_PE<N>.md` unless you are the Validator.
-- Do not push a `REVIEW_PE<N>.md` without first running `REVIEW_FILE=<file> python scripts/check_review.py` and confirming it exits 0 (§5.2 step 8).
+- Do not push a `REVIEW_PE<N>.md` without first running `REVIEW_FILE=docs/reviews/archive/<file> python scripts/check_review.py` and confirming it exits 0 (§5.2 step 8).
 - Do not declare PASS without pasted gate outputs.
 - Do not leave uncommitted implementation files when ending a session.
 - Do not open a PR without running the pre-commit scope gate first.
