@@ -5,7 +5,7 @@
 > **Default Agent Pairing:** CODEX + Claude Code (default staffing only; any ELIS-compliant agent may fill either role when governance requirements are met)
 > **Delivers:** Hybrid SLR execution with explicit multi-identity GitHub review governance and verified PM cross-agent dispatch capability
 > **Phases:** 4 Phases · 15 PEs
-> **Governing Architecture:** `ELIS_SLR_AI_Platform_Conceptual_Architecture_v1_8.md`
+> **Governing Architecture:** `ELIS_SLR_AI_Platform_Conceptual_Architecture_v1_9.md`
 > **Host:** ELIS MiniServer — NUC8i7BEH · Ubuntu 24.04.4 LTS · `elis-server`
 > **Supersedes:** `ELIS_MultiAgent_Implementation_Plan_v1_8_2.md`
 
