@@ -41,7 +41,7 @@ The Validator:
 2. executes acceptance criteria **verbatim** (from the Release Plan);
 3. adds adversarial tests (edge cases + determinism checks);
 4. runs required checks locally;
-5. produces `REVIEW.md` with a clear verdict;
+5. produces `docs/reviews/archive/REVIEW_PE<N>.md` with a clear verdict;
 6. approves or requests changes and updates the review request file.
 
 ---
@@ -52,9 +52,9 @@ The Validator:
 - `docs/_active/RELEASE_PLAN_v2.0.md`
 
 ### 3.2 Branch-local handoff artefacts (per PR)
-These are created at the **repo root** on the feature branch:
+These are created on the feature branch:
 - `HANDOFF.md` (written by Implementer)
-- `REVIEW.md` (written by Validator)
+- `docs/reviews/archive/REVIEW_PE<N>.md` (written by Validator)
 
 These files travel with the PR branch and serve as durable, PR-specific context.
 
@@ -115,7 +115,7 @@ Examples:
 ### 5.4 Handoff files — fixed names
 Do **not** timestamp:
 - `HANDOFF.md`
-- `REVIEW.md`
+- `docs/reviews/archive/REVIEW_PE<N>.md`
 
 They are branch-local, PR-scoped artefacts with fixed names for discoverability.
 
@@ -212,7 +212,7 @@ At minimum:
 - `pytest -q`
 Plus PE-specific validation steps.
 
-7) **Write `REVIEW.md`**
+7) **Write `docs/reviews/archive/REVIEW_PE<N>.md`**
 Include:
 - verdict: `PASS`, `PASS WITH CHANGES`, or `FAIL`
 - acceptance criteria results
@@ -241,7 +241,7 @@ To prevent “two agents editing the same thing”:
 - The Validator may only:
   - modify files already listed in `HANDOFF.md` **and/or**
   - add new test files **and/or**
-  - add `REVIEW.md`
+  - add `docs/reviews/archive/REVIEW_PE<N>.md`
 - Avoid a single shared log file. Prefer one request file per unit and one activity report per unit.
 
 ---
@@ -259,7 +259,7 @@ To prevent “two agents editing the same thing”:
 - Changes state to `IN_REVIEW`
 - Runs acceptance criteria and breaks edge cases
 - Adds adversarial tests
-- Writes `REVIEW.md` with verdict
+- Writes `docs/reviews/archive/REVIEW_PE<N>.md` with verdict
 - Sets state to `APPROVED` (or `CHANGES_REQUESTED`)
 - If approved: merges PR and moves request file to `done/`
 

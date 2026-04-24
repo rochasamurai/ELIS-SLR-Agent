@@ -136,9 +136,11 @@ None
 
 
 def test_review_path_fallback_uses_most_recent_review(monkeypatch, tmp_path):
-    older = tmp_path / "REVIEW_PE_A.md"
-    newer = tmp_path / "REVIEW_PE_B.md"
+    review_dir = tmp_path / "docs" / "reviews" / "archive"
+    older = review_dir / "REVIEW_PE_A.md"
+    newer = review_dir / "REVIEW_PE_B.md"
 
+    review_dir.mkdir(parents=True, exist_ok=True)
     _write_review(older, REVIEW_BASE)
     _write_review(
         newer, REVIEW_BASE.replace("PASS", "FAIL", 1).replace("None", "- fix", 1)

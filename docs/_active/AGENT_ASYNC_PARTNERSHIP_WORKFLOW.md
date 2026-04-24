@@ -104,8 +104,8 @@ A review request moves through these states:
    - `ruff check .`
    - `black --check .`
    - `pytest -q`
-7. Write `REVIEW.md` at repo root.
-8. Commit review artefacts (tests + REVIEW.md + any allowed fixes).
+7. Write `docs/reviews/archive/REVIEW_PE<N>.md` in the review archive.
+8. Commit review artefacts (tests + review file + any allowed fixes).
 9. Set request state:
    - `APPROVED` or `CHANGES_REQUESTED`
 10. If approved: merge PR, then move request file to `done/`.
@@ -163,7 +163,7 @@ If a criterion cannot be validated locally (e.g., missing API key), the Validato
 2. Add the templates in `reports/agent_activity/templates/`.
 3. For the next PE, use:
    - `HANDOFF.md`
-   - `REVIEW.md`
+   - `docs/reviews/archive/REVIEW_PE<N>.md`
    - `reports/agent_activity/queue/RQ-...md`
 
 Once this works for two units, scale it across PE2 adapters.

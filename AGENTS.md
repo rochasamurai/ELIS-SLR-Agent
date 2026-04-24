@@ -592,14 +592,14 @@ PM / Implementer → keep `~/.openclaw/.env` secrets protected and, once PE-OC-2
 Validation verdicts are written to **per-PE files** rather than a single overwritten `REVIEW.md`:
 
 - File: `REVIEW_PE<N>.md` (e.g., `REVIEW_PE4.md`, `REVIEW_PE5.md`)
-- Location: repo root
+- Location: `docs/reviews/archive/`
 - Owned by: Validator
 - Written once per PE; never overwritten by a subsequent PE
 - On re-validation after a FAIL, **append** a new dated section — do not overwrite prior findings.
 - Live handshake channel: PR review comments are used for PASS/FAIL signalling and fix/re-review loops.
 - Durable artifact rule: PR comments do **not** replace `REVIEW_PE<N>.md`; the file must still be committed.
 
-The root `REVIEW.md` is retained as a pointer to the most recent validation for quick reference.
+The review index lives at `docs/reviews/README.md` and points to the most recent validation for quick reference.
 
 ---
 

@@ -6,7 +6,7 @@ Exits 0 on a valid REVIEW file.
 
 File selection: same priority as parse_verdict.py:
   1. REVIEW_FILE env var — exact path.
-  2. REVIEW_PATH env var — directory scan by mtime. Default ".".
+  2. REVIEW_PATH env var — recursive scan by mtime. Default ".".
 """
 
 from __future__ import annotations
@@ -31,7 +31,7 @@ _VERDICT_RE = re.compile(r"^(PASS|FAIL|IN PROGRESS)\b")
 def _find_review_file(search_dir: Path) -> Path | None:
     """Return most-recent REVIEW_PE*.md by mtime, or None if none found."""
     files = sorted(
-        search_dir.glob("REVIEW_PE*.md"),
+        search_dir.rglob("REVIEW_PE*.md"),
         key=lambda p: p.stat().st_mtime,
         reverse=True,
     )
