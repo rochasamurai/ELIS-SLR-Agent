@@ -10,9 +10,9 @@
 
 | Field          | Value                                                          |
 |----------------|----------------------------------------------------------------|
-| Release        | GitHub Actions CI Authority Plan · complete                    |
+| Release        | E2E Multi-Agent Platform Drill — PE-RUNNER-01 hotfix           |
 | Base branch    | main                                                           |
-| Plan file      | GITHUB_ACTIONS_TEST_IMPROVEMENT_PLAN.md                        |
+| Plan file      | E2E_MULTI_AGENT_TEST_PLAN.md                                   |
 | Plan location  | docs/_active/                                                  |
 
 ---
@@ -21,10 +21,10 @@
 
 | Field   | Value |
 |---------|-------|
-| PE      | PE-E2E-01 |
-| Branch  | feature/pe-e2e-01-smoke |
+| PE      | PE-RUNNER-01 |
+| Branch  | fix/pe-runner-01-codex-headless-invocation |
 
-> **Active disposable E2E PE.** Running end-to-end multi-agent drill per E2E_MULTI_AGENT_TEST_PLAN.md.
+> **Hotfix PE opened during E2E drill.** Fixes Codex CLI v0.118.0 headless invocation in `scripts/implementer_runner_common.py`. PR #369 open. PE-E2E-01 blocked until this merges.
 
 ---
 
@@ -32,10 +32,10 @@
 
 | Agent       | Role |
 |-------------|------|
-| Claude Code | Validator |
-| CODEX       | Implementer |
+| Claude Code | Implementer |
+| CODEX       | Validator |
 
-> Active PE roles: CODEX = Implementer, Claude Code = Validator (alternation enforced).
+> Active PE roles: Claude Code = Implementer, CODEX = Validator (alternation enforced).
 
 ---
 
@@ -115,7 +115,8 @@
 | PE-SLR-10       | slr            | slr-impl-b           | slr-val-a          | feature/pe-slr-10-end-to-end-hybrid-slr-validation                     | merged         | 2026-04-22   |
 | PE-GHA-01       | ci             | gha-impl-a           | gha-val-b          | feature/pe-gha-01-agents-md-ci-authority                                | merged         | 2026-04-22   |
 | PE-GHA-02       | ci             | gha-impl-b           | gha-val-a          | feature/pe-gha-02-workflow-classification-and-branch-protection          | merged         | 2026-04-22   |
-| PE-E2E-01       | e2e            | e2e-impl-a           | e2e-val-b          | feature/pe-e2e-01-smoke                                                 | implementing    | 2026-04-23   |
+| PE-RUNNER-01    | infra           | infra-impl-claude    | infra-val-codex    | fix/pe-runner-01-codex-headless-invocation                              | validating      | 2026-04-24   |
+| PE-E2E-01       | e2e            | e2e-impl-a           | e2e-val-b          | feature/pe-e2e-01-smoke                                                 | blocked         | 2026-04-24   |
 
 Valid status values:
 - `planning`
@@ -192,6 +193,7 @@ PM housekeeping entries (prefix `PM-CHORE-XX`):
 | PM-CHORE-57  | Closed PE-GHA-01 as merged (PR #364, r2 PASS verdict — Claude Code Validator; elis-codex-bot formal approval). Phase A of the GitHub Actions CI Authority Plan complete: `AGENTS.md` updated, ADR-011 recorded. No active PE. Awaiting PM assignment of Phase B or next plan. | 2026-04-22 |
 | PM-CHORE-58  | Opened PE-GHA-02 (Phases B+C+D — Workflow Classification, Branch Protection Hardening, Gate Regression Test) with `gha-impl-b` (Claude Code) as Implementer and `gha-val-a` (CODEX @ `elis-server`) as Validator per alternation rule. Dependency PE-GHA-01 satisfied. | 2026-04-22 |
 | PM-CHORE-59  | Closed PE-GHA-02 as merged (PR #367, r2 PASS verdict — CODEX Validator; elis-codex-bot formal approval). GitHub Actions CI Authority Plan complete — all 2 GHA PEs merged (PE-GHA-01 and PE-GHA-02). Branch protection on `main` now requires all 7 portable-gate CI checks. No active PE. Awaiting PM assignment of next plan. | 2026-04-22 |
+| PM-CHORE-60  | PO-authorised direct update during E2E drill. TC-02 failed: Codex CLI v0.118.0 headless invocation bug. Opened PE-RUNNER-01 (Codex headless invocation fix, branch `fix/pe-runner-01-codex-headless-invocation`, PR #369). Updated Release context plan file to `E2E_MULTI_AGENT_TEST_PLAN.md`. Set Claude Code = Implementer, CODEX = Validator per alternation. Updated PE-E2E-01 status to `blocked`. Added PE-RUNNER-01 registry row (infra, infra-impl-claude, infra-val-codex, validating). | 2026-04-24 |
 
 Alternation rule:
 - For consecutive PEs in the same domain, the implementer engine must alternate (`codex` <-> `claude`).
