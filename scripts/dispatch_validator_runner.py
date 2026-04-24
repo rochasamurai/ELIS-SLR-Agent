@@ -24,7 +24,11 @@ from pathlib import Path
 
 from scripts.check_handoff import REQUIRED_SECTIONS as HANDOFF_REQUIRED_SECTIONS
 from scripts.check_status_packet import REQUIRED_SECTIONS as STATUS_PACKET_REQUIRED_SECTIONS
-from scripts.implementer_runner_common import RunnerError, parse_current_pe
+from scripts.implementer_runner_common import (
+    CurrentPEContext,
+    RunnerError,
+    parse_current_pe,
+)
 
 
 def _handoff_path() -> Path:
@@ -59,7 +63,7 @@ def _verify_sections(path: Path, required_sections: list[str], label: str) -> No
         )
 
 
-def _require_ready_for_validation(context: "CurrentPEContext") -> None:
+def _require_ready_for_validation(context: CurrentPEContext) -> None:
     if context.status != "gate-1-pending":
         raise RunnerError(
             f"Current PE status is '{context.status}' — waiting for implementer to finish "
