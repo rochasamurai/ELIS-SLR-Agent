@@ -377,7 +377,7 @@ def run_cli(engine: str, prompt: str, *, timeout: int | None = None) -> None:
     result = subprocess.run(
         cmd,
         input=prompt if use_stdin else None,
-        stdin=subprocess.PIPE if use_stdin else subprocess.DEVNULL,
+        stdin=subprocess.DEVNULL if not use_stdin else None,
         capture_output=True,
         text=True,
         timeout=timeout,
