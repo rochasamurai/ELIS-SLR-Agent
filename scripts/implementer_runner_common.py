@@ -346,11 +346,17 @@ def mark_pr_ready(branch: str, base_branch: str) -> None:
 
 def default_cli_command(engine: str, prompt: str) -> list[str]:
     if engine == "codex":
-        # Prompt is delivered via stdin (see run_cli) so that Codex exits cleanly
-        # when stdin closes. Passing the prompt as a positional arg to `codex exec`
-        # causes Codex v0.118.0 to wait for interactive continuation after completing
-        # the task, then fail with "Reading additional input from stdin..." on EOF.
-        return ["codex", "--dangerously-bypass-approvals-and-sandbox"]
+        # script(1) allocates a pseudo-TTY so codex exec does not fail with
+        # "stdin is not a terminal". The prompt is passed via $CODEX_PROMPT
+        # (set by run_cli) to avoid shell-quoting issues with long markdown.
+        # DEVNULL stdin → PTY EOF → codex exec interprets as Ctrl-D and exits
+        # cleanly after completing the task instead of looping for more input.
+        # -q: suppress "Script started" banner  -e: propagate codex exit code.
+        return [
+            "script", "-q", "-e", "-c",
+            'codex exec --skip-git-repo-check --dangerously-bypass-approvals-and-sandbox "$CODEX_PROMPT"',
+            "/dev/null",
+        ]
     if engine == "claude":
         return ["claude", "-p", prompt, "--dangerously-skip-permissions"]
     raise RunnerError(f"Unsupported engine '{engine}'.")
@@ -366,21 +372,16 @@ def cli_command(engine: str, prompt: str) -> list[str]:
     return shlex.split(rendered)
 
 
-def _codex_uses_stdin(engine: str) -> bool:
-    """True when Codex should receive its prompt via stdin rather than in args."""
-    return engine == "codex" and not os.environ.get("AGENT_RUNNER_TEMPLATE", "").strip()
-
-
 def run_cli(engine: str, prompt: str, *, timeout: int | None = None) -> None:
     cmd = cli_command(engine, prompt)
-    use_stdin = _codex_uses_stdin(engine)
+    env = {**os.environ, "CODEX_PROMPT": prompt} if engine == "codex" else None
     result = subprocess.run(
         cmd,
-        input=prompt if use_stdin else None,
-        stdin=subprocess.DEVNULL if not use_stdin else None,
+        stdin=subprocess.DEVNULL,
         capture_output=True,
         text=True,
         timeout=timeout,
+        env=env,
         check=False,
     )
     if result.returncode != 0:
