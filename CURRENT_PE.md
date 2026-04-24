@@ -21,10 +21,10 @@
 
 | Field   | Value |
 |---------|-------|
-| PE      | PE-INFRA-SLR-07 |
-| Branch  | feature/pe-infra-slr-07-review-archive-migration |
+| PE      | PE-INFRA-SLR-08 |
+| Branch  | feature/pe-infra-slr-08-control-plane-workflow-wiring |
 
-> **Active PE.** Running PE-INFRA-SLR-07 under ELIS_MultiAgent_Implementation_Plan_v1_9.md with Claude Code as Implementer and CODEX as Validator.
+> **Active PE.** Running PE-INFRA-SLR-08 under ELIS_MultiAgent_Implementation_Plan_v1_9.md with CODEX as Implementer and Claude Code as Validator.
 
 ---
 
@@ -32,10 +32,10 @@
 
 | Agent       | Role |
 |-------------|------|
-| Claude Code | Implementer |
-| CODEX       | Validator |
+| CODEX       | Implementer |
+| Claude Code | Validator |
 
-> Active PE roles: Claude Code = Implementer, CODEX = Validator (alternation enforced).
+> Active PE roles: CODEX = Implementer, Claude Code = Validator (alternation enforced).
 
 ---
 
@@ -118,7 +118,8 @@
 | PE-RUNNER-01    | infra           | infra-impl-claude    | infra-val-codex    | fix/pe-runner-01-codex-headless-invocation                              | merged          | 2026-04-24   |
 | PE-E2E-01       | e2e            | e2e-impl-a           | e2e-val-b          | feature/pe-e2e-01-smoke                                                 | implementing    | 2026-04-24   |
 | PE-INFRA-SLR-06 | infra          | infra-impl-a         | infra-val-b        | feature/pe-infra-slr-06-workflow-state-machine-formalisation            | merged          | 2026-04-24   |
-| PE-INFRA-SLR-07 | infra          | infra-impl-b         | infra-val-a        | feature/pe-infra-slr-07-review-archive-migration                        | implementing    | 2026-04-24   |
+| PE-INFRA-SLR-07 | infra          | infra-impl-b         | infra-val-a        | feature/pe-infra-slr-07-review-archive-migration                        | merged          | 2026-04-24   |
+| PE-INFRA-SLR-08 | infra          | infra-impl-a         | infra-val-b        | feature/pe-infra-slr-08-control-plane-workflow-wiring                   | implementing    | 2026-04-24   |
 
 Valid status values:
 - `planning`
