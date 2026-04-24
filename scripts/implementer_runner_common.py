@@ -353,7 +353,10 @@ def default_cli_command(engine: str, prompt: str) -> list[str]:
         # cleanly after completing the task instead of looping for more input.
         # -q: suppress "Script started" banner  -e: propagate codex exit code.
         return [
-            "script", "-q", "-e", "-c",
+            "script",
+            "-q",
+            "-e",
+            "-c",
             'codex exec --skip-git-repo-check --dangerously-bypass-approvals-and-sandbox "$CODEX_PROMPT"',
             "/dev/null",
         ]

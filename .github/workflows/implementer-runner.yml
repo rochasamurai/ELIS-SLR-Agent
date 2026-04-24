@@ -1,4 +1,4 @@
-# Classification: Orchestration — dispatches agent sessions and mutates repo; uses bot tokens; not a code-validation gate.
+# Classification: Orchestration — dispatches agent sessions on the elis-server self-hosted runner; uses bot tokens; not a code-validation gate.
 name: Implementer Agent Runner
 
 on:
@@ -30,7 +30,7 @@ permissions:
 jobs:
   run-implementer:
     name: Run implementer for ${{ inputs.pe_id }}
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, elis-server]
     timeout-minutes: 240
     env:
       MAX_COMMITS: "20"

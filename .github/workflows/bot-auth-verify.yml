@@ -1,4 +1,4 @@
-# Classification: Orchestration — dispatches agent sessions, manages PRs/labels, or pushes commits; may use bot tokens; not a code-validation gate.
+# Classification: Orchestration — verifies agent CLI auth on the elis-server self-hosted runner; may use bot tokens; not a code-validation gate.
 name: PE-AUTO-01 — Bot Auth Verification
 
 # =============================================================================
@@ -29,7 +29,7 @@ permissions:
 jobs:
   verify-codex-auth:
     name: Verify Codex CLI auth (AC-3a)
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, elis-server]
     steps:
       - uses: actions/checkout@v4
 
@@ -51,7 +51,7 @@ jobs:
 
   verify-claude-auth:
     name: Verify Claude Code auth (AC-3b)
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, elis-server]
     steps:
       - uses: actions/checkout@v4
 
@@ -74,7 +74,7 @@ jobs:
 
   verify-bot-tokens:
     name: Verify bot token identities (AC-4)
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, elis-server]
     steps:
       - uses: actions/checkout@v4
 
