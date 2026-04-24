@@ -1,9 +1,9 @@
 # DOCUMENT_CLASSIFICATION.md  
 ELIS SLR AI Platform — Document Governance Policy  
 
-Version: 1.1
+Version: 1.2
 Status: Active Governance Document
-Scope: All files under /docs/ and PE-level review files at repo root  
+Scope: All files under /docs/, including PE-level review files at docs/reviews/archive/  
 
 ---
 
@@ -124,23 +124,23 @@ Rules:
 - Never delete reviews
 - Reviews are permanent audit trail artifacts
 
-### 3.3.1 PE-Level Workflow Reviews (repo root)
+### 3.3.1 PE-Level Workflow Reviews (archive)
 
 Operational PE review files (`REVIEW_PE_*.md` and `REVIEW_*.md`) produced by the
-Validator during the governed 2-agent workflow are maintained at the **repository
-root**, not in `/docs/reviews/`.
+Validator during the governed 2-agent workflow are maintained under
+**`/docs/reviews/archive/`**, not at the repository root.
 
-Rationale: PE-level reviews are workflow artefacts, not governance documents.
-They must remain directly accessible to agents and CI tooling without path
-reconfiguration. They are still immutable under the same "never modify, never
-delete" rule.
+Rationale: PE-level reviews are workflow artefacts migrated to the archive in
+PE-INFRA-SLR-07 for path consistency. CI tooling, auto-merge gates, and the
+validator runner all resolve review files via the `docs/reviews/archive/` prefix.
+They remain immutable under the same "never modify, never delete" rule.
 
 The boundary is:
 
 | Review type | Location |
 |---|---|
 | Architecture / governance / VPS plan reviews | `/docs/reviews/` |
-| PE workflow reviews (`REVIEW_PE_*.md`) | Repo root |
+| PE workflow reviews (`REVIEW_PE_*.md`) | `/docs/reviews/archive/` |
 
 ---
 
@@ -262,7 +262,7 @@ The repository is governance-stable when:
 
 - Only one active architecture file exists
 - Only one active VPS plan exists
-- Architectural reviews are in `/docs/reviews/`; PE workflow reviews are at repo root
+- Architectural reviews are in `/docs/reviews/`; PE workflow reviews are in `/docs/reviews/archive/`
 - Archive is date-versioned
 - Operational documents are isolated in /docs/_active/
 - Lifecycle enforcement is traceable
@@ -291,6 +291,7 @@ Must automatically FAIL review.
 |---|---|
 | 1.0 | Initial governance policy |
 | 1.1 | §3.3.1 added: PE-level workflow reviews (`REVIEW_PE_*.md`) explicitly scoped to repo root. Scope line updated to reflect this. §8 institutional readiness signal updated accordingly. |
+| 1.2 | §3.3.1 updated: PE-level workflow reviews migrated to `/docs/reviews/archive/` by PE-INFRA-SLR-07. Scope line, boundary table, and §8 readiness signal updated accordingly. |
 
 ---
 

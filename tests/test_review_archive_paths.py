@@ -99,3 +99,16 @@ def test_review_index_pointer_exists_in_archive():
     assert (
         pointed_file.exists()
     ), f"README.md points to {match.group(1)} but that file does not exist in archive/"
+
+
+# ---------------------------------------------------------------------------
+# docs/DOCUMENT_CLASSIFICATION.md references archive path
+# ---------------------------------------------------------------------------
+
+
+def test_document_classification_references_archive_path():
+    content = (REPO_ROOT / "docs" / "DOCUMENT_CLASSIFICATION.md").read_text(
+        encoding="utf-8"
+    )
+    assert "docs/reviews/archive/" in content
+    assert "repo root" not in content.lower().split("### 3.3.1")[1].split("---")[0]
