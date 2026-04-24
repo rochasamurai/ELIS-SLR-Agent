@@ -10,10 +10,10 @@
 
 | Field          | Value                                                          |
 |----------------|----------------------------------------------------------------|
-| Release        | E2E Multi-Agent Platform Drill                                 |
+| Release        | ELIS SLR Agent — Multi-Agent Implementation Plan · v1.9       |
 | Base branch    | main                                                           |
-| Plan file      | E2E_MULTI_AGENT_TEST_PLAN.md                                   |
-| Plan location  | docs/_active/                                                  |
+| Plan file      | ELIS_MultiAgent_Implementation_Plan_v1_9.md                   |
+| Plan location  | repo root                                                      |
 
 ---
 
@@ -21,10 +21,10 @@
 
 | Field   | Value |
 |---------|-------|
-| PE      | PE-E2E-01 |
-| Branch  | feature/pe-e2e-01-smoke |
+| PE      | PE-INFRA-SLR-06 |
+| Branch  | feature/pe-infra-slr-06-workflow-state-machine-formalisation |
 
-> **Active disposable E2E PE.** Running end-to-end multi-agent drill per E2E_MULTI_AGENT_TEST_PLAN.md. PE-RUNNER-01 merged (PR #369) — Codex headless invocation fixed. Resuming from TC-02.
+> **Active PE.** Running PE-INFRA-SLR-06 under ELIS_MultiAgent_Implementation_Plan_v1_9.md with CODEX as Implementer and Claude Code as Validator.
 
 ---
 
@@ -117,6 +117,7 @@
 | PE-GHA-02       | ci             | gha-impl-b           | gha-val-a          | feature/pe-gha-02-workflow-classification-and-branch-protection          | merged         | 2026-04-22   |
 | PE-RUNNER-01    | infra           | infra-impl-claude    | infra-val-codex    | fix/pe-runner-01-codex-headless-invocation                              | merged          | 2026-04-24   |
 | PE-E2E-01       | e2e            | e2e-impl-a           | e2e-val-b          | feature/pe-e2e-01-smoke                                                 | implementing    | 2026-04-24   |
+| PE-INFRA-SLR-06 | infra          | infra-impl-a         | infra-val-b        | feature/pe-infra-slr-06-workflow-state-machine-formalisation            | implementing    | 2026-04-24   |
 
 Valid status values:
 - `planning`
@@ -195,6 +196,7 @@ PM housekeeping entries (prefix `PM-CHORE-XX`):
 | PM-CHORE-59  | Closed PE-GHA-02 as merged (PR #367, r2 PASS verdict — CODEX Validator; elis-codex-bot formal approval). GitHub Actions CI Authority Plan complete — all 2 GHA PEs merged (PE-GHA-01 and PE-GHA-02). Branch protection on `main` now requires all 7 portable-gate CI checks. No active PE. Awaiting PM assignment of next plan. | 2026-04-22 |
 | PM-CHORE-60  | PO-authorised direct update during E2E drill. TC-02 failed: Codex CLI v0.118.0 headless invocation bug. Opened PE-RUNNER-01 (Codex headless invocation fix, branch `fix/pe-runner-01-codex-headless-invocation`, PR #369). Updated Release context plan file to `E2E_MULTI_AGENT_TEST_PLAN.md`. Set Claude Code = Implementer, CODEX = Validator per alternation. Updated PE-E2E-01 status to `blocked`. Added PE-RUNNER-01 registry row (infra, infra-impl-claude, infra-val-codex, validating). | 2026-04-24 |
 | PM-CHORE-61  | Closed PE-RUNNER-01 as merged (PR #369, PO-merged — CODEX local validation incomplete due to GH_TOKEN 401 in non-production session; CI all-green). Restored PE-E2E-01 as active PE (CODEX = Implementer, Claude Code = Validator). Drill resumes from TC-02: re-trigger Implementer Agent Runner for PE-E2E-01 with fixed Codex headless invocation. | 2026-04-24 |
+| PM-CHORE-62  | Adopted `ELIS_MultiAgent_Implementation_Plan_v1_9.md` as governing plan for the workflow-state-machine release line. Opened PE-INFRA-SLR-06 (Workflow State Machine Formalisation) with `infra-impl-a` as Implementer and `infra-val-b` as Validator per alternation rule. Updated `CURRENT_PE.md` release context, current PE assignment, and registry row to reflect the new PE. | 2026-04-24 |
 
 Alternation rule:
 - For consecutive PEs in the same domain, the implementer engine must alternate (`codex` <-> `claude`).
