@@ -101,7 +101,7 @@ Agent scope clean — no secret-pattern files detected in worktree.
 
 ```text
 feature/pe-slr-13-screening-lightweight-support-local-first-validation
-c338868
+44c9c65
 ```
 
 ### 6.3 Quality gates
@@ -133,7 +133,7 @@ NO — repo-wide pytest currently fails in an unrelated auth-test area outside P
 - [x] Implement the PE-13 policy test
 - [x] Run focused quality checks on the PE-13 test
 - [x] Run repo-wide formatting / lint / test checks
-- [ ] Finalise handoff and commit cleanly
+- [x] Finalise handoff and commit cleanly
 
 ### Updated Todos
 - [x] Read `CURRENT_PE.md`
@@ -143,7 +143,7 @@ NO — repo-wide pytest currently fails in an unrelated auth-test area outside P
 - [x] Implement the PE-13 policy test
 - [x] Run focused quality checks on the PE-13 test
 - [x] Run repo-wide formatting / lint / test checks
-- [→] Finalise handoff and commit cleanly
+- [x] Finalise handoff and commit cleanly
 
 ### Final Todos
 - [x] Read `CURRENT_PE.md`
