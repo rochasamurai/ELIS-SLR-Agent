@@ -16,6 +16,7 @@ from elis.workflow_state_machine import (
     guards_for,
     implementer_dispatch_allowed,
     validator_dispatch_allowed,
+    validator_dispatch_allowed_after_evidence,
 )
 from scripts import check_current_pe, check_role_registration
 
@@ -70,6 +71,8 @@ def test_dispatch_helpers_follow_state_machine_transitions() -> None:
     assert implementer_dispatch_allowed("planning") is False
     assert validator_dispatch_allowed(VALIDATOR_DISPATCH_SOURCE_STATE) is True
     assert validator_dispatch_allowed("implementing") is False
+    assert validator_dispatch_allowed_after_evidence("implementing") is True
+    assert validator_dispatch_allowed_after_evidence("planning") is False
     assert can_transition(
         VALIDATOR_DISPATCH_SOURCE_STATE,
         VALIDATOR_DISPATCH_TARGET_STATE,

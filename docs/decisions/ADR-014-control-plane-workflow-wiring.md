@@ -31,6 +31,13 @@ local runners, merge when gate conditions are satisfied, and report audit
 evidence. They must not invoke Codex or Claude development-agent coding
 entrypoints.
 
+When a PR branch already contains complete implementer evidence but
+`CURRENT_PE.md` still records `implementing`, validator dispatch may observe the
+`implementing -> gate-1-pending` guard and then dispatch through
+`gate-1-pending -> validating` in one bounded control-plane step. This keeps the
+registry state machine authoritative while avoiding a manual registry edit as a
+precondition for automated Gate 1 dispatch.
+
 Portable CI workflows remain bounded to formatting, linting, validation, and
 tests, and must not depend on bot/App credentials.
 

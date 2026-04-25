@@ -87,6 +87,10 @@ The bounded wiring is:
   `HANDOFF.md`, complete Status Packet sections, validator assignment evidence,
   and a PR branch that matches the active PE branch. `validator-runner.yml`
   launches the validator on the self-hosted `elis-server` runner.
+- When the PR branch contains complete implementer evidence but `CURRENT_PE.md`
+  still records `implementing`, the dispatcher may observe
+  `implementing -> gate-1-pending` and then dispatch through
+  `gate-1-pending -> validating` in one bounded control-plane step.
 - GitHub-hosted workflows may verify guards, post comments/statuses, dispatch
   the local runners, and report audit evidence. They must not invoke Codex or
   Claude coding entrypoints for development-agent work.

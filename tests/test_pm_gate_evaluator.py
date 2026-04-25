@@ -32,6 +32,23 @@ def test_gate_1_pass_assigns_validator() -> None:
     assert "@claude-code" in result["actions"]["post_comment"]
 
 
+def test_gate_1_passes_from_implementing_when_evidence_is_complete() -> None:
+    result = evaluate_gate_1(
+        {
+            "pe_id": "PE-OC-07",
+            "ci_green": True,
+            "handoff_present": True,
+            "status_packet_complete": True,
+            "current_status": "implementing",
+        },
+        "@claude-code",
+    )
+
+    assert result["decision"] == "pass"
+    assert result["registry_status"] == "validating"
+    assert result["missing_conditions"] == []
+
+
 def test_gate_1_fail_reports_missing_conditions() -> None:
     result = evaluate_gate_1(
         {
@@ -56,14 +73,14 @@ def test_gate_1_blocks_when_state_machine_source_is_not_ready() -> None:
             "ci_green": True,
             "handoff_present": True,
             "status_packet_complete": True,
-            "current_status": "implementing",
+            "current_status": "planning",
         },
         "@claude-code",
     )
 
     assert result["decision"] == "fail"
     assert result["registry_status"] == "gate-1-pending"
-    assert "current_status:implementing" in result["missing_conditions"]
+    assert "current_status:planning" in result["missing_conditions"]
 
 
 def test_gate_2_pass_merges_when_ci_green() -> None:

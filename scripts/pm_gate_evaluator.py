@@ -14,9 +14,8 @@ import sys
 from typing import Any
 
 from elis.workflow_state_machine import (
-    VALIDATOR_DISPATCH_SOURCE_STATE,
     VALIDATOR_DISPATCH_TARGET_STATE,
-    can_transition,
+    validator_dispatch_allowed_after_evidence,
 )
 
 GATE_1 = "gate-1"
@@ -87,16 +86,12 @@ def evaluate_gate_1(payload: dict[str, Any], validator_handle: str) -> dict[str,
     if not status_packet_complete:
         missing.append("status_packet_complete")
 
-    current_status = (
-        str(payload.get("current_status", VALIDATOR_DISPATCH_SOURCE_STATE))
-        .strip()
-        .lower()
-    )
-    if not can_transition(current_status, VALIDATOR_DISPATCH_TARGET_STATE):
+    current_status = str(payload.get("current_status", "implementing")).strip().lower()
+    if not validator_dispatch_allowed_after_evidence(current_status):
         missing.append(f"current_status:{current_status}")
 
     if missing:
-        status = VALIDATOR_DISPATCH_SOURCE_STATE
+        status = "gate-1-pending"
         return {
             "gate": GATE_1,
             "decision": "fail",
