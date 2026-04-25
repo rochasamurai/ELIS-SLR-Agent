@@ -21,10 +21,10 @@
 
 | Field   | Value |
 |---------|-------|
-| PE      | PE-SLR-12 |
-| Branch  | feature/pe-slr-12-validator-runner-evidence-contract |
+| PE      | PE-SLR-13 |
+| Branch  | feature/pe-slr-13-screening-lightweight-support-local-first-validation |
 
-> **Active PE.** Running PE-SLR-12 under ELIS_MultiAgent_Implementation_Plan_v1_9.md with Claude Code as Implementer and CODEX as Validator.
+> **Active PE.** Running PE-SLR-13 under ELIS_MultiAgent_Implementation_Plan_v1_9.md with CODEX as Implementer and Claude Code as Validator.
 
 ---
 
@@ -32,10 +32,10 @@
 
 | Agent       | Role |
 |-------------|------|
-| CODEX       | Validator |
-| Claude Code | Implementer |
+| CODEX       | Implementer |
+| Claude Code | Validator |
 
-> Active PE roles: Claude Code = Implementer, CODEX = Validator (alternation enforced).
+> Active PE roles: CODEX = Implementer, Claude Code = Validator (alternation enforced).
 
 ---
 
@@ -121,7 +121,8 @@
 | PE-INFRA-SLR-07 | infra          | infra-impl-b         | infra-val-a        | feature/pe-infra-slr-07-review-archive-migration                        | merged          | 2026-04-24   |
 | PE-INFRA-SLR-08 | infra          | infra-impl-a         | infra-val-b        | feature/pe-infra-slr-08-control-plane-workflow-wiring                   | merged          | 2026-04-25   |
 | PE-SLR-11       | slr            | prog-impl-a          | prog-val-b         | feature/pe-slr-11-implementer-runner-local-first-confirmation           | merged          | 2026-04-25   |
-| PE-SLR-12       | slr            | prog-impl-b          | prog-val-a         | feature/pe-slr-12-validator-runner-evidence-contract                    | implementing    | 2026-04-25   |
+| PE-SLR-12       | slr            | prog-impl-b          | prog-val-a         | feature/pe-slr-12-validator-runner-evidence-contract                    | merged          | 2026-04-25   |
+| PE-SLR-13       | slr            | prog-impl-a          | prog-val-b         | feature/pe-slr-13-screening-lightweight-support-local-first-validation  | implementing    | 2026-04-25   |
 
 Valid status values:
 - `planning`
