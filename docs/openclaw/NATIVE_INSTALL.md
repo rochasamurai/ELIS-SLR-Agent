@@ -40,6 +40,7 @@ Authoritative operating procedures:
 - `docs/openclaw/DEPLOYMENT.md` for deploy + restart flow
 - `docs/openclaw/PM_E2E_VALIDATION_RUNBOOK.md` for Discord-side PM validation
 - `docs/openclaw/NATIVE_OPERATIONS_AND_RESTORE_RUNBOOK.md` for routine operations and restore
+- `docs/openclaw/OPENROUTER_OPENCODE_CUTOVER_RUNBOOK.md` for the OpenClaw + OpenRouter + OpenCode cutover and audit schedule
 
 ## Docker Decommission On `elis-server`
 
