@@ -2,10 +2,13 @@
 
 **PE:** PE-INFRA-SLR-08  
 **Branch:** feature/pe-infra-slr-08-control-plane-workflow-wiring  
+**PR:** #374 - https://github.com/rochasamurai/ELIS-Multi-AI-Agent-Platform/pull/374  
 **Implementer:** CODEX (`infra-impl-a`)  
-**Date:** 2026-04-24  
+**Date:** 2026-04-25  
 **Base branch:** main  
-**Implementation commit:** `15498d8df25351e5d14478fc629c74505fce4dbc`
+**Implementation commits:**  
+- `15498d8df25351e5d14478fc629c74505fce4dbc`
+- `2a01fa299c6e82f04cd47829867c3df8f175a995`
 
 ---
 
@@ -18,10 +21,14 @@ The implementation:
 
 - adds dispatch helper constants/functions to `elis/workflow_state_machine.py`;
 - validates parsed `CURRENT_PE.md` statuses against canonical workflow states;
-- updates implementer and validator dispatch scripts to use the state-machine
-  helpers instead of duplicating raw string checks;
-- keeps validator dispatch blocked until the `gate-1-pending -> validating`
-  transition is allowed and required HANDOFF/Status Packet evidence is present;
+- updates implementer and validator dispatch scripts to use state-machine helpers
+  instead of duplicating raw string checks;
+- keeps validator dispatch blocked until implementer-complete evidence exists:
+  `HANDOFF.md`, complete Status Packet sections, and a branch matching the active
+  PE branch;
+- allows the control plane to observe `implementing -> gate-1-pending` from
+  complete implementer evidence before dispatching through
+  `gate-1-pending -> validating`;
 - replaces brittle provider-substring validator mention logic in
   `auto-assign-validator.yml` with `scripts/resolve_validator_handle.py`;
 - adds `scripts/check_control_plane_wiring.py` to prove development-agent coding
@@ -29,7 +36,14 @@ The implementation:
   bounded to gates;
 - documents the control-plane boundary in `AGENTS.md`,
   `docs/workflow/PE_STATE_MACHINE.md`, and ADR-014; and
-- adds focused tests for the wiring, dispatch helpers, and Gate 1 state guard.
+- adds focused tests for the wiring, dispatch helpers, Gate 1 state guard, and
+  evidence-backed validator dispatch path.
+
+After the first push, live `validator-dispatch` correctly exposed one remaining
+gap: it required `CURRENT_PE.md` to already say `gate-1-pending`, even when the
+PR branch had complete implementer evidence. Commit `2a01fa2` fixes that gap by
+making the evidence-backed transition explicit in the state-machine helper and
+the dispatcher tests.
 
 ---
 
@@ -38,19 +52,20 @@ The implementation:
 | File | Change |
 |------|--------|
 | `.github/workflows/auto-assign-validator.yml` | Use the model-agnostic validator handle resolver instead of inline provider substring parsing. |
-| `AGENTS.md` | Document GitHub Actions as control plane, not the development-agent coding substrate. |
-| `docs/decisions/ADR-014-control-plane-workflow-wiring.md` | New ADR for the control-plane workflow boundary. |
+| `AGENTS.md` | Document GitHub Actions as control plane, not the development-agent coding substrate, including the evidence-backed Gate 1 observation. |
+| `docs/decisions/ADR-014-control-plane-workflow-wiring.md` | New ADR for the control-plane workflow boundary and evidence-backed dispatch behaviour. |
 | `docs/decisions/README.md` | Add ADR-014 to the ADR index. |
-| `docs/workflow/PE_STATE_MACHINE.md` | Add the control-plane wiring section and validation command. |
-| `elis/workflow_state_machine.py` | Add dispatch state constants and helper functions. |
+| `docs/workflow/PE_STATE_MACHINE.md` | Add the control-plane wiring section, evidence-backed dispatch rule, and validation command. |
+| `elis/workflow_state_machine.py` | Add dispatch state constants, strict dispatch helpers, and an evidence-backed validator dispatch helper. |
 | `scripts/check_control_plane_wiring.py` | New repository check for local-first agent runners and bounded CI workflows. |
 | `scripts/dispatch_implementer_runner.py` | Use the canonical implementer dispatch helper. |
-| `scripts/dispatch_validator_runner.py` | Use canonical validator transition helpers and report guard evidence on blocked dispatch. |
+| `scripts/dispatch_validator_runner.py` | Verify HANDOFF/Status Packet sections before allowing validator dispatch through canonical evidence-backed helpers. |
 | `scripts/implementer_runner_common.py` | Reject non-canonical `CURRENT_PE.md` registry statuses during parse. |
-| `scripts/pm_gate_evaluator.py` | Add Gate 1 source-state guard aligned to `gate-1-pending -> validating`. |
+| `scripts/pm_gate_evaluator.py` | Align Gate 1 assignment decisions with evidence-backed validator dispatch. |
 | `tests/test_control_plane_workflow_wiring.py` | New focused control-plane wiring tests. |
-| `tests/test_pm_gate_evaluator.py` | Add a Gate 1 state-machine source guard test. |
-| `tests/test_workflow_state_machine.py` | Cover dispatch helpers and control-plane documentation language. |
+| `tests/test_dispatch_validator_runner.py` | Cover complete-evidence dispatch from `implementing` and rejection from non-ready states. |
+| `tests/test_pm_gate_evaluator.py` | Cover Gate 1 pass from complete `implementing` evidence and rejection from `planning`. |
+| `tests/test_workflow_state_machine.py` | Cover strict and evidence-backed dispatch helpers plus control-plane documentation language. |
 
 ---
 
@@ -60,6 +75,10 @@ The implementation:
   eligibility is part of the lifecycle contract, so the implementer and
   validator dispatch scripts now consume the canonical mirror rather than
   hardcoding state strings locally.
+- **Strict and evidence-backed validator dispatch are separate helpers:** strict
+  dispatch still follows `gate-1-pending -> validating`; the live control plane
+  may use the evidence-backed helper only after HANDOFF and Status Packet checks
+  have passed.
 - **Workflow boundary check is conservative:** only the implementer and validator
   runner workflows may invoke development-agent coding entrypoints, and they
   must run on the self-hosted `elis-server` surface.
@@ -75,10 +94,10 @@ The implementation:
 
 | AC | Criterion | Result |
 |----|-----------|--------|
-| AC-1 | Implementer and validator dispatch paths are aligned with the state machine and local-first execution surface. | PASS - dispatch scripts use canonical state-machine helpers; runner workflows stay on `[self-hosted, elis-server]`; focused tests cover both paths. |
+| AC-1 | Implementer and validator dispatch paths are aligned with the state machine and local-first execution surface. | PASS - dispatch scripts use canonical state-machine helpers; runner workflows stay on `[self-hosted, elis-server]`; focused tests cover implementer dispatch, strict validator dispatch, and evidence-backed validator dispatch. |
 | AC-2 | Workflow files do not attempt to perform GitHub-hosted agent coding where `elis-server` is the intended execution surface. | PASS - `scripts/check_control_plane_wiring.py` and tests fail if Codex/Claude development-agent entrypoints appear outside local runner workflows or on `ubuntu-latest`. |
 | AC-3 | Portable gates remain bounded to CI/test duties: formatting, linting, validation, and tests. | PASS - the control-plane check verifies CI workflows avoid bot/App credentials and agent coding entrypoints while retaining portable gate commands. |
-| AC-4 | Validator dispatch is blocked until implementer-complete evidence exists. | PASS - `dispatch_validator_runner.py` still requires HANDOFF and Status Packet sections and now also requires the canonical `gate-1-pending -> validating` source state. |
+| AC-4 | Validator dispatch is blocked until implementer-complete evidence exists. | PASS - `dispatch_validator_runner.py` verifies HANDOFF and Status Packet sections before dispatch, rejects `planning`, and permits `implementing` only after complete evidence is present. |
 | AC-5 | The workflow/documentation pair describes GitHub Actions as control plane, not the coding substrate. | PASS - `AGENTS.md`, `docs/workflow/PE_STATE_MACHINE.md`, and ADR-014 all state the control-plane boundary; tests assert the governing language is present. |
 
 ---
@@ -106,7 +125,7 @@ git diff --name-status -- tests/test_verify_claude_auth.py scripts/verify_claude
 ### Formatting
 
 ```powershell
-$env:BLACK_CACHE_DIR = (Join-Path (Get-Location) '.black-cache-pe'); & 'C:\Users\carlo\ELIS-SLR-Agent\.venv\Scripts\python.exe' -m black --check --include "\.py$" elis/ scripts/ tests/; if (Test-Path .black-cache-pe) { Remove-Item -LiteralPath (Resolve-Path .black-cache-pe).Path -Recurse -Force }
+$env:BLACK_CACHE_DIR = (Join-Path (Get-Location) '.black-cache-pe'); & 'C:\Users\carlo\ELIS-SLR-Agent\.venv\Scripts\python.exe' -m black --check --include '\.py$' elis scripts tests; $code = $LASTEXITCODE; if (Test-Path .black-cache-pe) { Remove-Item -LiteralPath (Resolve-Path .black-cache-pe).Path -Recurse -Force }; exit $code
 All done! \u2728 \U0001f370 \u2728
 184 files would be left unchanged.
 ```
@@ -129,13 +148,15 @@ Control-plane wiring OK — agent coding is local-first and CI is bounded.
 
 ```powershell
 & 'C:\Users\carlo\ELIS-SLR-Agent\.venv\Scripts\python.exe' -m pytest tests/test_control_plane_workflow_wiring.py tests/test_workflow_state_machine.py tests/test_dispatch_implementer_runner.py tests/test_dispatch_validator_runner.py tests/test_pm_gate_evaluator.py -q -p no:cacheprovider
-............................                                             [100%]
+..............................                                           [100%]
 ```
+
+PE-specific tests: PASS - 30/30 passed.
 
 ### Full Test Suite
 
 ```powershell
-& 'C:\Users\carlo\ELIS-SLR-Agent\.venv\Scripts\python.exe' -m pytest tests/ -q --tb=short -p no:cacheprovider
+& 'C:\Users\carlo\ELIS-SLR-Agent\.venv\Scripts\python.exe' -m pytest tests -q --tb=short -p no:cacheprovider
 ........................................................................ [  6%]
 ........................................................................ [ 13%]
 ........................................................................ [ 20%]
@@ -145,12 +166,12 @@ Control-plane wiring OK — agent coding is local-first and CI is bounded.
 ........................................................................ [ 48%]
 ........................................................................ [ 55%]
 ........................................................................ [ 62%]
-........................................................................ [ 69%]
-........................................................................ [ 76%]
+........................................................................ [ 68%]
+........................................................................ [ 75%]
 ........................................................................ [ 82%]
 ........................................................................ [ 89%]
 ........................................................................ [ 96%]
-..............FF..................                                       [100%]
+................FF..................                                     [100%]
 ================================== FAILURES ===================================
 __________________ test_fails_when_credentials_file_missing ___________________
 tests\test_verify_claude_auth.py:32: in test_fails_when_credentials_file_missing
@@ -233,6 +254,18 @@ The full-suite failures are outside PE-INFRA-SLR-08 scope. This branch does not
 modify `tests/test_verify_claude_auth.py` or `scripts/verify_claude_auth.py`, as
 shown by the empty diff command above.
 
+### PR Evidence
+
+```powershell
+gh pr list --state open --base main
+374	feat(pe-infra-slr-08): control-plane workflow wiring	feature/pe-infra-slr-08-control-plane-workflow-wiring	OPEN	2026-04-25T04:02:59Z
+```
+
+```powershell
+gh pr view 374 --json number,state,url,headRefName,baseRefName,title,isDraft,mergeStateStatus,reviewDecision
+{"baseRefName":"main","headRefName":"feature/pe-infra-slr-08-control-plane-workflow-wiring","isDraft":false,"mergeStateStatus":"CLEAN","number":374,"reviewDecision":"","state":"OPEN","title":"feat(pe-infra-slr-08): control-plane workflow wiring","url":"https://github.com/rochasamurai/ELIS-Multi-AI-Agent-Platform/pull/374"}
+```
+
 ---
 
 ## Status Packet
@@ -241,7 +274,7 @@ shown by the empty diff command above.
 
 ```powershell
 git status -sb
-## feature/pe-infra-slr-08-control-plane-workflow-wiring...origin/main [ahead 1]
+## feature/pe-infra-slr-08-control-plane-workflow-wiring...origin/feature/pe-infra-slr-08-control-plane-workflow-wiring [ahead 1]
 warning: unable to access 'C:\Users\carlo/.config/git/ignore': Permission denied
 warning: unable to access 'C:\Users\carlo/.config/git/ignore': Permission denied
 
@@ -259,14 +292,14 @@ git branch --show-current
 feature/pe-infra-slr-08-control-plane-workflow-wiring
 
 git rev-parse HEAD
-15498d8df25351e5d14478fc629c74505fce4dbc
+2a01fa299c6e82f04cd47829867c3df8f175a995
 
 git log -5 --oneline --decorate
-15498d8 (HEAD -> feature/pe-infra-slr-08-control-plane-workflow-wiring) feat(pe-infra-slr-08): wire control-plane workflow guards
+2a01fa2 (HEAD -> feature/pe-infra-slr-08-control-plane-workflow-wiring) fix(pe-infra-slr-08): allow evidence-backed validator dispatch
+255d87e (origin/feature/pe-infra-slr-08-control-plane-workflow-wiring) docs(pe-infra-slr-08): add implementation handoff
+15498d8 feat(pe-infra-slr-08): wire control-plane workflow guards
 2bbdcea (origin/main, origin/HEAD, main) chore(pm): PM-CHORE-64 — close PE-INFRA-SLR-07, open PE-INFRA-SLR-08
 ce06c48 Merge pull request #373 from rochasamurai/feature/pe-infra-slr-07-review-archive-migration
-b064040 test(pe-infra-slr-07): add validator review evidence
-98b578d (feature/pe-infra-slr-07-review-archive-migration) docs(pe-infra-slr-07): update handoff — DOCUMENT_CLASSIFICATION fix and test count
 ```
 
 ### 6.3 Scope evidence
@@ -275,6 +308,7 @@ b064040 test(pe-infra-slr-07): add validator review evidence
 git diff --name-status origin/main..HEAD
 M	.github/workflows/auto-assign-validator.yml
 M	AGENTS.md
+M	HANDOFF.md
 A	docs/decisions/ADR-014-control-plane-workflow-wiring.md
 M	docs/decisions/README.md
 M	docs/workflow/PE_STATE_MACHINE.md
@@ -285,47 +319,54 @@ M	scripts/dispatch_validator_runner.py
 M	scripts/implementer_runner_common.py
 M	scripts/pm_gate_evaluator.py
 A	tests/test_control_plane_workflow_wiring.py
+M	tests/test_dispatch_validator_runner.py
 M	tests/test_pm_gate_evaluator.py
 M	tests/test_workflow_state_machine.py
+```
 
+```powershell
 git diff --stat origin/main..HEAD
- .github/workflows/auto-assign-validator.yml        |  30 +----
- AGENTS.md                                          |   5 +
- .../ADR-014-control-plane-workflow-wiring.md       |  76 +++++++++++
+ .github/workflows/auto-assign-validator.yml        |  30 +-
+ AGENTS.md                                          |   9 +
+ HANDOFF.md                                         | 372 +++++++++++++++------
+ .../ADR-014-control-plane-workflow-wiring.md       |  83 +++++
  docs/decisions/README.md                           |   1 +
- docs/workflow/PE_STATE_MACHINE.md                  |  24 ++++
- elis/workflow_state_machine.py                     |  26 ++++
- scripts/check_control_plane_wiring.py              | 140 +++++++++++++++++++++
+ docs/workflow/PE_STATE_MACHINE.md                  |  28 ++
+ elis/workflow_state_machine.py                     |  49 +++
+ scripts/check_control_plane_wiring.py              | 140 ++++++++
  scripts/dispatch_implementer_runner.py             |   3 +-
- scripts/dispatch_validator_runner.py               |  19 ++-
+ scripts/dispatch_validator_runner.py               |  32 +-
  scripts/implementer_runner_common.py               |   5 +
- scripts/pm_gate_evaluator.py                       |  18 ++-
- tests/test_control_plane_workflow_wiring.py        |  73 +++++++++++
- tests/test_pm_gate_evaluator.py                    |  17 +++
- tests/test_workflow_state_machine.py               |  16 +++
- 14 files changed, 418 insertions(+), 35 deletions(-)
+ scripts/pm_gate_evaluator.py                       |  11 +-
+ tests/test_control_plane_workflow_wiring.py        |  73 ++++
+ tests/test_dispatch_validator_runner.py            |  26 +-
+ tests/test_pm_gate_evaluator.py                    |  34 ++
+ tests/test_workflow_state_machine.py               |  19 ++
+ 16 files changed, 770 insertions(+), 145 deletions(-)
 ```
 
 ### 6.4 Quality gates
 
-```powershell
+```text
 black: PASS - 184 files would be left unchanged.
 ruff: PASS - All checks passed!
-PE-specific tests: PASS - 28 passed.
 Control-plane wiring check: PASS.
-pytest full suite: FAIL local preflight - 2 unrelated Windows/Claude-auth failures; all other tests pass.
+PE-specific tests: PASS - 30/30 passed.
+pytest full suite: FAIL local preflight - 2 unrelated Windows/Claude-auth failures in tests/test_verify_claude_auth.py; all other tests reached completion.
+GitHub Actions CI: authoritative portable gate evidence remains on PR #374 after push.
 ```
 
 ### 6.5 PR evidence
 
-```powershell
-gh pr list --state open --base main
-HTTP 401: Requires authentication (https://api.github.com/graphql)
-Try authenticating with:  gh auth login
+```text
+PR: #374
+State: OPEN
+Draft: false
+Base: main
+Head: feature/pe-infra-slr-08-control-plane-workflow-wiring
+Merge state: CLEAN
+URL: https://github.com/rochasamurai/ELIS-Multi-AI-Agent-Platform/pull/374
 ```
-
-No PR has been opened from this session because the local `gh` session is not
-authenticated.
 
 ---
 
@@ -336,6 +377,8 @@ authenticated.
 - Start with `scripts/check_control_plane_wiring.py` and
   `tests/test_control_plane_workflow_wiring.py`; they are the PE-specific
   enforcement surface for AC-1 through AC-5.
+- Re-run `tests/test_dispatch_validator_runner.py` because it now covers the
+  live Gate 1 failure mode discovered after the first push.
 - The local full-suite failure is pre-existing/host-specific and isolated from
   this PE by the empty diff for `tests/test_verify_claude_auth.py` and
   `scripts/verify_claude_auth.py`.
