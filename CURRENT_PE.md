@@ -21,10 +21,10 @@
 
 | Field   | Value |
 |---------|-------|
-| PE      | PE-INFRA-SLR-08 |
-| Branch  | feature/pe-infra-slr-08-control-plane-workflow-wiring |
+| PE      | PE-SLR-11 |
+| Branch  | feature/pe-slr-11-implementer-runner-local-first-confirmation |
 
-> **Active PE.** Running PE-INFRA-SLR-08 under ELIS_MultiAgent_Implementation_Plan_v1_9.md with CODEX as Implementer and Claude Code as Validator.
+> **Active PE.** Running PE-SLR-11 under ELIS_MultiAgent_Implementation_Plan_v1_9.md with CODEX as Implementer and Claude Code as Validator.
 
 ---
 
@@ -119,7 +119,8 @@
 | PE-E2E-01       | e2e            | e2e-impl-a           | e2e-val-b          | feature/pe-e2e-01-smoke                                                 | implementing    | 2026-04-24   |
 | PE-INFRA-SLR-06 | infra          | infra-impl-a         | infra-val-b        | feature/pe-infra-slr-06-workflow-state-machine-formalisation            | merged          | 2026-04-24   |
 | PE-INFRA-SLR-07 | infra          | infra-impl-b         | infra-val-a        | feature/pe-infra-slr-07-review-archive-migration                        | merged          | 2026-04-24   |
-| PE-INFRA-SLR-08 | infra          | infra-impl-a         | infra-val-b        | feature/pe-infra-slr-08-control-plane-workflow-wiring                   | implementing    | 2026-04-24   |
+| PE-INFRA-SLR-08 | infra          | infra-impl-a         | infra-val-b        | feature/pe-infra-slr-08-control-plane-workflow-wiring                   | merged          | 2026-04-25   |
+| PE-SLR-11       | slr            | prog-impl-a          | prog-val-b         | feature/pe-slr-11-implementer-runner-local-first-confirmation           | implementing    | 2026-04-25   |
 
 Valid status values:
 - `planning`
