@@ -101,7 +101,10 @@ def test_build_prompt_contains_acceptance_criteria(tmp_path):
 
     assert "You are the ELIS CODEX Implementer runner for PE-AUTO-04." in prompt
     assert "AGENTS BODY" in prompt
+    assert "=== ACTIVE PLAN ACCEPTANCE CRITERIA ===" in prompt
     assert "PR opened by the correct account" in prompt
+    assert "Do not open, refresh, or ready the PR yourself." in prompt
+    assert "open or refresh the draft PR" not in prompt
 
 
 def test_budget_guard_fails_when_commit_limit_exceeded():
@@ -161,6 +164,80 @@ def test_last_commit_touches_returns_false(monkeypatch):
     )
 
     assert common.last_commit_touches("HANDOFF.md") is False
+
+
+def test_handoff_pr_guard_requires_clean_tree(monkeypatch):
+    monkeypatch.setattr(common, "working_tree_clean", lambda: False)
+    monkeypatch.setattr(common, "last_commit_touches", lambda _path: True)
+
+    with pytest.raises(common.RunnerError, match="Working tree is dirty"):
+        common.ensure_handoff_ready_for_pr()
+
+
+def test_handoff_pr_guard_requires_handoff_in_last_commit(monkeypatch):
+    monkeypatch.setattr(common, "working_tree_clean", lambda: True)
+    monkeypatch.setattr(common, "last_commit_touches", lambda _path: False)
+
+    with pytest.raises(common.RunnerError, match="HANDOFF.md is not part"):
+        common.ensure_handoff_ready_for_pr()
+
+
+def test_handoff_pr_guard_accepts_clean_tree_and_handoff_last(monkeypatch):
+    monkeypatch.setattr(common, "working_tree_clean", lambda: True)
+    monkeypatch.setattr(common, "last_commit_touches", lambda _path: True)
+
+    common.ensure_handoff_ready_for_pr()
+
+
+def test_run_implementer_checks_handoff_before_pr_operations(monkeypatch):
+    events: list[str] = []
+    inputs = common.RunnerInputs(
+        pe_id="PE-AUTO-04",
+        branch="feature/pe-auto-04-impl-runner",
+        base_branch="main",
+        plan_file="ELIS_2Agent_Automation_Plan_v2_0.md",
+        engine="codex",
+        max_commits=20,
+        timeout_seconds=300,
+    )
+    context = common.CurrentPEContext(
+        pe_id="PE-AUTO-04",
+        branch="feature/pe-auto-04-impl-runner",
+        base_branch="main",
+        plan_file="ELIS_2Agent_Automation_Plan_v2_0.md",
+        plan_location="repo root",
+        status="implementing",
+        implementer_agent="infra-impl-codex",
+        validator_agent="infra-val-claude",
+        implementer_engine="codex",
+        validator_engine="claude",
+    )
+
+    monkeypatch.setattr(common, "parse_runner_inputs", lambda _argv, _engine: inputs)
+    monkeypatch.setattr(common, "parse_current_pe", lambda _path: context)
+    monkeypatch.setattr(common, "ensure_expected_login", lambda _engine: None)
+    monkeypatch.setattr(common, "branch_commit_count", lambda _base: 0)
+    monkeypatch.setattr(common, "build_prompt", lambda **_kwargs: "prompt")
+
+    def fake_run_cli(*_args, **_kwargs):
+        events.append("run_cli")
+
+    def fake_handoff_guard():
+        events.append("handoff_guard")
+
+    def fake_create_pr(*_args):
+        events.append("create_pr")
+
+    def fake_ready(*_args):
+        events.append("ready_pr")
+
+    monkeypatch.setattr(common, "run_cli", fake_run_cli)
+    monkeypatch.setattr(common, "ensure_handoff_ready_for_pr", fake_handoff_guard)
+    monkeypatch.setattr(common, "create_draft_pr", fake_create_pr)
+    monkeypatch.setattr(common, "mark_pr_ready", fake_ready)
+
+    assert common.run_implementer(["runner"], engine="codex") == 0
+    assert events == ["run_cli", "handoff_guard", "create_pr", "ready_pr"]
 
 
 def test_runner_started_at_uses_epoch_env(monkeypatch):

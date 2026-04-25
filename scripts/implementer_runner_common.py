@@ -167,11 +167,14 @@ def build_prompt(
         f"You are the ELIS {engine.upper()} Implementer runner for {pe_id}.\n\n"
         "Follow AGENTS.md Section 5.1 autonomously.\n"
         "Implement only the active PE acceptance criteria, keep scope minimal,\n"
-        "open or refresh the draft PR, run quality gates, update the namespaced\n"
-        "handoff file in handoffs/, regenerate the root HANDOFF.md with\n"
-        "`python scripts/copy_handoff.py`, and only convert the PR to ready when\n"
-        "HANDOFF.md is the last commit.\n\n"
-        "Acceptance criteria:\n"
+        "run quality gates, update the namespaced handoff file in handoffs/,\n"
+        "regenerate the root HANDOFF.md with `python scripts/copy_handoff.py`,\n"
+        "and commit all changes with HANDOFF.md as the last commit.\n"
+        "Do not open, refresh, or ready the PR yourself. The runner opens or\n"
+        "readies the PR only after it verifies a clean tree and HANDOFF.md as\n"
+        "the last commit.\n\n"
+        f"Active plan: {plan_path.name}\n\n"
+        "=== ACTIVE PLAN ACCEPTANCE CRITERIA ===\n"
         f"{criteria_block}\n\n"
         "Canonical context files follow.\n\n"
         "=== AGENTS.md ===\n"
@@ -269,6 +272,19 @@ def working_tree_clean() -> bool:
     if result.returncode != 0:
         raise RunnerError(result.stderr.strip() or "git status failed.")
     return not result.stdout.strip()
+
+
+def ensure_handoff_ready_for_pr() -> None:
+    """Refuse PR operations until the runner handoff contract is satisfied."""
+
+    if not working_tree_clean():
+        raise RunnerError(
+            "Working tree is dirty after agent run; refusing to open or ready PR."
+        )
+    if not last_commit_touches("HANDOFF.md"):
+        raise RunnerError(
+            "HANDOFF.md is not part of the last commit; refusing to open or ready PR."
+        )
 
 
 def pr_number(branch: str, base_branch: str) -> str | None:
@@ -502,11 +518,8 @@ def run_implementer(argv: list[str], *, engine: str) -> int:
             timeout_seconds=inputs.timeout_seconds,
         )
 
+        ensure_handoff_ready_for_pr()
         create_draft_pr(inputs.branch, inputs.base_branch, inputs.pe_id)
-        if not working_tree_clean():
-            raise RunnerError(
-                "Working tree is dirty after agent run; refusing to continue."
-            )
         mark_pr_ready(inputs.branch, inputs.base_branch)
         print(f"{engine} implementer runner PASS for {inputs.pe_id}")
         return 0
