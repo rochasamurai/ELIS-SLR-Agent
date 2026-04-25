@@ -9,7 +9,7 @@
 
 ## Summary
 
-PE-SLR-13 now has a targeted policy test that checks the authoritative v1.9 implementation plan for the local-first placement contract covering screening and lightweight support on `elis-server`. The test asserts the PE-SLR-13 section exists and that the plan text includes the scope and acceptance-criteria language for local execution, off-host exceptions, and the relevant validation requirement. The new test passes under `pytest -q tests/test_pe_slr13_policy.py`, and the file is formatted and lint-clean. A repo-wide `pytest -q` run still fails in an unrelated `tests/test_verify_claude_auth.py` area, so that baseline issue is recorded below rather than expanded into this PE.
+PE-SLR-13 now has a targeted policy test that checks the authoritative v1.9 implementation plan for the local-first placement contract covering screening and lightweight support on `elis-server`. The branch has been rebased onto the current GitHub `main` tip so the PM-owned `CURRENT_PE.md` drift is no longer part of the PE delta. The test asserts the PE-SLR-13 section exists and that the plan text includes the scope and acceptance-criteria language for local execution, off-host exceptions, and the relevant validation requirement. The new test passes under `pytest -q tests/test_pe_slr13_policy.py`, and the file is formatted and lint-clean. A repo-wide `pytest -q` run still fails in an unrelated `tests/test_verify_claude_auth.py` area, so that baseline issue is recorded below rather than expanded into this PE.
 
 ---
 
@@ -19,7 +19,6 @@ PE-SLR-13 now has a targeted policy test that checks the authoritative v1.9 impl
 |---|---|
 | `tests/test_pe_slr13_policy.py` | new |
 | `handoffs/HANDOFF_PE-SLR-13.md` | modified |
-
 ---
 
 ## Design Decisions
@@ -27,6 +26,7 @@ PE-SLR-13 now has a targeted policy test that checks the authoritative v1.9 impl
 - **Kept the PE implementation intentionally narrow:** PE-SLR-13 is a placement-policy validation step, so the safest implementation is a focused regression test against the canonical v1.9 plan text rather than changing runtime placement logic.
 - **Asserted the plan’s authoritative wording directly:** the test checks the PE-SLR-13 heading, scope sentence, and acceptance-criteria language so future drift in the plan is caught early.
 - **Did not chase the unrelated auth-test baseline failure:** the repo-wide failure in `tests/test_verify_claude_auth.py` is outside the PE-SLR-13 scope and appears to be a pre-existing mismatch between the auth script and its tests.
+- **Rebased onto current `github/main` and kept `CURRENT_PE.md` out of the PE diff:** this removes the stale-base drift the reviewer flagged and keeps the PE delta limited to the policy test plus the PE handoff artefact.
 
 ---
 
