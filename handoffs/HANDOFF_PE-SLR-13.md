@@ -95,14 +95,13 @@ Agent scope clean — no secret-pattern files detected in worktree.
 
 ```text
 ## feature/pe-slr-13-screening-lightweight-support-local-first-validation
-?? tests/test_pe_slr13_policy.py
 ```
 
 ### 6.2 Repository state
 
 ```text
 feature/pe-slr-13-screening-lightweight-support-local-first-validation
-6370936
+c338868
 ```
 
 ### 6.3 Quality gates
