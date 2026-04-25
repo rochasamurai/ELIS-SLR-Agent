@@ -12,6 +12,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from elis.workflow_state_machine import implementer_dispatch_allowed  # noqa: E402
 from scripts.implementer_runner_common import (  # noqa: E402
     RunnerError,
     parse_current_pe,
@@ -22,7 +23,7 @@ def main() -> int:
     try:
         current_pe_path = Path(os.environ.get("CURRENT_PE_PATH", "CURRENT_PE.md"))
         context = parse_current_pe(current_pe_path)
-        should_dispatch = context.status == "implementing"
+        should_dispatch = implementer_dispatch_allowed(context.status)
         lines = [
             f"should_dispatch={'true' if should_dispatch else 'false'}",
             f"pe_id={context.pe_id}",

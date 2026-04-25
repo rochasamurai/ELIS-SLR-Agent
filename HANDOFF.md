@@ -1,36 +1,49 @@
-# HANDOFF — PE-INFRA-SLR-07
+# HANDOFF - PE-INFRA-SLR-08
 
-**PE:** PE-INFRA-SLR-07  
-**Branch:** feature/pe-infra-slr-07-review-archive-migration  
-**Implementer:** Claude Code (`infra-impl-b`)  
-**Date:** 2026-04-24  
+**PE:** PE-INFRA-SLR-08  
+**Branch:** feature/pe-infra-slr-08-control-plane-workflow-wiring  
+**PR:** #374 - https://github.com/rochasamurai/ELIS-Multi-AI-Agent-Platform/pull/374  
+**Implementer:** CODEX (`infra-impl-a`)  
+**Date:** 2026-04-25  
 **Base branch:** main  
-**Implementation commit:** `3b5ad0d` (fix commit: `5ea5e1d`)
+**Implementation commits:**  
+- `15498d8df25351e5d14478fc629c74505fce4dbc`
+- `2a01fa299c6e82f04cd47829867c3df8f175a995`
 
 ---
 
 ## Summary
 
-PE-INFRA-SLR-07 completes the review archive migration by fixing all path resolution
-references that still pointed to the repo root after PE-INFRA-SLR-06 moved the files to
-`docs/reviews/archive/`.
+PE-INFRA-SLR-08 wires the GitHub Actions control plane to the v1.9 workflow
+state machine and local-first execution boundary.
 
 The implementation:
 
-- adds `review_file_path()` to `scripts/validator_runner_common.py` as the canonical
-  archive-path helper (always returns forward-slash paths suitable for git and CI);
-- updates `read_verdict()`, `verify_review_committed()`, and `build_validator_prompt()`
-  to resolve REVIEW files under `docs/reviews/archive/` rather than the repo root;
-- fixes three workflow files whose pathspecs and path constructions targeted the root;
-- corrects AGENTS.md §5.2 step 8 and the do-not list to show the full archive path in
-  the `REVIEW_FILE=` command example;
-- updates `docs/reviews/README.md` to point to the actual latest PE review file;
-- updates `docs/DOCUMENT_CLASSIFICATION.md` to v1.2: §3.3.1 boundary table, scope
-  line, and §8 readiness signal now reference `/docs/reviews/archive/` not repo root;
-- updates the pre-existing `test_validator_runner_common.py` tests whose mocks and
-  assertions assumed root-level paths; and
-- adds `tests/test_review_archive_paths.py` with 12 targeted tests covering AC-4
-  (including a test for the DOCUMENT_CLASSIFICATION.md fix).
+- adds dispatch helper constants/functions to `elis/workflow_state_machine.py`;
+- validates parsed `CURRENT_PE.md` statuses against canonical workflow states;
+- updates implementer and validator dispatch scripts to use state-machine helpers
+  instead of duplicating raw string checks;
+- keeps validator dispatch blocked until implementer-complete evidence exists:
+  `HANDOFF.md`, complete Status Packet sections, and a branch matching the active
+  PE branch;
+- allows the control plane to observe `implementing -> gate-1-pending` from
+  complete implementer evidence before dispatching through
+  `gate-1-pending -> validating`;
+- replaces brittle provider-substring validator mention logic in
+  `auto-assign-validator.yml` with `scripts/resolve_validator_handle.py`;
+- adds `scripts/check_control_plane_wiring.py` to prove development-agent coding
+  entrypoints stay on the self-hosted `elis-server` runner and CI workflows stay
+  bounded to gates;
+- documents the control-plane boundary in `AGENTS.md`,
+  `docs/workflow/PE_STATE_MACHINE.md`, and ADR-014; and
+- adds focused tests for the wiring, dispatch helpers, Gate 1 state guard, and
+  evidence-backed validator dispatch path.
+
+After the first push, live `validator-dispatch` correctly exposed one remaining
+gap: it required `CURRENT_PE.md` to already say `gate-1-pending`, even when the
+PR branch had complete implementer evidence. Commit `2a01fa2` fixes that gap by
+making the evidence-backed transition explicit in the state-machine helper and
+the dispatcher tests.
 
 ---
 
@@ -38,28 +51,42 @@ The implementation:
 
 | File | Change |
 |------|--------|
-| `scripts/validator_runner_common.py` | Add `review_file_path()`, `REVIEW_ARCHIVE_DIR`; update `read_verdict()`, `verify_review_committed()`, `build_validator_prompt()`, error message in `run_validator()` |
-| `.github/workflows/ci.yml` | Fix pathspec `-- 'REVIEW_*.md'` → `-- 'docs/reviews/archive/REVIEW_*.md'` |
-| `.github/workflows/auto-merge-on-pass.yml` | Fix pathspec `-- 'REVIEW_*.md'` → `-- 'docs/reviews/archive/REVIEW_*.md'` |
-| `.github/workflows/validator-runner.yml` | Prepend `docs/reviews/archive/` to constructed `review_file` path |
-| `AGENTS.md` | Update §5.2 step 8 and do-not list: `REVIEW_FILE=docs/reviews/archive/REVIEW_PE<N>.md` |
-| `docs/reviews/README.md` | Correct stale pointer: `archive/REVIEW_PE6.md` → `archive/REVIEW_PE_INFRA_06.md` |
-| `tests/test_review_archive_paths.py` | New: 12 targeted AC-4 tests (includes DOCUMENT_CLASSIFICATION check) |
-| `docs/DOCUMENT_CLASSIFICATION.md` | Bump to v1.2: §3.3.1 boundary, scope line, §8 readiness signal reference `/docs/reviews/archive/` |
-| `tests/test_validator_runner_common.py` | Update existing tests: read_verdict, verify_review_committed, build_validator_prompt mocks/assertions use archive paths |
+| `.github/workflows/auto-assign-validator.yml` | Use the model-agnostic validator handle resolver instead of inline provider substring parsing. |
+| `AGENTS.md` | Document GitHub Actions as control plane, not the development-agent coding substrate, including the evidence-backed Gate 1 observation. |
+| `docs/decisions/ADR-014-control-plane-workflow-wiring.md` | New ADR for the control-plane workflow boundary and evidence-backed dispatch behaviour. |
+| `docs/decisions/README.md` | Add ADR-014 to the ADR index. |
+| `docs/workflow/PE_STATE_MACHINE.md` | Add the control-plane wiring section, evidence-backed dispatch rule, and validation command. |
+| `elis/workflow_state_machine.py` | Add dispatch state constants, strict dispatch helpers, and an evidence-backed validator dispatch helper. |
+| `scripts/check_control_plane_wiring.py` | New repository check for local-first agent runners and bounded CI workflows. |
+| `scripts/dispatch_implementer_runner.py` | Use the canonical implementer dispatch helper. |
+| `scripts/dispatch_validator_runner.py` | Verify HANDOFF/Status Packet sections before allowing validator dispatch through canonical evidence-backed helpers. |
+| `scripts/implementer_runner_common.py` | Reject non-canonical `CURRENT_PE.md` registry statuses during parse. |
+| `scripts/pm_gate_evaluator.py` | Align Gate 1 assignment decisions with evidence-backed validator dispatch. |
+| `tests/test_control_plane_workflow_wiring.py` | New focused control-plane wiring tests. |
+| `tests/test_dispatch_validator_runner.py` | Cover complete-evidence dispatch from `implementing` and rejection from non-ready states. |
+| `tests/test_pm_gate_evaluator.py` | Cover Gate 1 pass from complete `implementing` evidence and rejection from `planning`. |
+| `tests/test_workflow_state_machine.py` | Cover strict and evidence-backed dispatch helpers plus control-plane documentation language. |
 
 ---
 
 ## Design Decisions
 
-- **`review_file_path()` always returns forward slashes**: These paths are consumed by
-  git commands and CI shell scripts. Using `str(Path(...))` on Windows produces
-  backslashes; the helper hardcodes the forward-slash string to avoid CI breakage.
-- **`REVIEW_ARCHIVE_DIR` as a `Path` constant**: Used only for `read_verdict()` filesystem
-  access (where OS-native path is correct); not used in `review_file_path()`.
-- **No backward-compat shim for root-level REVIEW files**: Root REVIEW files were removed
-  by PE-INFRA-SLR-06. Any validator writing a REVIEW file to the root after this PE
-  would be rejected by `verify_review_committed()` (correct behaviour).
+- **State-machine helpers live in `elis/workflow_state_machine.py`:** dispatch
+  eligibility is part of the lifecycle contract, so the implementer and
+  validator dispatch scripts now consume the canonical mirror rather than
+  hardcoding state strings locally.
+- **Strict and evidence-backed validator dispatch are separate helpers:** strict
+  dispatch still follows `gate-1-pending -> validating`; the live control plane
+  may use the evidence-backed helper only after HANDOFF and Status Packet checks
+  have passed.
+- **Workflow boundary check is conservative:** only the implementer and validator
+  runner workflows may invoke development-agent coding entrypoints, and they
+  must run on the self-hosted `elis-server` surface.
+- **CI remains credential-free:** the new check rejects bot/App credentials in
+  CI workflows so portable gates stay reproducible and merge-authoritative.
+- **Validator mention resolution is model-agnostic:** `auto-assign-validator.yml`
+  now delegates to the existing resolver, which handles role-slot IDs such as
+  `infra-val-a` / `infra-val-b` correctly.
 
 ---
 
@@ -67,113 +94,291 @@ The implementation:
 
 | AC | Criterion | Result |
 |----|-----------|--------|
-| AC-1 | Root `REVIEW.md` replaced by `docs/reviews/README.md` as review index. | PASS — `docs/reviews/README.md` exists; no root `REVIEW.md` present. |
-| AC-2 | Root `REVIEW_*.md` files archived under `docs/reviews/archive/`. | PASS — all PE REVIEW files are under archive; test confirms no root `REVIEW_PE*.md`. |
-| AC-3 | `scripts/check_review.py` discovers archived review files correctly. | PASS — `rglob("REVIEW_PE*.md")` was already recursive; `check_review.py` passes on the archive layout. |
-| AC-4 | Review-related docs and workflow guidance reference the new archive path. | PASS — `validator_runner_common.py`, all three workflow files, AGENTS.md §5.2 and §8, `docs/reviews/README.md`, and `docs/DOCUMENT_CLASSIFICATION.md` v1.2 all reference `docs/reviews/archive/`; 12 targeted tests verify this. |
-| AC-5 | Review validation tests pass with the archived file layout. | PASS — 38 targeted tests pass; 1030/1032 in full suite (2 pre-existing `test_verify_claude_auth.py` failures unrelated to this PE). |
+| AC-1 | Implementer and validator dispatch paths are aligned with the state machine and local-first execution surface. | PASS - dispatch scripts use canonical state-machine helpers; runner workflows stay on `[self-hosted, elis-server]`; focused tests cover implementer dispatch, strict validator dispatch, and evidence-backed validator dispatch. |
+| AC-2 | Workflow files do not attempt to perform GitHub-hosted agent coding where `elis-server` is the intended execution surface. | PASS - `scripts/check_control_plane_wiring.py` and tests fail if Codex/Claude development-agent entrypoints appear outside local runner workflows or on `ubuntu-latest`. |
+| AC-3 | Portable gates remain bounded to CI/test duties: formatting, linting, validation, and tests. | PASS - the control-plane check verifies CI workflows avoid bot/App credentials and agent coding entrypoints while retaining portable gate commands. |
+| AC-4 | Validator dispatch is blocked until implementer-complete evidence exists. | PASS - `dispatch_validator_runner.py` verifies HANDOFF and Status Packet sections before dispatch, rejects `planning`, and permits `implementing` only after complete evidence is present. |
+| AC-5 | The workflow/documentation pair describes GitHub Actions as control plane, not the coding substrate. | PASS - `AGENTS.md`, `docs/workflow/PE_STATE_MACHINE.md`, and ADR-014 all state the control-plane boundary; tests assert the governing language is present. |
 
 ---
 
 ## Validation Commands
 
-### Tool Versions
+### Current PE and Scope Checks
 
 ```powershell
-C:\Users\carlo\ELIS-SLR-Agent\.venv\Scripts\python.exe -m black --version
-python -m black, 24.8.0 (compiled: no)
-Python (CPython) 3.14.0
-
-C:\Users\carlo\ELIS-SLR-Agent\.venv\Scripts\python.exe -m ruff --version
-ruff 0.6.9
+& 'C:\Users\carlo\ELIS-SLR-Agent\.venv\Scripts\python.exe' scripts/check_current_pe.py
+CURRENT_PE.md OK — release context, roles, registry, and alternation valid.
 ```
 
-### Current PE Validation
-
 ```powershell
-C:\Users\carlo\ELIS-SLR-Agent\.venv\Scripts\python.exe scripts/check_current_pe.py
-CURRENT_PE.md OK — release context, roles, registry, and alternation valid.
-
-C:\Users\carlo\ELIS-SLR-Agent\.venv\Scripts\python.exe scripts/check_agent_scope.py
+& 'C:\Users\carlo\ELIS-SLR-Agent\.venv\Scripts\python.exe' scripts/check_agent_scope.py
 Agent scope clean — no secret-pattern files detected in worktree.
 ```
 
-### Scope Evidence
-
-```
-git diff --name-status origin/main..HEAD
-M	.github/workflows/auto-merge-on-pass.yml
-M	.github/workflows/ci.yml
-M	.github/workflows/validator-runner.yml
-M	AGENTS.md
-M	docs/reviews/README.md
-M	scripts/validator_runner_common.py
-A	tests/test_review_archive_paths.py
-M	tests/test_validator_runner_common.py
-
-git diff --stat origin/main..HEAD
- .github/workflows/auto-merge-on-pass.yml |   2 +-
- .github/workflows/ci.yml                 |   4 +-
- .github/workflows/validator-runner.yml   |   2 +-
- AGENTS.md                                |   4 +-
- docs/reviews/README.md                   |   2 +-
- scripts/validator_runner_common.py       |  28 ++++++---
- tests/test_review_archive_paths.py       | 101 +++++++++++++++++++++++++++++++
- tests/test_validator_runner_common.py    |  15 +++--
- 8 files changed, 139 insertions(+), 19 deletions(-)
-```
-
-### Formatting
-
-```
-python -m black --check --include "\.py$" scripts/ tests/ elis/
-All done! ✨ 🍰 ✨
-181 files would be left unchanged.
-```
-
-### Ruff
-
-```
-python -m ruff check .
-All checks passed!
-```
-
-### Targeted PE Tests
-
-```
-python -m pytest tests/test_review_archive_paths.py tests/test_validator_runner_common.py tests/test_check_review.py -q
-......................................                                   [100%]
-38 passed
-```
-
-### Full Test Suite
-
-```
-python -m pytest tests/ -q
-2 failed, 1030 passed, 17 warnings in 10.65s
-
-FAILED tests/test_verify_claude_auth.py::test_fails_when_credentials_file_missing
-FAILED tests/test_verify_claude_auth.py::test_fails_when_credentials_file_lacks_oauth_key
-```
-
-The full-suite failures are not in PE-INFRA-SLR-07 scope. This branch does not modify
-`tests/test_verify_claude_auth.py` or Claude-auth verification logic:
-
-```
+```powershell
 git diff --name-status -- tests/test_verify_claude_auth.py scripts/verify_claude_auth.py
 ```
 
 (no output)
 
+### Formatting
+
+```powershell
+$env:BLACK_CACHE_DIR = (Join-Path (Get-Location) '.black-cache-pe'); & 'C:\Users\carlo\ELIS-SLR-Agent\.venv\Scripts\python.exe' -m black --check --include '\.py$' elis scripts tests; $code = $LASTEXITCODE; if (Test-Path .black-cache-pe) { Remove-Item -LiteralPath (Resolve-Path .black-cache-pe).Path -Recurse -Force }; exit $code
+All done! \u2728 \U0001f370 \u2728
+184 files would be left unchanged.
+```
+
+### Ruff
+
+```powershell
+& 'C:\Users\carlo\ELIS-SLR-Agent\.venv\Scripts\python.exe' -m ruff check elis scripts tests
+All checks passed!
+```
+
+### Control-Plane Wiring Check
+
+```powershell
+& 'C:\Users\carlo\ELIS-SLR-Agent\.venv\Scripts\python.exe' scripts/check_control_plane_wiring.py
+Control-plane wiring OK — agent coding is local-first and CI is bounded.
+```
+
+### PE-Specific Tests
+
+```powershell
+& 'C:\Users\carlo\ELIS-SLR-Agent\.venv\Scripts\python.exe' -m pytest tests/test_control_plane_workflow_wiring.py tests/test_workflow_state_machine.py tests/test_dispatch_implementer_runner.py tests/test_dispatch_validator_runner.py tests/test_pm_gate_evaluator.py -q -p no:cacheprovider
+..............................                                           [100%]
+```
+
+PE-specific tests: PASS - 30/30 passed.
+
+### Full Test Suite
+
+```powershell
+& 'C:\Users\carlo\ELIS-SLR-Agent\.venv\Scripts\python.exe' -m pytest tests -q --tb=short -p no:cacheprovider
+........................................................................ [  6%]
+........................................................................ [ 13%]
+........................................................................ [ 20%]
+........................................................................ [ 27%]
+........................................................................ [ 34%]
+........................................................................ [ 41%]
+........................................................................ [ 48%]
+........................................................................ [ 55%]
+........................................................................ [ 62%]
+........................................................................ [ 68%]
+........................................................................ [ 75%]
+........................................................................ [ 82%]
+........................................................................ [ 89%]
+........................................................................ [ 96%]
+................FF..................                                     [100%]
+================================== FAILURES ===================================
+__________________ test_fails_when_credentials_file_missing ___________________
+tests\test_verify_claude_auth.py:32: in test_fails_when_credentials_file_missing
+    assert verify_claude_auth.main() == 1
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+scripts\verify_claude_auth.py:76: in main
+    result = subprocess.run(
+..\..\.python-runtime\pythoncore-3.14-64\Lib\subprocess.py:554: in run
+    with Popen(*popenargs, **kwargs) as process:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\.python-runtime\pythoncore-3.14-64\Lib\subprocess.py:1038: in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+..\..\.python-runtime\pythoncore-3.14-64\Lib\subprocess.py:1552: in _execute_child
+    hp, ht, pid, tid = _winapi.CreateProcess(executable, args,
+E   FileNotFoundError: [WinError 2] The system cannot find the file specified
+---------------------------- Captured stdout call -----------------------------
+OK: CLAUDE_CREDENTIALS_JSON is set (length=17)
+OK: credentials file exists at C:\Users\carlo\.claude\.credentials.json
+OK: credentials file contains claudeAiOauth entry
+OK: claude CLI found at C:\Users\carlo\AppData\Roaming\npm\claude.CMD
+______________ test_fails_when_credentials_file_lacks_oauth_key _______________
+tests\test_verify_claude_auth.py:40: in test_fails_when_credentials_file_lacks_oauth_key
+    assert verify_claude_auth.main() == 1
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+scripts\verify_claude_auth.py:76: in main
+    result = subprocess.run(
+..\..\.python-runtime\pythoncore-3.14-64\Lib\subprocess.py:554: in run
+    with Popen(*popenargs, **kwargs) as process:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+..\..\.python-runtime\pythoncore-3.14-64\Lib\subprocess.py:1038: in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+..\..\.python-runtime\pythoncore-3.14-64\Lib\subprocess.py:1552: in _execute_child
+    hp, ht, pid, tid = _winapi.CreateProcess(executable, args,
+E   FileNotFoundError: [WinError 2] The system cannot find the file specified
+---------------------------- Captured stdout call -----------------------------
+OK: CLAUDE_CREDENTIALS_JSON is set (length=17)
+OK: credentials file exists at C:\Users\carlo\.claude\.credentials.json
+OK: credentials file contains claudeAiOauth entry
+OK: claude CLI found at C:\Users\carlo\AppData\Roaming\npm\claude.CMD
+============================== warnings summary ===============================
+tests/test_elis_cli.py::test_screen_emits_manifest
+tests/test_elis_cli.py::test_screen_dry_run_does_not_emit_manifest
+tests/test_pipeline_merge.py::test_merge_output_validates_and_is_screen_compatible
+tests/test_pipeline_screen.py::TestScreenMain::test_dry_run
+tests/test_pipeline_screen.py::TestScreenMain::test_write_output
+  C:\Users\carlo\ELIS-SLR-Agent\.worktrees\pe-infra-slr-08\elis\pipeline\screen.py:276: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    else g.get("year_to", dt.datetime.utcnow().year)
+
+tests/test_elis_cli.py::test_screen_emits_manifest
+tests/test_elis_cli.py::test_screen_dry_run_does_not_emit_manifest
+tests/test_pipeline_merge.py::test_merge_output_validates_and_is_screen_compatible
+tests/test_pipeline_screen.py::TestScreenMain::test_dry_run
+tests/test_pipeline_screen.py::TestScreenMain::test_write_output
+  C:\Users\carlo\ELIS-SLR-Agent\.worktrees\pe-infra-slr-08\elis\pipeline\screen.py:30: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    return dt.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+
+tests/test_pipeline_search.py::TestBuildRunInputs::test_defaults
+tests/test_pipeline_search.py::TestSearchMain::test_dry_run_with_minimal_config
+tests/test_pipeline_search.py::TestSearchMain::test_dry_run_topic_with_name_not_id
+  C:\Users\carlo\ELIS-SLR-Agent\.worktrees\pe-infra-slr-08\elis\pipeline\search.py:154: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    year_to = int(g.get("year_to", dt.datetime.utcnow().year))
+
+tests/test_pipeline_search.py::TestSearchMain::test_dry_run_with_minimal_config
+tests/test_pipeline_search.py::TestSearchMain::test_dry_run_topic_with_name_not_id
+  C:\Users\carlo\ELIS-SLR-Agent\.worktrees\pe-infra-slr-08\elis\pipeline\search.py:405: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    y1 = int(config.get("global", {}).get("year_to", dt.datetime.utcnow().year))
+
+tests/test_pipeline_search.py::TestSearchMain::test_dry_run_with_minimal_config
+tests/test_pipeline_search.py::TestSearchMain::test_dry_run_topic_with_name_not_id
+  C:\Users\carlo\ELIS-SLR-Agent\.worktrees\pe-infra-slr-08\elis\pipeline\search.py:43: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    return dt.datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_verify_claude_auth.py::test_fails_when_credentials_file_missing
+FAILED tests/test_verify_claude_auth.py::test_fails_when_credentials_file_lacks_oauth_key
+```
+
+The full-suite failures are outside PE-INFRA-SLR-08 scope. This branch does not
+modify `tests/test_verify_claude_auth.py` or `scripts/verify_claude_auth.py`, as
+shown by the empty diff command above.
+
+### PR Evidence
+
+```powershell
+gh pr list --state open --base main
+374	feat(pe-infra-slr-08): control-plane workflow wiring	feature/pe-infra-slr-08-control-plane-workflow-wiring	OPEN	2026-04-25T04:02:59Z
+```
+
+```powershell
+gh pr view 374 --json number,state,url,headRefName,baseRefName,title,isDraft,mergeStateStatus,reviewDecision
+{"baseRefName":"main","headRefName":"feature/pe-infra-slr-08-control-plane-workflow-wiring","isDraft":false,"mergeStateStatus":"CLEAN","number":374,"reviewDecision":"","state":"OPEN","title":"feat(pe-infra-slr-08): control-plane workflow wiring","url":"https://github.com/rochasamurai/ELIS-Multi-AI-Agent-Platform/pull/374"}
+```
+
+---
+
+## Status Packet
+
+### 6.1 Working-tree state
+
+```powershell
+git status -sb
+## feature/pe-infra-slr-08-control-plane-workflow-wiring...origin/feature/pe-infra-slr-08-control-plane-workflow-wiring [ahead 1]
+warning: unable to access 'C:\Users\carlo/.config/git/ignore': Permission denied
+warning: unable to access 'C:\Users\carlo/.config/git/ignore': Permission denied
+
+git diff --name-status
+
+git diff --stat
+```
+
+### 6.2 Repository state
+
+```powershell
+git fetch --all --prune
+
+git branch --show-current
+feature/pe-infra-slr-08-control-plane-workflow-wiring
+
+git rev-parse HEAD
+2a01fa299c6e82f04cd47829867c3df8f175a995
+
+git log -5 --oneline --decorate
+2a01fa2 (HEAD -> feature/pe-infra-slr-08-control-plane-workflow-wiring) fix(pe-infra-slr-08): allow evidence-backed validator dispatch
+255d87e (origin/feature/pe-infra-slr-08-control-plane-workflow-wiring) docs(pe-infra-slr-08): add implementation handoff
+15498d8 feat(pe-infra-slr-08): wire control-plane workflow guards
+2bbdcea (origin/main, origin/HEAD, main) chore(pm): PM-CHORE-64 — close PE-INFRA-SLR-07, open PE-INFRA-SLR-08
+ce06c48 Merge pull request #373 from rochasamurai/feature/pe-infra-slr-07-review-archive-migration
+```
+
+### 6.3 Scope evidence
+
+```powershell
+git diff --name-status origin/main..HEAD
+M	.github/workflows/auto-assign-validator.yml
+M	AGENTS.md
+M	HANDOFF.md
+A	docs/decisions/ADR-014-control-plane-workflow-wiring.md
+M	docs/decisions/README.md
+M	docs/workflow/PE_STATE_MACHINE.md
+M	elis/workflow_state_machine.py
+A	scripts/check_control_plane_wiring.py
+M	scripts/dispatch_implementer_runner.py
+M	scripts/dispatch_validator_runner.py
+M	scripts/implementer_runner_common.py
+M	scripts/pm_gate_evaluator.py
+A	tests/test_control_plane_workflow_wiring.py
+M	tests/test_dispatch_validator_runner.py
+M	tests/test_pm_gate_evaluator.py
+M	tests/test_workflow_state_machine.py
+```
+
+```powershell
+git diff --stat origin/main..HEAD
+ .github/workflows/auto-assign-validator.yml        |  30 +-
+ AGENTS.md                                          |   9 +
+ HANDOFF.md                                         | 372 +++++++++++++++------
+ .../ADR-014-control-plane-workflow-wiring.md       |  83 +++++
+ docs/decisions/README.md                           |   1 +
+ docs/workflow/PE_STATE_MACHINE.md                  |  28 ++
+ elis/workflow_state_machine.py                     |  49 +++
+ scripts/check_control_plane_wiring.py              | 140 ++++++++
+ scripts/dispatch_implementer_runner.py             |   3 +-
+ scripts/dispatch_validator_runner.py               |  32 +-
+ scripts/implementer_runner_common.py               |   5 +
+ scripts/pm_gate_evaluator.py                       |  11 +-
+ tests/test_control_plane_workflow_wiring.py        |  73 ++++
+ tests/test_dispatch_validator_runner.py            |  26 +-
+ tests/test_pm_gate_evaluator.py                    |  34 ++
+ tests/test_workflow_state_machine.py               |  19 ++
+ 16 files changed, 770 insertions(+), 145 deletions(-)
+```
+
+### 6.4 Quality gates
+
+```text
+black: PASS - 184 files would be left unchanged.
+ruff: PASS - All checks passed!
+Control-plane wiring check: PASS.
+PE-specific tests: PASS - 30/30 passed.
+pytest full suite: FAIL local preflight - 2 unrelated Windows/Claude-auth failures in tests/test_verify_claude_auth.py; all other tests reached completion.
+GitHub Actions CI: authoritative portable gate evidence remains on PR #374 after push.
+```
+
+### 6.5 PR evidence
+
+```text
+PR: #374
+State: OPEN
+Draft: false
+Base: main
+Head: feature/pe-infra-slr-08-control-plane-workflow-wiring
+Merge state: CLEAN
+URL: https://github.com/rochasamurai/ELIS-Multi-AI-Agent-Platform/pull/374
+```
+
 ---
 
 ## Notes for Validator
 
-- Validate AC-1 through AC-5 against `ELIS_MultiAgent_Implementation_Plan_v1_9.md` verbatim.
-- Start with `tests/test_review_archive_paths.py` — it is the PE-specific validation surface.
-- `test_review_file_path_*` tests verify the new helper returns forward-slash archive paths.
-- `test_no_review_pe_files_at_repo_root` performs a real filesystem glob — it will catch any regression.
-- `test_*_references_archive_path` tests read the actual workflow YAML and doc files from disk.
-- `test_document_classification_references_archive_path` confirms DOCUMENT_CLASSIFICATION.md §3.3.1 no longer says "repo root".
-- `REVIEW_IMPLEMENTATION_ALIGNMENT_v1.md` is an immutable historical artifact (written when PE reviews were still at root); it must not be modified. Gap 7 in that document is the finding PE-INFRA-SLR-07 resolves.
-- The two full-suite failures are unrelated to this PE and pre-date it; treat them separately.
+- Validate PE-INFRA-SLR-08 AC-1 through AC-5 verbatim against
+  `ELIS_MultiAgent_Implementation_Plan_v1_9.md`.
+- Start with `scripts/check_control_plane_wiring.py` and
+  `tests/test_control_plane_workflow_wiring.py`; they are the PE-specific
+  enforcement surface for AC-1 through AC-5.
+- Re-run `tests/test_dispatch_validator_runner.py` because it now covers the
+  live Gate 1 failure mode discovered after the first push.
+- The local full-suite failure is pre-existing/host-specific and isolated from
+  this PE by the empty diff for `tests/test_verify_claude_auth.py` and
+  `scripts/verify_claude_auth.py`.

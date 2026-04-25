@@ -4,8 +4,10 @@ Called by validator-dispatch.yml when the Gate 1 assignment comment is detected.
 Reads CURRENT_PE.md from the base branch (main) and verifies that the PR's head
 branch matches the active PE branch before dispatching.
 
-Dispatch is only allowed once the Implementer has finished and the PE is marked
-ready for validation (``gate-1-pending``) with a complete HANDOFF/status packet.
+Dispatch is allowed after the Implementer has finished and complete
+HANDOFF/status packet evidence is present. The control plane may observe
+``implementing -> gate-1-pending`` from that evidence before dispatching through
+``gate-1-pending -> validating``.
 
 Environment variables:
   PR_NUMBER      — pull request number (required, from github.event.issue.number)
@@ -22,6 +24,12 @@ import subprocess
 import sys
 from pathlib import Path
 
+from elis.workflow_state_machine import (
+    VALIDATOR_DISPATCH_SOURCE_STATE,
+    VALIDATOR_DISPATCH_TARGET_STATE,
+    guards_for,
+    validator_dispatch_allowed_after_evidence,
+)
 from scripts.check_handoff import REQUIRED_SECTIONS as HANDOFF_REQUIRED_SECTIONS
 from scripts.check_status_packet import (
     REQUIRED_SECTIONS as STATUS_PACKET_REQUIRED_SECTIONS,
@@ -66,15 +74,23 @@ def _verify_sections(path: Path, required_sections: list[str], label: str) -> No
 
 
 def _require_ready_for_validation(context: CurrentPEContext) -> None:
-    if context.status != "gate-1-pending":
-        raise RunnerError(
-            f"Current PE status is '{context.status}' — waiting for implementer to finish "
-            "before validator dispatch."
-        )
-
     handoff_path = _handoff_path()
     _verify_sections(handoff_path, STATUS_PACKET_REQUIRED_SECTIONS, "Status Packet")
     _verify_sections(handoff_path, HANDOFF_REQUIRED_SECTIONS, "HANDOFF")
+
+    if not validator_dispatch_allowed_after_evidence(context.status):
+        required_guards = guards_for(
+            VALIDATOR_DISPATCH_SOURCE_STATE,
+            VALIDATOR_DISPATCH_TARGET_STATE,
+        )
+        guard_text = "; ".join(required_guards)
+        raise RunnerError(
+            f"Current PE status is '{context.status}' — validator dispatch requires "
+            f"complete implementer evidence from 'implementing' or "
+            f"'{VALIDATOR_DISPATCH_SOURCE_STATE}' before "
+            f"'{VALIDATOR_DISPATCH_TARGET_STATE}'. Required authorisation evidence: "
+            f"{guard_text}."
+        )
 
 
 def main() -> int:

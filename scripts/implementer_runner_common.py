@@ -14,6 +14,7 @@ from pathlib import Path
 
 from elis.agent_id import engine_from_agent_id
 from elis.reviewer_identity import ReviewerIdentityError, review_login_for_engine
+from elis.workflow_state_machine import ensure_canonical_state
 
 
 PE_SECTION_RE = r"### {pe_id}\b"
@@ -104,6 +105,10 @@ def parse_current_pe(path: Path) -> CurrentPEContext:
     implementer_agent = registry_match.group("implementer").strip()
     validator_agent = registry_match.group("validator").strip()
     status = registry_match.group("status").strip().lower()
+    try:
+        ensure_canonical_state(status)
+    except ValueError as exc:
+        raise RunnerError(str(exc)) from exc
 
     if registry_match.group("branch").strip() != branch:
         raise RunnerError(

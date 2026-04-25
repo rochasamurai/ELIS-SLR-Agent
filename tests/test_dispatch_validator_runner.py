@@ -43,6 +43,8 @@ CURRENT_PE_BODY_IMPLEMENTING = CURRENT_PE_BODY_READY.replace(
     "gate-1-pending", "implementing"
 )
 
+CURRENT_PE_BODY_PLANNING = CURRENT_PE_BODY_READY.replace("gate-1-pending", "planning")
+
 HANDOFF_BODY = """\
 # HANDOFF — PE-AUTO-05
 
@@ -122,10 +124,32 @@ def test_dispatches_when_pr_branch_matches_and_pe_ready(tmp_path, monkeypatch):
     assert "pr_number=312" in text
 
 
-def test_rejects_when_pe_still_implementing(tmp_path, monkeypatch):
+def test_dispatches_from_implementing_when_handoff_evidence_is_complete(
+    tmp_path, monkeypatch
+):
     current_pe = tmp_path / "CURRENT_PE.md"
     handoff = tmp_path / "HANDOFF.md"
+    output = tmp_path / "github_output.txt"
     _write(current_pe, CURRENT_PE_BODY_IMPLEMENTING)
+    _write(handoff, HANDOFF_BODY)
+    monkeypatch.setenv("CURRENT_PE_PATH", str(current_pe))
+    monkeypatch.setenv("HANDOFF_PATH", str(handoff))
+    monkeypatch.setenv("PR_NUMBER", "312")
+    monkeypatch.setenv("GITHUB_OUTPUT", str(output))
+    monkeypatch.setattr(
+        dispatch_validator_runner.subprocess,
+        "run",
+        _fake_gh_pr_view("feature/pe-auto-05-validator-runner"),
+    )
+
+    assert dispatch_validator_runner.main() == 0
+    assert "should_dispatch=true" in output.read_text(encoding="utf-8")
+
+
+def test_rejects_when_pe_is_not_implementing_or_gate_1_pending(tmp_path, monkeypatch):
+    current_pe = tmp_path / "CURRENT_PE.md"
+    handoff = tmp_path / "HANDOFF.md"
+    _write(current_pe, CURRENT_PE_BODY_PLANNING)
     _write(handoff, HANDOFF_BODY)
     monkeypatch.setenv("CURRENT_PE_PATH", str(current_pe))
     monkeypatch.setenv("HANDOFF_PATH", str(handoff))

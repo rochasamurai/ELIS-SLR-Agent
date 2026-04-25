@@ -20,6 +20,12 @@ CANONICAL_STATES: tuple[str, ...] = (
     "superseded",
 )
 
+IMPLEMENTER_DISPATCH_STATE = "implementing"
+IMPLEMENTER_COMPLETION_TARGET_STATE = "gate-1-pending"
+VALIDATOR_DISPATCH_SOURCE_STATE = "gate-1-pending"
+VALIDATOR_DISPATCH_TARGET_STATE = "validating"
+LOCAL_AGENT_EXECUTION_SURFACE = "elis-server"
+
 ACTIVE_STATES: tuple[str, ...] = (
     "planning",
     "implementing",
@@ -85,10 +91,53 @@ def is_canonical_state(state: str) -> bool:
     return state in CANONICAL_STATES
 
 
+def ensure_canonical_state(state: str) -> str:
+    """Return *state* if it is canonical; raise ValueError otherwise."""
+
+    if not is_canonical_state(state):
+        raise ValueError(f"Unknown PE workflow state: {state!r}.")
+    return state
+
+
 def can_transition(source: str, target: str) -> bool:
     """Return whether the state machine permits a source -> target move."""
 
     return (source, target) in ALLOWED_TRANSITIONS
+
+
+def implementer_dispatch_allowed(state: str) -> bool:
+    """Return whether the control plane may dispatch an implementer session."""
+
+    return ensure_canonical_state(state) == IMPLEMENTER_DISPATCH_STATE
+
+
+def implementer_completion_observable(state: str) -> bool:
+    """Return whether guard evidence may move implementation to Gate 1."""
+
+    ensure_canonical_state(state)
+    return can_transition(state, IMPLEMENTER_COMPLETION_TARGET_STATE)
+
+
+def validator_dispatch_allowed(state: str) -> bool:
+    """Return whether the control plane may dispatch a validator session."""
+
+    ensure_canonical_state(state)
+    return can_transition(state, VALIDATOR_DISPATCH_TARGET_STATE)
+
+
+def validator_dispatch_allowed_after_evidence(state: str) -> bool:
+    """Return whether validator dispatch may proceed after evidence checks pass.
+
+    In live automation, ``CURRENT_PE.md`` can still record ``implementing`` while
+    the PR branch already contains complete handoff evidence. In that case the
+    control plane observes ``implementing -> gate-1-pending`` and then dispatches
+    through ``gate-1-pending -> validating``.
+    """
+
+    return validator_dispatch_allowed(state) or (
+        implementer_completion_observable(state)
+        and validator_dispatch_allowed(IMPLEMENTER_COMPLETION_TARGET_STATE)
+    )
 
 
 def guards_for(source: str, target: str) -> tuple[str, ...]:
