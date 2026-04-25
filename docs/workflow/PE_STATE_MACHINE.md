@@ -74,3 +74,27 @@ policy allows it.
 Portable CI gates remain authoritative for formatting, linting, validation, and
 tests. Agent implementation and validation sessions remain governed by
 `CURRENT_PE.md`, `AGENTS.md`, and this state-machine contract.
+
+## Control-Plane Wiring
+
+GitHub Actions is the control plane, not the development-agent coding substrate.
+The bounded wiring is:
+
+- Implementer dispatch starts only from an active `implementing` PE. The
+  dispatcher resolves `CURRENT_PE.md`, then `implementer-runner.yml` launches
+  the implementer on the self-hosted `elis-server` runner.
+- Validator dispatch starts only after implementer-complete evidence exists:
+  `HANDOFF.md`, complete Status Packet sections, validator assignment evidence,
+  and a PR branch that matches the active PE branch. `validator-runner.yml`
+  launches the validator on the self-hosted `elis-server` runner.
+- GitHub-hosted workflows may verify guards, post comments/statuses, dispatch
+  the local runners, and report audit evidence. They must not invoke Codex or
+  Claude coding entrypoints for development-agent work.
+- Portable gates remain bounded to CI/test duties: formatting, linting,
+  validation checks, and tests. These gates run on GitHub-hosted CI and are
+  merge-authoritative, while local `elis-server` runs remain preflight evidence.
+
+The repository-level check is `python scripts/check_control_plane_wiring.py`.
+It fails if development-agent coding entrypoints move to `ubuntu-latest`, if
+local agent runners lose the `elis-server` execution surface, or if CI workflows
+start depending on bot/App credentials.

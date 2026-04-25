@@ -71,35 +71,7 @@ jobs:
       - name: Resolve validator agent mention
         id: validator
         if: steps.pr.outputs.number != ''
-        run: |
-          mention=$(python - <<'EOF'
-          import re, sys
-          from pathlib import Path
-          content = Path('CURRENT_PE.md').read_text(encoding='utf-8')
-          # Find the validator agent id from the Active PE Registry for the current PE.
-          pe_match = re.search(r'^\|\s*PE\s*\|\s*(PE(?:-[A-Z0-9]+)+)\s*\|', content, re.MULTILINE)
-          if not pe_match:
-              print('@claude-code')
-              sys.exit(0)
-          pe_id = pe_match.group(1)
-          row_match = re.search(
-              rf'^\|\s*{re.escape(pe_id)}\s*\|[^|]+\|[^|]+\|\s*([^|]+?)\s*\|',
-              content, re.MULTILINE,
-          )
-          if not row_match:
-              print('@claude-code')
-              sys.exit(0)
-          validator_agent = row_match.group(1).strip().lower()
-          if 'codex' in validator_agent:
-              print('@codex')
-          elif 'gemini' in validator_agent:
-              print('@gemini-cli')
-          else:
-              print('@claude-code')
-          EOF
-          )
-          echo "mention=${mention}" >> "$GITHUB_OUTPUT"
-        shell: bash
+        run: python scripts/resolve_validator_handle.py
 
       - name: Auto-assign Validator via PR comment
         if: success() && steps.pr.outputs.number != ''

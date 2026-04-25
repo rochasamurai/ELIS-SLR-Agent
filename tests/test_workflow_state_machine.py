@@ -10,8 +10,12 @@ from elis.workflow_state_machine import (
     REVIEW_COMPLETION_GUARDS,
     TRANSITION_GUARDS,
     VALIDATOR_AUTHORISATION_GUARDS,
+    VALIDATOR_DISPATCH_SOURCE_STATE,
+    VALIDATOR_DISPATCH_TARGET_STATE,
     can_transition,
     guards_for,
+    implementer_dispatch_allowed,
+    validator_dispatch_allowed,
 )
 from scripts import check_current_pe, check_role_registration
 
@@ -61,6 +65,17 @@ def test_allowed_transitions_and_guard_lookup_are_discoverable() -> None:
     )
 
 
+def test_dispatch_helpers_follow_state_machine_transitions() -> None:
+    assert implementer_dispatch_allowed("implementing") is True
+    assert implementer_dispatch_allowed("planning") is False
+    assert validator_dispatch_allowed(VALIDATOR_DISPATCH_SOURCE_STATE) is True
+    assert validator_dispatch_allowed("implementing") is False
+    assert can_transition(
+        VALIDATOR_DISPATCH_SOURCE_STATE,
+        VALIDATOR_DISPATCH_TARGET_STATE,
+    )
+
+
 def test_existing_status_validators_reuse_the_state_machine_contract() -> None:
     assert check_current_pe.VALID_REGISTRY_STATUSES == set(CANONICAL_STATES)
     assert check_current_pe.VALID_ACTIVE_STATUSES == set(ACTIVE_STATES)
@@ -96,6 +111,7 @@ def test_governing_docs_expose_states_and_guard_language() -> None:
         "Validator authorisation",
         "Review completion",
         "Merge approval",
+        "GitHub Actions is the control plane, not the development-agent coding substrate",
         "GitHub Actions may observe state, validate guards, post audit evidence",
     ):
         assert phrase in docs["agents"]

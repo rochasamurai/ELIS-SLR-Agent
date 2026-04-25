@@ -189,6 +189,11 @@ dispatch bounded workflow steps. GitHub Actions must not perform agent coding
 unless the current state explicitly permits that action and the active
 execution-surface policy allows it.
 
+GitHub Actions is the control plane, not the development-agent coding substrate.
+Implementer and Validator coding sessions run on the local-first `elis-server`
+execution surface; GitHub-hosted workflows remain bounded to CI, guard
+validation, dispatch, comments/statuses, merge automation, and audit evidence.
+
 ### 2.11 Language standard
 - All repository-facing content must use **UK English** by default.
 - This applies to:

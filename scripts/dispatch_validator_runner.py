@@ -22,6 +22,12 @@ import subprocess
 import sys
 from pathlib import Path
 
+from elis.workflow_state_machine import (
+    VALIDATOR_DISPATCH_SOURCE_STATE,
+    VALIDATOR_DISPATCH_TARGET_STATE,
+    guards_for,
+    validator_dispatch_allowed,
+)
 from scripts.check_handoff import REQUIRED_SECTIONS as HANDOFF_REQUIRED_SECTIONS
 from scripts.check_status_packet import (
     REQUIRED_SECTIONS as STATUS_PACKET_REQUIRED_SECTIONS,
@@ -66,10 +72,17 @@ def _verify_sections(path: Path, required_sections: list[str], label: str) -> No
 
 
 def _require_ready_for_validation(context: CurrentPEContext) -> None:
-    if context.status != "gate-1-pending":
+    if not validator_dispatch_allowed(context.status):
+        required_guards = guards_for(
+            VALIDATOR_DISPATCH_SOURCE_STATE,
+            VALIDATOR_DISPATCH_TARGET_STATE,
+        )
+        guard_text = "; ".join(required_guards)
         raise RunnerError(
-            f"Current PE status is '{context.status}' — waiting for implementer to finish "
-            "before validator dispatch."
+            f"Current PE status is '{context.status}' — validator dispatch requires "
+            f"'{VALIDATOR_DISPATCH_SOURCE_STATE}' before "
+            f"'{VALIDATOR_DISPATCH_TARGET_STATE}'. Required guard evidence: "
+            f"{guard_text}."
         )
 
     handoff_path = _handoff_path()
