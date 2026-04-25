@@ -9,7 +9,7 @@
 
 ## Summary
 
-Started PE-SLR-13 in the prog-impl-a workspace by bootstrapping a fresh repo clone into the assigned workspace, syncing it to `origin/main`, and creating the mandated PE branch. Step 0 review succeeded for `CURRENT_PE.md` and `LESSONS_LEARNED.md`, but the authoritative plan file referenced by PM (`ELIS_MultiAgent_Implementation_Plan_v1_9.md`) is not present in the synced repository checkout. Because the PE acceptance criteria and in-scope deliverables are defined by that missing plan, implementation is currently blocked on obtaining the authoritative PE-SLR-13 plan text before code changes can be made safely.
+Started PE-SLR-13 in the prog-impl-a workspace by bootstrapping a fresh repo clone into the assigned workspace, syncing it to `origin/main`, and creating the mandated PE branch. Step 0 review succeeded for `CURRENT_PE.md` and `LESSONS_LEARNED.md`. The authoritative plan text for PE-SLR-13 has now been restored locally from the PM-linked GitHub source (`ELIS_MultiAgent_Implementation_Plan_v1_9.md`), so the stale-plan blocker is cleared and implementation can continue safely against the v1.9 acceptance criteria.
 
 ---
 
@@ -31,7 +31,11 @@ Started PE-SLR-13 in the prog-impl-a workspace by bootstrapping a fresh repo clo
 
 ## Acceptance Criteria
 
-- [ ] ACs not yet extracted — blocked pending access to `ELIS_MultiAgent_Implementation_Plan_v1_9.md`
+- [ ] AC-1 Screening work is documented and validated as local-first on `elis-server`
+- [ ] AC-2 Lightweight support agents are documented and validated as local-first on `elis-server`
+- [ ] AC-3 Local execution is chosen for low-latency, persistent-context, or supervision-sensitive tasks
+- [ ] AC-4 Off-host execution is acceptable when quality, boundedness, or scalability justify it
+- [ ] AC-5 The relevant policy checks or tests pass
 
 ---
 
@@ -70,8 +74,8 @@ MISSING: ELIS_MultiAgent_Implementation_Plan_v1_9.md
 - [x] Read `LESSONS_LEARNED.md`
 - [x] Bootstrap repo into assigned workspace
 - [x] Create the PE branch
-- [→] Resolve authoritative PE-SLR-13 plan / ACs
-- [ ] Implement in-scope code changes
+- [x] Resolve authoritative PE-SLR-13 plan / ACs
+- [→] Implement in-scope code changes
 - [ ] Run quality gates
 - [ ] Finalize HANDOFF and status packet
 
@@ -95,11 +99,11 @@ feature/pe-slr-13-screening-lightweight-support-local-first-validation
 ### 6.3 Quality gates
 
 ```text
-Not run yet — blocked pending authoritative plan / scoped code changes.
+Not run yet — plan recovered, but no code changes or quality gates have been run since the plan was restored.
 ```
 
 ### 6.4 Ready to merge
 
 ```text
-NO — blocked pending access to ELIS_MultiAgent_Implementation_Plan_v1_9.md / PE-SLR-13 acceptance criteria.
+NO — plan recovered, but implementation/validation has not started yet.
 ```
