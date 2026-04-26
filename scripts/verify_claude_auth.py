@@ -72,8 +72,8 @@ def classify_auth() -> VerificationResult:
                     source=str(creds_path),
                     details=[f"credentials file unreadable: {exc}"],
                     next_step=(
-                        "Ask PO to complete the browser-based OAuth setup on a machine "
-                        "with browser access and then update CLAUDE_CREDENTIALS_JSON "
+                        "Complete the browser-based OAuth setup on a machine with "
+                        "browser access and then update CLAUDE_CREDENTIALS_JSON "
                         "from the secret source; or set ANTHROPIC_API_KEY as the fallback."
                     ),
                 )
@@ -83,6 +83,7 @@ def classify_auth() -> VerificationResult:
                     details.append("ANTHROPIC_API_KEY fallback present: yes")
                 details.append(f"credentials file: {creds_path}")
                 details.append("claudeAiOauth entry present: yes")
+                details.append("PREFERRED PATH: browser-based OAuth authentication.")
                 return VerificationResult(
                     auth_mode="oauth",
                     valid=True,
@@ -98,6 +99,7 @@ def classify_auth() -> VerificationResult:
                     details=[
                         f"credentials file missing claudeAiOauth: {creds_path}",
                         f"ANTHROPIC_API_KEY env present (length={len(api_key)})",
+                        "PREFERRED PATH: browser-based OAuth authentication.",
                     ],
                 )
 
@@ -107,8 +109,8 @@ def classify_auth() -> VerificationResult:
                 source=str(creds_path),
                 details=["credentials file missing 'claudeAiOauth' key."],
                 next_step=(
-                    "Ask PO to complete the browser-based OAuth setup on a machine "
-                    "with browser access and then update CLAUDE_CREDENTIALS_JSON "
+                    "Complete the browser-based OAuth setup on a machine with "
+                    "browser access and then update CLAUDE_CREDENTIALS_JSON "
                     "from the secret source; or set ANTHROPIC_API_KEY as the fallback."
                 ),
             )
@@ -121,6 +123,7 @@ def classify_auth() -> VerificationResult:
                 details=[
                     "OAuth credentials file not found, but fallback API key is present.",
                     f"ANTHROPIC_API_KEY env present (length={len(api_key)})",
+                    "PREFERRED PATH: browser-based OAuth authentication.",
                 ],
             )
 
@@ -132,8 +135,9 @@ def classify_auth() -> VerificationResult:
                 "CLAUDE_CREDENTIALS_JSON is set but ~/.claude/.credentials.json is missing.",
             ],
             next_step=(
-                "Ask PO to refresh the OAuth-backed credentials secret from the "
-                "secret source or set ANTHROPIC_API_KEY as the fallback."
+                "Complete the browser-based OAuth setup on a machine with browser "
+                "access and then refresh the OAuth-backed credentials secret from "
+                "the secret source; or set ANTHROPIC_API_KEY as the fallback."
             ),
         )
 
@@ -143,7 +147,10 @@ def classify_auth() -> VerificationResult:
             auth_mode="api_key",
             valid=True,
             source="env:ANTHROPIC_API_KEY",
-            details=[f"ANTHROPIC_API_KEY env present (length={len(api_key)})"],
+            details=[
+                f"ANTHROPIC_API_KEY env present (length={len(api_key)})",
+                "PREFERRED PATH: browser-based OAuth authentication.",
+            ],
         )
 
     return VerificationResult(
@@ -152,9 +159,9 @@ def classify_auth() -> VerificationResult:
         source="missing",
         details=["CLAUDE_CREDENTIALS_JSON is not set in environment."],
         next_step=(
-            "Ask PO to complete the browser-based OAuth setup on a machine with "
-            "browser access and then update CLAUDE_CREDENTIALS_JSON from the "
-            "secret source; or set ANTHROPIC_API_KEY as the fallback."
+            "Complete the browser-based OAuth setup on a machine with browser "
+            "access and then update CLAUDE_CREDENTIALS_JSON from the secret "
+            "source; or set ANTHROPIC_API_KEY as the fallback."
         ),
     )
 

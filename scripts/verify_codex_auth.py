@@ -64,8 +64,8 @@ def classify_auth() -> VerificationResult:
                 source=str(auth_file),
                 details=[f"credentials file unreadable: {exc}"],
                 next_step=(
-                    "Ask PO to complete the browser-based OAuth login on a machine "
-                    "with browser access."
+                    "Complete the browser-based OAuth login on a machine with "
+                    "browser access."
                 ),
             )
 
@@ -89,6 +89,7 @@ def classify_auth() -> VerificationResult:
                 details.append("OPENAI_API_KEY field present: yes")
             if api_key:
                 details.append("OPENAI_API_KEY env fallback present: yes")
+            details.append("PREFERRED PATH: browser-based OAuth authentication.")
             return VerificationResult(
                 auth_mode="oauth",
                 valid=True,
@@ -104,6 +105,7 @@ def classify_auth() -> VerificationResult:
                 details.append("OPENAI_API_KEY field present: yes")
             if api_key:
                 details.append("OPENAI_API_KEY env fallback present: yes")
+            details.append("PREFERRED PATH: browser-based OAuth authentication.")
             return VerificationResult(
                 auth_mode="api_key",
                 valid=True,
@@ -119,7 +121,10 @@ def classify_auth() -> VerificationResult:
             auth_mode="api_key",
             valid=True,
             source="env:OPENAI_API_KEY",
-            details=[f"OPENAI_API_KEY env present (length={len(api_key)})"],
+            details=[
+                f"OPENAI_API_KEY env present (length={len(api_key)})",
+                "PREFERRED PATH: browser-based OAuth authentication.",
+            ],
         )
     else:
         details.append("auth.json not found")
@@ -130,8 +135,8 @@ def classify_auth() -> VerificationResult:
         source=source,
         details=details,
         next_step=(
-            "Ask PO to complete the browser-based OAuth login on a machine with "
-            "browser access, or set OPENAI_API_KEY as the fallback."
+            "Complete the browser-based OAuth login on a machine with browser "
+            "access, or set OPENAI_API_KEY as the fallback."
         ),
     )
 
