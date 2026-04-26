@@ -73,9 +73,8 @@ def classify_auth() -> VerificationResult:
                     details=[f"credentials file unreadable: {exc}"],
                     next_step=(
                         "Ask PO to run 'claude setup-token' on a machine with browser access "
-                        "(or otherwise refresh Claude Code credentials) and then update "
-                        "CLAUDE_CREDENTIALS_JSON from the secret source; or set "
-                        "ANTHROPIC_API_KEY as the fallback."
+                        "and then update CLAUDE_CREDENTIALS_JSON from the secret source; "
+                        "or set ANTHROPIC_API_KEY as the fallback."
                     ),
                 )
 
@@ -109,9 +108,8 @@ def classify_auth() -> VerificationResult:
                 details=["credentials file missing 'claudeAiOauth' key."],
                 next_step=(
                     "Ask PO to run 'claude setup-token' on a machine with browser access "
-                    "(or otherwise refresh Claude Code credentials) and then update "
-                    "CLAUDE_CREDENTIALS_JSON from the secret source; or set "
-                    "ANTHROPIC_API_KEY as the fallback."
+                    "and then update CLAUDE_CREDENTIALS_JSON from the secret source; "
+                    "or set ANTHROPIC_API_KEY as the fallback."
                 ),
             )
 
@@ -155,8 +153,7 @@ def classify_auth() -> VerificationResult:
         details=["CLAUDE_CREDENTIALS_JSON is not set in environment."],
         next_step=(
             "Ask PO to run 'claude setup-token' on a machine with browser access "
-            "(or otherwise refresh Claude Code credentials) and then update "
-            "CLAUDE_CREDENTIALS_JSON from the secret source; or set "
+            "and then update CLAUDE_CREDENTIALS_JSON from the secret source; or set "
             "ANTHROPIC_API_KEY as the fallback."
         ),
     )
@@ -166,9 +163,7 @@ def verify_claude_cli(details: list[str]) -> tuple[bool, str | None]:
     claude_path = shutil.which("claude")
     if claude_path is None:
         details.append("FAIL: 'claude' CLI not found on PATH.")
-        details.append(
-            "Install Claude Code with the official Anthropic installer before retrying."
-        )
+        details.append("Run 'claude setup-token' on a machine with browser access.")
         return False, None
 
     details.append(f"claude CLI: {claude_path}")

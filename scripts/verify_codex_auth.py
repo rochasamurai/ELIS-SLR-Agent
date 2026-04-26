@@ -63,7 +63,7 @@ def classify_auth() -> VerificationResult:
                 valid=False,
                 source=str(auth_file),
                 details=[f"credentials file unreadable: {exc}"],
-                next_step="Ask PO to re-run 'codex auth login' on a terminal with browser access.",
+                next_step="Ask PO to run 'codex auth login' on a terminal with browser access.",
             )
 
         auth_mode = str(data.get("auth_mode", "")).strip().lower()
@@ -134,7 +134,7 @@ def verify_codex_cli(details: list[str]) -> tuple[bool, str | None]:
     codex_path = shutil.which("codex")
     if codex_path is None:
         details.append("FAIL: 'codex' CLI not found on PATH.")
-        details.append("Install with: npm install -g @openai/codex")
+        details.append("Run 'codex auth login' on a terminal with browser access.")
         return False, None
 
     details.append(f"codex CLI: {codex_path}")
