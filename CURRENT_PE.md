@@ -125,6 +125,7 @@
 | PE-SLR-13       | slr            | prog-impl-a          | prog-val-b         | feature/pe-slr-13-screening-lightweight-support-local-first-validation  | merged          | 2026-04-26   |
 | PE-SLR-14       | slr            | prog-impl-b          | prog-val-a         | feature/pe-slr-14-extraction-synthesis-off-host-contract-validation     | merged          | 2026-04-26   |
 | PE-SLR-15       | slr            | prog-impl-a          | prog-val-b         | feature/pe-slr-15-hybrid-slr-end-to-end-validation-and-housekeeping     | merged          | 2026-04-26   |
+| PE-AGT-00       | agt            | infra-impl-a         | infra-val-b        | feature/pe-agt-00-model-authentication-setup                            | implementing    | 2026-04-26   |
 
 Valid status values:
 - `planning`
@@ -214,6 +215,7 @@ PM housekeeping entries (prefix `PM-CHORE-XX`):
 | PM-CHORE-70  | Closed PE-SLR-15 as merged (PR #380, PASS verdict — Claude Code Validator). ELIS_MultiAgent_Implementation_Plan_v1_9.md complete — all 15 SLR PEs (PE-SLR-01 through PE-SLR-15) and infrastructure prerequisites (PE-INFRA-SLR-06 through PE-INFRA-SLR-08, PE-SLR-11, PE-SLR-12) merged. No active PE. Platform ready. Awaiting PM assignment of next plan. | 2026-04-26 |
 | PM-CHORE-71  | Adopted ELIS_MultiAgent_Implementation_Plan_v2_0.md (release v2.0.1). Opened PE-AGT-00 (Model Authentication Setup) with `infra-impl-a` (CODEX) as Implementer and `infra-val-b` (Claude Code) as Validator per PO directive. Implementer start is gated: PO must run Claude Code and Codex OAuth logins on elis-server and confirm `python scripts/verify_claude_auth.py` and `python scripts/verify_codex_auth.py` both exit 0 before branch work begins. | 2026-04-26 |
 | PE-AGT-00    | infra           | infra-impl-a         | infra-val-b        | feature/pe-agt-00-model-authentication-setup      | implementing    | 2026-04-26   |
+
 
 Alternation rule:
 - For consecutive PEs in the same domain, the implementer engine must alternate (`codex` <-> `claude`).

@@ -6,7 +6,7 @@ import subprocess
 from scripts import verify_claude_auth
 
 
-def _write_credentials_file(tmp_path, monkeypatch, payload=None):
+def _prepare_oauth_credentials(tmp_path, monkeypatch, payload=None):
     monkeypatch.setenv("HOME", str(tmp_path))
     monkeypatch.setenv("CLAUDE_CREDENTIALS_JSON", '{"present": true}')
     creds_dir = tmp_path / ".claude"
@@ -17,65 +17,67 @@ def _write_credentials_file(tmp_path, monkeypatch, payload=None):
     return creds_path
 
 
-def test_fails_when_credentials_env_missing(monkeypatch, capsys):
-    monkeypatch.delenv("CLAUDE_CREDENTIALS_JSON", raising=False)
-
-    assert verify_claude_auth.main() == 1
-    captured = capsys.readouterr()
-    assert "CLAUDE_CREDENTIALS_JSON is not set" in captured.err
-
-
-def test_fails_when_credentials_file_missing(tmp_path, monkeypatch, capsys):
-    monkeypatch.setenv("HOME", str(tmp_path))
-    monkeypatch.setenv("CLAUDE_CREDENTIALS_JSON", '{"present": true}')
-
-    assert verify_claude_auth.main() == 1
-    captured = capsys.readouterr()
-    assert "credentials file not found" in captured.err
-
-
-def test_fails_when_credentials_file_lacks_oauth_key(tmp_path, monkeypatch, capsys):
-    _write_credentials_file(tmp_path, monkeypatch, payload={"unexpected": True})
-
-    assert verify_claude_auth.main() == 1
-    captured = capsys.readouterr()
-    assert "missing 'claudeAiOauth' key" in captured.err
-
-
-def test_fails_when_claude_missing(tmp_path, monkeypatch, capsys):
-    _write_credentials_file(tmp_path, monkeypatch)
-    monkeypatch.setattr(verify_claude_auth.shutil, "which", lambda _cmd: None)
-
-    assert verify_claude_auth.main() == 1
-    captured = capsys.readouterr()
-    assert "'claude' CLI not found on PATH." in captured.err
-
-
-def test_fails_when_claude_version_command_fails(tmp_path, monkeypatch, capsys):
-    _write_credentials_file(tmp_path, monkeypatch)
+def _patch_claude_cli(monkeypatch, returncode=0, stdout="1.2.3", stderr=""):
     monkeypatch.setattr(
-        verify_claude_auth.shutil, "which", lambda _cmd: "/usr/local/bin/claude"
+        verify_claude_auth.shutil,
+        "which",
+        lambda _cmd: "/usr/local/bin/claude",
     )
     monkeypatch.setattr(
         verify_claude_auth.subprocess,
         "run",
         lambda *_args, **_kwargs: subprocess.CompletedProcess(
             args=["claude", "--version"],
-            returncode=1,
-            stdout="",
-            stderr="boom",
+            returncode=returncode,
+            stdout=stdout,
+            stderr=stderr,
         ),
     )
 
-    assert verify_claude_auth.main() == 1
+
+def test_invalid_when_credentials_env_missing(tmp_path, monkeypatch, capsys):
+    monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.delenv("CLAUDE_CREDENTIALS_JSON", raising=False)
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.setattr(verify_claude_auth.shutil, "which", lambda _cmd: None)
+
+    assert verify_claude_auth.main([]) == 1
     captured = capsys.readouterr()
-    assert "'claude --version' exited 1" in captured.err
+    combined = captured.out + captured.err
+    assert "RESULT: Invalid authentication" in combined
+    assert "claude setup-token" in combined
 
 
-def test_passes_without_leaking_credentials_json(tmp_path, monkeypatch, capsys):
-    credentials_json = '{"accessToken":"sk-ant-st-secret-value"}'
-    _write_credentials_file(tmp_path, monkeypatch)
-    monkeypatch.setenv("CLAUDE_CREDENTIALS_JSON", credentials_json)
+def test_valid_oauth_authentication(tmp_path, monkeypatch, capsys):
+    _prepare_oauth_credentials(tmp_path, monkeypatch)
+    _patch_claude_cli(monkeypatch)
+
+    assert verify_claude_auth.main([]) == 0
+    captured = capsys.readouterr()
+    combined = captured.out + captured.err
+    assert "RESULT: Valid OAuth authentication" in combined
+    assert "claudeAiOauth entry present: yes" in combined
+
+
+def test_valid_api_key_fallback_when_oauth_missing(tmp_path, monkeypatch, capsys):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "anthropic-test-key")
+    monkeypatch.delenv("CLAUDE_CREDENTIALS_JSON", raising=False)
+    monkeypatch.setenv("HOME", str(tmp_path))
+    _patch_claude_cli(monkeypatch)
+
+    assert verify_claude_auth.main([]) == 0
+    captured = capsys.readouterr()
+    combined = captured.out + captured.err
+    assert "RESULT: Valid API Key authentication" in combined
+    assert "ANTHROPIC_API_KEY env present" in combined
+
+
+def test_invalid_when_credentials_file_missing_and_no_fallback(
+    tmp_path, monkeypatch, capsys
+):
+    monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.setenv("CLAUDE_CREDENTIALS_JSON", '{"present": true}')
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     monkeypatch.setattr(
         verify_claude_auth.shutil, "which", lambda _cmd: "/usr/local/bin/claude"
     )
@@ -90,9 +92,36 @@ def test_passes_without_leaking_credentials_json(tmp_path, monkeypatch, capsys):
         ),
     )
 
-    assert verify_claude_auth.main() == 0
+    assert verify_claude_auth.main([]) == 1
     captured = capsys.readouterr()
     combined = captured.out + captured.err
-    assert "claude auth verification PASS" in combined
+    assert "RESULT: Invalid authentication" in combined
+    assert (
+        "CLAUDE_CREDENTIALS_JSON is set but ~/.claude/.credentials.json is missing."
+        in combined
+    )
+
+
+def test_fails_when_claude_version_command_fails(tmp_path, monkeypatch, capsys):
+    _prepare_oauth_credentials(tmp_path, monkeypatch)
+    _patch_claude_cli(monkeypatch, returncode=1, stdout="", stderr="boom")
+
+    assert verify_claude_auth.main([]) == 1
+    captured = capsys.readouterr()
+    combined = captured.out + captured.err
+    assert "RESULT: Invalid authentication" in combined
+    assert "'claude --version' exited 1" in combined
+
+
+def test_passes_without_leaking_credentials_json(tmp_path, monkeypatch, capsys):
+    credentials_json = '{"accessToken":"sk-ant...alue"}'
+    _prepare_oauth_credentials(tmp_path, monkeypatch)
+    monkeypatch.setenv("CLAUDE_CREDENTIALS_JSON", credentials_json)
+    _patch_claude_cli(monkeypatch)
+
+    assert verify_claude_auth.main([]) == 0
+    captured = capsys.readouterr()
+    combined = captured.out + captured.err
+    assert "RESULT: Valid OAuth authentication" in combined
     assert "length=" in combined
     assert credentials_json not in combined
