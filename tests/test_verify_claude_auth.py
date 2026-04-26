@@ -45,8 +45,8 @@ def test_invalid_when_credentials_env_missing(tmp_path, monkeypatch, capsys):
     captured = capsys.readouterr()
     combined = captured.out + captured.err
     assert "RESULT: Invalid authentication" in combined
-    assert "claude setup-token" in combined
-    assert "Install Claude Code" not in combined
+    assert "INFO: local CLI not found on PATH (expected on elis-server)." in combined
+    assert "claude CLI" not in combined
 
 
 def test_valid_oauth_authentication(tmp_path, monkeypatch, capsys):
@@ -64,13 +64,15 @@ def test_valid_api_key_fallback_when_oauth_missing(tmp_path, monkeypatch, capsys
     monkeypatch.setenv("ANTHROPIC_API_KEY", "anthropic-test-key")
     monkeypatch.delenv("CLAUDE_CREDENTIALS_JSON", raising=False)
     monkeypatch.setenv("HOME", str(tmp_path))
-    _patch_claude_cli(monkeypatch)
+    monkeypatch.setattr(verify_claude_auth.shutil, "which", lambda _cmd: None)
 
     assert verify_claude_auth.main([]) == 0
     captured = capsys.readouterr()
     combined = captured.out + captured.err
     assert "RESULT: Valid API Key authentication" in combined
     assert "ANTHROPIC_API_KEY env present" in combined
+    assert "INFO: local CLI not found on PATH (expected on elis-server)." in combined
+    assert "claude CLI" not in combined
 
 
 def test_invalid_when_credentials_file_missing_and_no_fallback(
@@ -107,11 +109,11 @@ def test_fails_when_claude_version_command_fails(tmp_path, monkeypatch, capsys):
     _prepare_oauth_credentials(tmp_path, monkeypatch)
     _patch_claude_cli(monkeypatch, returncode=1, stdout="", stderr="boom")
 
-    assert verify_claude_auth.main([]) == 1
+    assert verify_claude_auth.main([]) == 0
     captured = capsys.readouterr()
     combined = captured.out + captured.err
-    assert "RESULT: Invalid authentication" in combined
-    assert "'claude --version' exited 1" in combined
+    assert "RESULT: Valid OAuth authentication" in combined
+    assert "WARN: local CLI --version exited 1" in combined
 
 
 def test_passes_without_leaking_credentials_json(tmp_path, monkeypatch, capsys):

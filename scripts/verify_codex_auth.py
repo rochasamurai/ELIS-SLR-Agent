@@ -1,13 +1,13 @@
 """
 verify_codex_auth.py — PE-AUTH-01
 
-Verifies whether the Codex CLI is authenticated in the current environment.
+Verifies whether the OpenAI auth state is available in the current environment.
 Primary mechanism: OAuth-backed auth.json.
 Fallback mechanism: OPENAI_API_KEY.
 
 Exit codes:
     0 — valid OAuth or API key authentication
-    1 — invalid or missing authentication / CLI prerequisites
+    1 — invalid or missing authentication / runtime prerequisites
 
 Usage:
     python scripts/verify_codex_auth.py [--json]
@@ -63,7 +63,10 @@ def classify_auth() -> VerificationResult:
                 valid=False,
                 source=str(auth_file),
                 details=[f"credentials file unreadable: {exc}"],
-                next_step="Ask PO to run 'codex auth login' on a terminal with browser access.",
+                next_step=(
+                    "Ask PO to complete the browser-based OAuth login on a machine "
+                    "with browser access."
+                ),
             )
 
         auth_mode = str(data.get("auth_mode", "")).strip().lower()
@@ -126,18 +129,20 @@ def classify_auth() -> VerificationResult:
         valid=False,
         source=source,
         details=details,
-        next_step="Ask PO to run 'codex auth login' on a machine with browser access, or set OPENAI_API_KEY as the fallback.",
+        next_step=(
+            "Ask PO to complete the browser-based OAuth login on a machine with "
+            "browser access, or set OPENAI_API_KEY as the fallback."
+        ),
     )
 
 
 def verify_codex_cli(details: list[str]) -> tuple[bool, str | None]:
     codex_path = shutil.which("codex")
     if codex_path is None:
-        details.append("FAIL: 'codex' CLI not found on PATH.")
-        details.append("Run 'codex auth login' on a terminal with browser access.")
+        details.append("INFO: local CLI not found on PATH (expected on elis-server).")
         return False, None
 
-    details.append(f"codex CLI: {codex_path}")
+    details.append(f"local CLI: {codex_path}")
     result = subprocess.run(
         ["codex", "--version"],
         capture_output=True,
@@ -146,14 +151,14 @@ def verify_codex_cli(details: list[str]) -> tuple[bool, str | None]:
         check=False,
     )
     if result.returncode != 0:
-        details.append(f"FAIL: 'codex --version' exited {result.returncode}")
+        details.append(f"WARN: local CLI --version exited {result.returncode}")
         stderr = result.stderr.strip()
         if stderr:
             details.append(stderr)
         return False, None
 
     version = result.stdout.strip() or result.stderr.strip() or "<unknown>"
-    details.append(f"codex --version: {version}")
+    details.append(f"CLI version: {version}")
     return True, version
 
 
@@ -161,24 +166,22 @@ def render_text(
     result: VerificationResult, cli_ok: bool, cli_version: str | None
 ) -> str:
     lines: list[str] = []
-    if result.valid and cli_ok:
+    if result.valid:
         lines.append(
             "RESULT: Valid OAuth authentication"
             if result.auth_mode == "oauth"
             else "RESULT: Valid API Key authentication"
         )
-    elif result.valid and not cli_ok:
-        lines.append("RESULT: Invalid authentication")
     else:
         lines.append("RESULT: Invalid authentication")
 
     lines.append(f"AUTH MODE: {result.auth_mode}")
     lines.append(f"SOURCE: {result.source}")
     if cli_version is not None:
-        lines.append(f"CLI VERSION: {cli_version}")
+        lines.append(f"RUNTIME VERSION: {cli_version}")
     for detail in result.details:
         lines.append(detail)
-    if result.valid and cli_ok:
+    if result.valid:
         lines.append("NEXT STEP: none")
     elif result.next_step:
         lines.append(f"NEXT STEP: {result.next_step}")
@@ -213,7 +216,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     sys.stdout.write(output)
 
-    if result.valid and cli_ok:
+    if result.valid:
         return 0
     return 1
 

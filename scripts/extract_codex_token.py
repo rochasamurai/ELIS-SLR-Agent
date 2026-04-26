@@ -1,10 +1,10 @@
 """
 extract_codex_token.py — PE-AUTH-01
 
-Reads the local Codex CLI auth file and prints ONLY metadata (key names,
+Reads the local auth file and prints ONLY metadata (key names,
 auth_mode, last_refresh timestamp). Never prints token values.
 
-Usage (PO runs once on local machine to verify what is available):
+Usage (PO runs once on a local machine to verify what is available):
     python scripts/extract_codex_token.py
 
 Security rule §13: token values must never appear in any output.
@@ -30,7 +30,8 @@ def main() -> int:
     auth_file = find_auth_file()
     if auth_file is None:
         print(
-            "ERROR: auth.json not found. Run 'codex auth login' first.", file=sys.stderr
+            "ERROR: auth.json not found. Complete the browser-based auth flow first.",
+            file=sys.stderr,
         )
         return 1
 
@@ -62,11 +63,11 @@ def main() -> int:
         print(
             "Recommended mechanism: store OPENAI_API_KEY as GitHub Secret 'OPENAI_API_KEY'."
         )
-        print("Runners set: export OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}")
+        print("Runners set: export OPENAI_API_KEY=*** from secrets.OPENAI_API_KEY")
     elif has_refresh:
         print()
-        print("Fallback mechanism: store refresh_token as 'CODEX_REFRESH_TOKEN'.")
-        print("Runner must exchange it for an access_token before invoking codex.")
+        print("Fallback mechanism: store refresh_token as 'REFRESH_TOKEN'.")
+        print("Runner must exchange it for an access_token before use.")
 
     return 0
 
