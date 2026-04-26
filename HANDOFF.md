@@ -1,8 +1,8 @@
-# HANDOFF - PE-SLR-14
+# HANDOFF - PE-SLR-15
 
-**PE:** PE-SLR-14  
-**Branch:** feature/pe-slr-14-extraction-synthesis-off-host-contract-validation  
-**Implementer:** Claude Code  
+**PE:** PE-SLR-15  
+**Branch:** feature/pe-slr-15-hybrid-slr-end-to-end-validation-and-housekeeping  
+**Implementer:** CODEX (`prog-impl-a`)  
 **Date:** 2026-04-26  
 **Base branch:** main  
 
@@ -10,7 +10,7 @@
 
 ## Summary
 
-PE-SLR-14 validates the extraction and synthesis off-host contract: that these stages remain off-host until hardware, validation evidence, and quality benchmarks justify migration to `elis-server`.
+PE-SLR-15 is the final PE in the v1.9 series. It validates the full hybrid SLR workflow end to end: the v1.9 state machine, review archive layout, gate sequencing, and release housekeeping.
 
 ---
 
@@ -18,11 +18,22 @@ PE-SLR-14 validates the extraction and synthesis off-host contract: that these s
 
 | AC | Criterion |
 |----|-----------|
-| AC-1 | The off-host extraction contract remains explicit and enforced. |
-| AC-2 | The off-host synthesis contract remains explicit and enforced. |
-| AC-3 | The architecture and implementation plan agree that these stages do not move local by default. |
-| AC-4 | Workflow/runbook guidance preserves the off-host boundary and its rationale. |
-| AC-5 | The contract checks or tests pass. |
+| AC-1 | The implementer → validator → merge flow succeeds under the v1.9 state machine. |
+| AC-2 | Review artefacts are written to the archive path and discoverable by the review tooling. |
+| AC-3 | GitHub Actions remain bounded to CI and control-plane duties. |
+| AC-4 | The hybrid placement rules hold across the full run. |
+| AC-5 | The final housekeeping step leaves the repo in a clean, documented state. |
+
+---
+
+## Notes for Implementer
+
+- Read `CURRENT_PE.md` at Step 0 — role is CODEX = Implementer, Claude Code = Validator.
+- Validate AC-1 through AC-5 against `ELIS_MultiAgent_Implementation_Plan_v1_9.md` §PE-SLR-15.
+- Branch from current `origin/main`.
+- Do not modify `CURRENT_PE.md`.
+- Commit `HANDOFF.md` before opening the PR.
+- **Alternation note:** plan v1.9 lists `prog-impl-claude` for PE-SLR-15, but `check_current_pe.py` CI gate requires CODEX after PE-SLR-14's Claude Code Implementer. CODEX is the correct Implementer.
 
 ---
 
@@ -36,7 +47,6 @@ Awaiting Implementer session start.
 
 ```
 Base branch: main
-Head commit (main): 8690066  Merge pull request #378
 Plan file: ELIS_MultiAgent_Implementation_Plan_v1_9.md
 ```
 
@@ -51,13 +61,3 @@ Not yet run.
 ### 6.5 PR evidence
 
 Not yet opened.
-
----
-
-## Notes for Implementer
-
-- Read `CURRENT_PE.md` at Step 0 — role is Claude Code = Implementer, CODEX = Validator.
-- Validate AC-1 through AC-5 against `ELIS_MultiAgent_Implementation_Plan_v1_9.md` §PE-SLR-14.
-- Branch from current `origin/main` (`8690066`).
-- Do not modify `CURRENT_PE.md`.
-- Commit `HANDOFF.md` before opening the PR.
