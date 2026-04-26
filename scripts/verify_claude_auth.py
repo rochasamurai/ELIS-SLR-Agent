@@ -1,13 +1,13 @@
 """
 verify_claude_auth.py — PE-AUTH-02
 
-Verifies whether the Claude Code CLI is authenticated in the current environment.
+Verifies whether the Anthropic auth state is available in the current environment.
 Primary mechanism: OAuth-backed CLAUDE_CREDENTIALS_JSON.
 Fallback mechanism: ANTHROPIC_API_KEY.
 
 Exit codes:
     0 — valid OAuth or API key authentication
-    1 — invalid or missing authentication / CLI prerequisites
+    1 — invalid or missing authentication / runtime prerequisites
 
 Usage:
     python scripts/verify_claude_auth.py [--json]
@@ -72,9 +72,9 @@ def classify_auth() -> VerificationResult:
                     source=str(creds_path),
                     details=[f"credentials file unreadable: {exc}"],
                     next_step=(
-                        "Ask PO to run 'claude setup-token' on a machine with browser access "
-                        "and then update CLAUDE_CREDENTIALS_JSON from the secret source; "
-                        "or set ANTHROPIC_API_KEY as the fallback."
+                        "Ask PO to complete the browser-based OAuth setup on a machine "
+                        "with browser access and then update CLAUDE_CREDENTIALS_JSON "
+                        "from the secret source; or set ANTHROPIC_API_KEY as the fallback."
                     ),
                 )
 
@@ -107,9 +107,9 @@ def classify_auth() -> VerificationResult:
                 source=str(creds_path),
                 details=["credentials file missing 'claudeAiOauth' key."],
                 next_step=(
-                    "Ask PO to run 'claude setup-token' on a machine with browser access "
-                    "and then update CLAUDE_CREDENTIALS_JSON from the secret source; "
-                    "or set ANTHROPIC_API_KEY as the fallback."
+                    "Ask PO to complete the browser-based OAuth setup on a machine "
+                    "with browser access and then update CLAUDE_CREDENTIALS_JSON "
+                    "from the secret source; or set ANTHROPIC_API_KEY as the fallback."
                 ),
             )
 
@@ -132,8 +132,8 @@ def classify_auth() -> VerificationResult:
                 "CLAUDE_CREDENTIALS_JSON is set but ~/.claude/.credentials.json is missing.",
             ],
             next_step=(
-                "Ask PO to refresh CLAUDE_CREDENTIALS_JSON from the secret source "
-                "or set ANTHROPIC_API_KEY as the fallback."
+                "Ask PO to refresh the OAuth-backed credentials secret from the "
+                "secret source or set ANTHROPIC_API_KEY as the fallback."
             ),
         )
 
@@ -152,9 +152,9 @@ def classify_auth() -> VerificationResult:
         source="missing",
         details=["CLAUDE_CREDENTIALS_JSON is not set in environment."],
         next_step=(
-            "Ask PO to run 'claude setup-token' on a machine with browser access "
-            "and then update CLAUDE_CREDENTIALS_JSON from the secret source; or set "
-            "ANTHROPIC_API_KEY as the fallback."
+            "Ask PO to complete the browser-based OAuth setup on a machine with "
+            "browser access and then update CLAUDE_CREDENTIALS_JSON from the "
+            "secret source; or set ANTHROPIC_API_KEY as the fallback."
         ),
     )
 
@@ -162,10 +162,10 @@ def classify_auth() -> VerificationResult:
 def verify_claude_cli(details: list[str]) -> tuple[bool, str | None]:
     claude_path = shutil.which("claude")
     if claude_path is None:
-        details.append("INFO: 'claude' CLI not found on PATH (expected on elis-server).")
+        details.append("INFO: local CLI not found on PATH (expected on elis-server).")
         return False, None
 
-    details.append(f"claude CLI: {claude_path}")
+    details.append(f"local CLI: {claude_path}")
     result = subprocess.run(
         ["claude", "--version"],
         capture_output=True,
@@ -174,14 +174,14 @@ def verify_claude_cli(details: list[str]) -> tuple[bool, str | None]:
         check=False,
     )
     if result.returncode != 0:
-        details.append(f"WARN: 'claude --version' exited {result.returncode}")
+        details.append(f"WARN: local CLI --version exited {result.returncode}")
         stderr = result.stderr.strip()
         if stderr:
             details.append(stderr)
         return False, None
 
     version = result.stdout.strip() or result.stderr.strip() or "<unknown>"
-    details.append(f"claude --version: {version}")
+    details.append(f"CLI version: {version}")
     return True, version
 
 
@@ -201,7 +201,7 @@ def render_text(
     lines.append(f"AUTH MODE: {result.auth_mode}")
     lines.append(f"SOURCE: {result.source}")
     if cli_version is not None:
-        lines.append(f"CLI VERSION: {cli_version}")
+        lines.append(f"RUNTIME VERSION: {cli_version}")
     for detail in result.details:
         lines.append(detail)
     if result.valid:

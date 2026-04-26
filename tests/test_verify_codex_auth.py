@@ -50,7 +50,8 @@ def test_invalid_when_no_credentials(tmp_path, monkeypatch, capsys):
     captured = capsys.readouterr()
     combined = captured.out + captured.err
     assert "RESULT: Invalid authentication" in combined
-    assert "INFO: 'codex' CLI not found on PATH (expected on elis-server)." in combined
+    assert "INFO: local CLI not found on PATH (expected on elis-server)." in combined
+    assert "codex CLI" not in combined
 
 
 def test_valid_oauth_authentication(tmp_path, monkeypatch, capsys):
@@ -75,7 +76,8 @@ def test_valid_api_key_fallback_when_oauth_missing(tmp_path, monkeypatch, capsys
     combined = captured.out + captured.err
     assert "RESULT: Valid API Key authentication" in combined
     assert "OPENAI_API_KEY env present" in combined
-    assert "INFO: 'codex' CLI not found on PATH (expected on elis-server)." in combined
+    assert "INFO: local CLI not found on PATH (expected on elis-server)." in combined
+    assert "codex CLI" not in combined
 
 
 def test_invalid_when_cli_version_command_fails(tmp_path, monkeypatch, capsys):
@@ -86,7 +88,7 @@ def test_invalid_when_cli_version_command_fails(tmp_path, monkeypatch, capsys):
     captured = capsys.readouterr()
     combined = captured.out + captured.err
     assert "RESULT: Valid OAuth authentication" in combined
-    assert "WARN: 'codex --version' exited 1" in combined
+    assert "WARN: local CLI --version exited 1" in combined
 
 
 def test_passes_without_leaking_api_key(tmp_path, monkeypatch, capsys):

@@ -45,7 +45,8 @@ def test_invalid_when_credentials_env_missing(tmp_path, monkeypatch, capsys):
     captured = capsys.readouterr()
     combined = captured.out + captured.err
     assert "RESULT: Invalid authentication" in combined
-    assert "INFO: 'claude' CLI not found on PATH (expected on elis-server)." in combined
+    assert "INFO: local CLI not found on PATH (expected on elis-server)." in combined
+    assert "claude CLI" not in combined
 
 
 def test_valid_oauth_authentication(tmp_path, monkeypatch, capsys):
@@ -70,7 +71,8 @@ def test_valid_api_key_fallback_when_oauth_missing(tmp_path, monkeypatch, capsys
     combined = captured.out + captured.err
     assert "RESULT: Valid API Key authentication" in combined
     assert "ANTHROPIC_API_KEY env present" in combined
-    assert "INFO: 'claude' CLI not found on PATH (expected on elis-server)." in combined
+    assert "INFO: local CLI not found on PATH (expected on elis-server)." in combined
+    assert "claude CLI" not in combined
 
 
 def test_invalid_when_credentials_file_missing_and_no_fallback(
@@ -111,7 +113,7 @@ def test_fails_when_claude_version_command_fails(tmp_path, monkeypatch, capsys):
     captured = capsys.readouterr()
     combined = captured.out + captured.err
     assert "RESULT: Valid OAuth authentication" in combined
-    assert "WARN: 'claude --version' exited 1" in combined
+    assert "WARN: local CLI --version exited 1" in combined
 
 
 def test_passes_without_leaking_credentials_json(tmp_path, monkeypatch, capsys):
