@@ -1,46 +1,47 @@
-# HANDOFF — Plan v1.9 Complete
+# HANDOFF — PE-AGT-00 Ready Pending PO OAuth Confirmation
 
-**Status:** No active PE  
+**Status:** Active PE opened; implementer start blocked pending PO pre-flight  
 **Date:** 2026-04-26  
 **Base branch:** main  
+**Plan file:** `ELIS_MultiAgent_Implementation_Plan_v2_0.md`
 
 ---
 
-## Summary
+## Current PE
 
-`ELIS_MultiAgent_Implementation_Plan_v1_9.md` is complete. All 15 SLR PEs and their infrastructure prerequisites have been merged.
-
----
-
-## Completed PEs (v1.9 series)
-
-| PE | Title | PR | Status |
-|----|-------|----|--------|
-| PE-INFRA-SLR-06 | Workflow State Machine Formalisation | #372 | merged |
-| PE-INFRA-SLR-07 | Review Archive Migration and Path Resolution | #373 | merged |
-| PE-INFRA-SLR-08 | Control-Plane Workflow Wiring | #374 | merged |
-| PE-SLR-11 | Implementer Runner Local-First Confirmation | #376 | merged |
-| PE-SLR-12 | Validator Runner Evidence Contract | #377 | merged |
-| PE-SLR-13 | Screening and Lightweight Support Local-First Validation | #378 | merged |
-| PE-SLR-14 | Extraction and Synthesis Off-Host Contract Validation | #379 | merged |
-| PE-SLR-15 | Hybrid SLR End-to-End Validation and Housekeeping | #380 | merged |
+- **PE:** `PE-AGT-00`
+- **Title:** Model Authentication Setup (Codex + Claude Code)
+- **Branch:** `feature/pe-agt-00-model-authentication-setup`
+- **Implementer:** `infra-impl-a` (CODEX)
+- **Validator:** `infra-val-b` (Claude Code)
+- **Dependency:** none
 
 ---
 
-## Success Criteria — all satisfied
+## Acceptance Criteria
 
-1. Workflow state machine explicit and enforceable. ✓
-2. Review archive is the canonical review location. ✓
-3. Implementer and validator runners operate local-first on `elis-server`. ✓
-4. GitHub Actions stay within bounded control-plane responsibilities. ✓
-5. Screening/support remain local-first. ✓
-6. Extraction/synthesis remain off-host by policy. ✓
-7. End-to-end validation proves the v1.9 architecture in practice. ✓
+1. `scripts/verify_codex_auth.py` checks `~/.codex/auth.json` as the primary credential source.
+2. `scripts/verify_codex_auth.py` falls back to `OPENAI_API_KEY` with a `WARN` line and exits 0 when the key is present.
+3. `scripts/verify_codex_auth.py` exits 1 only when both OAuth credential and API key are absent.
+4. `scripts/verify_claude_auth.py` checks `~/.claude/.credentials.json` for `claudeAiOauth` as the primary credential source.
+5. `scripts/verify_claude_auth.py` falls back to `ANTHROPIC_API_KEY` with a `WARN` line and exits 0 when the key is present.
+6. `scripts/verify_claude_auth.py` exits 1 only when both OAuth credential and API key are absent.
+7. Tests cover OAuth-present, fallback-present, and both-absent paths for both verification scripts.
+8. `docs/openclaw/AUTH_STRATEGY.md` documents OAuth-primary, API-key-fallback, why this contract exists, and how to re-run OAuth on elis-server.
 
 ---
 
-## Notes for PM
+## Notes for the Implementer
 
-- Platform is in plan-complete mode. `check_current_pe.py` validates this state.
-- To start a new PE series: adopt a new plan file, update `CURRENT_PE.md` (Release context + Current PE), and assign agents.
-- All review artefacts are in `docs/reviews/archive/`.
+- **Do not start branch work yet.** The plan requires PO pre-flight completion before implementation begins.
+- PO must run `claude` interactively on elis-server, complete login, then confirm `python scripts/verify_claude_auth.py` exits 0.
+- PO must run `codex` interactively on elis-server, complete login, then confirm `python scripts/verify_codex_auth.py` exits 0.
+- PM will notify the Implementer once Carlos posts both successful confirmations.
+- This PE changes only the two auth verify scripts, their tests, and `docs/openclaw/AUTH_STRATEGY.md`.
+- This PE does **not** change runner workflows or openclaw config.
+
+---
+
+## PM Note to PO
+
+Before assigning the Implementer to begin work, please run the Claude Code and Codex OAuth logins on `elis-server` and confirm both verify scripts exit 0.
