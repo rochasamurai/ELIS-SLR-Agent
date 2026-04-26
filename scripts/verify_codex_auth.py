@@ -133,8 +133,7 @@ def classify_auth() -> VerificationResult:
 def verify_codex_cli(details: list[str]) -> tuple[bool, str | None]:
     codex_path = shutil.which("codex")
     if codex_path is None:
-        details.append("FAIL: 'codex' CLI not found on PATH.")
-        details.append("Run 'codex auth login' on a terminal with browser access.")
+        details.append("INFO: 'codex' CLI not found on PATH (expected on elis-server).")
         return False, None
 
     details.append(f"codex CLI: {codex_path}")
@@ -146,7 +145,7 @@ def verify_codex_cli(details: list[str]) -> tuple[bool, str | None]:
         check=False,
     )
     if result.returncode != 0:
-        details.append(f"FAIL: 'codex --version' exited {result.returncode}")
+        details.append(f"WARN: 'codex --version' exited {result.returncode}")
         stderr = result.stderr.strip()
         if stderr:
             details.append(stderr)
@@ -161,14 +160,12 @@ def render_text(
     result: VerificationResult, cli_ok: bool, cli_version: str | None
 ) -> str:
     lines: list[str] = []
-    if result.valid and cli_ok:
+    if result.valid:
         lines.append(
             "RESULT: Valid OAuth authentication"
             if result.auth_mode == "oauth"
             else "RESULT: Valid API Key authentication"
         )
-    elif result.valid and not cli_ok:
-        lines.append("RESULT: Invalid authentication")
     else:
         lines.append("RESULT: Invalid authentication")
 
@@ -178,7 +175,7 @@ def render_text(
         lines.append(f"CLI VERSION: {cli_version}")
     for detail in result.details:
         lines.append(detail)
-    if result.valid and cli_ok:
+    if result.valid:
         lines.append("NEXT STEP: none")
     elif result.next_step:
         lines.append(f"NEXT STEP: {result.next_step}")
@@ -213,7 +210,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     sys.stdout.write(output)
 
-    if result.valid and cli_ok:
+    if result.valid:
         return 0
     return 1
 

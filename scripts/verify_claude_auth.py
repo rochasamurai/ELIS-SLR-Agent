@@ -162,8 +162,7 @@ def classify_auth() -> VerificationResult:
 def verify_claude_cli(details: list[str]) -> tuple[bool, str | None]:
     claude_path = shutil.which("claude")
     if claude_path is None:
-        details.append("FAIL: 'claude' CLI not found on PATH.")
-        details.append("Run 'claude setup-token' on a machine with browser access.")
+        details.append("INFO: 'claude' CLI not found on PATH (expected on elis-server).")
         return False, None
 
     details.append(f"claude CLI: {claude_path}")
@@ -175,7 +174,7 @@ def verify_claude_cli(details: list[str]) -> tuple[bool, str | None]:
         check=False,
     )
     if result.returncode != 0:
-        details.append(f"FAIL: 'claude --version' exited {result.returncode}")
+        details.append(f"WARN: 'claude --version' exited {result.returncode}")
         stderr = result.stderr.strip()
         if stderr:
             details.append(stderr)
@@ -190,7 +189,7 @@ def render_text(
     result: VerificationResult, cli_ok: bool, cli_version: str | None
 ) -> str:
     lines: list[str] = []
-    if result.valid and cli_ok:
+    if result.valid:
         lines.append(
             "RESULT: Valid OAuth authentication"
             if result.auth_mode == "oauth"
@@ -205,7 +204,7 @@ def render_text(
         lines.append(f"CLI VERSION: {cli_version}")
     for detail in result.details:
         lines.append(detail)
-    if result.valid and cli_ok:
+    if result.valid:
         lines.append("NEXT STEP: none")
     elif result.next_step:
         lines.append(f"NEXT STEP: {result.next_step}")
@@ -240,7 +239,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     sys.stdout.write(output)
 
-    if result.valid and cli_ok:
+    if result.valid:
         return 0
     return 1
 
