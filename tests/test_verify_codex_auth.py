@@ -50,7 +50,8 @@ def test_invalid_when_no_credentials(tmp_path, monkeypatch, capsys):
     captured = capsys.readouterr()
     combined = captured.out + captured.err
     assert "RESULT: Invalid authentication" in combined
-    assert "auth.json not found" in combined
+    assert "Run 'codex auth login'" in combined
+    assert "npm install -g @openai/codex" not in combined
 
 
 def test_valid_oauth_authentication(tmp_path, monkeypatch, capsys):

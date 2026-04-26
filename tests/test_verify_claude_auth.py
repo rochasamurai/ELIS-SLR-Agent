@@ -46,6 +46,7 @@ def test_invalid_when_credentials_env_missing(tmp_path, monkeypatch, capsys):
     combined = captured.out + captured.err
     assert "RESULT: Invalid authentication" in combined
     assert "claude setup-token" in combined
+    assert "Install Claude Code" not in combined
 
 
 def test_valid_oauth_authentication(tmp_path, monkeypatch, capsys):
