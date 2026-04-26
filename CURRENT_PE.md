@@ -21,10 +21,10 @@
 
 | Field   | Value |
 |---------|-------|
-| PE      | PE-SLR-15 |
-| Branch  | feature/pe-slr-15-hybrid-slr-end-to-end-validation-and-housekeeping |
+| PE      | — |
+| Branch  | — |
 
-> **Active PE.** Running PE-SLR-15 under ELIS_MultiAgent_Implementation_Plan_v1_9.md with CODEX as Implementer and Claude Code as Validator.
+> **No active PE.** ELIS_MultiAgent_Implementation_Plan_v1_9.md complete — all 15 SLR PEs and infrastructure prerequisites merged. Awaiting PM assignment of next plan.
 
 ---
 
@@ -32,10 +32,10 @@
 
 | Agent       | Role |
 |-------------|------|
-| CODEX       | Implementer |
-| Claude Code | Validator |
+| CODEX       | — |
+| Claude Code | — |
 
-> Active PE roles: CODEX = Implementer, Claude Code = Validator (alternation enforced).
+> No active PE roles. Awaiting PM assignment.
 
 ---
 
@@ -124,7 +124,7 @@
 | PE-SLR-12       | slr            | prog-impl-b          | prog-val-a         | feature/pe-slr-12-validator-runner-evidence-contract                    | merged          | 2026-04-25   |
 | PE-SLR-13       | slr            | prog-impl-a          | prog-val-b         | feature/pe-slr-13-screening-lightweight-support-local-first-validation  | merged          | 2026-04-26   |
 | PE-SLR-14       | slr            | prog-impl-b          | prog-val-a         | feature/pe-slr-14-extraction-synthesis-off-host-contract-validation     | merged          | 2026-04-26   |
-| PE-SLR-15       | slr            | prog-impl-a          | prog-val-b         | feature/pe-slr-15-hybrid-slr-end-to-end-validation-and-housekeeping     | implementing    | 2026-04-26   |
+| PE-SLR-15       | slr            | prog-impl-a          | prog-val-b         | feature/pe-slr-15-hybrid-slr-end-to-end-validation-and-housekeeping     | merged          | 2026-04-26   |
 
 Valid status values:
 - `planning`
@@ -211,6 +211,7 @@ PM housekeeping entries (prefix `PM-CHORE-XX`):
 | PM-CHORE-67  | Closed PE-SLR-12 as merged (PR #377, PASS verdict — CODEX Validator; elis-codex-bot formal approval). Opened PE-SLR-13 (Screening and Lightweight Support Local-First Validation) with `prog-impl-a` (CODEX) as Implementer and `prog-val-b` (Claude Code) as Validator per alternation rule. Dependency PE-SLR-12 satisfied. | 2026-04-25 |
 | PM-CHORE-68  | Closed PE-SLR-13 as merged (PR #378, r2 PASS verdict — Claude Code Validator; r1 FAIL due to stale branch base and CURRENT_PE.md registry destruction, resolved by CODEX rebase onto `origin/main`). Opened PE-SLR-14 (Extraction and Synthesis Off-Host Contract Validation) with `prog-impl-b` (Claude Code) as Implementer and `prog-val-a` (CODEX) as Validator per alternation rule. Dependency PE-SLR-13 satisfied. | 2026-04-26 |
 | PM-CHORE-69  | Closed PE-SLR-14 as merged (PR #379, PASS verdict — CODEX Validator). Opened PE-SLR-15 (Hybrid SLR End-to-End Validation and Housekeeping) with `prog-impl-a` (CODEX) as Implementer and `prog-val-b` (Claude Code) as Validator per alternation rule. Note: plan v1.9 §PE-SLR-15 lists `prog-impl-claude` but alternation rule (enforced by `check_current_pe.py` CI gate) requires CODEX after PE-SLR-14's Claude Code Implementer. Dependency PE-SLR-14 satisfied. Final PE in the v1.9 series. | 2026-04-26 |
+| PM-CHORE-70  | Closed PE-SLR-15 as merged (PR #380, PASS verdict — Claude Code Validator). ELIS_MultiAgent_Implementation_Plan_v1_9.md complete — all 15 SLR PEs (PE-SLR-01 through PE-SLR-15) and infrastructure prerequisites (PE-INFRA-SLR-06 through PE-INFRA-SLR-08, PE-SLR-11, PE-SLR-12) merged. No active PE. Platform ready. Awaiting PM assignment of next plan. | 2026-04-26 |
 
 Alternation rule:
 - For consecutive PEs in the same domain, the implementer engine must alternate (`codex` <-> `claude`).

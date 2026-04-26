@@ -1,132 +1,46 @@
-# HANDOFF - PE-SLR-15
+# HANDOFF — Plan v1.9 Complete
 
-**PE:** PE-SLR-15  
-**Branch:** feature/pe-slr-15-hybrid-slr-end-to-end-validation-and-housekeeping  
-**Implementer:** CODEX (`prog-impl-a`)  
+**Status:** No active PE  
 **Date:** 2026-04-26  
 **Base branch:** main  
-**Implementation commit:** `c4608b0`
 
 ---
 
 ## Summary
 
-PE-SLR-15 validates the final v1.9 hybrid SLR release path end to end. The implementation adds a focused PE-specific validation test that proves the canonical workflow states and control-plane wiring still support the implementer → validator → merge flow, the hybrid flow remains local-first for screening/support and off-host for extraction/synthesis, and the repo remains in a clean documented state with review artefacts archived.
+`ELIS_MultiAgent_Implementation_Plan_v1_9.md` is complete. All 15 SLR PEs and their infrastructure prerequisites have been merged.
 
 ---
 
-## Files Changed
+## Completed PEs (v1.9 series)
 
-| Path | Type |
-|---|---|
-| `tests/test_pe_slr15_validation.py` | new |
-| `HANDOFF.md` | modified |
-
----
-
-## Design Decisions
-
-- **Contract-first validation:** PE-SLR-15 is a validation PE, so the implementation stays in tests and documentation rather than changing runtime code.
-- **End-to-end evidence in one file:** the new PE test verifies the plan text, workflow-state machine, control-plane wiring, hybrid SLR runtime surfaces, workload policy alignment, and final housekeeping state in one place.
-- **Reuse governed helpers:** the test leans on existing helpers from `elis.hybrid_slr_validation`, `elis.workflow_state_machine`, and `scripts.check_control_plane_wiring` so the PE validates the living contract instead of duplicating it.
+| PE | Title | PR | Status |
+|----|-------|----|--------|
+| PE-INFRA-SLR-06 | Workflow State Machine Formalisation | #372 | merged |
+| PE-INFRA-SLR-07 | Review Archive Migration and Path Resolution | #373 | merged |
+| PE-INFRA-SLR-08 | Control-Plane Workflow Wiring | #374 | merged |
+| PE-SLR-11 | Implementer Runner Local-First Confirmation | #376 | merged |
+| PE-SLR-12 | Validator Runner Evidence Contract | #377 | merged |
+| PE-SLR-13 | Screening and Lightweight Support Local-First Validation | #378 | merged |
+| PE-SLR-14 | Extraction and Synthesis Off-Host Contract Validation | #379 | merged |
+| PE-SLR-15 | Hybrid SLR End-to-End Validation and Housekeeping | #380 | merged |
 
 ---
 
-## Acceptance Criteria
+## Success Criteria — all satisfied
 
-| AC | Criterion | Result |
-|----|-----------|--------|
-| AC-1 | The implementer → validator → merge flow succeeds under the v1.9 state machine. | PASS — `CANONICAL_STATES` and key transitions are asserted; `implementer_dispatch_allowed("implementing")` and `validator_dispatch_allowed_after_evidence("implementing")` both behave as required. |
-| AC-2 | Review artefacts are written to the archive path and discoverable by the review tooling. | PASS — existing archive tooling remains in place, and the PE test confirms the canonical review/documentation files are present. |
-| AC-3 | GitHub Actions remain bounded to CI and control-plane duties. | PASS — `validate_control_plane_wiring()` returns `[]` in the PE test. |
-| AC-4 | The hybrid placement rules hold across the full run. | PASS — `run_hybrid_slr_flow()` proves screening/support stay local-first while extraction/synthesis remain off-host; the placement reports stay consistent. |
-| AC-5 | The final housekeeping step leaves the repo in a clean, documented state. | PASS — the PE test asserts the canonical docs are present, `REVIEW.md` is absent, and the release docs remain in place. |
-
----
-
-## Validation Commands
-
-### Step 0 Checks
-
-```bash
-python scripts/check_current_pe.py
-CURRENT_PE.md OK — release context, roles, registry, and alternation valid.
-
-python scripts/check_agent_scope.py
-Agent scope clean — no secret-pattern files detected in worktree.
-```
-
-### PE-Specific Tests
-
-```bash
-python -m pytest -q tests/test_pe_slr15_validation.py
-.....                                                                    [100%]
-
-python -m pytest -q
-..................................................................       [100%]
-```
-
-### Formatting
-
-```bash
-python -m black --check tests/test_pe_slr15_validation.py
-All done! ✨ 🍰 ✨
-1 file would be left unchanged.
-
-python -m black --check .
-All done! ✨ 🍰 ✨
-209 files would be left unchanged.
-```
-
-### Ruff
-
-```bash
-python -m ruff check tests/test_pe_slr15_validation.py
-All checks passed!
-
-python -m ruff check .
-All checks passed!
-```
-
-### Scope Evidence
-
-```bash
-git diff --name-status github/main..HEAD
-A	tests/test_pe_slr15_validation.py
-```
+1. Workflow state machine explicit and enforceable. ✓
+2. Review archive is the canonical review location. ✓
+3. Implementer and validator runners operate local-first on `elis-server`. ✓
+4. GitHub Actions stay within bounded control-plane responsibilities. ✓
+5. Screening/support remain local-first. ✓
+6. Extraction/synthesis remain off-host by policy. ✓
+7. End-to-end validation proves the v1.9 architecture in practice. ✓
 
 ---
 
-## Status Packet
+## Notes for PM
 
-### 6.1 Working-tree state
-
-```bash
-git status -sb
-## feature/pe-slr-15-hybrid-slr-end-to-end-validation-and-housekeeping...github/main [ahead 1]
-```
-
-### 6.2 Repository state
-
-```bash
-git branch --show-current
-feature/pe-slr-15-hybrid-slr-end-to-end-validation-and-housekeeping
-
-git rev-parse --short HEAD
-c4608b0
-```
-
-### 6.3 Quality gates
-
-```bash
-black:                 PASS — tests/test_pe_slr15_validation.py and repo-wide check passed.
-ruff:                  PASS — tests/test_pe_slr15_validation.py and repo-wide check passed.
-pytest:                PASS — tests/test_pe_slr15_validation.py and repo-wide check passed.
-full suite:            PASS — 100% green on `python -m pytest -q`.
-check_current_pe.py:   PASS.
-check_agent_scope.py:  PASS.
-```
-
-### 6.4 Ready to merge
-
-YES — awaiting validator review
+- Platform is in plan-complete mode. `check_current_pe.py` validates this state.
+- To start a new PE series: adopt a new plan file, update `CURRENT_PE.md` (Release context + Current PE), and assign agents.
+- All review artefacts are in `docs/reviews/archive/`.
