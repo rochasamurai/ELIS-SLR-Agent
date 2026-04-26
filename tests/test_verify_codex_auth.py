@@ -52,7 +52,10 @@ def test_invalid_when_no_credentials(tmp_path, monkeypatch, capsys):
     assert "RESULT: Invalid authentication" in combined
     assert "INFO: local CLI not found on PATH (expected on elis-server)." in combined
     assert "codex CLI" not in combined
-    assert "NEXT STEP: Complete the browser-based OAuth login on a machine with browser access, or set OPENAI_API_KEY as the fallback." in combined
+    assert (
+        "NEXT STEP: Complete the browser-based OAuth login on a machine with browser access, or set OPENAI_API_KEY as the fallback."
+        in combined
+    )
 
 
 def test_valid_oauth_authentication(tmp_path, monkeypatch, capsys):

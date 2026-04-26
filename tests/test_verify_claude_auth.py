@@ -47,7 +47,10 @@ def test_invalid_when_credentials_env_missing(tmp_path, monkeypatch, capsys):
     assert "RESULT: Invalid authentication" in combined
     assert "INFO: local CLI not found on PATH (expected on elis-server)." in combined
     assert "claude CLI" not in combined
-    assert "NEXT STEP: Complete the browser-based OAuth setup on a machine with browser access and then update CLAUDE_CREDENTIALS_JSON from the secret source; or set ANTHROPIC_API_KEY as the fallback." in combined
+    assert (
+        "NEXT STEP: Complete the browser-based OAuth setup on a machine with browser access and then update CLAUDE_CREDENTIALS_JSON from the secret source; or set ANTHROPIC_API_KEY as the fallback."
+        in combined
+    )
 
 
 def test_valid_oauth_authentication(tmp_path, monkeypatch, capsys):
