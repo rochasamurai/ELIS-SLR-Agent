@@ -1,13 +1,14 @@
 """
-verify_claude_auth.py — PE-AUTH-02
+verify_claude_auth.py — PE-AGT-00
 
-Verifies whether the Anthropic auth state is available in the current environment.
-Primary mechanism: OAuth-backed CLAUDE_CREDENTIALS_JSON.
+Verifies whether Claude Code authentication is available on elis-server.
+Primary mechanism: OAuth-backed ~/.claude/.credentials.json containing
+`claudeAiOauth`.
 Fallback mechanism: ANTHROPIC_API_KEY.
 
 Exit codes:
     0 — valid OAuth or API key authentication
-    1 — invalid or missing authentication / runtime prerequisites
+    1 — missing or invalid authentication
 
 Usage:
     python scripts/verify_claude_auth.py [--json]
@@ -24,7 +25,7 @@ import pathlib
 import shutil
 import subprocess
 import sys
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 
 
 @dataclass
@@ -36,83 +37,58 @@ class VerificationResult:
     next_step: str | None = None
 
 
-def _credentials_file() -> pathlib.Path:
+def credentials_file() -> pathlib.Path:
     return pathlib.Path.home() / ".claude" / ".credentials.json"
 
 
 def classify_auth() -> VerificationResult:
-    credentials_json = os.environ.get("CLAUDE_CREDENTIALS_JSON", "")
+    creds_path = credentials_file()
     api_key = os.environ.get("ANTHROPIC_API_KEY", "")
-    creds_path = _credentials_file()
 
-    details: list[str] = []
-
-    # Primary path: OAuth-backed credentials file injected from the secret.
-    if credentials_json:
-        details.append(
-            f"CLAUDE_CREDENTIALS_JSON env present (length={len(credentials_json)})"
-        )
-        if creds_path.exists():
-            try:
-                data = json.loads(creds_path.read_text(encoding="utf-8"))
-            except (json.JSONDecodeError, OSError) as exc:
-                if api_key:
-                    return VerificationResult(
-                        auth_mode="api_key",
-                        valid=True,
-                        source="env:ANTHROPIC_API_KEY",
-                        details=[
-                            f"primary OAuth file unreadable: {exc}",
-                            f"ANTHROPIC_API_KEY env present (length={len(api_key)})",
-                        ],
-                    )
-                return VerificationResult(
-                    auth_mode="invalid",
-                    valid=False,
-                    source=str(creds_path),
-                    details=[f"credentials file unreadable: {exc}"],
-                    next_step=(
-                        "Complete the browser-based OAuth setup on a machine with "
-                        "browser access and then update CLAUDE_CREDENTIALS_JSON "
-                        "from the secret source; or set ANTHROPIC_API_KEY as the fallback."
-                    ),
-                )
-
-            if "claudeAiOauth" in data:
-                if api_key:
-                    details.append("ANTHROPIC_API_KEY fallback present: yes")
-                details.append(f"credentials file: {creds_path}")
-                details.append("claudeAiOauth entry present: yes")
-                details.append("PREFERRED PATH: browser-based OAuth authentication.")
-                return VerificationResult(
-                    auth_mode="oauth",
-                    valid=True,
-                    source=str(creds_path),
-                    details=details,
-                )
-
+    if creds_path.exists():
+        try:
+            data = json.loads(creds_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError) as exc:
             if api_key:
                 return VerificationResult(
                     auth_mode="api_key",
                     valid=True,
                     source="env:ANTHROPIC_API_KEY",
                     details=[
-                        f"credentials file missing claudeAiOauth: {creds_path}",
+                        f"WARN: OAuth credential file unreadable: {exc}",
+                        (
+                            "WARN: Falling back to ANTHROPIC_API_KEY because "
+                            "OAuth could not be verified."
+                        ),
                         f"ANTHROPIC_API_KEY env present (length={len(api_key)})",
-                        "PREFERRED PATH: browser-based OAuth authentication.",
                     ],
                 )
-
             return VerificationResult(
                 auth_mode="invalid",
                 valid=False,
                 source=str(creds_path),
-                details=["credentials file missing 'claudeAiOauth' key."],
+                details=[f"credentials file unreadable: {exc}"],
                 next_step=(
-                    "Complete the browser-based OAuth setup on a machine with "
-                    "browser access and then update CLAUDE_CREDENTIALS_JSON "
-                    "from the secret source; or set ANTHROPIC_API_KEY as the fallback."
+                    "Run `claude` interactively on elis-server to refresh OAuth, "
+                    "or set ANTHROPIC_API_KEY as the fallback."
                 ),
+            )
+
+        if isinstance(data, dict) and "claudeAiOauth" in data:
+            return VerificationResult(
+                auth_mode="oauth",
+                valid=True,
+                source=str(creds_path),
+                details=[
+                    f"credentials file: {creds_path}",
+                    "claudeAiOauth entry present: yes",
+                    "OAuth is the primary authentication path.",
+                    (
+                        "ANTHROPIC_API_KEY fallback present: yes"
+                        if api_key
+                        else "ANTHROPIC_API_KEY fallback present: no"
+                    ),
+                ],
             )
 
         if api_key:
@@ -121,9 +97,15 @@ def classify_auth() -> VerificationResult:
                 valid=True,
                 source="env:ANTHROPIC_API_KEY",
                 details=[
-                    "OAuth credentials file not found, but fallback API key is present.",
+                    (
+                        "WARN: ~/.claude/.credentials.json is present but does not "
+                        "contain claudeAiOauth."
+                    ),
+                    (
+                        "WARN: Falling back to ANTHROPIC_API_KEY because "
+                        "OAuth could not be verified."
+                    ),
                     f"ANTHROPIC_API_KEY env present (length={len(api_key)})",
-                    "PREFERRED PATH: browser-based OAuth authentication.",
                 ],
             )
 
@@ -131,37 +113,33 @@ def classify_auth() -> VerificationResult:
             auth_mode="invalid",
             valid=False,
             source=str(creds_path),
-            details=[
-                "CLAUDE_CREDENTIALS_JSON is set but ~/.claude/.credentials.json is missing.",
-            ],
+            details=["credentials file missing 'claudeAiOauth' key."],
             next_step=(
-                "Complete the browser-based OAuth setup on a machine with browser "
-                "access and then refresh the OAuth-backed credentials secret from "
-                "the secret source; or set ANTHROPIC_API_KEY as the fallback."
+                "Run `claude` interactively on elis-server to refresh OAuth, "
+                "or set ANTHROPIC_API_KEY as the fallback."
             ),
         )
 
-    # Fallback path: API key authentication.
     if api_key:
         return VerificationResult(
             auth_mode="api_key",
             valid=True,
             source="env:ANTHROPIC_API_KEY",
             details=[
+                "WARN: OAuth credential file not found at ~/.claude/.credentials.json.",
+                "WARN: Falling back to ANTHROPIC_API_KEY.",
                 f"ANTHROPIC_API_KEY env present (length={len(api_key)})",
-                "PREFERRED PATH: browser-based OAuth authentication.",
             ],
         )
 
     return VerificationResult(
         auth_mode="invalid",
         valid=False,
-        source="missing",
-        details=["CLAUDE_CREDENTIALS_JSON is not set in environment."],
+        source=str(creds_path),
+        details=["OAuth credential file not found at ~/.claude/.credentials.json."],
         next_step=(
-            "Complete the browser-based OAuth setup on a machine with browser "
-            "access and then update CLAUDE_CREDENTIALS_JSON from the secret "
-            "source; or set ANTHROPIC_API_KEY as the fallback."
+            "Run `claude` interactively on elis-server to refresh OAuth, or set "
+            "ANTHROPIC_API_KEY as the fallback."
         ),
     )
 
@@ -246,9 +224,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     sys.stdout.write(output)
 
-    if result.valid:
-        return 0
-    return 1
+    return 0 if result.valid else 1
 
 
 if __name__ == "__main__":

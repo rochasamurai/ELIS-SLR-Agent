@@ -1,13 +1,13 @@
 """
-verify_codex_auth.py — PE-AUTH-01
+verify_codex_auth.py — PE-AGT-00
 
-Verifies whether the OpenAI auth state is available in the current environment.
+Verifies whether Codex authentication is available on elis-server.
 Primary mechanism: OAuth-backed auth.json.
 Fallback mechanism: OPENAI_API_KEY.
 
 Exit codes:
     0 — valid OAuth or API key authentication
-    1 — invalid or missing authentication / runtime prerequisites
+    1 — missing or invalid authentication
 
 Usage:
     python scripts/verify_codex_auth.py [--json]
@@ -24,7 +24,7 @@ import pathlib
 import shutil
 import subprocess
 import sys
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 
 
 @dataclass
@@ -36,60 +36,95 @@ class VerificationResult:
     next_step: str | None = None
 
 
-def find_auth_file() -> pathlib.Path | None:
-    candidates = [
+def auth_file_candidates() -> list[pathlib.Path]:
+    return [
         pathlib.Path.home() / ".codex" / "auth.json",
         pathlib.Path.home() / ".config" / "openai" / "auth.json",
     ]
-    for path in candidates:
+
+
+def find_auth_file() -> pathlib.Path | None:
+    for path in auth_file_candidates():
         if path.exists():
             return path
     return None
+
+
+def has_oauth_tokens(data: object) -> bool:
+    if not isinstance(data, dict):
+        return False
+
+    auth_mode = str(data.get("auth_mode", "")).strip().lower()
+    if auth_mode in {"chatgpt", "oauth"}:
+        return True
+
+    tokens = data.get("tokens")
+    if not isinstance(tokens, dict):
+        return False
+
+    return bool(tokens.get("refresh_token") or tokens.get("access_token"))
 
 
 def classify_auth() -> VerificationResult:
     auth_file = find_auth_file()
     api_key = os.environ.get("OPENAI_API_KEY", "")
 
-    details: list[str] = []
-    source = "missing"
-
     if auth_file is not None:
         try:
             data = json.loads(auth_file.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, OSError) as exc:
+            if api_key:
+                return VerificationResult(
+                    auth_mode="api_key",
+                    valid=True,
+                    source="env:OPENAI_API_KEY",
+                    details=[
+                        f"WARN: OAuth credential file unreadable: {exc}",
+                        (
+                            "WARN: Falling back to OPENAI_API_KEY because OAuth "
+                            "could not be verified."
+                        ),
+                        f"OPENAI_API_KEY env present (length={len(api_key)})",
+                    ],
+                )
             return VerificationResult(
                 auth_mode="invalid",
                 valid=False,
                 source=str(auth_file),
                 details=[f"credentials file unreadable: {exc}"],
                 next_step=(
-                    "Complete the browser-based OAuth login on a machine with "
-                    "browser access."
+                    "Run `codex` interactively on elis-server to refresh OAuth, "
+                    "or set OPENAI_API_KEY as the fallback."
                 ),
             )
 
-        auth_mode = str(data.get("auth_mode", "")).strip().lower()
-        tokens = data.get("tokens")
-        has_refresh_token = isinstance(tokens, dict) and bool(
-            tokens.get("refresh_token")
-        )
-        has_access_token = isinstance(tokens, dict) and bool(tokens.get("access_token"))
-        has_top_level_api_key = bool(data.get("OPENAI_API_KEY"))
-
-        if auth_mode in {"chatgpt", "oauth"} or has_refresh_token or has_access_token:
-            details.append(f"auth.json location: {auth_file}")
-            if auth_mode:
-                details.append(f"auth_mode: {auth_mode}")
-            if has_refresh_token:
-                details.append("refresh_token present: yes")
-            if has_access_token:
-                details.append("access_token present: yes")
-            if has_top_level_api_key:
-                details.append("OPENAI_API_KEY field present: yes")
-            if api_key:
-                details.append("OPENAI_API_KEY env fallback present: yes")
-            details.append("PREFERRED PATH: browser-based OAuth authentication.")
+        if has_oauth_tokens(data):
+            auth_mode = str(data.get("auth_mode", "")).strip().lower()
+            tokens = data.get("tokens") if isinstance(data, dict) else {}
+            details = [
+                f"auth.json location: {auth_file}",
+                (
+                    f"auth_mode: {auth_mode}"
+                    if auth_mode
+                    else "auth_mode: <not recorded>"
+                ),
+                (
+                    "refresh_token present: yes"
+                    if isinstance(tokens, dict) and bool(tokens.get("refresh_token"))
+                    else "refresh_token present: no"
+                ),
+                (
+                    "access_token present: yes"
+                    if isinstance(tokens, dict) and bool(tokens.get("access_token"))
+                    else "access_token present: no"
+                ),
+                (
+                    "OPENAI_API_KEY fallback present: yes"
+                    if api_key
+                    else "OPENAI_API_KEY fallback present: no"
+                ),
+                "OAuth is the primary authentication path.",
+            ]
             return VerificationResult(
                 auth_mode="oauth",
                 valid=True,
@@ -97,46 +132,54 @@ def classify_auth() -> VerificationResult:
                 details=details,
             )
 
-        if auth_mode in {"apikey", "api_key"} or has_top_level_api_key or api_key:
-            details.append(f"auth.json location: {auth_file}")
-            if auth_mode:
-                details.append(f"auth_mode: {auth_mode}")
-            if has_top_level_api_key:
-                details.append("OPENAI_API_KEY field present: yes")
-            if api_key:
-                details.append("OPENAI_API_KEY env fallback present: yes")
-            details.append("PREFERRED PATH: browser-based OAuth authentication.")
+        if api_key:
             return VerificationResult(
                 auth_mode="api_key",
                 valid=True,
-                source=str(auth_file) if auth_file else "env:OPENAI_API_KEY",
-                details=details,
+                source="env:OPENAI_API_KEY",
+                details=[
+                    f"WARN: auth.json found at {auth_file} but OAuth markers are absent.",
+                    (
+                        "WARN: Falling back to OPENAI_API_KEY because OAuth "
+                        "could not be verified."
+                    ),
+                    f"OPENAI_API_KEY env present (length={len(api_key)})",
+                ],
             )
 
-        details.append(f"auth.json location: {auth_file}")
-        details.append("No supported auth markers found in auth.json")
-        source = str(auth_file)
-    elif api_key:
+        return VerificationResult(
+            auth_mode="invalid",
+            valid=False,
+            source=str(auth_file),
+            details=[f"auth.json found at {auth_file} but OAuth markers are absent."],
+            next_step=(
+                "Run `codex` interactively on elis-server to refresh OAuth, or set "
+                "OPENAI_API_KEY as the fallback."
+            ),
+        )
+
+    if api_key:
+        preferred = auth_file_candidates()[0]
         return VerificationResult(
             auth_mode="api_key",
             valid=True,
             source="env:OPENAI_API_KEY",
             details=[
+                f"WARN: OAuth credential file not found at {preferred}.",
+                "WARN: Falling back to OPENAI_API_KEY.",
                 f"OPENAI_API_KEY env present (length={len(api_key)})",
-                "PREFERRED PATH: browser-based OAuth authentication.",
             ],
         )
-    else:
-        details.append("auth.json not found")
 
+    checked_paths = ", ".join(str(path) for path in auth_file_candidates())
     return VerificationResult(
         auth_mode="invalid",
         valid=False,
-        source=source,
-        details=details,
+        source="missing",
+        details=[f"OAuth credential file not found. Checked: {checked_paths}"],
         next_step=(
-            "Complete the browser-based OAuth login on a machine with browser "
-            "access, or set OPENAI_API_KEY as the fallback."
+            "Run `codex` interactively on elis-server to refresh OAuth, or set "
+            "OPENAI_API_KEY as the fallback."
         ),
     )
 
@@ -221,9 +264,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     sys.stdout.write(output)
 
-    if result.valid:
-        return 0
-    return 1
+    return 0 if result.valid else 1
 
 
 if __name__ == "__main__":
