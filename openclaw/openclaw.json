@@ -4,9 +4,28 @@
       {
         "id": "pm",
         "workspace": "/home/samurai/openclaw/workspace-pm",
-        "model": "openai/gpt-5-mini",
+        "model": "deepseek/deepseek-v4-pro",
         "subagents": {
-          "allowAgents": ["harvest-impl-a", "harvest-val-b", "screen-impl-b", "screen-val-a", "extract-impl-a", "extract-val-b", "synth-impl-b", "synth-val-a", "prisma-impl-b", "prisma-val-a", "prog-impl-a", "prog-impl-b", "prog-val-a", "prog-val-b", "infra-impl-a", "infra-impl-b", "infra-val-a", "infra-val-b"]
+          "allowAgents": [
+            "harvest-impl-a",
+            "harvest-val-b",
+            "screen-impl-b",
+            "screen-val-a",
+            "extract-impl-a",
+            "extract-val-b",
+            "synth-impl-b",
+            "synth-val-a",
+            "prisma-impl-b",
+            "prisma-val-a",
+            "prog-impl-a",
+            "prog-impl-b",
+            "prog-val-a",
+            "prog-val-b",
+            "infra-impl-a",
+            "infra-impl-b",
+            "infra-val-a",
+            "infra-val-b"
+          ]
         },
         "tools": {
           "elevated": {
@@ -22,17 +41,17 @@
       {
         "id": "harvest-impl-a",
         "workspace": "/home/samurai/openclaw/workspace-slr-harvest",
-        "model": "deepseek/deepseek-v4-pro"
+        "model": "qwen/qwen3-coder-flash"
       },
       {
         "id": "harvest-val-b",
         "workspace": "/home/samurai/openclaw/workspace-slr-harvest",
-        "model": "openrouter/xiaomi/mimo-v2.5-pro"
+        "model": "z-ai/glm-5.1"
       },
       {
         "id": "screen-impl-b",
         "workspace": "/home/samurai/openclaw/workspace-slr-screen",
-        "model": "openrouter/xiaomi/mimo-v2.5-pro"
+        "model": "deepseek/deepseek-v4-flash"
       },
       {
         "id": "screen-val-a",
@@ -42,17 +61,17 @@
       {
         "id": "extract-impl-a",
         "workspace": "/home/samurai/openclaw/workspace-slr-extract",
-        "model": "deepseek/deepseek-v4-pro"
+        "model": "qwen/qwen3-coder-flash"
       },
       {
         "id": "extract-val-b",
         "workspace": "/home/samurai/openclaw/workspace-slr-extract",
-        "model": "openrouter/xiaomi/mimo-v2.5-pro"
+        "model": "z-ai/glm-5.1"
       },
       {
         "id": "synth-impl-b",
         "workspace": "/home/samurai/openclaw/workspace-slr-synth",
-        "model": "openrouter/xiaomi/mimo-v2.5-pro"
+        "model": "deepseek/deepseek-v4-flash"
       },
       {
         "id": "synth-val-a",
@@ -62,7 +81,7 @@
       {
         "id": "prisma-impl-b",
         "workspace": "/home/samurai/openclaw/workspace-slr-prisma",
-        "model": "openrouter/xiaomi/mimo-v2.5-pro"
+        "model": "deepseek/deepseek-v4-flash"
       },
       {
         "id": "prisma-val-a",
@@ -72,12 +91,12 @@
       {
         "id": "prog-impl-a",
         "workspace": "/home/samurai/openclaw/workspace-prog-impl",
-        "model": "deepseek/deepseek-v4-pro"
+        "model": "qwen/qwen3-coder-flash"
       },
       {
         "id": "prog-impl-b",
         "workspace": "/home/samurai/openclaw/workspace-prog-impl",
-        "model": "openrouter/xiaomi/mimo-v2.5-pro"
+        "model": "deepseek/deepseek-v4-flash"
       },
       {
         "id": "prog-val-a",
@@ -87,17 +106,17 @@
       {
         "id": "prog-val-b",
         "workspace": "/home/samurai/openclaw/workspace-prog-val",
-        "model": "openrouter/xiaomi/mimo-v2.5-pro"
+        "model": "z-ai/glm-5.1"
       },
       {
         "id": "infra-impl-a",
         "workspace": "/home/samurai/openclaw/workspace-infra-impl",
-        "model": "deepseek/deepseek-v4-pro"
+        "model": "qwen/qwen3-coder-flash"
       },
       {
         "id": "infra-impl-b",
         "workspace": "/home/samurai/openclaw/workspace-infra-impl",
-        "model": "openrouter/xiaomi/mimo-v2.5-pro"
+        "model": "deepseek/deepseek-v4-flash"
       },
       {
         "id": "infra-val-a",
@@ -107,7 +126,7 @@
       {
         "id": "infra-val-b",
         "workspace": "/home/samurai/openclaw/workspace-infra-val",
-        "model": "openrouter/xiaomi/mimo-v2.5-pro"
+        "model": "z-ai/glm-5.1"
       }
     ]
   },
