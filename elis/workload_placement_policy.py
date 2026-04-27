@@ -42,6 +42,7 @@ DEFAULT_WORKLOAD_PLACEMENT_POLICY = WorkloadPlacementPolicy(
     max_local_concurrency=1,
     local_workload_classes=(
         "screening",
+        "lightweight-support",
         "metadata-triage",
         "bibliometric-preanalysis",
     ),

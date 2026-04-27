@@ -43,6 +43,7 @@ def test_ac2_pm_can_report_local_vs_off_host_workload_classes() -> None:
     report = report_workload_classes()
     assert report["local_workload_classes"] == [
         "screening",
+        "lightweight-support",
         "metadata-triage",
         "bibliometric-preanalysis",
     ]

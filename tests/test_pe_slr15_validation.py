@@ -153,6 +153,7 @@ def test_phase_surface_and_workload_reports_remain_consistent() -> None:
     assert report["phase_execution_surfaces"] == report_execution_surfaces()
     assert report["local_workload_classes"] == [
         "screening",
+        "lightweight-support",
         "metadata-triage",
         "bibliometric-preanalysis",
     ]

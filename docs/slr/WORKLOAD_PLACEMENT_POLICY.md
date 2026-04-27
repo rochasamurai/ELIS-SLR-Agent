@@ -11,6 +11,7 @@ work remains within host capacity while Extraction and Synthesis stay off-host.
 - Maximum local concurrency: `1`
 - Allowed local workload classes:
   - `screening`
+  - `lightweight-support`
   - `metadata-triage`
   - `bibliometric-preanalysis`
 - Off-host-only workload classes:
@@ -55,4 +56,3 @@ PM can report workload placement using `report_workload_classes()` which returns
 ```bash
 python -m pytest tests/test_workload_placement_policy.py -v
 ```
-
