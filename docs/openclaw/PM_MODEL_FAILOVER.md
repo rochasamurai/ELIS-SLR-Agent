@@ -10,13 +10,13 @@
 Primary PM model:
 
 ```text
-anthropic/claude-opus-4-6
+openrouter/deepseek/deepseek-v4-pro
 ```
 
 Approved contingency model:
 
 ```text
-openai/gpt-5.4
+openrouter/deepseek/deepseek-v3.2
 ```
 
 Use the contingency model when the primary model is unavailable due to:
@@ -31,7 +31,7 @@ Use the contingency model when the primary model is unavailable due to:
 ## Best Practice
 
 - Prefer keeping PM on the primary model during normal operation.
-- Treat failover to `gpt-5.4` as degraded mode.
+- Treat failover to `deepseek-v3.2` as degraded mode.
 - Record the switch in the operational handoff or incident note.
 - Do not enable automatic fallback until PM-only fallback scope is validated on the installed OpenClaw build.
 
@@ -43,7 +43,7 @@ Run on `elis-server` as the OpenClaw host user:
 
 ```bash
 openclaw config get agents.list --json
-openclaw config set agents.list.0.model openai/gpt-5.4
+openclaw config set agents.list.0.model openrouter/deepseek/deepseek-v3.2
 systemctl --user restart openclaw-gateway
 openclaw doctor
 openclaw channels status --probe
@@ -52,7 +52,7 @@ openclaw config get agents.list --json
 
 Expected result:
 
-- PM agent model shows `openai/gpt-5.4`
+- PM agent model shows `openrouter/deepseek/deepseek-v3.2`
 - `openclaw-gateway.service` remains active
 - Discord and Telegram still report `works`
 
@@ -60,10 +60,10 @@ Expected result:
 
 ## Restore Primary Model
 
-After Anthropic access is restored:
+After primary access is restored:
 
 ```bash
-openclaw config set agents.list.0.model anthropic/claude-opus-4-6
+openclaw config set agents.list.0.model openrouter/deepseek/deepseek-v4-pro
 systemctl --user restart openclaw-gateway
 openclaw doctor
 openclaw channels status --probe

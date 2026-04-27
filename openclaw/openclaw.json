@@ -4,7 +4,29 @@
       {
         "id": "pm",
         "workspace": "/home/samurai/openclaw/workspace-pm",
-        "model": "openai/gpt-5-mini",
+        "model": "deepseek/deepseek-v4-pro",
+        "subagents": {
+          "allowAgents": [
+            "harvest-impl-a",
+            "harvest-val-b",
+            "screen-impl-b",
+            "screen-val-a",
+            "extract-impl-a",
+            "extract-val-b",
+            "synth-impl-b",
+            "synth-val-a",
+            "prisma-impl-b",
+            "prisma-val-a",
+            "prog-impl-a",
+            "prog-impl-b",
+            "prog-val-a",
+            "prog-val-b",
+            "infra-impl-a",
+            "infra-impl-b",
+            "infra-val-a",
+            "infra-val-b"
+          ]
+        },
         "tools": {
           "elevated": {
             "enabled": true,
@@ -19,92 +41,92 @@
       {
         "id": "harvest-impl-a",
         "workspace": "/home/samurai/openclaw/workspace-slr-harvest",
-        "model": "openai/gpt-5.1-codex"
+        "model": "qwen/qwen3-coder-flash"
       },
       {
         "id": "harvest-val-b",
         "workspace": "/home/samurai/openclaw/workspace-slr-harvest",
-        "model": "anthropic/claude-sonnet-4-6"
+        "model": "z-ai/glm-5.1"
       },
       {
         "id": "screen-impl-b",
         "workspace": "/home/samurai/openclaw/workspace-slr-screen",
-        "model": "anthropic/claude-opus-4-6"
+        "model": "deepseek/deepseek-v4-flash"
       },
       {
         "id": "screen-val-a",
         "workspace": "/home/samurai/openclaw/workspace-slr-screen",
-        "model": "openai/gpt-5.1-codex"
+        "model": "deepseek/deepseek-v4-pro"
       },
       {
         "id": "extract-impl-a",
         "workspace": "/home/samurai/openclaw/workspace-slr-extract",
-        "model": "openai/gpt-5.1-codex"
+        "model": "qwen/qwen3-coder-flash"
       },
       {
         "id": "extract-val-b",
         "workspace": "/home/samurai/openclaw/workspace-slr-extract",
-        "model": "anthropic/claude-opus-4-6"
+        "model": "z-ai/glm-5.1"
       },
       {
         "id": "synth-impl-b",
         "workspace": "/home/samurai/openclaw/workspace-slr-synth",
-        "model": "anthropic/claude-opus-4-6"
+        "model": "deepseek/deepseek-v4-flash"
       },
       {
         "id": "synth-val-a",
         "workspace": "/home/samurai/openclaw/workspace-slr-synth",
-        "model": "openai/gpt-5.1-codex"
+        "model": "deepseek/deepseek-v4-pro"
       },
       {
         "id": "prisma-impl-b",
         "workspace": "/home/samurai/openclaw/workspace-slr-prisma",
-        "model": "anthropic/claude-sonnet-4-6"
+        "model": "deepseek/deepseek-v4-flash"
       },
       {
         "id": "prisma-val-a",
         "workspace": "/home/samurai/openclaw/workspace-slr-prisma",
-        "model": "openai/gpt-5.1-codex"
+        "model": "deepseek/deepseek-v4-pro"
       },
       {
         "id": "prog-impl-a",
         "workspace": "/home/samurai/openclaw/workspace-prog-impl",
-        "model": "openai/gpt-5.1-codex"
+        "model": "qwen/qwen3-coder-flash"
       },
       {
         "id": "prog-impl-b",
         "workspace": "/home/samurai/openclaw/workspace-prog-impl",
-        "model": "anthropic/claude-sonnet-4-6"
+        "model": "deepseek/deepseek-v4-flash"
       },
       {
         "id": "prog-val-a",
         "workspace": "/home/samurai/openclaw/workspace-prog-val",
-        "model": "openai/gpt-5.1-codex"
+        "model": "deepseek/deepseek-v4-pro"
       },
       {
         "id": "prog-val-b",
         "workspace": "/home/samurai/openclaw/workspace-prog-val",
-        "model": "anthropic/claude-sonnet-4-6"
+        "model": "z-ai/glm-5.1"
       },
       {
         "id": "infra-impl-a",
         "workspace": "/home/samurai/openclaw/workspace-infra-impl",
-        "model": "openai/gpt-5.1-codex"
+        "model": "qwen/qwen3-coder-flash"
       },
       {
         "id": "infra-impl-b",
         "workspace": "/home/samurai/openclaw/workspace-infra-impl",
-        "model": "anthropic/claude-sonnet-4-6"
+        "model": "deepseek/deepseek-v4-flash"
       },
       {
         "id": "infra-val-a",
         "workspace": "/home/samurai/openclaw/workspace-infra-val",
-        "model": "openai/gpt-5.1-codex"
+        "model": "deepseek/deepseek-v4-pro"
       },
       {
         "id": "infra-val-b",
         "workspace": "/home/samurai/openclaw/workspace-infra-val",
-        "model": "anthropic/claude-sonnet-4-6"
+        "model": "z-ai/glm-5.1"
       }
     ]
   },

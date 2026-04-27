@@ -316,13 +316,13 @@ The PM Agent should:
 
 Recommended PM model policy:
 
-- primary: `anthropic/claude-opus-4-6`
-- contingency: `openai/gpt-5.4`
+- primary: `openrouter/deepseek/deepseek-v4-pro`
+- contingency: `openrouter/deepseek/deepseek-v3.2`
 
 Best-practice rule:
 
 - do not enable automatic fallback unless the installed OpenClaw build is verified to scope fallback safely for PM
-- until that is proven, treat `GPT-5.4` as a manual operator failover for PM only
+- until that is proven, treat `deepseek-v3.2` as a manual operator failover for PM only
 - record the switch as degraded mode in the operational log or handoff
 
 ---
