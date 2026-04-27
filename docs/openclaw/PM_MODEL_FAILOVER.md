@@ -10,7 +10,7 @@
 Primary PM model:
 
 ```text
-anthropic/claude-opus-4-6
+openrouter/xiaomi/mimo-v2.5-pro
 ```
 
 Approved contingency model:
@@ -60,10 +60,10 @@ Expected result:
 
 ## Restore Primary Model
 
-After Anthropic access is restored:
+After primary access is restored:
 
 ```bash
-openclaw config set agents.list.0.model anthropic/claude-opus-4-6
+openclaw config set agents.list.0.model openrouter/xiaomi/mimo-v2.5-pro
 systemctl --user restart openclaw-gateway
 openclaw doctor
 openclaw channels status --probe

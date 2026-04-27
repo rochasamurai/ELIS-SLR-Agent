@@ -59,7 +59,7 @@ All 19 registered agents are reviewed. The plan is complete when every agent has
 || Domain | infra |
 || Implementer | `infra-impl-a` |
 || Validator | `infra-val-b` |
-|| Agents covered | All Codex agents (`openai/gpt-5.1-codex`); all Claude Code agents (`anthropic/claude-*`) |
+|| Agents covered | All Codex agents (`openai/gpt-5.1-codex`); all non-CODEX agents in the active roster |
 || Depends On | — |
 || Status | Planned |
 

@@ -19,27 +19,40 @@ deployment run is executed.
 
 ## 2. Source-Controlled Runtime Target (19 agents)
 
-| ID | Domain | Role | Model | Workspace |
-|---|---|---|---|---|
-| `pm` | PM | Orchestrator | `openai/gpt-5-mini` | `/home/samurai/openclaw/workspace-pm` |
-| `prog-impl-codex` | Programs | Implementer | `openai/gpt-5.1-codex` | `/home/samurai/openclaw/workspace-prog-impl` |
-| `prog-impl-claude` | Programs | Implementer | `anthropic/claude-sonnet-4-6` | `/home/samurai/openclaw/workspace-prog-impl` |
-| `prog-val-codex` | Programs | Validator | `openai/gpt-5.1-codex` | `/home/samurai/openclaw/workspace-prog-val` |
-| `prog-val-claude` | Programs | Validator | `anthropic/claude-sonnet-4-6` | `/home/samurai/openclaw/workspace-prog-val` |
-| `infra-impl-codex` | Infrastructure | Implementer | `openai/gpt-5.1-codex` | `/home/samurai/openclaw/workspace-infra-impl` |
-| `infra-impl-claude` | Infrastructure | Implementer | `anthropic/claude-sonnet-4-6` | `/home/samurai/openclaw/workspace-infra-impl` |
-| `infra-val-codex` | Infrastructure | Validator | `openai/gpt-5.1-codex` | `/home/samurai/openclaw/workspace-infra-val` |
-| `infra-val-claude` | Infrastructure | Validator | `anthropic/claude-sonnet-4-6` | `/home/samurai/openclaw/workspace-infra-val` |
-| `harvest-impl-codex` | Harvest | Implementer | `openai/gpt-5.1-codex` | `/home/samurai/openclaw/workspace-slr-harvest` |
-| `harvest-val-claude` | Harvest | Validator | `anthropic/claude-sonnet-4-6` | `/home/samurai/openclaw/workspace-slr-harvest` |
-| `screen-impl-claude` | Screen | Implementer | `anthropic/claude-opus-4-6` | `/home/samurai/openclaw/workspace-slr-screen` |
-| `screen-val-codex` | Screen | Validator | `openai/gpt-5.1-codex` | `/home/samurai/openclaw/workspace-slr-screen` |
-| `extract-impl-codex` | Extraction | Implementer | `openai/gpt-5.1-codex` | `/home/samurai/openclaw/workspace-slr-extract` |
-| `extract-val-claude` | Extraction | Validator | `anthropic/claude-opus-4-6` | `/home/samurai/openclaw/workspace-slr-extract` |
-| `synth-impl-claude` | Synthesis | Implementer | `anthropic/claude-opus-4-6` | `/home/samurai/openclaw/workspace-slr-synth` |
-| `synth-val-codex` | Synthesis | Validator | `openai/gpt-5.1-codex` | `/home/samurai/openclaw/workspace-slr-synth` |
-| `prisma-impl-claude` | PRISMA | Implementer | `anthropic/claude-sonnet-4-6` | `/home/samurai/openclaw/workspace-slr-prisma` |
-| `prisma-val-codex` | PRISMA | Validator | `openai/gpt-5.1-codex` | `/home/samurai/openclaw/workspace-slr-prisma` |
+### PM
+- `pm` — Orchestrator — `openai/gpt-5-mini` — `/home/samurai/openclaw/workspace-pm`
+
+### Prog
+- `prog-impl-a` — Implementer — `deepseek/deepseek-v4-pro` — `/home/samurai/openclaw/workspace-prog-impl`
+- `prog-impl-b` — Implementer — `openrouter/xiaomi/mimo-v2.5-pro` — `/home/samurai/openclaw/workspace-prog-impl`
+- `prog-val-a` — Validator — `deepseek/deepseek-v4-pro` — `/home/samurai/openclaw/workspace-prog-val`
+- `prog-val-b` — Validator — `openrouter/xiaomi/mimo-v2.5-pro` — `/home/samurai/openclaw/workspace-prog-val`
+
+### Infra
+- `infra-impl-a` — Implementer — `deepseek/deepseek-v4-pro` — `/home/samurai/openclaw/workspace-infra-impl`
+- `infra-impl-b` — Implementer — `openrouter/xiaomi/mimo-v2.5-pro` — `/home/samurai/openclaw/workspace-infra-impl`
+- `infra-val-a` — Validator — `deepseek/deepseek-v4-pro` — `/home/samurai/openclaw/workspace-infra-val`
+- `infra-val-b` — Validator — `openrouter/xiaomi/mimo-v2.5-pro` — `/home/samurai/openclaw/workspace-infra-val`
+
+### SLR — Harvest
+- `harvest-impl-a` — Implementer — `deepseek/deepseek-v4-pro` — `/home/samurai/openclaw/workspace-slr-harvest`
+- `harvest-val-b` — Validator — `openrouter/xiaomi/mimo-v2.5-pro` — `/home/samurai/openclaw/workspace-slr-harvest`
+
+### SLR — Screen
+- `screen-impl-b` — Implementer — `openrouter/xiaomi/mimo-v2.5-pro` — `/home/samurai/openclaw/workspace-slr-screen`
+- `screen-val-a` — Validator — `deepseek/deepseek-v4-pro` — `/home/samurai/openclaw/workspace-slr-screen`
+
+### SLR — Extract
+- `extract-impl-a` — Implementer — `deepseek/deepseek-v4-pro` — `/home/samurai/openclaw/workspace-slr-extract`
+- `extract-val-b` — Validator — `openrouter/xiaomi/mimo-v2.5-pro` — `/home/samurai/openclaw/workspace-slr-extract`
+
+### SLR — Synth
+- `synth-impl-b` — Implementer — `openrouter/xiaomi/mimo-v2.5-pro` — `/home/samurai/openclaw/workspace-slr-synth`
+- `synth-val-a` — Validator — `deepseek/deepseek-v4-pro` — `/home/samurai/openclaw/workspace-slr-synth`
+
+### SLR — Prisma
+- `prisma-impl-b` — Implementer — `openrouter/xiaomi/mimo-v2.5-pro` — `/home/samurai/openclaw/workspace-slr-prisma`
+- `prisma-val-a` — Validator — `deepseek/deepseek-v4-pro` — `/home/samurai/openclaw/workspace-slr-prisma`
 
 Notes:
 

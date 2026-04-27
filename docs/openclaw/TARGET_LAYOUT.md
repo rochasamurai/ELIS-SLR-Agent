@@ -316,7 +316,7 @@ The PM Agent should:
 
 Recommended PM model policy:
 
-- primary: `anthropic/claude-opus-4-6`
+- primary: `openrouter/xiaomi/mimo-v2.5-pro`
 - contingency: `openai/gpt-5.4`
 
 Best-practice rule:
