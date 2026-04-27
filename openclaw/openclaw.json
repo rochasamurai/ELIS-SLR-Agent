@@ -4,7 +4,7 @@
       {
         "id": "pm",
         "workspace": "/home/samurai/openclaw/workspace-pm",
-        "model": "deepseek/deepseek-v4-pro",
+        "model": "openrouter/deepseek/deepseek-v4-pro",
         "subagents": {
           "allowAgents": [
             "harvest-impl-a",
@@ -41,92 +41,92 @@
       {
         "id": "harvest-impl-a",
         "workspace": "/home/samurai/openclaw/workspace-slr-harvest",
-        "model": "qwen/qwen3-coder-flash"
+        "model": "openrouter/qwen/qwen3-coder-flash"
       },
       {
         "id": "harvest-val-b",
         "workspace": "/home/samurai/openclaw/workspace-slr-harvest",
-        "model": "z-ai/glm-5.1"
+        "model": "openrouter/z-ai/glm-5.1"
       },
       {
         "id": "screen-impl-b",
         "workspace": "/home/samurai/openclaw/workspace-slr-screen",
-        "model": "deepseek/deepseek-v4-flash"
+        "model": "openrouter/deepseek/deepseek-v4-flash"
       },
       {
         "id": "screen-val-a",
         "workspace": "/home/samurai/openclaw/workspace-slr-screen",
-        "model": "deepseek/deepseek-v4-pro"
+        "model": "openrouter/deepseek/deepseek-v4-pro"
       },
       {
         "id": "extract-impl-a",
         "workspace": "/home/samurai/openclaw/workspace-slr-extract",
-        "model": "qwen/qwen3-coder-flash"
+        "model": "openrouter/qwen/qwen3-coder-flash"
       },
       {
         "id": "extract-val-b",
         "workspace": "/home/samurai/openclaw/workspace-slr-extract",
-        "model": "z-ai/glm-5.1"
+        "model": "openrouter/z-ai/glm-5.1"
       },
       {
         "id": "synth-impl-b",
         "workspace": "/home/samurai/openclaw/workspace-slr-synth",
-        "model": "deepseek/deepseek-v4-flash"
+        "model": "openrouter/deepseek/deepseek-v4-flash"
       },
       {
         "id": "synth-val-a",
         "workspace": "/home/samurai/openclaw/workspace-slr-synth",
-        "model": "deepseek/deepseek-v4-pro"
+        "model": "openrouter/deepseek/deepseek-v4-pro"
       },
       {
         "id": "prisma-impl-b",
         "workspace": "/home/samurai/openclaw/workspace-slr-prisma",
-        "model": "deepseek/deepseek-v4-flash"
+        "model": "openrouter/deepseek/deepseek-v4-flash"
       },
       {
         "id": "prisma-val-a",
         "workspace": "/home/samurai/openclaw/workspace-slr-prisma",
-        "model": "deepseek/deepseek-v4-pro"
+        "model": "openrouter/deepseek/deepseek-v4-pro"
       },
       {
         "id": "prog-impl-a",
         "workspace": "/home/samurai/openclaw/workspace-prog-impl",
-        "model": "qwen/qwen3-coder-flash"
+        "model": "openrouter/qwen/qwen3-coder-flash"
       },
       {
         "id": "prog-impl-b",
         "workspace": "/home/samurai/openclaw/workspace-prog-impl",
-        "model": "deepseek/deepseek-v4-flash"
+        "model": "openrouter/deepseek/deepseek-v4-flash"
       },
       {
         "id": "prog-val-a",
         "workspace": "/home/samurai/openclaw/workspace-prog-val",
-        "model": "deepseek/deepseek-v4-pro"
+        "model": "openrouter/deepseek/deepseek-v4-pro"
       },
       {
         "id": "prog-val-b",
         "workspace": "/home/samurai/openclaw/workspace-prog-val",
-        "model": "z-ai/glm-5.1"
+        "model": "openrouter/z-ai/glm-5.1"
       },
       {
         "id": "infra-impl-a",
         "workspace": "/home/samurai/openclaw/workspace-infra-impl",
-        "model": "qwen/qwen3-coder-flash"
+        "model": "openrouter/qwen/qwen3-coder-flash"
       },
       {
         "id": "infra-impl-b",
         "workspace": "/home/samurai/openclaw/workspace-infra-impl",
-        "model": "deepseek/deepseek-v4-flash"
+        "model": "openrouter/deepseek/deepseek-v4-flash"
       },
       {
         "id": "infra-val-a",
         "workspace": "/home/samurai/openclaw/workspace-infra-val",
-        "model": "deepseek/deepseek-v4-pro"
+        "model": "openrouter/deepseek/deepseek-v4-pro"
       },
       {
         "id": "infra-val-b",
         "workspace": "/home/samurai/openclaw/workspace-infra-val",
-        "model": "z-ai/glm-5.1"
+        "model": "openrouter/z-ai/glm-5.1"
       }
     ]
   },
