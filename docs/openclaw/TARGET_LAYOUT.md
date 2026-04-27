@@ -316,8 +316,8 @@ The PM Agent should:
 
 Recommended PM model policy:
 
-- primary: `deepseek/deepseek-v4-pro`
-- contingency: `deepseek/deepseek-v3.2`
+- primary: `openrouter/deepseek/deepseek-v4-pro`
+- contingency: `openrouter/deepseek/deepseek-v3.2`
 
 Best-practice rule:
 

@@ -22,16 +22,16 @@ PM coordinates and records decisions.
 The first-version configuration uses these model roles:
 
 ```txt
-PM:           deepseek/deepseek-v4-pro
-Fallback:     deepseek/deepseek-v3.2
+PM:           openrouter/deepseek/deepseek-v4-pro
+Fallback:     openrouter/deepseek/deepseek-v3.2
 
-Implementers: qwen/qwen3-coder-flash
-              deepseek/deepseek-v4-flash
+Implementers: openrouter/qwen/qwen3-coder-flash
+              openrouter/deepseek/deepseek-v4-flash
 
-Validators:   deepseek/deepseek-v4-pro
-              z-ai/glm-5.1
+Validators:   openrouter/deepseek/deepseek-v4-pro
+              openrouter/z-ai/glm-5.1
 
-Escalation:   xiaomi/mimo-v2.5-pro
+Escalation:   openrouter/xiaomi/mimo-v2.5-pro
 ```
 
 This structure is functional and has three advantages:
@@ -48,8 +48,8 @@ This structure is functional and has three advantages:
 
 ```txt
 pm
-Primary:  deepseek/deepseek-v4-pro
-Fallback: deepseek/deepseek-v3.2
+Primary:  openrouter/deepseek/deepseek-v4-pro
+Fallback: openrouter/deepseek/deepseek-v3.2
 ```
 
 **Role:** coordination, task assignment, handoff review, validator routing, release governance, escalation decisions.
@@ -61,8 +61,8 @@ Fallback: deepseek/deepseek-v3.2
 ### 2.2 Implementer Agents
 
 ```txt
-impl-a: qwen/qwen3-coder-flash
-impl-b: deepseek/deepseek-v4-flash
+impl-a: openrouter/qwen/qwen3-coder-flash
+impl-b: openrouter/deepseek/deepseek-v4-flash
 ```
 
 **Role:** repository edits, workflow changes, implementation tasks, coding repairs, documentation updates, test additions.
@@ -74,8 +74,8 @@ impl-b: deepseek/deepseek-v4-flash
 ### 2.3 Validator Agents
 
 ```txt
-val-a: deepseek/deepseek-v4-pro
-val-b: z-ai/glm-5.1
+val-a: openrouter/deepseek/deepseek-v4-pro
+val-b: openrouter/z-ai/glm-5.1
 ```
 
 **Role:** independent review, technical validation, deterministic behaviour checks, schema/manifest review, CI review, release-gate review.
@@ -87,7 +87,7 @@ val-b: z-ai/glm-5.1
 ### 2.4 Escalation Agent
 
 ```txt
-escalation-reviewer: xiaomi/mimo-v2.5-pro
+escalation-reviewer: openrouter/xiaomi/mimo-v2.5-pro
 ```
 
 **Role:** arbitration, conflict resolution, high-risk review, repeated failure review, PM-requested independent judgement.
@@ -118,8 +118,8 @@ Therefore, MiMo-V2.5-Pro should be configured as a named escalation agent, not m
 ### 4.1 PM
 
 ```txt
-pm — deepseek/deepseek-v4-pro
-fallback — deepseek/deepseek-v3.2
+pm — openrouter/deepseek/deepseek-v4-pro
+fallback — openrouter/deepseek/deepseek-v3.2
 escalates to — escalation-reviewer
 ```
 
@@ -128,11 +128,11 @@ escalates to — escalation-reviewer
 ### 4.2 Prog — Programs
 
 ```txt
-prog-impl-a — qwen/qwen3-coder-flash
-prog-impl-b — deepseek/deepseek-v4-flash
+prog-impl-a — openrouter/qwen/qwen3-coder-flash
+prog-impl-b — openrouter/deepseek/deepseek-v4-flash
 
-prog-val-a  — deepseek/deepseek-v4-pro
-prog-val-b  — z-ai/glm-5.1
+prog-val-a  — openrouter/deepseek/deepseek-v4-pro
+prog-val-b  — openrouter/z-ai/glm-5.1
 ```
 
 ---
@@ -140,11 +140,11 @@ prog-val-b  — z-ai/glm-5.1
 ### 4.3 Infra — Infrastructure
 
 ```txt
-infra-impl-a — qwen/qwen3-coder-flash
-infra-impl-b — deepseek/deepseek-v4-flash
+infra-impl-a — openrouter/qwen/qwen3-coder-flash
+infra-impl-b — openrouter/deepseek/deepseek-v4-flash
 
-infra-val-a  — deepseek/deepseek-v4-pro
-infra-val-b  — z-ai/glm-5.1
+infra-val-a  — openrouter/deepseek/deepseek-v4-pro
+infra-val-b  — openrouter/z-ai/glm-5.1
 ```
 
 ---
@@ -152,11 +152,11 @@ infra-val-b  — z-ai/glm-5.1
 ### 4.4 SLR — Harvest
 
 ```txt
-harvest-impl-a — deepseek/deepseek-v4-flash
-harvest-impl-b — qwen/qwen3-coder-flash
+harvest-impl-a — openrouter/deepseek/deepseek-v4-flash
+harvest-impl-b — openrouter/qwen/qwen3-coder-flash
 
-harvest-val-a  — deepseek/deepseek-v4-pro
-harvest-val-b  — z-ai/glm-5.1
+harvest-val-a  — openrouter/deepseek/deepseek-v4-pro
+harvest-val-b  — openrouter/z-ai/glm-5.1
 ```
 
 ---
@@ -164,11 +164,11 @@ harvest-val-b  — z-ai/glm-5.1
 ### 4.5 SLR — Screen
 
 ```txt
-screen-impl-a — deepseek/deepseek-v4-flash
-screen-impl-b — qwen/qwen3-coder-flash
+screen-impl-a — openrouter/deepseek/deepseek-v4-flash
+screen-impl-b — openrouter/qwen/qwen3-coder-flash
 
-screen-val-a  — deepseek/deepseek-v4-pro
-screen-val-b  — z-ai/glm-5.1
+screen-val-a  — openrouter/deepseek/deepseek-v4-pro
+screen-val-b  — openrouter/z-ai/glm-5.1
 ```
 
 ---
@@ -176,11 +176,11 @@ screen-val-b  — z-ai/glm-5.1
 ### 4.6 SLR — Extract
 
 ```txt
-extract-impl-a — qwen/qwen3-coder-flash
-extract-impl-b — deepseek/deepseek-v4-flash
+extract-impl-a — openrouter/qwen/qwen3-coder-flash
+extract-impl-b — openrouter/deepseek/deepseek-v4-flash
 
-extract-val-a  — deepseek/deepseek-v4-pro
-extract-val-b  — z-ai/glm-5.1
+extract-val-a  — openrouter/deepseek/deepseek-v4-pro
+extract-val-b  — openrouter/z-ai/glm-5.1
 ```
 
 ---
@@ -188,11 +188,11 @@ extract-val-b  — z-ai/glm-5.1
 ### 4.7 SLR — Synth
 
 ```txt
-synth-impl-a — deepseek/deepseek-v4-flash
-synth-impl-b — qwen/qwen3-coder-flash
+synth-impl-a — openrouter/deepseek/deepseek-v4-flash
+synth-impl-b — openrouter/qwen/qwen3-coder-flash
 
-synth-val-a  — deepseek/deepseek-v4-pro
-synth-val-b  — z-ai/glm-5.1
+synth-val-a  — openrouter/deepseek/deepseek-v4-pro
+synth-val-b  — openrouter/z-ai/glm-5.1
 ```
 
 ---
@@ -200,11 +200,11 @@ synth-val-b  — z-ai/glm-5.1
 ### 4.8 SLR — Prisma
 
 ```txt
-prisma-impl-a — deepseek/deepseek-v4-flash
-prisma-impl-b — qwen/qwen3-coder-flash
+prisma-impl-a — openrouter/deepseek/deepseek-v4-flash
+prisma-impl-b — openrouter/qwen/qwen3-coder-flash
 
-prisma-val-a  — deepseek/deepseek-v4-pro
-prisma-val-b  — z-ai/glm-5.1
+prisma-val-a  — openrouter/deepseek/deepseek-v4-pro
+prisma-val-b  — openrouter/z-ai/glm-5.1
 ```
 
 ---
@@ -212,7 +212,7 @@ prisma-val-b  — z-ai/glm-5.1
 ### 4.9 Escalation
 
 ```txt
-escalation-reviewer — xiaomi/mimo-v2.5-pro
+escalation-reviewer — openrouter/xiaomi/mimo-v2.5-pro
 ```
 
 ---
@@ -229,33 +229,33 @@ Use this as the conceptual model policy in `openclaw.json` or the equivalent Ope
   "agents": {
     "defaults": {
       "model": {
-        "primary": "deepseek/deepseek-v4-pro",
+        "primary": "openrouter/deepseek/deepseek-v4-pro",
         "fallbacks": [
-          "deepseek/deepseek-v3.2"
+          "openrouter/deepseek/deepseek-v3.2"
         ]
       },
       "models": {
-        "deepseek/deepseek-v4-pro": {
+        "openrouter/deepseek/deepseek-v4-pro": {
           "alias": "deepseek-v4-pro",
           "purpose": "PM coordination, high-quality validation, long-context reasoning"
         },
-        "deepseek/deepseek-v3.2": {
+        "openrouter/deepseek/deepseek-v3.2": {
           "alias": "deepseek-v3.2",
           "purpose": "PM fallback and lower-cost reasoning fallback"
         },
-        "deepseek/deepseek-v4-flash": {
+        "openrouter/deepseek/deepseek-v4-flash": {
           "alias": "deepseek-v4-flash",
           "purpose": "low-cost implementation, routine coding, SLR pipeline edits"
         },
-        "qwen/qwen3-coder-flash": {
+        "openrouter/qwen/qwen3-coder-flash": {
           "alias": "qwen3-coder-flash",
           "purpose": "coding-specialist implementation agent"
         },
-        "z-ai/glm-5.1": {
+        "openrouter/z-ai/glm-5.1": {
           "alias": "glm-5.1",
           "purpose": "independent validation, long-horizon code review, engineering-grade review"
         },
-        "xiaomi/mimo-v2.5-pro": {
+        "openrouter/xiaomi/mimo-v2.5-pro": {
           "alias": "mimo-v2.5-pro",
           "purpose": "escalation, arbitration, conflict resolution, high-risk review"
         }
@@ -277,9 +277,9 @@ This is a logical registry for agent assignment. The exact schema may need adjus
     "pm": {
       "role": "project-manager",
       "model": {
-        "primary": "deepseek/deepseek-v4-pro",
+        "primary": "openrouter/deepseek/deepseek-v4-pro",
         "fallbacks": [
-          "deepseek/deepseek-v3.2"
+          "openrouter/deepseek/deepseek-v3.2"
         ]
       },
       "can_call": [
@@ -317,126 +317,126 @@ This is a logical registry for agent assignment. The exact schema may need adjus
 
     "prog-impl-a": {
       "role": "programs-implementer",
-      "model": "qwen/qwen3-coder-flash"
+      "model": "openrouter/qwen/qwen3-coder-flash"
     },
     "prog-impl-b": {
       "role": "programs-implementer",
-      "model": "deepseek/deepseek-v4-flash"
+      "model": "openrouter/deepseek/deepseek-v4-flash"
     },
     "prog-val-a": {
       "role": "programs-validator",
-      "model": "deepseek/deepseek-v4-pro"
+      "model": "openrouter/deepseek/deepseek-v4-pro"
     },
     "prog-val-b": {
       "role": "programs-validator",
-      "model": "z-ai/glm-5.1"
+      "model": "openrouter/z-ai/glm-5.1"
     },
 
     "infra-impl-a": {
       "role": "infrastructure-implementer",
-      "model": "qwen/qwen3-coder-flash"
+      "model": "openrouter/qwen/qwen3-coder-flash"
     },
     "infra-impl-b": {
       "role": "infrastructure-implementer",
-      "model": "deepseek/deepseek-v4-flash"
+      "model": "openrouter/deepseek/deepseek-v4-flash"
     },
     "infra-val-a": {
       "role": "infrastructure-validator",
-      "model": "deepseek/deepseek-v4-pro"
+      "model": "openrouter/deepseek/deepseek-v4-pro"
     },
     "infra-val-b": {
       "role": "infrastructure-validator",
-      "model": "z-ai/glm-5.1"
+      "model": "openrouter/z-ai/glm-5.1"
     },
 
     "harvest-impl-a": {
       "role": "slr-harvest-implementer",
-      "model": "deepseek/deepseek-v4-flash"
+      "model": "openrouter/deepseek/deepseek-v4-flash"
     },
     "harvest-impl-b": {
       "role": "slr-harvest-implementer",
-      "model": "qwen/qwen3-coder-flash"
+      "model": "openrouter/qwen/qwen3-coder-flash"
     },
     "harvest-val-a": {
       "role": "slr-harvest-validator",
-      "model": "deepseek/deepseek-v4-pro"
+      "model": "openrouter/deepseek/deepseek-v4-pro"
     },
     "harvest-val-b": {
       "role": "slr-harvest-validator",
-      "model": "z-ai/glm-5.1"
+      "model": "openrouter/z-ai/glm-5.1"
     },
 
     "screen-impl-a": {
       "role": "slr-screen-implementer",
-      "model": "deepseek/deepseek-v4-flash"
+      "model": "openrouter/deepseek/deepseek-v4-flash"
     },
     "screen-impl-b": {
       "role": "slr-screen-implementer",
-      "model": "qwen/qwen3-coder-flash"
+      "model": "openrouter/qwen/qwen3-coder-flash"
     },
     "screen-val-a": {
       "role": "slr-screen-validator",
-      "model": "deepseek/deepseek-v4-pro"
+      "model": "openrouter/deepseek/deepseek-v4-pro"
     },
     "screen-val-b": {
       "role": "slr-screen-validator",
-      "model": "z-ai/glm-5.1"
+      "model": "openrouter/z-ai/glm-5.1"
     },
 
     "extract-impl-a": {
       "role": "slr-extract-implementer",
-      "model": "qwen/qwen3-coder-flash"
+      "model": "openrouter/qwen/qwen3-coder-flash"
     },
     "extract-impl-b": {
       "role": "slr-extract-implementer",
-      "model": "deepseek/deepseek-v4-flash"
+      "model": "openrouter/deepseek/deepseek-v4-flash"
     },
     "extract-val-a": {
       "role": "slr-extract-validator",
-      "model": "deepseek/deepseek-v4-pro"
+      "model": "openrouter/deepseek/deepseek-v4-pro"
     },
     "extract-val-b": {
       "role": "slr-extract-validator",
-      "model": "z-ai/glm-5.1"
+      "model": "openrouter/z-ai/glm-5.1"
     },
 
     "synth-impl-a": {
       "role": "slr-synthesis-implementer",
-      "model": "deepseek/deepseek-v4-flash"
+      "model": "openrouter/deepseek/deepseek-v4-flash"
     },
     "synth-impl-b": {
       "role": "slr-synthesis-implementer",
-      "model": "qwen/qwen3-coder-flash"
+      "model": "openrouter/qwen/qwen3-coder-flash"
     },
     "synth-val-a": {
       "role": "slr-synthesis-validator",
-      "model": "deepseek/deepseek-v4-pro"
+      "model": "openrouter/deepseek/deepseek-v4-pro"
     },
     "synth-val-b": {
       "role": "slr-synthesis-validator",
-      "model": "z-ai/glm-5.1"
+      "model": "openrouter/z-ai/glm-5.1"
     },
 
     "prisma-impl-a": {
       "role": "slr-prisma-implementer",
-      "model": "deepseek/deepseek-v4-flash"
+      "model": "openrouter/deepseek/deepseek-v4-flash"
     },
     "prisma-impl-b": {
       "role": "slr-prisma-implementer",
-      "model": "qwen/qwen3-coder-flash"
+      "model": "openrouter/qwen/qwen3-coder-flash"
     },
     "prisma-val-a": {
       "role": "slr-prisma-validator",
-      "model": "deepseek/deepseek-v4-pro"
+      "model": "openrouter/deepseek/deepseek-v4-pro"
     },
     "prisma-val-b": {
       "role": "slr-prisma-validator",
-      "model": "z-ai/glm-5.1"
+      "model": "openrouter/z-ai/glm-5.1"
     },
 
     "escalation-reviewer": {
       "role": "escalation-arbitrator",
-      "model": "xiaomi/mimo-v2.5-pro",
+      "model": "openrouter/xiaomi/mimo-v2.5-pro",
       "mode": "read-only-review",
       "called_by": [
         "pm"
@@ -612,19 +612,19 @@ The escalation reviewer should return `NEEDS HUMAN DECISION` when:
 
 ```txt
 PM
-- deepseek/deepseek-v4-pro
-- fallback: deepseek/deepseek-v3.2
+- openrouter/deepseek/deepseek-v4-pro
+- fallback: openrouter/deepseek/deepseek-v3.2
 
 Implementers
-- qwen/qwen3-coder-flash
-- deepseek/deepseek-v4-flash
+- openrouter/qwen/qwen3-coder-flash
+- openrouter/deepseek/deepseek-v4-flash
 
 Validators
-- deepseek/deepseek-v4-pro
-- z-ai/glm-5.1
+- openrouter/deepseek/deepseek-v4-pro
+- openrouter/z-ai/glm-5.1
 
 Escalation
-- xiaomi/mimo-v2.5-pro
+- openrouter/xiaomi/mimo-v2.5-pro
 ```
 
 ---

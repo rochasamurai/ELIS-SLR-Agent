@@ -10,13 +10,13 @@
 Primary PM model:
 
 ```text
-deepseek/deepseek-v4-pro
+openrouter/deepseek/deepseek-v4-pro
 ```
 
 Approved contingency model:
 
 ```text
-deepseek/deepseek-v3.2
+openrouter/deepseek/deepseek-v3.2
 ```
 
 Use the contingency model when the primary model is unavailable due to:
@@ -43,7 +43,7 @@ Run on `elis-server` as the OpenClaw host user:
 
 ```bash
 openclaw config get agents.list --json
-openclaw config set agents.list.0.model deepseek/deepseek-v3.2
+openclaw config set agents.list.0.model openrouter/deepseek/deepseek-v3.2
 systemctl --user restart openclaw-gateway
 openclaw doctor
 openclaw channels status --probe
@@ -52,7 +52,7 @@ openclaw config get agents.list --json
 
 Expected result:
 
-- PM agent model shows `deepseek/deepseek-v3.2`
+- PM agent model shows `openrouter/deepseek/deepseek-v3.2`
 - `openclaw-gateway.service` remains active
 - Discord and Telegram still report `works`
 
@@ -63,7 +63,7 @@ Expected result:
 After primary access is restored:
 
 ```bash
-openclaw config set agents.list.0.model deepseek/deepseek-v4-pro
+openclaw config set agents.list.0.model openrouter/deepseek/deepseek-v4-pro
 systemctl --user restart openclaw-gateway
 openclaw doctor
 openclaw channels status --probe
