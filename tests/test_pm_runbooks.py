@@ -42,7 +42,9 @@ def test_native_operations_restore_runbook_exists_and_covers_restore_flow() -> N
 def test_existing_docs_reference_new_runbooks() -> None:
     deployment = read_doc("DEPLOYMENT.md")
     native_install = read_doc("NATIVE_INSTALL.md")
-    pm_rules = read_doc("PM_AGENT_RULES.md")
+    pm_rules = (
+        REPO_ROOT / "openclaw" / "workspaces" / "workspace-pm" / "AGENTS.md"
+    ).read_text(encoding="utf-8")
     pm_reset = read_doc("PM_SESSION_RESET.md")
 
     assert "PM_E2E_VALIDATION_RUNBOOK.md" in deployment

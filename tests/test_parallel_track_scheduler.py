@@ -671,12 +671,14 @@ AUTOMATION_PLAN_ARCHIVE = (
 
 def test_parallel_eligibility_script_covers_no_direct_dependency() -> None:
     text = CHECK_ELIGIBILITY_SCRIPT.read_text(encoding="utf-8")
-    assert "Direct dependency check" in text
+    assert "# Direct dependency" in text
+    assert "directly depends on" in text
 
 
 def test_parallel_eligibility_script_covers_no_transitive_dependency() -> None:
     text = CHECK_ELIGIBILITY_SCRIPT.read_text(encoding="utf-8")
-    assert "Transitive dependency check" in text
+    assert "# Transitive dependency" in text
+    assert "transitively depends on" in text
 
 
 def test_parallel_eligibility_script_covers_opposite_engines() -> None:
@@ -692,5 +694,7 @@ def test_parallel_track_rules_still_include_examples_eligible_and_ineligible() -
 
 
 def test_parallel_eligibility_script_covers_file_scope_overlap_criterion() -> None:
-    text = CHECK_ELIGIBILITY_SCRIPT.read_text(encoding="utf-8")
-    assert "File overlap" in text
+    plan_pes = _plan_pes_parallel()
+    eligible, failures = check_eligibility("PE-P-03", "PE-P-04", plan_pes)
+    assert eligible, f"Expected ELIGIBLE but got: {failures}"
+    assert failures == []
