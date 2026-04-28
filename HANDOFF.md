@@ -1,47 +1,89 @@
-# HANDOFF — PE-AGT-00 Ready Pending PO OAuth Confirmation
+## Summary
+Removed 11 obsolete engine-specific agent documentation/config files so the repo no longer treats them as active guidance. Verified the remaining agent documentation/config source-of-truth surfaces are `openclaw/openclaw.json` and `docs/openclaw/AGENT_CATALOGUE.md`; the deleted files are absent and no longer available as competing references.
 
-**Status:** Active PE opened; implementer start blocked pending PO pre-flight  
-**Date:** 2026-04-26  
-**Base branch:** main  
-**Plan file:** `ELIS_MultiAgent_Implementation_Plan_v2_0.md`
+## Files Changed
+| Path | Type |
+|---|---|
+| `config/reviewer_identity_map.json` | deleted |
+| `docs/openclaw/CLAUDE_AUTH_SETUP.md` | deleted |
+| `docs/openclaw/CODEX_AGENT_SETUP.md` | deleted |
+| `docs/openclaw/CODEX_AUTH_SETUP.md` | deleted |
+| `docs/openclaw/INFRA_AGENT_SETUP.md` | deleted |
+| `docs/openclaw/PARALLEL_TRACK_GUIDE.md` | deleted |
+| `docs/openclaw/PM_AGENT_ORCHESTRATION_CONTRACT.md` | deleted |
+| `docs/openclaw/PM_AGENT_RULES.md` | deleted |
+| `docs/openclaw/PM_CROSS_AGENT_DISPATCH_EVIDENCE.md` | deleted |
+| `docs/pm_agent/ASSIGNMENT_PROTOCOL.md` | deleted |
+| `docs/pm_agent/ESCALATION_PROTOCOL.md` | deleted |
+| `HANDOFF.md` | modified |
 
----
-
-## Current PE
-
-- **PE:** `PE-AGT-00`
-- **Title:** Model Authentication Setup (Codex + Claude Code)
-- **Branch:** `feature/pe-agt-00-model-authentication-setup`
-- **Implementer:** `infra-impl-a` (CODEX)
-- **Validator:** `infra-val-b` (Claude Code)
-- **Dependency:** none
-
----
+## Design Decisions
+- Kept the change set strictly to the 11 requested deletions plus this handoff update.
+- Interpreted the legacy-name verification requirement narrowly: confirm the deleted agent-doc/config surfaces are removed and that the intended surviving source-of-truth files still exist. A repo-wide non-archive search still returns many historical/planning/runtime references to `CODEX`, `codex`, and `Claude Code`, so broader normalization is out of scope for this PE.
+- Recorded the environment gate outcome exactly as observed: `black` and `ruff` passed; `pytest` is unavailable in this session (`No module named pytest`).
 
 ## Acceptance Criteria
+- [x] Delete `docs/openclaw/CODEX_AGENT_SETUP.md`
+- [x] Delete `docs/openclaw/CODEX_AUTH_SETUP.md`
+- [x] Delete `docs/openclaw/CLAUDE_AUTH_SETUP.md`
+- [x] Delete `docs/openclaw/INFRA_AGENT_SETUP.md`
+- [x] Delete `docs/openclaw/PM_AGENT_ORCHESTRATION_CONTRACT.md`
+- [x] Delete `docs/openclaw/PM_CROSS_AGENT_DISPATCH_EVIDENCE.md`
+- [x] Delete `docs/openclaw/PARALLEL_TRACK_GUIDE.md`
+- [x] Delete `docs/openclaw/PM_AGENT_RULES.md`
+- [x] Delete `config/reviewer_identity_map.json`
+- [x] Delete `docs/pm_agent/ASSIGNMENT_PROTOCOL.md`
+- [x] Delete `docs/pm_agent/ESCALATION_PROTOCOL.md`
+- [x] Verify `openclaw/openclaw.json` still exists as a source of truth
+- [x] Verify `docs/openclaw/AGENT_CATALOGUE.md` still exists as a source of truth
+- [x] Verify deleted files are absent from the working tree
+- [x] Verify no additional active source-of-truth file was retained from the deleted set
+- [ ] Verify no remaining files reference legacy engine names beyond archived documents [blocked: repo-wide non-archive search still returns many matches in active historical/planning/runtime files outside this PE scope]
 
-1. `scripts/verify_codex_auth.py` checks `~/.codex/auth.json` as the primary credential source.
-2. `scripts/verify_codex_auth.py` falls back to `OPENAI_API_KEY` with a `WARN` line and exits 0 when the key is present.
-3. `scripts/verify_codex_auth.py` exits 1 only when both OAuth credential and API key are absent.
-4. `scripts/verify_claude_auth.py` checks `~/.claude/.credentials.json` for `claudeAiOauth` as the primary credential source.
-5. `scripts/verify_claude_auth.py` falls back to `ANTHROPIC_API_KEY` with a `WARN` line and exits 0 when the key is present.
-6. `scripts/verify_claude_auth.py` exits 1 only when both OAuth credential and API key are absent.
-7. Tests cover OAuth-present, fallback-present, and both-absent paths for both verification scripts.
-8. `docs/openclaw/AUTH_STRATEGY.md` documents OAuth-primary, API-key-fallback, why this contract exists, and how to re-run OAuth on elis-server.
+## Validation Commands
+- `python -m black --check .`
+  - `210 files would be left unchanged.`
+- `python -m ruff check .`
+  - `All checks passed!`
+- `python -m pytest -q`
+  - `/usr/bin/python: No module named pytest`
+- `rg -n --hidden --glob '!docs/_archive/**' --glob '!**/.git/**' '\b(CODEX|codex|Claude Code)\b' .`
+  - Returned many matches in active non-archive files (for example `CURRENT_PE.md`, plan files, scripts, workflow files, handoffs, and runbooks); therefore a repo-wide “no remaining references” claim cannot be made within this PE’s delete-only scope.
+- `ls -1 openclaw/openclaw.json docs/openclaw/AGENT_CATALOGUE.md`
+  - Confirmed both files exist.
+- Python existence check for all 11 deletion targets
+  - Confirmed all 11 paths are missing after `git rm`.
 
----
+## Status Packet
+### §6.1 Working-tree state
+```text
+## feature/pe-infra-agent-01-doc-consolidation
+D  config/reviewer_identity_map.json
+D  docs/openclaw/CLAUDE_AUTH_SETUP.md
+D  docs/openclaw/CODEX_AGENT_SETUP.md
+D  docs/openclaw/CODEX_AUTH_SETUP.md
+D  docs/openclaw/INFRA_AGENT_SETUP.md
+D  docs/openclaw/PARALLEL_TRACK_GUIDE.md
+D  docs/openclaw/PM_AGENT_ORCHESTRATION_CONTRACT.md
+D  docs/openclaw/PM_AGENT_RULES.md
+D  docs/openclaw/PM_CROSS_AGENT_DISPATCH_EVIDENCE.md
+D  docs/pm_agent/ASSIGNMENT_PROTOCOL.md
+D  docs/pm_agent/ESCALATION_PROTOCOL.md
+M  HANDOFF.md
+```
 
-## Notes for the Implementer
+### §6.2 Repository state
+```text
+feature/pe-infra-agent-01-doc-consolidation
+```
 
-- **Do not start branch work yet.** The plan requires PO pre-flight completion before implementation begins.
-- PO must run `claude` interactively on elis-server, complete login, then confirm `python scripts/verify_claude_auth.py` exits 0.
-- PO must run `codex` interactively on elis-server, complete login, then confirm `python scripts/verify_codex_auth.py` exits 0.
-- PM will notify the Implementer once Carlos posts both successful confirmations.
-- This PE changes only the two auth verify scripts, their tests, and `docs/openclaw/AUTH_STRATEGY.md`.
-- This PE does **not** change runner workflows or openclaw config.
+### §6.3 Quality gates
+- `black --check`: PASS
+- `ruff check`: PASS
+- `pytest -q`: [blocked] unavailable in current environment (`No module named pytest`)
+- Legacy-name verification search: [blocked] repo still contains many non-archive references outside this PE scope
 
----
-
-## PM Note to PO
-
-Before assigning the Implementer to begin work, please run the Claude Code and Codex OAuth logins on `elis-server` and confirm both verify scripts exit 0.
+### §6.4 Ready to merge
+```text
+NO — outstanding blocked validation: pytest unavailable in this session, and repo-wide legacy-name references remain outside delete-only PE scope.
+```
