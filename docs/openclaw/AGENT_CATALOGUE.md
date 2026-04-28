@@ -108,4 +108,13 @@ Use these artifacts together:
 
 ---
 
+## 6. Governance
+
+Token usage policy and implementation guidance for all agents:
+
+- `docs/governance/ELIS_Token_Usage_Guidelines_for_Multi_AI_Agents.md`
+- `docs/governance/ELIS_Token_Usage_Guidelines_Implementation_Plan.md`
+
+---
+
 *OpenClaw Agent Catalogue · Source-controlled target roster · 2026-03-25*
