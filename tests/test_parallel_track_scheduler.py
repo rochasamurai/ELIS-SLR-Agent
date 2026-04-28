@@ -6,7 +6,7 @@ Covers:
   AC-3  Sequencer performs dual dispatch when DAG has >=2 ready + eligible PEs
   AC-4  check_current_pe.py validates Track A + Track B structure
   AC-5  When Track A closes, Track B remains active as sole PE
-  AC-6  PARALLEL_TRACK_GUIDE.md covers all 5 eligibility criteria with examples
+  AC-6  Runtime/config sources still encode the documented parallel-track rules
 """
 
 from __future__ import annotations
@@ -654,44 +654,43 @@ def test_pe_sequencer_workflow_persists_dual_track_actions() -> None:
 
 
 # ---------------------------------------------------------------------------
-# AC-6 — PARALLEL_TRACK_GUIDE.md covers all 5 eligibility criteria
+# AC-6 — runtime/config sources cover the parallel-track eligibility rules
 # ---------------------------------------------------------------------------
 
-GUIDE_PATH = (
+CHECK_ELIGIBILITY_SCRIPT = (
+    Path(__file__).resolve().parents[1] / "scripts" / "check_parallel_eligibility.py"
+)
+AUTOMATION_PLAN_ARCHIVE = (
     Path(__file__).resolve().parents[1]
     / "docs"
-    / "openclaw"
-    / "PARALLEL_TRACK_GUIDE.md"
+    / "_archive"
+    / "2026-04"
+    / "ELIS_2Agent_Automation_Plan_v2_0.md"
 )
 
 
-def test_parallel_guide_exists() -> None:
-    assert GUIDE_PATH.exists(), "PARALLEL_TRACK_GUIDE.md is missing."
+def test_parallel_eligibility_script_covers_no_direct_dependency() -> None:
+    text = CHECK_ELIGIBILITY_SCRIPT.read_text(encoding="utf-8")
+    assert "Direct dependency check" in text
 
 
-def test_parallel_guide_covers_no_direct_dependency() -> None:
-    text = GUIDE_PATH.read_text(encoding="utf-8")
-    assert "direct" in text.lower() and "dependency" in text.lower()
+def test_parallel_eligibility_script_covers_no_transitive_dependency() -> None:
+    text = CHECK_ELIGIBILITY_SCRIPT.read_text(encoding="utf-8")
+    assert "Transitive dependency check" in text
 
 
-def test_parallel_guide_covers_no_transitive_dependency() -> None:
-    text = GUIDE_PATH.read_text(encoding="utf-8")
-    assert "transitive" in text.lower()
+def test_parallel_eligibility_script_covers_opposite_engines() -> None:
+    text = CHECK_ELIGIBILITY_SCRIPT.read_text(encoding="utf-8")
+    assert "Different implementer engines" in text
+    assert "opposite engines" in text
 
 
-def test_parallel_guide_covers_opposite_engines() -> None:
-    text = GUIDE_PATH.read_text(encoding="utf-8")
-    assert "opposite" in text.lower() and "engine" in text.lower()
-
-
-def test_parallel_guide_covers_examples_eligible_and_ineligible() -> None:
-    text = GUIDE_PATH.read_text(encoding="utf-8")
+def test_parallel_track_rules_still_include_examples_eligible_and_ineligible() -> None:
+    text = AUTOMATION_PLAN_ARCHIVE.read_text(encoding="utf-8")
     assert "ELIGIBLE" in text
     assert "INELIGIBLE" in text
 
 
-def test_parallel_guide_covers_file_scope_overlap_criterion() -> None:
-    text = GUIDE_PATH.read_text(encoding="utf-8")
-    assert "file" in text.lower() and (
-        "overlap" in text.lower() or "scope" in text.lower()
-    )
+def test_parallel_eligibility_script_covers_file_scope_overlap_criterion() -> None:
+    text = CHECK_ELIGIBILITY_SCRIPT.read_text(encoding="utf-8")
+    assert "File overlap" in text

@@ -23,6 +23,9 @@ Removed 11 obsolete engine-specific agent documentation/config files so the repo
 | `scripts/gh_bot.py` | modified |
 | `tests/test_check_current_pe.py` | modified |
 | `tests/test_gate2_auto_merge.py` | modified |
+| `tests/test_parallel_track_scheduler.py` | modified |
+| `tests/test_pm_cross_agent_dispatch.py` | modified |
+| `tests/test_pm_agent_rules.py` | modified |
 | `tests/test_validator_identity_mapping.py` | modified |
 
 ## Design Decisions
@@ -36,6 +39,7 @@ Removed 11 obsolete engine-specific agent documentation/config files so the repo
 - Recorded the environment gate outcome exactly as observed: `black` and `ruff` passed; `pytest` is unavailable in this session (`No module named pytest`).
 - Extended `scripts/check_reviewer_identity.py` to parse the canonical `## Agent roles` markdown table (`| slot-a | Validator |`) in addition to the legacy inline note, because current branch metadata now expresses role assignment via slot labels.
 - Updated `tests/test_gate2_auto_merge.py` fixtures to generate slot-based `CURRENT_PE.md` examples so the regression test reflects the branch's actual role table format.
+- Repointed deleted-doc regression tests at current sources of truth instead of resurrecting removed files: parallel-track rule assertions now validate the scheduler script plus archived plan examples, PM dispatch coverage now validates `openclaw/openclaw.json` allow-listing for validator targets, and PM rules coverage now reads `openclaw/workspaces/workspace-pm/AGENTS.md`.
 
 ## Acceptance Criteria
 - [x] Delete `docs/openclaw/CODEX_AGENT_SETUP.md`
@@ -61,6 +65,10 @@ Removed 11 obsolete engine-specific agent documentation/config files so the repo
 - `python -m black --check scripts/check_current_pe.py scripts/check_reviewer_identity.py tests/test_check_current_pe.py tests/test_gate2_auto_merge.py`
   - `4 files would be left unchanged.`
 - `python -m ruff check scripts/check_current_pe.py scripts/check_reviewer_identity.py tests/test_check_current_pe.py tests/test_gate2_auto_merge.py`
+  - `All checks passed!`
+- `python -m black tests/test_parallel_track_scheduler.py tests/test_pm_cross_agent_dispatch.py tests/test_pm_agent_rules.py`
+  - `2 files reformatted, 1 file left unchanged.`
+- `python -m ruff check tests/test_parallel_track_scheduler.py tests/test_pm_cross_agent_dispatch.py tests/test_pm_agent_rules.py`
   - `All checks passed!`
 - `python -m pytest -q tests/test_check_current_pe.py tests/test_gate2_auto_merge.py`
   - `/usr/bin/python: No module named pytest`
@@ -98,6 +106,9 @@ M  openclaw/openclaw.json
 M  scripts/check_reviewer_identity.py
 M  scripts/gh_bot.py
 M  tests/test_gate2_auto_merge.py
+M  tests/test_parallel_track_scheduler.py
+M  tests/test_pm_agent_rules.py
+M  tests/test_pm_cross_agent_dispatch.py
 M  tests/test_validator_identity_mapping.py
 ```
 
@@ -111,6 +122,7 @@ feature/pe-infra-agent-01-doc-consolidation
 - `black` (follow-up reviewer identity formatter run): PASS
 - `ruff check` (targeted checker + tests): PASS
 - `pytest -q tests/test_check_current_pe.py tests/test_gate2_auto_merge.py`: [blocked] unavailable in current environment (`No module named pytest`)
+- `pytest -q tests/test_parallel_track_scheduler.py tests/test_pm_cross_agent_dispatch.py tests/test_pm_agent_rules.py`: [blocked] unavailable in current environment (`No module named pytest`)
 - `python scripts/check_current_pe.py`: PASS
 - `gh_bot.py` import/startup smoke check: PASS
 - `pytest -q tests/test_gate2_auto_merge.py`: [blocked] unavailable in current environment (`No module named pytest`)
