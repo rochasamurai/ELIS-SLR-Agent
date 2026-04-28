@@ -21,10 +21,10 @@
 
 | Field   | Value |
 |---------|-------|
-| PE      | PE-AGT-00 |
-| Branch  | feature/pe-agt-00-model-authentication-setup |
+| PE      | PE-INFRA-AGENT-01 |
+| Branch  | feature/pe-infra-agent-01-doc-consolidation |
 
-> **Active PE.** Running PE-AGT-00 under ELIS_MultiAgent_Implementation_Plan_v2_0.md with CODEX as Implementer and Claude Code as Validator. PO must complete Claude and Codex OAuth logins on elis-server and confirm both verify scripts exit 0 before implementation begins.
+> **Active PE.** PE-INFRA-AGENT-01 — Agent Documentation Consolidation. Remove engine-specific docs (CODEX_AGENT_SETUP.md, CODEX_AUTH_SETUP.md, CLAUDE_AUTH_SETUP.md, INFRA_AGENT_SETUP.md, PM_AGENT_ORCHESTRATION_CONTRACT.md, PM_CROSS_AGENT_DISPATCH_EVIDENCE.md, PARALLEL_TRACK_GUIDE.md, PM_AGENT_RULES.md, reviewer_identity_map.json, ASSIGNMENT_PROTOCOL.md, ESCALATION_PROTOCOL.md). Only 2 agent-config sources of truth remain: openclaw.json (runtime) and AGENT_CATALOGUE.md (canonical catalogue).
 
 ---
 
@@ -32,10 +32,10 @@
 
 | Agent       | Role |
 |-------------|------|
-| CODEX       | Implementer |
-| Claude Code | Validator |
+| slot-b      | Implementer |
+| slot-a      | Validator |
 
-> Active PE roles: CODEX = Implementer, Claude Code = Validator. Implementer start is gated on PO OAuth confirmation per plan v2.0.1 PE-AGT-00.
+> Active PE roles: slot-b = Implementer, slot-a = Validator. PE-INFRA-AGENT-01 is a housekeeping PE — removes obsolete engine-specific documentation.
 
 ---
 
@@ -126,6 +126,7 @@
 | PE-SLR-14       | slr            | prog-impl-b          | prog-val-a         | feature/pe-slr-14-extraction-synthesis-off-host-contract-validation     | merged          | 2026-04-26   |
 | PE-SLR-15       | slr            | prog-impl-a          | prog-val-b         | feature/pe-slr-15-hybrid-slr-end-to-end-validation-and-housekeeping     | merged          | 2026-04-26   |
 | PE-AGT-00       | agt            | infra-impl-a         | infra-val-b        | feature/pe-agt-00-model-authentication-setup                            | implementing    | 2026-04-26   |
+| PE-INFRA-AGENT-01 | infra         | infra-impl-b         | infra-val-a        | feature/pe-infra-agent-01-doc-consolidation                             | planning        | 2026-04-28   |
 
 Valid status values:
 - `planning`
@@ -215,6 +216,7 @@ PM housekeeping entries (prefix `PM-CHORE-XX`):
 | PM-CHORE-70  | Closed PE-SLR-15 as merged (PR #380, PASS verdict — Claude Code Validator). ELIS_MultiAgent_Implementation_Plan_v1_9.md complete — all 15 SLR PEs (PE-SLR-01 through PE-SLR-15) and infrastructure prerequisites (PE-INFRA-SLR-06 through PE-INFRA-SLR-08, PE-SLR-11, PE-SLR-12) merged. No active PE. Platform ready. Awaiting PM assignment of next plan. | 2026-04-26 |
 | PM-CHORE-71  | Adopted ELIS_MultiAgent_Implementation_Plan_v2_0.md (release v2.0.1). Opened PE-AGT-00 (Model Authentication Setup) with `infra-impl-a` (CODEX) as Implementer and `infra-val-b` (Claude Code) as Validator per PO directive. Implementer start is gated: PO must run Claude Code and Codex OAuth logins on elis-server and confirm `python scripts/verify_claude_auth.py` and `python scripts/verify_codex_auth.py` both exit 0 before branch work begins. | 2026-04-26 |
 | PE-AGT-00    | infra           | infra-impl-a         | infra-val-b        | feature/pe-agt-00-model-authentication-setup      | implementing    | 2026-04-26   |
+| PM-CHORE-72  | Opened PE-INFRA-AGENT-01 (Agent Documentation Consolidation) with `infra-impl-b` (slot-b) as Implementer and `infra-val-a` (slot-a) as Validator per alternation rule (PE-AGT-00 used infra-impl-a). Removes 11 engine-specific docs; only openclaw.json + AGENT_CATALOGUE.md remain as agent source of truth. | 2026-04-28 |
 
 
 Alternation rule:
