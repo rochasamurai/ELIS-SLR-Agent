@@ -34,6 +34,8 @@ Removed 11 obsolete engine-specific agent documentation/config files so the repo
 - Added a defensive `sys.path` bootstrap to `scripts/gh_bot.py` so direct script execution still resolves the in-repo `elis` package on hosts where `scripts/` becomes `sys.path[0]`.
 - Interpreted the legacy-name verification requirement narrowly: confirm the deleted agent-doc/config surfaces are removed and that the intended surviving source-of-truth files still exist. A repo-wide non-archive search still returns many historical/planning/runtime references to `CODEX`, `codex`, and `Claude Code`, so broader normalization is out of scope for this PE.
 - Recorded the environment gate outcome exactly as observed: `black` and `ruff` passed; `pytest` is unavailable in this session (`No module named pytest`).
+- Extended `scripts/check_reviewer_identity.py` to parse the canonical `## Agent roles` markdown table (`| slot-a | Validator |`) in addition to the legacy inline note, because current branch metadata now expresses role assignment via slot labels.
+- Updated `tests/test_gate2_auto_merge.py` fixtures to generate slot-based `CURRENT_PE.md` examples so the regression test reflects the branch's actual role table format.
 
 ## Acceptance Criteria
 - [x] Delete `docs/openclaw/CODEX_AGENT_SETUP.md`
@@ -106,10 +108,12 @@ feature/pe-infra-agent-01-doc-consolidation
 
 ### §6.3 Quality gates
 - `black --check` (targeted checker + tests): PASS
+- `black` (follow-up reviewer identity formatter run): PASS
 - `ruff check` (targeted checker + tests): PASS
 - `pytest -q tests/test_check_current_pe.py tests/test_gate2_auto_merge.py`: [blocked] unavailable in current environment (`No module named pytest`)
 - `python scripts/check_current_pe.py`: PASS
 - `gh_bot.py` import/startup smoke check: PASS
+- `pytest -q tests/test_gate2_auto_merge.py`: [blocked] unavailable in current environment (`No module named pytest`)
 - `pytest -q` for identity tests: [blocked] unavailable in current environment (`No module named pytest`)
 - Legacy-name verification search: [blocked] repo still contains many non-archive references outside this PE scope
 

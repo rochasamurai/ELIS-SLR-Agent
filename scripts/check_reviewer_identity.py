@@ -29,9 +29,7 @@ import re
 import sys
 
 CURRENT_PE_PATH = os.environ.get("CURRENT_PE_PATH", "CURRENT_PE.md")
-OPENCLAW_CONFIG_PATH = os.environ.get(
-    "OPENCLAW_CONFIG_PATH", "openclaw/openclaw.json"
-)
+OPENCLAW_CONFIG_PATH = os.environ.get("OPENCLAW_CONFIG_PATH", "openclaw/openclaw.json")
 
 # Canonical slot-to-engine mapping (AGENTS.md §14.2)
 _SLOT_TO_ENGINE: dict[str, str] = {"a": "codex", "b": "claude", "c": "gemini"}
@@ -59,16 +57,39 @@ def _load_reviewer_identities(path: str) -> dict:
 
 
 def _get_validator_agent_id(current_pe_path: str) -> str | None:
-    """Return the validator agentId from the note line in CURRENT_PE.md.
+    """Return the validator agentId from CURRENT_PE.md.
 
-    Matches lines of the form:
+    Supports both the legacy note line format:
         `infra-val-a` (CODEX @ `elis-server`) as Validator.
+
+    And the current ``## Agent roles`` markdown table format:
+        | slot-a | Validator |
     """
     with open(current_pe_path, encoding="utf-8") as fh:
         content = fh.read()
-    m = re.search(r"`([\w-]+)`\s*([^)]+)\s+as Validator", content)
-    if m:
-        return m.group(1)
+
+    note_match = re.search(r"`([\w-]+)`\s*([^)]+)\s+as Validator", content)
+    if note_match:
+        return note_match.group(1)
+
+    agent_roles_match = re.search(
+        r"^## Agent roles\s*$([\s\S]*?)(?=^## |\Z)",
+        content,
+        flags=re.MULTILINE,
+    )
+    if not agent_roles_match:
+        return None
+
+    agent_roles_section = agent_roles_match.group(1)
+    for line in agent_roles_section.splitlines():
+        table_match = re.match(r"^\|\s*([^|]+?)\s*\|\s*Validator\s*\|", line)
+        if not table_match:
+            continue
+        agent_label = table_match.group(1).strip()
+        slot_match = re.fullmatch(r"slot-([abc])", agent_label)
+        if slot_match:
+            return f"infra-val-{slot_match.group(1)}"
+
     return None
 
 

@@ -79,7 +79,7 @@ def _run_identity_script(
 
 @pytest.fixture()
 def pe_file_val_a(tmp_path: Path) -> Path:
-    """CURRENT_PE.md with infra-val-a (CODEX / elis-codex-bot) as Validator."""
+    """CURRENT_PE.md with slot-a / infra-val-a as Validator."""
     p = tmp_path / "CURRENT_PE.md"
     p.write_text(
         textwrap.dedent(
@@ -90,6 +90,7 @@ def pe_file_val_a(tmp_path: Path) -> Path:
         | slot-b      | Implementer |
         | slot-a      | Validator   |
 
+        > Active PE roles: slot-b = Implementer, slot-a = Validator.
         > PE-INFRA-SLR-05: `infra-impl-b` (Claude Code) as Implementer · `infra-val-a` (CODEX @ `elis-server`) as Validator.
         """
         ),
@@ -100,7 +101,7 @@ def pe_file_val_a(tmp_path: Path) -> Path:
 
 @pytest.fixture()
 def pe_file_val_b(tmp_path: Path) -> Path:
-    """CURRENT_PE.md with infra-val-b (Claude Code / elis-claude-bot) as Validator."""
+    """CURRENT_PE.md with slot-b / infra-val-b as Validator."""
     p = tmp_path / "CURRENT_PE.md"
     p.write_text(
         textwrap.dedent(
@@ -111,6 +112,7 @@ def pe_file_val_b(tmp_path: Path) -> Path:
         | slot-a | Implementer |
         | slot-b | Validator   |
 
+        > Active PE roles: slot-a = Implementer, slot-b = Validator.
         > PE-TEST: `infra-impl-a` (CODEX) as Implementer · `infra-val-b` (Claude Code) as Validator.
         """
         ),
