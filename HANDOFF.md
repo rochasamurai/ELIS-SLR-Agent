@@ -1,5 +1,5 @@
 ## Summary
-Removed 11 obsolete engine-specific agent documentation/config files so the repo no longer treats them as active guidance. Verified the remaining agent documentation/config source-of-truth surfaces are `openclaw/openclaw.json` and `docs/openclaw/AGENT_CATALOGUE.md`; the deleted files are absent and no longer available as competing references.
+Removed 11 obsolete engine-specific agent documentation/config files so the repo no longer treats them as active guidance. Verified the remaining agent documentation/config source-of-truth surfaces are `openclaw/openclaw.json` and `docs/openclaw/AGENT_CATALOGUE.md`; the deleted files are absent and no longer available as competing references. Added a follow-up fix to `scripts/check_current_pe.py` so `current-pe-check` accepts both legacy agent labels and ADR-009 slot-based labels in the Agent roles table, with regression coverage for the new slot-based format.
 
 ## Files Changed
 | Path | Type |
@@ -16,9 +16,13 @@ Removed 11 obsolete engine-specific agent documentation/config files so the repo
 | `docs/pm_agent/ASSIGNMENT_PROTOCOL.md` | deleted |
 | `docs/pm_agent/ESCALATION_PROTOCOL.md` | deleted |
 | `HANDOFF.md` | modified |
+| `scripts/check_current_pe.py` | modified |
+| `tests/test_check_current_pe.py` | modified |
 
 ## Design Decisions
-- Kept the change set strictly to the 11 requested deletions plus this handoff update.
+- Kept the original PE change set focused on the 11 requested deletions, then applied the minimal follow-up code fix needed to unblock PR #388 CI without broadening scope further.
+- Updated `scripts/check_current_pe.py` to treat role labels as compatibility aliases per engine: `codex` matches either `CODEX` or `slot-a`, `claude` matches either `Claude Code` or `slot-b`, and `gemini` still matches `Gemini CLI`.
+- Chose alias-set validation instead of rewriting role parsing so both legacy and slot-based `CURRENT_PE.md` formats remain valid during migration.
 - Interpreted the legacy-name verification requirement narrowly: confirm the deleted agent-doc/config surfaces are removed and that the intended surviving source-of-truth files still exist. A repo-wide non-archive search still returns many historical/planning/runtime references to `CODEX`, `codex`, and `Claude Code`, so broader normalization is out of scope for this PE.
 - Recorded the environment gate outcome exactly as observed: `black` and `ruff` passed; `pytest` is unavailable in this session (`No module named pytest`).
 
@@ -41,12 +45,14 @@ Removed 11 obsolete engine-specific agent documentation/config files so the repo
 - [ ] Verify no remaining files reference legacy engine names beyond archived documents [blocked: repo-wide non-archive search still returns many matches in active historical/planning/runtime files outside this PE scope]
 
 ## Validation Commands
-- `python -m black --check .`
-  - `210 files would be left unchanged.`
-- `python -m ruff check .`
+- `python -m black --check scripts/check_current_pe.py tests/test_check_current_pe.py`
+  - `2 files would be left unchanged.`
+- `python -m ruff check scripts/check_current_pe.py tests/test_check_current_pe.py`
   - `All checks passed!`
-- `python -m pytest -q`
+- `python -m pytest -q tests/test_check_current_pe.py`
   - `/usr/bin/python: No module named pytest`
+- `python scripts/check_current_pe.py`
+  - `CURRENT_PE.md OK — release context, roles, registry, and alternation valid.`
 - `rg -n --hidden --glob '!docs/_archive/**' --glob '!**/.git/**' '\b(CODEX|codex|Claude Code)\b' .`
   - Returned many matches in active non-archive files (for example `CURRENT_PE.md`, plan files, scripts, workflow files, handoffs, and runbooks); therefore a repo-wide “no remaining references” claim cannot be made within this PE’s delete-only scope.
 - `ls -1 openclaw/openclaw.json docs/openclaw/AGENT_CATALOGUE.md`
@@ -78,9 +84,10 @@ feature/pe-infra-agent-01-doc-consolidation
 ```
 
 ### §6.3 Quality gates
-- `black --check`: PASS
-- `ruff check`: PASS
-- `pytest -q`: [blocked] unavailable in current environment (`No module named pytest`)
+- `black --check` (targeted checker + tests): PASS
+- `ruff check` (targeted checker + tests): PASS
+- `pytest -q tests/test_check_current_pe.py`: [blocked] unavailable in current environment (`No module named pytest`)
+- `python scripts/check_current_pe.py`: PASS
 - Legacy-name verification search: [blocked] repo still contains many non-archive references outside this PE scope
 
 ### §6.4 Ready to merge

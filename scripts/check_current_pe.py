@@ -31,9 +31,9 @@ REQUIRED_REGISTRY_COLUMNS = {
     "last-updated",
 }
 ENGINE_TO_AGENT = {
-    "codex": "CODEX",
-    "claude": "Claude Code",
-    "gemini": "Gemini CLI",
+    "codex": {"CODEX", "slot-a"},
+    "claude": {"Claude Code", "slot-b"},
+    "gemini": {"Gemini CLI"},
 }
 
 
@@ -228,15 +228,15 @@ def _validate_alternation(
 def _validate_roles_table(
     roles: dict[str, str], impl_engine: str, val_engine: str
 ) -> None:
-    expected_impl_agent = ENGINE_TO_AGENT.get(impl_engine)
-    expected_val_agent = ENGINE_TO_AGENT.get(val_engine)
-    if expected_impl_agent is None or expected_val_agent is None:
+    expected_impl_agents = ENGINE_TO_AGENT.get(impl_engine)
+    expected_val_agents = ENGINE_TO_AGENT.get(val_engine)
+    if expected_impl_agents is None or expected_val_agents is None:
         raise ValueError("Active PE registry engines do not map to known agent labels.")
-    if roles.get(expected_impl_agent) != "Implementer":
+    if not any(roles.get(agent) == "Implementer" for agent in expected_impl_agents):
         raise ValueError(
             "Agent roles table does not match the active PE registry implementer."
         )
-    if roles.get(expected_val_agent) != "Validator":
+    if not any(roles.get(agent) == "Validator" for agent in expected_val_agents):
         raise ValueError(
             "Agent roles table does not match the active PE registry validator."
         )
