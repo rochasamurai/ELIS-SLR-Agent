@@ -1,0 +1,33 @@
+[
+  {
+    "_meta": true,
+    "stage": "dedup",
+    "input_records": 2,
+    "unique_clusters": 2,
+    "duplicates_removed": 0,
+    "fuzzy_enabled": false,
+    "keeper_priority_source": "config/sources.yml"
+  },
+  {
+    "source": "A",
+    "title": "T1",
+    "doi": "10.1/a",
+    "cluster_id": "c33f0a068564",
+    "cluster_size": 1,
+    "cluster_sources": [
+      "a"
+    ],
+    "id": "c33f0a068564"
+  },
+  {
+    "source": "B",
+    "title": "T2",
+    "doi": "10.1/b",
+    "cluster_id": "dac814719f74",
+    "cluster_size": 1,
+    "cluster_sources": [
+      "b"
+    ],
+    "id": "dac814719f74"
+  }
+]

@@ -1,0 +1,76 @@
+[
+  {
+    "_meta": true,
+    "protocol_version": "ELIS 2025 (MVP)",
+    "config_path": "elis merge --inputs",
+    "retrieved_at": "1970-01-01T00:00:00Z",
+    "global": {},
+    "topics_enabled": [
+      "unknown"
+    ],
+    "sources": [
+      "s"
+    ],
+    "record_count": 3,
+    "summary": {
+      "total": 3,
+      "per_source": {
+        "s": 3
+      },
+      "per_topic": {
+        "unknown": 3
+      }
+    },
+    "run_inputs": {
+      "input_files": [
+        "C:\\Users\\carlo\\ELIS-SLR-Agent\\.tmp\\pe-gha-02\\test_merge_position_monotonica0\\a.json",
+        "C:\\Users\\carlo\\ELIS-SLR-Agent\\.tmp\\pe-gha-02\\test_merge_position_monotonica0\\b.json"
+      ]
+    }
+  },
+  {
+    "source": "s",
+    "title": "R1",
+    "authors": [],
+    "year": null,
+    "doi": null,
+    "source_id": null,
+    "query_topic": "unknown",
+    "query_string": "",
+    "retrieved_at": "1970-01-01T00:00:00Z",
+    "source_file": "a.json",
+    "merge_position": 1,
+    "id": "t:c28bc9d11f7de96486da",
+    "_stable_id": "t:c28bc9d11f7de96486da"
+  },
+  {
+    "source": "s",
+    "title": "R2",
+    "authors": [],
+    "year": null,
+    "doi": null,
+    "source_id": null,
+    "query_topic": "unknown",
+    "query_string": "",
+    "retrieved_at": "1970-01-01T00:00:00Z",
+    "source_file": "a.json",
+    "merge_position": 2,
+    "id": "t:f6c001636a4e06e9402d",
+    "_stable_id": "t:f6c001636a4e06e9402d"
+  },
+  {
+    "source": "s",
+    "title": "R3",
+    "authors": [],
+    "year": null,
+    "doi": null,
+    "source_id": null,
+    "query_topic": "unknown",
+    "query_string": "",
+    "retrieved_at": "1970-01-01T00:00:00Z",
+    "source_file": "b.json",
+    "merge_position": 3,
+    "id": "t:02ee2944ef0ab2b799ee",
+    "_stable_id": "t:02ee2944ef0ab2b799ee"
+  }
+]

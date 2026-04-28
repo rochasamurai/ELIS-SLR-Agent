@@ -1,0 +1,26 @@
+[
+  {
+    "_meta": true,
+    "stage": "dedup",
+    "input_records": 1,
+    "unique_clusters": 1,
+    "duplicates_removed": 0,
+    "fuzzy_enabled": false,
+    "keeper_priority_source": "config/sources.yml",
+    "protocol_version": "v2",
+    "topics_enabled": [
+      "t1"
+    ]
+  },
+  {
+    "source": "A",
+    "title": "T",
+    "doi": "10.1/a",
+    "cluster_id": "c33f0a068564",
+    "cluster_size": 1,
+    "cluster_sources": [
+      "a"
+    ],
+    "id": "c33f0a068564"
+  }
+]

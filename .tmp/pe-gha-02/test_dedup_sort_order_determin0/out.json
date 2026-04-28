@@ -1,0 +1,59 @@
+[
+  {
+    "_meta": true,
+    "stage": "dedup",
+    "input_records": 4,
+    "unique_clusters": 4,
+    "duplicates_removed": 0,
+    "fuzzy_enabled": false,
+    "keeper_priority_source": "config/sources.yml"
+  },
+  {
+    "source": "A",
+    "title": "A",
+    "query_topic": "t1",
+    "doi": "10.1/aa",
+    "cluster_id": "550d7f3a48f5",
+    "cluster_size": 1,
+    "cluster_sources": [
+      "a"
+    ],
+    "id": "550d7f3a48f5"
+  },
+  {
+    "source": "A",
+    "title": "B",
+    "query_topic": "t1",
+    "doi": "10.1/ab",
+    "cluster_id": "a5c272c388bd",
+    "cluster_size": 1,
+    "cluster_sources": [
+      "a"
+    ],
+    "id": "a5c272c388bd"
+  },
+  {
+    "source": "A",
+    "title": "C",
+    "query_topic": "t2",
+    "doi": "10.1/ac",
+    "cluster_id": "f7b3451dc949",
+    "cluster_size": 1,
+    "cluster_sources": [
+      "a"
+    ],
+    "id": "f7b3451dc949"
+  },
+  {
+    "source": "Z",
+    "title": "B",
+    "query_topic": "t1",
+    "doi": "10.1/zb",
+    "cluster_id": "b2e136cfe422",
+    "cluster_size": 1,
+    "cluster_sources": [
+      "z"
+    ],
+    "id": "b2e136cfe422"
+  }
+]

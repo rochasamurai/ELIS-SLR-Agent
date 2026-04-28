@@ -1,0 +1,35 @@
+[
+  {
+    "_meta": true,
+    "stage": "dedup",
+    "input_records": 2,
+    "unique_clusters": 2,
+    "duplicates_removed": 0,
+    "fuzzy_enabled": false,
+    "keeper_priority_source": "config/sources.yml"
+  },
+  {
+    "source": "A",
+    "title": "Z",
+    "doi": "10.1/z",
+    "year": 2020,
+    "cluster_id": "de953ea2e5a5",
+    "cluster_size": 1,
+    "cluster_sources": [
+      "a"
+    ],
+    "id": "de953ea2e5a5"
+  },
+  {
+    "source": "B",
+    "title": "A",
+    "doi": "10.1/a",
+    "year": 2019,
+    "cluster_id": "c33f0a068564",
+    "cluster_size": 1,
+    "cluster_sources": [
+      "b"
+    ],
+    "id": "c33f0a068564"
+  }
+]

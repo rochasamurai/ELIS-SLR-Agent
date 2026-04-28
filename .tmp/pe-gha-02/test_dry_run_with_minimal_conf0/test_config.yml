@@ -1,0 +1,13 @@
+global:
+  job_result_cap: 1
+  languages:
+  - en
+  max_results_per_source: 1
+  year_from: 2024
+  year_to: 2024
+topics:
+- enabled: true
+  id: test_topic
+  queries:
+  - test
+  sources: []

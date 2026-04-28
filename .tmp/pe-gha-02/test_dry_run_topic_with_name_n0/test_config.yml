@@ -1,0 +1,12 @@
+global:
+  languages:
+  - en
+  max_results_per_source: 1
+  year_from: 2024
+  year_to: 2024
+topics:
+- enabled: true
+  name: My Topic Without ID
+  queries:
+  - test
+  sources: []

@@ -1,0 +1,70 @@
+[
+  {
+    "_meta": true,
+    "protocol_version": "ELIS 2025 (MVP)",
+    "config_path": "elis merge --inputs",
+    "retrieved_at": "1970-01-01T00:00:00Z",
+    "global": {},
+    "topics_enabled": [
+      "topic-a",
+      "topic-z"
+    ],
+    "sources": [
+      "crossref",
+      "openalex"
+    ],
+    "record_count": 2,
+    "summary": {
+      "total": 2,
+      "per_source": {
+        "crossref": 1,
+        "openalex": 1
+      },
+      "per_topic": {
+        "topic-a": 1,
+        "topic-z": 1
+      }
+    },
+    "run_inputs": {
+      "input_files": [
+        "C:\\Users\\carlo\\ELIS-SLR-Agent\\.tmp\\pe-gha-02\\test_merge_normalises_records_0\\openalex.json",
+        "C:\\Users\\carlo\\ELIS-SLR-Agent\\.tmp\\pe-gha-02\\test_merge_normalises_records_0\\crossref.jsonl"
+      ]
+    }
+  },
+  {
+    "source": "crossref",
+    "title": "B study",
+    "authors": [
+      "Carol"
+    ],
+    "year": 2023,
+    "doi": "10.1000/xyz",
+    "query_topic": "topic-a",
+    "query_string": "\"beta\"",
+    "source_id": null,
+    "retrieved_at": "1970-01-01T00:00:00Z",
+    "source_file": "crossref.jsonl",
+    "merge_position": 2,
+    "id": "doi:10.1000/xyz",
+    "_stable_id": "doi:10.1000/xyz"
+  },
+  {
+    "source": "openalex",
+    "title": "A Study",
+    "authors": [
+      "Alice",
+      "Bob"
+    ],
+    "year": 2024,
+    "doi": "10.1000/abc",
+    "query_topic": "topic-z",
+    "query_string": "\"alpha\"",
+    "source_id": null,
+    "retrieved_at": "1970-01-01T00:00:00Z",
+    "source_file": "openalex.json",
+    "merge_position": 1,
+    "id": "doi:10.1000/abc",
+    "_stable_id": "doi:10.1000/abc"
+  }
+]

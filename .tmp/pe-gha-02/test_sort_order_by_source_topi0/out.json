@@ -1,0 +1,94 @@
+[
+  {
+    "_meta": true,
+    "protocol_version": "ELIS 2025 (MVP)",
+    "config_path": "elis merge --inputs",
+    "retrieved_at": "1970-01-01T00:00:00Z",
+    "global": {},
+    "topics_enabled": [
+      "t1",
+      "t2"
+    ],
+    "sources": [
+      "a",
+      "z"
+    ],
+    "record_count": 4,
+    "summary": {
+      "total": 4,
+      "per_source": {
+        "a": 3,
+        "z": 1
+      },
+      "per_topic": {
+        "t1": 3,
+        "t2": 1
+      }
+    },
+    "run_inputs": {
+      "input_files": [
+        "C:\\Users\\carlo\\ELIS-SLR-Agent\\.tmp\\pe-gha-02\\test_sort_order_by_source_topi0\\input.json"
+      ]
+    }
+  },
+  {
+    "source": "a",
+    "title": "A",
+    "year": 2020,
+    "query_topic": "t1",
+    "authors": [],
+    "doi": null,
+    "source_id": null,
+    "query_string": "",
+    "retrieved_at": "1970-01-01T00:00:00Z",
+    "source_file": "input.json",
+    "merge_position": 3,
+    "id": "t:1ccb55d2b379fb846d52",
+    "_stable_id": "t:1ccb55d2b379fb846d52"
+  },
+  {
+    "source": "a",
+    "title": "B",
+    "year": 2020,
+    "query_topic": "t1",
+    "authors": [],
+    "doi": null,
+    "source_id": null,
+    "query_string": "",
+    "retrieved_at": "1970-01-01T00:00:00Z",
+    "source_file": "input.json",
+    "merge_position": 4,
+    "id": "t:9216897d1c709753b045",
+    "_stable_id": "t:9216897d1c709753b045"
+  },
+  {
+    "source": "a",
+    "title": "C",
+    "year": 2020,
+    "query_topic": "t2",
+    "authors": [],
+    "doi": null,
+    "source_id": null,
+    "query_string": "",
+    "retrieved_at": "1970-01-01T00:00:00Z",
+    "source_file": "input.json",
+    "merge_position": 2,
+    "id": "t:1212cfc4bf1774239e14",
+    "_stable_id": "t:1212cfc4bf1774239e14"
+  },
+  {
+    "source": "z",
+    "title": "B",
+    "year": 2020,
+    "query_topic": "t1",
+    "authors": [],
+    "doi": null,
+    "source_id": null,
+    "query_string": "",
+    "retrieved_at": "1970-01-01T00:00:00Z",
+    "source_file": "input.json",
+    "merge_position": 1,
+    "id": "t:4a5bd6a3a73919bd8b23",
+    "_stable_id": "t:4a5bd6a3a73919bd8b23"
+  }
+]

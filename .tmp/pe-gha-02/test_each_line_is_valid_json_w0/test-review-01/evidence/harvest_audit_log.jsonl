@@ -1,0 +1,2 @@
+{"attempt": 1, "detail": "", "error": "timeout", "review_id": "test-review-01", "source": "openalex", "status": "retry", "step": "write", "timestamp": "2026-04-13T10:00:00+00:00"}
+{"attempt": 2, "detail": "", "error": "", "review_id": "test-review-01", "source": "openalex", "status": "success", "step": "write", "timestamp": "2026-04-13T10:00:02+00:00"}

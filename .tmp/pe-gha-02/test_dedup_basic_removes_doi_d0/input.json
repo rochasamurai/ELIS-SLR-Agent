@@ -1,0 +1,23 @@
+[
+  {
+    "_meta": true
+  },
+  {
+    "source": "openalex",
+    "title": "Same Paper",
+    "doi": "10.1/abc",
+    "year": 2020,
+    "authors": [
+      "Alice"
+    ]
+  },
+  {
+    "source": "crossref",
+    "title": "Same Paper Variant",
+    "doi": "https://doi.org/10.1/abc",
+    "year": 2020,
+    "authors": [
+      "A. Smith"
+    ]
+  }
+]

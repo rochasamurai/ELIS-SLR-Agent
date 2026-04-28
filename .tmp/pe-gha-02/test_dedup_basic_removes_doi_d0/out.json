@@ -1,0 +1,27 @@
+[
+  {
+    "_meta": true,
+    "stage": "dedup",
+    "input_records": 2,
+    "unique_clusters": 1,
+    "duplicates_removed": 1,
+    "fuzzy_enabled": false,
+    "keeper_priority_source": "config/sources.yml"
+  },
+  {
+    "source": "crossref",
+    "title": "Same Paper Variant",
+    "doi": "https://doi.org/10.1/abc",
+    "year": 2020,
+    "authors": [
+      "A. Smith"
+    ],
+    "cluster_id": "8680376ce68f",
+    "cluster_size": 2,
+    "cluster_sources": [
+      "crossref",
+      "openalex"
+    ],
+    "id": "8680376ce68f"
+  }
+]

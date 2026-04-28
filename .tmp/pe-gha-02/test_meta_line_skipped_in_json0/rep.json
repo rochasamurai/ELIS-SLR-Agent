@@ -1,0 +1,15 @@
+{
+  "total_records": 1,
+  "per_source_counts": {
+    "b": 1
+  },
+  "doi_coverage_pct": 0.0,
+  "null_field_ratios": {
+    "title": 0.0,
+    "abstract": 1.0,
+    "language": 1.0
+  },
+  "input_files": [
+    "C:\\Users\\carlo\\ELIS-SLR-Agent\\.tmp\\pe-gha-02\\test_meta_line_skipped_in_json0\\input.jsonl"
+  ]
+}

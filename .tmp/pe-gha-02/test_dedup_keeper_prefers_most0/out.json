@@ -1,0 +1,25 @@
+[
+  {
+    "_meta": true,
+    "stage": "dedup",
+    "input_records": 2,
+    "unique_clusters": 1,
+    "duplicates_removed": 1,
+    "fuzzy_enabled": false,
+    "keeper_priority_source": "config/sources.yml"
+  },
+  {
+    "source": "scopus",
+    "title": "T",
+    "doi": "10.1/x",
+    "abstract": "Rich abstract here",
+    "language": "en",
+    "cluster_id": "4d718a0a8963",
+    "cluster_size": 2,
+    "cluster_sources": [
+      "crossref",
+      "scopus"
+    ],
+    "id": "4d718a0a8963"
+  }
+]

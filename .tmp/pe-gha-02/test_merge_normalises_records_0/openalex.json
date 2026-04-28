@@ -1,0 +1,14 @@
+[
+  {
+    "source": "OpenAlex",
+    "title": "  A   Study   ",
+    "authors": [
+      "  Alice  ",
+      " Bob "
+    ],
+    "year": "2024",
+    "doi": "https://doi.org/10.1000/ABC",
+    "query_topic": "topic-z",
+    "query_string": "\"alpha\""
+  }
+]

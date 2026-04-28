@@ -1,0 +1,26 @@
+[
+  {
+    "source": "Z",
+    "title": "B",
+    "query_topic": "t1",
+    "doi": "10.1/zb"
+  },
+  {
+    "source": "A",
+    "title": "C",
+    "query_topic": "t2",
+    "doi": "10.1/ac"
+  },
+  {
+    "source": "A",
+    "title": "A",
+    "query_topic": "t1",
+    "doi": "10.1/aa"
+  },
+  {
+    "source": "A",
+    "title": "B",
+    "query_topic": "t1",
+    "doi": "10.1/ab"
+  }
+]

@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "review_id": "r1",
+  "run_id": "run-9",
+  "trigger_source": "github-actions",
+  "execution_surface": "off-host-workflow",
+  "local_execution_allowed": false,
+  "input_schema_path": "schemas/appendix_b.schema.json",
+  "output_schema_path": "schemas/appendix_c.schema.json",
+  "output_rows_path": "json_jsonl/ELIS_Appendix_C_DataExtraction_rows.json",
+  "output_record_count": 1,
+  "output_record_ids": [
+    "rec-1"
+  ],
+  "output_rows_sha256": "90ef84f5db8c230101bfcd65b2cb49bba8662ba217c73c89a201b6fd6b006d5c",
+  "commit_sha": "cafef00d",
+  "generated_at": "2026-04-21T01:02:03Z"
+}

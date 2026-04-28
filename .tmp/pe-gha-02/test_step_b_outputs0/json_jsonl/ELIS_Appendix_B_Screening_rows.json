@@ -1,0 +1,18 @@
+[
+  {
+    "id": "B-A-TEST1-INC",
+    "source_id": "A-TEST1",
+    "title": "N/A",
+    "decision": "included",
+    "reason": "MVP toy include",
+    "decided_at": "2026-04-22T19:55:33Z"
+  },
+  {
+    "id": "B-A-TEST1-EXC",
+    "source_id": "A-TEST1",
+    "title": "N/A",
+    "decision": "excluded",
+    "reason": "MVP toy exclude",
+    "decided_at": "2026-04-22T19:55:33Z"
+  }
+]

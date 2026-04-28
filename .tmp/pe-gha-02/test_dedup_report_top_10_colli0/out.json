@@ -1,0 +1,155 @@
+[
+  {
+    "_meta": true,
+    "stage": "dedup",
+    "input_records": 24,
+    "unique_clusters": 12,
+    "duplicates_removed": 12,
+    "fuzzy_enabled": false,
+    "keeper_priority_source": "config/sources.yml"
+  },
+  {
+    "source": "A",
+    "title": "P0",
+    "doi": "10.1/0",
+    "cluster_id": "d9af7c4c063f",
+    "cluster_size": 2,
+    "cluster_sources": [
+      "a",
+      "b"
+    ],
+    "id": "d9af7c4c063f"
+  },
+  {
+    "source": "A",
+    "title": "P1",
+    "doi": "10.1/1",
+    "cluster_id": "a27715313ed6",
+    "cluster_size": 2,
+    "cluster_sources": [
+      "a",
+      "b"
+    ],
+    "id": "a27715313ed6"
+  },
+  {
+    "source": "A",
+    "title": "P10",
+    "doi": "10.1/10",
+    "cluster_id": "946893b22c83",
+    "cluster_size": 2,
+    "cluster_sources": [
+      "a",
+      "b"
+    ],
+    "id": "946893b22c83"
+  },
+  {
+    "source": "A",
+    "title": "P11",
+    "doi": "10.1/11",
+    "cluster_id": "04ae055bf350",
+    "cluster_size": 2,
+    "cluster_sources": [
+      "a",
+      "b"
+    ],
+    "id": "04ae055bf350"
+  },
+  {
+    "source": "A",
+    "title": "P2",
+    "doi": "10.1/2",
+    "cluster_id": "07c333b9e197",
+    "cluster_size": 2,
+    "cluster_sources": [
+      "a",
+      "b"
+    ],
+    "id": "07c333b9e197"
+  },
+  {
+    "source": "A",
+    "title": "P3",
+    "doi": "10.1/3",
+    "cluster_id": "ebc7979857b3",
+    "cluster_size": 2,
+    "cluster_sources": [
+      "a",
+      "b"
+    ],
+    "id": "ebc7979857b3"
+  },
+  {
+    "source": "A",
+    "title": "P4",
+    "doi": "10.1/4",
+    "cluster_id": "4089dc84d6b7",
+    "cluster_size": 2,
+    "cluster_sources": [
+      "a",
+      "b"
+    ],
+    "id": "4089dc84d6b7"
+  },
+  {
+    "source": "A",
+    "title": "P5",
+    "doi": "10.1/5",
+    "cluster_id": "cd3e4af05b04",
+    "cluster_size": 2,
+    "cluster_sources": [
+      "a",
+      "b"
+    ],
+    "id": "cd3e4af05b04"
+  },
+  {
+    "source": "A",
+    "title": "P6",
+    "doi": "10.1/6",
+    "cluster_id": "8954f6818d6c",
+    "cluster_size": 2,
+    "cluster_sources": [
+      "a",
+      "b"
+    ],
+    "id": "8954f6818d6c"
+  },
+  {
+    "source": "A",
+    "title": "P7",
+    "doi": "10.1/7",
+    "cluster_id": "a232c42dded8",
+    "cluster_size": 2,
+    "cluster_sources": [
+      "a",
+      "b"
+    ],
+    "id": "a232c42dded8"
+  },
+  {
+    "source": "A",
+    "title": "P8",
+    "doi": "10.1/8",
+    "cluster_id": "b53515a012d8",
+    "cluster_size": 2,
+    "cluster_sources": [
+      "a",
+      "b"
+    ],
+    "id": "b53515a012d8"
+  },
+  {
+    "source": "A",
+    "title": "P9",
+    "doi": "10.1/9",
+    "cluster_id": "f31af9cc4cbe",
+    "cluster_size": 2,
+    "cluster_sources": [
+      "a",
+      "b"
+    ],
+    "id": "f31af9cc4cbe"
+  }
+]

@@ -1,0 +1,9 @@
+[
+  {
+    "checkpoint_id": "chk-claim-7",
+    "claim_id": "claim-7",
+    "impact_level": "high",
+    "reviewer_required": true,
+    "status": "pending"
+  }
+]

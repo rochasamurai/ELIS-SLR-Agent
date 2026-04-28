@@ -1,0 +1,50 @@
+[
+  {
+    "_meta": true,
+    "protocol_version": "ELIS 2025 (MVP)",
+    "input_path": "C:\\Users\\carlo\\ELIS-SLR-Agent\\.tmp\\pe-gha-02\\test_write_output0\\appendix_a.json",
+    "output_path": "C:\\Users\\carlo\\ELIS-SLR-Agent\\.tmp\\pe-gha-02\\test_write_output0\\appendix_b.json",
+    "retrieved_at": "2026-04-22T19:55:40Z",
+    "topics_enabled": [
+      "t1"
+    ],
+    "sources_touched": [
+      "crossref"
+    ],
+    "counts": {
+      "included_count": 1,
+      "excluded_count": 1,
+      "excluded_by_reason": {
+        "out_of_year": 1
+      }
+    },
+    "summary": {
+      "total": 1,
+      "per_source": {
+        "crossref": 1
+      },
+      "per_topic": {
+        "t1": 1
+      }
+    },
+    "run_inputs": {
+      "year_from": 2020,
+      "year_to": 2024,
+      "languages": [
+        "en"
+      ],
+      "allow_unknown_language": false,
+      "enforce_preprint_policy": false
+    }
+  },
+  {
+    "id": "doi:10.1/a",
+    "title": "Paper A",
+    "year": 2022,
+    "language": "en",
+    "source": "crossref",
+    "query_topic": "t1",
+    "query_string": "test",
+    "retrieved_at": "2024-01-01T00:00:00Z"
+  }
+]

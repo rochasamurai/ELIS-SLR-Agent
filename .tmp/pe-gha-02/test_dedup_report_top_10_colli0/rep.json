@@ -1,0 +1,91 @@
+{
+  "input_records": 24,
+  "unique_clusters": 12,
+  "duplicates_removed": 12,
+  "doi_based_dedup": 12,
+  "title_year_author_dedup": 0,
+  "fuzzy_dedup": 0,
+  "keeper_priority_source": "config/sources.yml",
+  "top_10_collisions": [
+    {
+      "cluster_id": "d9af7c4c063f",
+      "size": 2,
+      "sources": [
+        "a",
+        "b"
+      ]
+    },
+    {
+      "cluster_id": "a27715313ed6",
+      "size": 2,
+      "sources": [
+        "a",
+        "b"
+      ]
+    },
+    {
+      "cluster_id": "07c333b9e197",
+      "size": 2,
+      "sources": [
+        "a",
+        "b"
+      ]
+    },
+    {
+      "cluster_id": "ebc7979857b3",
+      "size": 2,
+      "sources": [
+        "a",
+        "b"
+      ]
+    },
+    {
+      "cluster_id": "4089dc84d6b7",
+      "size": 2,
+      "sources": [
+        "a",
+        "b"
+      ]
+    },
+    {
+      "cluster_id": "cd3e4af05b04",
+      "size": 2,
+      "sources": [
+        "a",
+        "b"
+      ]
+    },
+    {
+      "cluster_id": "8954f6818d6c",
+      "size": 2,
+      "sources": [
+        "a",
+        "b"
+      ]
+    },
+    {
+      "cluster_id": "a232c42dded8",
+      "size": 2,
+      "sources": [
+        "a",
+        "b"
+      ]
+    },
+    {
+      "cluster_id": "b53515a012d8",
+      "size": 2,
+      "sources": [
+        "a",
+        "b"
+      ]
+    },
+    {
+      "cluster_id": "f31af9cc4cbe",
+      "size": 2,
+      "sources": [
+        "a",
+        "b"
+      ]
+    }
+  ]
+}

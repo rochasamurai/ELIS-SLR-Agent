@@ -1,0 +1,19 @@
+databases:
+- enabled: true
+  max_results:
+    pilot: 100
+    production: 1000
+    testing: 25
+  max_results_default: testing
+  name: OpenAlex
+- enabled: true
+  max_results:
+    pilot: 100
+    production: 1000
+    testing: 25
+  max_results_default: production
+  name: Scopus
+query:
+  alternative_queries:
+  - simplified: electoral integrity strategies
+  boolean_string: ("electoral system" AND "integrity")

@@ -1,0 +1,7 @@
+{
+  "review_id": "r1",
+  "run_id": "run-9",
+  "trigger_source": "github-actions",
+  "execution_surface": "off-host-workflow",
+  "local_execution_allowed": false
+}

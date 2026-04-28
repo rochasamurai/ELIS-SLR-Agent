@@ -1,0 +1,66 @@
+[
+  {
+    "_meta": true,
+    "protocol_version": "ELIS 2025 (MVP)",
+    "config_path": "elis merge --inputs",
+    "retrieved_at": "1970-01-01T00:00:00Z",
+    "global": {},
+    "topics_enabled": [
+      "unknown"
+    ],
+    "sources": [
+      "crossref",
+      "openalex"
+    ],
+    "record_count": 2,
+    "summary": {
+      "total": 2,
+      "per_source": {
+        "crossref": 1,
+        "openalex": 1
+      },
+      "per_topic": {
+        "unknown": 2
+      }
+    },
+    "run_inputs": {
+      "input_files": [
+        "C:\\Users\\carlo\\ELIS-SLR-Agent\\.tmp\\pe-gha-02\\test_merge_is_deterministic_fo0\\input.json"
+      ]
+    }
+  },
+  {
+    "source": "crossref",
+    "title": "Alpha",
+    "authors": [
+      "B"
+    ],
+    "year": 2020,
+    "doi": null,
+    "source_id": null,
+    "query_topic": "unknown",
+    "query_string": "",
+    "retrieved_at": "1970-01-01T00:00:00Z",
+    "source_file": "input.json",
+    "merge_position": 2,
+    "id": "t:05ea4abd2a35a157b2ba",
+    "_stable_id": "t:05ea4abd2a35a157b2ba"
+  },
+  {
+    "source": "openalex",
+    "title": "Zeta",
+    "authors": [
+      "A"
+    ],
+    "year": 2025,
+    "doi": "10.1/zeta",
+    "source_id": null,
+    "query_topic": "unknown",
+    "query_string": "",
+    "retrieved_at": "1970-01-01T00:00:00Z",
+    "source_file": "input.json",
+    "merge_position": 1,
+    "id": "doi:10.1/zeta",
+    "_stable_id": "doi:10.1/zeta"
+  }
+]

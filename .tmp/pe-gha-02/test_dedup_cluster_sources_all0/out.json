@@ -1,0 +1,23 @@
+[
+  {
+    "_meta": true,
+    "stage": "dedup",
+    "input_records": 3,
+    "unique_clusters": 1,
+    "duplicates_removed": 2,
+    "fuzzy_enabled": false,
+    "keeper_priority_source": "config/sources.yml"
+  },
+  {
+    "source": "scopus",
+    "doi": "10.1/x",
+    "cluster_id": "4d718a0a8963",
+    "cluster_size": 3,
+    "cluster_sources": [
+      "crossref",
+      "openalex",
+      "scopus"
+    ],
+    "id": "4d718a0a8963"
+  }
+]

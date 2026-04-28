@@ -1,0 +1,20 @@
+[
+  {
+    "source": "OpenAlex",
+    "title": "Zeta",
+    "authors": [
+      "A"
+    ],
+    "year": 2025,
+    "doi": "https://doi.org/10.1/zeta"
+  },
+  {
+    "source": "CrossRef",
+    "title": "Alpha",
+    "authors": [
+      "B"
+    ],
+    "year": 2020,
+    "doi": ""
+  }
+]

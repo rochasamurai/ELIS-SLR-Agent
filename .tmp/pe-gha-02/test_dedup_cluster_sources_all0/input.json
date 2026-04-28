@@ -1,0 +1,14 @@
+[
+  {
+    "source": "openalex",
+    "doi": "10.1/x"
+  },
+  {
+    "source": "crossref",
+    "doi": "10.1/x"
+  },
+  {
+    "source": "scopus",
+    "doi": "10.1/x"
+  }
+]

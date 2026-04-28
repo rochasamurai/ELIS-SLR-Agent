@@ -1,0 +1,17 @@
+[
+  {
+    "source": "A",
+    "title": "P1",
+    "doi": "10.1/a"
+  },
+  {
+    "source": "B",
+    "title": "P2",
+    "doi": "10.1/b"
+  },
+  {
+    "source": "C",
+    "title": "P3",
+    "doi": "10.1/c"
+  }
+]

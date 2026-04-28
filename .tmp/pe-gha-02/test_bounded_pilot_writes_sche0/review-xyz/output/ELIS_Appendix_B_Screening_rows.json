@@ -1,0 +1,26 @@
+[
+  {
+    "id": "rec-0",
+    "source_id": "src-0",
+    "title": "Candidate 0",
+    "decision": "included",
+    "reason": "bounded-pilot-candidate",
+    "decided_at": "2026-04-22T19:55:42Z"
+  },
+  {
+    "id": "rec-1",
+    "source_id": "src-1",
+    "title": "Candidate 1",
+    "decision": "included",
+    "reason": "bounded-pilot-candidate",
+    "decided_at": "2026-04-22T19:55:42Z"
+  },
+  {
+    "id": "rec-2",
+    "source_id": "src-2",
+    "title": "Candidate 2",
+    "decision": "included",
+    "reason": "bounded-pilot-candidate",
+    "decided_at": "2026-04-22T19:55:42Z"
+  }
+]

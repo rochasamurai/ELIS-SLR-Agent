@@ -1,0 +1,27 @@
+[
+  {
+    "_meta": true,
+    "stage": "dedup",
+    "input_records": 2,
+    "unique_clusters": 1,
+    "duplicates_removed": 1,
+    "fuzzy_enabled": false,
+    "keeper_priority_source": "config/sources.yml"
+  },
+  {
+    "source": "scopus",
+    "title": "  Electoral Integrity  ",
+    "authors": [
+      "  Smith, J.  "
+    ],
+    "year": 2021,
+    "doi": null,
+    "cluster_id": "67cf2e0382aa",
+    "cluster_size": 2,
+    "cluster_sources": [
+      "crossref",
+      "scopus"
+    ],
+    "id": "67cf2e0382aa"
+  }
+]

@@ -1,0 +1,14 @@
+[
+  {
+    "source": "A",
+    "title": "Z",
+    "doi": "10.1/z",
+    "year": 2020
+  },
+  {
+    "source": "B",
+    "title": "A",
+    "doi": "10.1/a",
+    "year": 2019
+  }
+]

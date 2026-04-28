@@ -1,0 +1,105 @@
+[
+  {
+    "_meta": true,
+    "protocol_version": "ELIS 2025 (MVP)",
+    "config_path": "elis merge --inputs",
+    "retrieved_at": "1970-01-01T00:00:00Z",
+    "global": {},
+    "topics_enabled": [
+      "unknown"
+    ],
+    "sources": [
+      "a"
+    ],
+    "record_count": 5,
+    "summary": {
+      "total": 5,
+      "per_source": {
+        "a": 5
+      },
+      "per_topic": {
+        "unknown": 5
+      }
+    },
+    "run_inputs": {
+      "input_files": [
+        "C:\\Users\\carlo\\ELIS-SLR-Agent\\.tmp\\pe-gha-02\\test_year_variants_cast_correc0\\input.json"
+      ]
+    }
+  },
+  {
+    "source": "a",
+    "title": "Y1",
+    "year": 2024,
+    "authors": [],
+    "doi": null,
+    "source_id": null,
+    "query_topic": "unknown",
+    "query_string": "",
+    "retrieved_at": "1970-01-01T00:00:00Z",
+    "source_file": "input.json",
+    "merge_position": 1,
+    "id": "t:8319031c5626b6facf56",
+    "_stable_id": "t:8319031c5626b6facf56"
+  },
+  {
+    "source": "a",
+    "title": "Y2",
+    "year": 2023,
+    "authors": [],
+    "doi": null,
+    "source_id": null,
+    "query_topic": "unknown",
+    "query_string": "",
+    "retrieved_at": "1970-01-01T00:00:00Z",
+    "source_file": "input.json",
+    "merge_position": 2,
+    "id": "t:c8cc7b732cbed1d21b98",
+    "_stable_id": "t:c8cc7b732cbed1d21b98"
+  },
+  {
+    "source": "a",
+    "title": "Y3",
+    "year": null,
+    "authors": [],
+    "doi": null,
+    "source_id": null,
+    "query_topic": "unknown",
+    "query_string": "",
+    "retrieved_at": "1970-01-01T00:00:00Z",
+    "source_file": "input.json",
+    "merge_position": 3,
+    "id": "t:c1fa5e9573ae9a19db98",
+    "_stable_id": "t:c1fa5e9573ae9a19db98"
+  },
+  {
+    "source": "a",
+    "title": "Y4",
+    "year": null,
+    "authors": [],
+    "doi": null,
+    "source_id": null,
+    "query_topic": "unknown",
+    "query_string": "",
+    "retrieved_at": "1970-01-01T00:00:00Z",
+    "source_file": "input.json",
+    "merge_position": 4,
+    "id": "t:408785e4803c88a6c58a",
+    "_stable_id": "t:408785e4803c88a6c58a"
+  },
+  {
+    "source": "a",
+    "title": "Y5",
+    "year": null,
+    "authors": [],
+    "doi": null,
+    "source_id": null,
+    "query_topic": "unknown",
+    "query_string": "",
+    "retrieved_at": "1970-01-01T00:00:00Z",
+    "source_file": "input.json",
+    "merge_position": 5,
+    "id": "t:0cf6c523780d63839c08",
+    "_stable_id": "t:0cf6c523780d63839c08"
+  }
+]

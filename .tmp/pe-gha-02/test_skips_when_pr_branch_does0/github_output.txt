@@ -1,0 +1,7 @@
+should_dispatch=false
+pe_id=PE-AUTO-05
+branch=feature/pe-auto-05-validator-runner
+engine=codex
+plan_file=ELIS_2Agent_Automation_Plan_v2_0.md
+base_branch=main
+pr_number=299

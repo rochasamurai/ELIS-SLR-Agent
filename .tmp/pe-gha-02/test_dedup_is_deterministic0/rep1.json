@@ -1,0 +1,10 @@
+{
+  "input_records": 2,
+  "unique_clusters": 2,
+  "duplicates_removed": 0,
+  "doi_based_dedup": 0,
+  "title_year_author_dedup": 0,
+  "fuzzy_dedup": 0,
+  "keeper_priority_source": "config/sources.yml",
+  "top_10_collisions": []
+}

@@ -1,0 +1,14 @@
+[
+  {
+    "_meta": true,
+    "topics_enabled": [
+      "t1"
+    ],
+    "protocol_version": "v2"
+  },
+  {
+    "source": "A",
+    "title": "T",
+    "doi": "10.1/a"
+  }
+]

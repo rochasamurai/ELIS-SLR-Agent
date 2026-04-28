@@ -1,0 +1,1 @@
+{"record_id": "r1", "suggestion": "review", "confidence": 0.6, "evidence_spans": [{"text": "Secure voting", "valid": true}], "model_id": "asta-mcp-v1", "prompt_hash": "", "run_id": "r503", "timestamp": "2026-04-22T19:55:33+00:00"}

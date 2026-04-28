@@ -1,0 +1,15 @@
+{
+  "total_records": 1,
+  "per_source_counts": {
+    "crossref": 1
+  },
+  "doi_coverage_pct": 100.0,
+  "null_field_ratios": {
+    "title": 0.0,
+    "abstract": 1.0,
+    "language": 0.0
+  },
+  "input_files": [
+    "C:\\Users\\carlo\\ELIS-SLR-Agent\\.tmp\\pe-gha-02\\test_merge_output_validates_an0\\input.json"
+  ]
+}

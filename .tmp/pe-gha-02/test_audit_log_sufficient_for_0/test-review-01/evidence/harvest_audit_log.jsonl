@@ -1,0 +1,2 @@
+{"attempt": 1, "detail": "", "error": "first fail", "review_id": "test-review-01", "source": "crossref", "status": "retry", "step": "fetch", "timestamp": "2026-04-22T19:55:37.528701+00:00"}
+{"attempt": 2, "detail": "", "error": "", "review_id": "test-review-01", "source": "crossref", "status": "success", "step": "fetch", "timestamp": "2026-04-22T19:55:37.529043+00:00"}

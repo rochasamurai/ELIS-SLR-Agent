@@ -1,0 +1,90 @@
+[
+  {
+    "_meta": true,
+    "protocol_version": "ELIS 2025 (MVP)",
+    "config_path": "elis merge --inputs",
+    "retrieved_at": "1970-01-01T00:00:00Z",
+    "global": {},
+    "topics_enabled": [
+      "unknown"
+    ],
+    "sources": [
+      "a"
+    ],
+    "record_count": 4,
+    "summary": {
+      "total": 4,
+      "per_source": {
+        "a": 4
+      },
+      "per_topic": {
+        "unknown": 4
+      }
+    },
+    "run_inputs": {
+      "input_files": [
+        "C:\\Users\\carlo\\ELIS-SLR-Agent\\.tmp\\pe-gha-02\\test_doi_coverage_pct_computed0\\input.json"
+      ]
+    }
+  },
+  {
+    "source": "a",
+    "title": "T1",
+    "doi": "10.1/a",
+    "authors": [],
+    "year": null,
+    "source_id": null,
+    "query_topic": "unknown",
+    "query_string": "",
+    "retrieved_at": "1970-01-01T00:00:00Z",
+    "source_file": "input.json",
+    "merge_position": 1,
+    "id": "doi:10.1/a",
+    "_stable_id": "doi:10.1/a"
+  },
+  {
+    "source": "a",
+    "title": "T2",
+    "doi": null,
+    "authors": [],
+    "year": null,
+    "source_id": null,
+    "query_topic": "unknown",
+    "query_string": "",
+    "retrieved_at": "1970-01-01T00:00:00Z",
+    "source_file": "input.json",
+    "merge_position": 2,
+    "id": "t:2d7dd1aadbf953ecad3f",
+    "_stable_id": "t:2d7dd1aadbf953ecad3f"
+  },
+  {
+    "source": "a",
+    "title": "T3",
+    "doi": "10.1/c",
+    "authors": [],
+    "year": null,
+    "source_id": null,
+    "query_topic": "unknown",
+    "query_string": "",
+    "retrieved_at": "1970-01-01T00:00:00Z",
+    "source_file": "input.json",
+    "merge_position": 3,
+    "id": "doi:10.1/c",
+    "_stable_id": "doi:10.1/c"
+  },
+  {
+    "source": "a",
+    "title": "T4",
+    "doi": null,
+    "authors": [],
+    "year": null,
+    "source_id": null,
+    "query_topic": "unknown",
+    "query_string": "",
+    "retrieved_at": "1970-01-01T00:00:00Z",
+    "source_file": "input.json",
+    "merge_position": 4,
+    "id": "t:7228a562723725385ea0",
+    "_stable_id": "t:7228a562723725385ea0"
+  }
+]

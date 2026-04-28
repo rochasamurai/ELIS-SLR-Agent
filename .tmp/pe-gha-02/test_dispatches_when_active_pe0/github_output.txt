@@ -1,0 +1,6 @@
+should_dispatch=true
+pe_id=PE-AUTO-04
+branch=feature/pe-auto-04-impl-runner
+engine=codex
+plan_file=ELIS_2Agent_Automation_Plan_v2_0.md
+base_branch=main

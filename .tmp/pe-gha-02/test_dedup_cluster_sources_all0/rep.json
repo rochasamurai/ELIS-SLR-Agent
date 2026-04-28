@@ -1,0 +1,20 @@
+{
+  "input_records": 3,
+  "unique_clusters": 1,
+  "duplicates_removed": 2,
+  "doi_based_dedup": 2,
+  "title_year_author_dedup": 0,
+  "fuzzy_dedup": 0,
+  "keeper_priority_source": "config/sources.yml",
+  "top_10_collisions": [
+    {
+      "cluster_id": "4d718a0a8963",
+      "size": 3,
+      "sources": [
+        "crossref",
+        "openalex",
+        "scopus"
+      ]
+    }
+  ]
+}

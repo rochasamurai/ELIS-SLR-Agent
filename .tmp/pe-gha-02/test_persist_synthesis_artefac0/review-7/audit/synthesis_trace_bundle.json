@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0",
+  "review_id": "review-7",
+  "run_id": "run-7",
+  "trigger_source": "github-actions",
+  "execution_surface": "off-host-workflow",
+  "local_execution_allowed": false,
+  "extraction_input_schema_path": "schemas/appendix_c.schema.json",
+  "claim_count": 1,
+  "claim_ids": [
+    "claim-7"
+  ],
+  "trace_sha256": "1ab1e88921828ca4092dd4cf3310e908fa4fc87c64395da5b7409af0ee81ae8f",
+  "commit_sha": "cafebabe",
+  "generated_at": "2026-04-21T16:00:00Z",
+  "traces": [
+    {
+      "claim_id": "claim-7",
+      "supporting_record_ids": [
+        "rec-a"
+      ],
+      "evidence_refs": [
+        "appendix-c:row-33"
+      ],
+      "reasoning_summary": "Evidence link retained."
+    }
+  ]
+}

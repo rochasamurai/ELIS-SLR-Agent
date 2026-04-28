@@ -1,0 +1,14 @@
+{
+  "review_id": "review-xyz",
+  "stage": "screening-pilot",
+  "appendix_a_input_path": "C:/Users/carlo/ELIS-SLR-Agent/.tmp/pe-gha-02/test_bounded_pilot_writes_sche0/appendix_a_input.json",
+  "appendix_b_output_path": "C:/Users/carlo/ELIS-SLR-Agent/.tmp/pe-gha-02/test_bounded_pilot_writes_sche0/review-xyz/output/ELIS_Appendix_B_Screening_rows.json",
+  "appendix_a_schema_path": "schemas/appendix_a.schema.json",
+  "appendix_b_schema_path": "schemas/appendix_b.schema.json",
+  "record_cap": 3,
+  "records_seen": 8,
+  "records_processed": 3,
+  "records_written": 3,
+  "stored_outside_runtime_state": true,
+  "generated_at": "2026-04-22T19:55:42Z"
+}

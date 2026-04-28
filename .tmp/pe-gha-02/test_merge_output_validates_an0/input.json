@@ -1,0 +1,14 @@
+[
+  {
+    "source": "CrossRef",
+    "title": "Screenable Paper",
+    "authors": [
+      "Eve"
+    ],
+    "year": 2021,
+    "doi": "10.1/screen",
+    "query_topic": "t1",
+    "query_string": "test query",
+    "language": "en"
+  }
+]

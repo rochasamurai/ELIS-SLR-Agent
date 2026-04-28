@@ -1,0 +1,23 @@
+[
+  {
+    "_meta": true,
+    "stage": "dedup",
+    "input_records": 2,
+    "unique_clusters": 1,
+    "duplicates_removed": 1,
+    "fuzzy_enabled": false,
+    "keeper_priority_source": "config/sources.yml"
+  },
+  {
+    "source": "A",
+    "title": "Electoral Integrity in Modern Democracies",
+    "year": 2020,
+    "cluster_id": "6d09e94ff354",
+    "cluster_size": 2,
+    "cluster_sources": [
+      "a",
+      "b"
+    ],
+    "id": "6d09e94ff354"
+  }
+]

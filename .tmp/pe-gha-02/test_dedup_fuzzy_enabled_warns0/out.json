@@ -1,0 +1,22 @@
+[
+  {
+    "_meta": true,
+    "stage": "dedup",
+    "input_records": 1,
+    "unique_clusters": 1,
+    "duplicates_removed": 0,
+    "fuzzy_enabled": true,
+    "keeper_priority_source": "config/sources.yml"
+  },
+  {
+    "source": "A",
+    "title": "T",
+    "doi": "10.1/x",
+    "cluster_id": "4d718a0a8963",
+    "cluster_size": 1,
+    "cluster_sources": [
+      "a"
+    ],
+    "id": "4d718a0a8963"
+  }
+]

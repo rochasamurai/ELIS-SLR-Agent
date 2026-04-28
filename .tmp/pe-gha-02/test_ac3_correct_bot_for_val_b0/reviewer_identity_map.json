@@ -1,0 +1,1 @@
+{"agents": {"CODEX": {"engine": "codex", "review_login": "elis-codex-bot", "validator_capable_on_protected_branches": true}, "Claude Code": {"engine": "claude", "review_login": "elis-claude-bot", "validator_capable_on_protected_branches": true}, "PM": {"engine": "pm", "review_login": "elis-pm-bot", "validator_capable_on_protected_branches": false}}}

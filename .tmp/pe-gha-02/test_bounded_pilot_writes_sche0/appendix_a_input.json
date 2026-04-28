@@ -1,0 +1,62 @@
+[
+  {
+    "_meta": true,
+    "protocol_version": "ELIS 2025 (MVP)"
+  },
+  {
+    "id": "rec-0",
+    "source_id": "src-0",
+    "title": "Candidate 0",
+    "year": 2024,
+    "language": "en"
+  },
+  {
+    "id": "rec-1",
+    "source_id": "src-1",
+    "title": "Candidate 1",
+    "year": 2024,
+    "language": "en"
+  },
+  {
+    "id": "rec-2",
+    "source_id": "src-2",
+    "title": "Candidate 2",
+    "year": 2024,
+    "language": "en"
+  },
+  {
+    "id": "rec-3",
+    "source_id": "src-3",
+    "title": "Candidate 3",
+    "year": 2024,
+    "language": "en"
+  },
+  {
+    "id": "rec-4",
+    "source_id": "src-4",
+    "title": "Candidate 4",
+    "year": 2024,
+    "language": "en"
+  },
+  {
+    "id": "rec-5",
+    "source_id": "src-5",
+    "title": "Candidate 5",
+    "year": 2024,
+    "language": "en"
+  },
+  {
+    "id": "rec-6",
+    "source_id": "src-6",
+    "title": "Candidate 6",
+    "year": 2024,
+    "language": "en"
+  },
+  {
+    "id": "rec-7",
+    "source_id": "src-7",
+    "title": "Candidate 7",
+    "year": 2024,
+    "language": "en"
+  }
+]

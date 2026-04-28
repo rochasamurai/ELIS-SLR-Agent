@@ -1,0 +1,19 @@
+{
+  "input_records": 2,
+  "unique_clusters": 1,
+  "duplicates_removed": 1,
+  "doi_based_dedup": 0,
+  "title_year_author_dedup": 1,
+  "fuzzy_dedup": 0,
+  "keeper_priority_source": "config/sources.yml",
+  "top_10_collisions": [
+    {
+      "cluster_id": "67cf2e0382aa",
+      "size": 2,
+      "sources": [
+        "crossref",
+        "scopus"
+      ]
+    }
+  ]
+}

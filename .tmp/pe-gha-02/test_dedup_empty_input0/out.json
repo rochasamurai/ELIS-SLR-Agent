@@ -1,0 +1,11 @@
+[
+  {
+    "_meta": true,
+    "stage": "dedup",
+    "input_records": 0,
+    "unique_clusters": 0,
+    "duplicates_removed": 0,
+    "fuzzy_enabled": false,
+    "keeper_priority_source": "config/sources.yml"
+  }
+]

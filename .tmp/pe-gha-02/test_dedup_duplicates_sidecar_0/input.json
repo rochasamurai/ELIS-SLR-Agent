@@ -1,0 +1,26 @@
+[
+  {
+    "source": "openalex",
+    "title": "Same Paper",
+    "doi": "10.1/abc",
+    "year": 2020
+  },
+  {
+    "source": "crossref",
+    "title": "Same Paper",
+    "doi": "10.1/abc",
+    "year": 2020
+  },
+  {
+    "source": "scopus",
+    "title": "Same Paper",
+    "doi": "10.1/abc",
+    "year": 2020
+  },
+  {
+    "source": "wos",
+    "title": "Unique Paper",
+    "doi": "10.1/xyz",
+    "year": 2021
+  }
+]

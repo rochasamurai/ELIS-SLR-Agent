@@ -1,0 +1,23 @@
+[
+  {
+    "_meta": true,
+    "stage": "dedup",
+    "input_records": 2,
+    "unique_clusters": 1,
+    "duplicates_removed": 1,
+    "fuzzy_enabled": false,
+    "keeper_priority_source": "config/sources.yml"
+  },
+  {
+    "source": "scopus",
+    "title": "Tie Paper",
+    "doi": "10.1/tie",
+    "cluster_id": "5771675359c3",
+    "cluster_size": 2,
+    "cluster_sources": [
+      "openalex",
+      "scopus"
+    ],
+    "id": "5771675359c3"
+  }
+]

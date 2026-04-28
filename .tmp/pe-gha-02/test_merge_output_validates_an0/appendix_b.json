@@ -1,0 +1,59 @@
+[
+  {
+    "_meta": true,
+    "protocol_version": "ELIS 2025 (MVP)",
+    "input_path": "C:\\Users\\carlo\\ELIS-SLR-Agent\\.tmp\\pe-gha-02\\test_merge_output_validates_an0\\appendix_a.json",
+    "output_path": "C:\\Users\\carlo\\ELIS-SLR-Agent\\.tmp\\pe-gha-02\\test_merge_output_validates_an0\\appendix_b.json",
+    "retrieved_at": "2026-04-22T19:55:40Z",
+    "topics_enabled": [
+      "t1"
+    ],
+    "sources_touched": [
+      "crossref"
+    ],
+    "counts": {
+      "included_count": 1,
+      "excluded_count": 0,
+      "excluded_by_reason": {}
+    },
+    "summary": {
+      "total": 1,
+      "per_source": {
+        "crossref": 1
+      },
+      "per_topic": {
+        "t1": 1
+      }
+    },
+    "run_inputs": {
+      "year_from": 1990,
+      "year_to": 2026,
+      "languages": [
+        "en",
+        "fr",
+        "es",
+        "pt"
+      ],
+      "allow_unknown_language": false,
+      "enforce_preprint_policy": false
+    }
+  },
+  {
+    "source": "crossref",
+    "title": "Screenable Paper",
+    "authors": [
+      "Eve"
+    ],
+    "year": 2021,
+    "doi": "10.1/screen",
+    "query_topic": "t1",
+    "query_string": "test query",
+    "language": "en",
+    "source_id": null,
+    "retrieved_at": "1970-01-01T00:00:00Z",
+    "source_file": "input.json",
+    "merge_position": 1,
+    "id": "doi:10.1/screen",
+    "_stable_id": "doi:10.1/screen"
+  }
+]

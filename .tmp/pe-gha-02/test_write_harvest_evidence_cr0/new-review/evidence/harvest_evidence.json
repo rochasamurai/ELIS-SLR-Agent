@@ -1,0 +1,17 @@
+{
+  "canonical_manifest_path": "C:\\Users\\carlo\\ELIS-SLR-Agent\\.tmp\\pe-gha-02\\test_write_harvest_evidence_cr0\\new-review\\canonical\\ELIS_Appendix_A_Search_rows_manifest.json",
+  "canonical_output_path": "C:\\Users\\carlo\\ELIS-SLR-Agent\\.tmp\\pe-gha-02\\test_write_harvest_evidence_cr0\\new-review\\canonical\\ELIS_Appendix_A_Search_rows.json",
+  "merge_report_path": "C:\\Users\\carlo\\ELIS-SLR-Agent\\.tmp\\pe-gha-02\\test_write_harvest_evidence_cr0\\new-review\\canonical\\merge_report.json",
+  "review_id": "new-review",
+  "schema_version": "1.0",
+  "search_config": "cfg.yml",
+  "sources": [
+    {
+      "manifest_path": "C:\\Users\\carlo\\ELIS-SLR-Agent\\.tmp\\pe-gha-02\\test_write_harvest_evidence_cr0\\new-review\\raw\\openalex_manifest.json",
+      "output_path": "C:\\Users\\carlo\\ELIS-SLR-Agent\\.tmp\\pe-gha-02\\test_write_harvest_evidence_cr0\\new-review\\raw\\openalex.json",
+      "source": "openalex"
+    }
+  ],
+  "tier": "test",
+  "workflow_path": ".github/workflows/elis-agent-search.yml"
+}

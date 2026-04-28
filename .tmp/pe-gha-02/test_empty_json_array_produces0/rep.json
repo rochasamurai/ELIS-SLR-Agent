@@ -1,0 +1,13 @@
+{
+  "total_records": 0,
+  "per_source_counts": {},
+  "doi_coverage_pct": 0.0,
+  "null_field_ratios": {
+    "title": 0.0,
+    "abstract": 0.0,
+    "language": 0.0
+  },
+  "input_files": [
+    "C:\\Users\\carlo\\ELIS-SLR-Agent\\.tmp\\pe-gha-02\\test_empty_json_array_produces0\\empty.json"
+  ]
+}

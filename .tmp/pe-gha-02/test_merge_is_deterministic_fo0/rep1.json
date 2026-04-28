@@ -1,0 +1,16 @@
+{
+  "total_records": 2,
+  "per_source_counts": {
+    "crossref": 1,
+    "openalex": 1
+  },
+  "doi_coverage_pct": 50.0,
+  "null_field_ratios": {
+    "title": 0.0,
+    "abstract": 1.0,
+    "language": 1.0
+  },
+  "input_files": [
+    "C:\\Users\\carlo\\ELIS-SLR-Agent\\.tmp\\pe-gha-02\\test_merge_is_deterministic_fo0\\input.json"
+  ]
+}

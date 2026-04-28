@@ -1,0 +1,1 @@
+{"type": "object", "required": ["id", "source", "retrieved_at", "query_topic", "query_string"], "properties": {"id": {"type": "string"}, "title": {"type": ["string", "null"]}, "year": {"type": ["integer", "null"]}, "source": {"type": "string"}, "retrieved_at": {"type": "string"}, "query_topic": {"type": "string"}, "query_string": {"type": "string"}}}
