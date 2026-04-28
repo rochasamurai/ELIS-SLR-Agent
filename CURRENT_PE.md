@@ -126,7 +126,7 @@
 | PE-SLR-14       | slr            | prog-impl-b          | prog-val-a         | feature/pe-slr-14-extraction-synthesis-off-host-contract-validation     | merged          | 2026-04-26   |
 | PE-SLR-15       | slr            | prog-impl-a          | prog-val-b         | feature/pe-slr-15-hybrid-slr-end-to-end-validation-and-housekeeping     | merged          | 2026-04-26   |
 | PE-AGT-00       | agt            | infra-impl-a         | infra-val-b        | feature/pe-agt-00-model-authentication-setup                            | implementing    | 2026-04-26   |
-| PE-INFRA-AGENT-01 | infra         | infra-impl-b         | infra-val-a        | feature/pe-infra-agent-01-doc-consolidation                             | implementing    | 2026-04-28   |
+| PE-INFRA-AGENT-01 | infra         | infra-impl-b         | infra-val-a        | feature/pe-infra-agent-01-doc-consolidation                             | validating      | 2026-04-28   |
 
 Valid status values:
 - `planning`
