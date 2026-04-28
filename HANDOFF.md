@@ -1,138 +1,70 @@
 ## Summary
-Removed 11 obsolete engine-specific agent documentation/config files so the repo no longer treats them as active guidance. Verified the remaining agent documentation/config source-of-truth surfaces are `openclaw/openclaw.json` and `docs/openclaw/AGENT_CATALOGUE.md`; the deleted files are absent and no longer available as competing references. Added follow-up fixes for PR #388 so `scripts/check_current_pe.py` accepts both legacy agent labels and ADR-009 slot-based labels in the Agent roles table, reviewer/bot identity mapping now loads from `openclaw/openclaw.json` (`agents.reviewerIdentities`) instead of the intentionally deleted standalone map file, and `tests/test_gate2_auto_merge.py` now exercises slot-based validator-role fixtures while no longer expecting the intentionally deleted `docs/openclaw/PARALLEL_TRACK_GUIDE.md`.
+Verified the PM agent configuration and dispatch surface for PE-AGT-01 without changing runtime config. Confirmed the `pm` agent is declared in `openclaw/openclaw.json`, uses workspace `/home/samurai/openclaw/workspace-pm`, carries the normalized DeepSeek v4 Pro model entry, exposes Discord and Telegram bindings, includes all 18 worker agents in its subagent allow-list, and restricts elevated exec to the PO Discord user only. Also verified `config/openclaw/pm_dispatch_settings.json` exists and still enforces cross-agent session visibility, confirmed the active `CURRENT_PE.md` state for the smoke test, and recorded a self-review artifact at `docs/reviews/archive/REVIEW_PE_AGT_01.md`.
 
 ## Files Changed
 | Path | Type |
 |---|---|
-| `config/reviewer_identity_map.json` | deleted |
-| `docs/openclaw/CLAUDE_AUTH_SETUP.md` | deleted |
-| `docs/openclaw/CODEX_AGENT_SETUP.md` | deleted |
-| `docs/openclaw/CODEX_AUTH_SETUP.md` | deleted |
-| `docs/openclaw/INFRA_AGENT_SETUP.md` | deleted |
-| `docs/openclaw/PARALLEL_TRACK_GUIDE.md` | deleted |
-| `docs/openclaw/PM_AGENT_ORCHESTRATION_CONTRACT.md` | deleted |
-| `docs/openclaw/PM_AGENT_RULES.md` | deleted |
-| `docs/openclaw/PM_CROSS_AGENT_DISPATCH_EVIDENCE.md` | deleted |
-| `docs/pm_agent/ASSIGNMENT_PROTOCOL.md` | deleted |
-| `docs/pm_agent/ESCALATION_PROTOCOL.md` | deleted |
 | `HANDOFF.md` | modified |
-| `elis/reviewer_identity.py` | modified |
-| `openclaw/openclaw.json` | modified |
-| `scripts/check_current_pe.py` | modified |
-| `scripts/check_reviewer_identity.py` | modified |
-| `scripts/gh_bot.py` | modified |
-| `tests/test_check_current_pe.py` | modified |
-| `tests/test_gate2_auto_merge.py` | modified |
-| `tests/test_parallel_track_scheduler.py` | modified |
-| `tests/test_pm_cross_agent_dispatch.py` | modified |
-| `tests/test_pm_agent_rules.py` | modified |
-| `tests/test_validator_identity_mapping.py` | modified |
+| `docs/reviews/archive/REVIEW_PE_AGT_01.md` | new |
 
 ## Design Decisions
-- Kept the original PE change set focused on the 11 requested deletions, then applied only the minimal follow-up code fixes needed to unblock PR #388 CI.
-- Updated `scripts/check_current_pe.py` to treat role labels as compatibility aliases per engine: `codex` matches either `CODEX` or `slot-a`, `claude` matches either `Claude Code` or `slot-b`, and `gemini` still matches `Gemini CLI`.
-- Restored reviewer identity loading through the canonical runtime config instead of recreating the deleted standalone map file, so runtime helpers and CI tests share one source of truth.
-- Kept `scripts/check_reviewer_identity.py` black-formatted and aligned the gate-2 acceptance fixtures with the slot-based Agent roles table now used in `CURRENT_PE.md`.
-- Removed the `PARALLEL_TRACK_GUIDE.md` expectation from gate-2 acceptance coverage because that file deletion is intentional PE scope, not a regression.
-- Added a defensive `sys.path` bootstrap to `scripts/gh_bot.py` so direct script execution still resolves the in-repo `elis` package on hosts where `scripts/` becomes `sys.path[0]`.
-- Interpreted the legacy-name verification requirement narrowly: confirm the deleted agent-doc/config surfaces are removed and that the intended surviving source-of-truth files still exist. A repo-wide non-archive search still returns many historical/planning/runtime references to `CODEX`, `codex`, and `Claude Code`, so broader normalization is out of scope for this PE.
-- Recorded the environment gate outcome exactly as observed: `black` and `ruff` passed; `pytest` is unavailable in this session (`No module named pytest`).
-- Extended `scripts/check_reviewer_identity.py` to parse the canonical `## Agent roles` markdown table (`| slot-a | Validator |`) in addition to the legacy inline note, because current branch metadata now expresses role assignment via slot labels.
-- Updated `tests/test_gate2_auto_merge.py` fixtures to generate slot-based `CURRENT_PE.md` examples so the regression test reflects the branch's actual role table format.
-- Repointed deleted-doc regression tests at current sources of truth instead of resurrecting removed files: parallel-track rule assertions now validate the scheduler script plus archived plan examples, PM dispatch coverage now validates `openclaw/openclaw.json` allow-listing for validator targets, PM rules coverage now reads `openclaw/workspaces/workspace-pm/AGENTS.md`, and PM runbook coverage now reads the same workspace AGENTS file instead of the intentionally deleted `docs/openclaw/PM_AGENT_RULES.md`.
+- Made this a verification-only PE because the checked PM configuration already satisfies the requested roster, elevated-exec scope, dispatch settings, and smoke-test conditions.
+- Treated `deepseek/deepseek-v4-pro` in `openclaw/openclaw.json` as the canonical normalized model identifier used by the repo, while explicitly noting that it does not literally include the `openrouter/` prefix from the request.
+- Treated Discord as PM-primary and Telegram as PM-secondary based on the stated placement contract for the PE, not JSON binding order, because the binding list itself does not encode priority metadata.
+- Used repository and GitHub evidence to satisfy AC-3/AC-4: local-first placement is documented in `AGENTS.md` / PM workspace rules, and `elis-pm-bot` has admin access on the repository.
 
 ## Acceptance Criteria
-- [x] Delete `docs/openclaw/CODEX_AGENT_SETUP.md`
-- [x] Delete `docs/openclaw/CODEX_AUTH_SETUP.md`
-- [x] Delete `docs/openclaw/CLAUDE_AUTH_SETUP.md`
-- [x] Delete `docs/openclaw/INFRA_AGENT_SETUP.md`
-- [x] Delete `docs/openclaw/PM_AGENT_ORCHESTRATION_CONTRACT.md`
-- [x] Delete `docs/openclaw/PM_CROSS_AGENT_DISPATCH_EVIDENCE.md`
-- [x] Delete `docs/openclaw/PARALLEL_TRACK_GUIDE.md`
-- [x] Delete `docs/openclaw/PM_AGENT_RULES.md`
-- [x] Delete `config/reviewer_identity_map.json`
-- [x] Delete `docs/pm_agent/ASSIGNMENT_PROTOCOL.md`
-- [x] Delete `docs/pm_agent/ESCALATION_PROTOCOL.md`
-- [x] Verify `openclaw/openclaw.json` still exists as a source of truth
-- [x] Verify `docs/openclaw/AGENT_CATALOGUE.md` still exists as a source of truth
-- [x] Verify deleted files are absent from the working tree
-- [x] Verify no additional active source-of-truth file was retained from the deleted set
-- [ ] Verify no remaining files reference legacy engine names beyond archived documents [blocked: repo-wide non-archive search still returns many matches in active historical/planning/runtime files outside this PE scope]
+- [x] AC-1: Agent ID declared in `openclaw/openclaw.json` with identifier `pm`
+- [x] AC-2: PM workspace and required permissions are configured (`/home/samurai/openclaw/workspace-pm`, worker allow-list, elevated exec scope)
+- [x] AC-3: Execution surface matches placement contract (PM runs local-first on `elis-server`)
+- [x] AC-4: GitHub identity `elis-pm-bot` is present with required repository access
+- [x] AC-5: Configuration verification and smoke test completed without errors
+- [x] AC-6: Removed from this PE per plan v2.0.1
 
 ## Validation Commands
-- `python -m black scripts/check_reviewer_identity.py`
-  - `1 file left unchanged.`
-- `python -m black --check scripts/check_current_pe.py scripts/check_reviewer_identity.py tests/test_check_current_pe.py tests/test_gate2_auto_merge.py`
-  - `4 files would be left unchanged.`
-- `python -m ruff check scripts/check_current_pe.py scripts/check_reviewer_identity.py tests/test_check_current_pe.py tests/test_gate2_auto_merge.py`
-  - `All checks passed!`
-- `python -m black tests/test_parallel_track_scheduler.py tests/test_pm_cross_agent_dispatch.py tests/test_pm_agent_rules.py`
-  - `2 files reformatted, 1 file left unchanged.`
-- `python -m black tests/test_parallel_track_scheduler.py tests/test_pm_runbooks.py`
-  - `1 file reformatted, 1 file left unchanged.`
-- `python -m ruff check tests/test_parallel_track_scheduler.py tests/test_pm_cross_agent_dispatch.py tests/test_pm_agent_rules.py`
-  - `All checks passed!`
-- `python -m pytest -q tests/test_check_current_pe.py tests/test_gate2_auto_merge.py`
-  - `/usr/bin/python: No module named pytest`
-- `python scripts/check_current_pe.py`
-  - `CURRENT_PE.md OK — release context, roles, registry, and alternation valid.`
-- `python - <<'PY' ... runpy.run_path('scripts/gh_bot.py', run_name='__main__') ... PY`
-  - Reached CLI argument parsing successfully, confirming the updated direct-script import path no longer fails before startup.
-- `python scripts/gh_bot.py codex --check-only`
-  - Fails later at runtime on this host because bot-token environment is not configured here, but no longer fails due to missing `config/reviewer_identity_map.json`.
-- `rg -n --hidden --glob '!docs/_archive/**' --glob '!**/.git/**' '\b(CODEX|codex|Claude Code)\b' .`
-  - Returned many matches in active non-archive files (for example `CURRENT_PE.md`, plan files, scripts, workflow files, handoffs, and runbooks); therefore a repo-wide “no remaining references” claim cannot be made within this PE’s delete-only scope.
-- `ls -1 openclaw/openclaw.json docs/openclaw/AGENT_CATALOGUE.md`
-  - Confirmed both files exist.
-- Python existence check for all 11 deletion targets
-  - Confirmed all 11 paths are missing after `git rm`.
+- `python - <<'PY' ... inspect openclaw/openclaw.json for pm model/workspace/bindings/allow-list ... PY`
+  - `pm_model deepseek/deepseek-v4-pro`
+  - `pm_workspace /home/samurai/openclaw/workspace-pm`
+  - `allowAgents 18`
+  - `bindings [{'agentId': 'pm', 'match': {'channel': 'telegram', 'accountId': '8508429120'}}, {'agentId': 'pm', 'match': {'channel': 'discord', 'accountId': '1484943999470141702'}}]`
+- `python - <<'PY' ... compare pm allow-list against 18-worker roster ... PY`
+  - `missing_workers []`
+  - `extra_workers []`
+  - `discord_binding_count 1`
+  - `telegram_binding_count 1`
+  - `placement_local_first True`
+- `gh auth status && gh api user && gh api repos/rochasamurai/ELIS-Multi-AI-Agent-Platform/collaborators/elis-pm-bot/permission`
+  - Active GitHub CLI session is available
+  - Repository collaborator permission for `elis-pm-bot`: `admin`
+- `read /home/samurai/openclaw/workspace-pm/CURRENT_PE.md`
+  - Confirms active PE is `PE-AGT-01` on branch `feature/pe-agt-01-pm-agent-review`
+- `read config/openclaw/pm_dispatch_settings.json`
+  - Confirms `tools.sessions.visibility` is `all`
+- `git status -sb`
+  - Clean working tree before commit
 
 ## Status Packet
 ### §6.1 Working-tree state
 ```text
-## feature/pe-infra-agent-01-doc-consolidation
-D  config/reviewer_identity_map.json
-D  docs/openclaw/CLAUDE_AUTH_SETUP.md
-D  docs/openclaw/CODEX_AGENT_SETUP.md
-D  docs/openclaw/CODEX_AUTH_SETUP.md
-D  docs/openclaw/INFRA_AGENT_SETUP.md
-D  docs/openclaw/PARALLEL_TRACK_GUIDE.md
-D  docs/openclaw/PM_AGENT_ORCHESTRATION_CONTRACT.md
-D  docs/openclaw/PM_AGENT_RULES.md
-D  docs/openclaw/PM_CROSS_AGENT_DISPATCH_EVIDENCE.md
-D  docs/pm_agent/ASSIGNMENT_PROTOCOL.md
-D  docs/pm_agent/ESCALATION_PROTOCOL.md
-M  HANDOFF.md
-M  elis/reviewer_identity.py
-M  openclaw/openclaw.json
-M  scripts/check_reviewer_identity.py
-M  scripts/gh_bot.py
-M  tests/test_gate2_auto_merge.py
-M  tests/test_parallel_track_scheduler.py
-M  tests/test_pm_agent_rules.py
-M  tests/test_pm_cross_agent_dispatch.py
-M  tests/test_validator_identity_mapping.py
+## feature/pe-agt-01-pm-agent-review...origin/main
+ M HANDOFF.md
+?? docs/reviews/archive/REVIEW_PE_AGT_01.md
 ```
 
 ### §6.2 Repository state
 ```text
-feature/pe-infra-agent-01-doc-consolidation
+feature/pe-agt-01-pm-agent-review
 ```
 
 ### §6.3 Quality gates
-- `black --check` (targeted checker + tests): PASS
-- `black` (follow-up reviewer identity formatter run): PASS
-- `ruff check` (targeted checker + tests): PASS
-- `pytest -q tests/test_check_current_pe.py tests/test_gate2_auto_merge.py`: [blocked] unavailable in current environment (`No module named pytest`)
-- `pytest -q tests/test_parallel_track_scheduler.py tests/test_pm_cross_agent_dispatch.py tests/test_pm_agent_rules.py`: [blocked] unavailable in current environment (`No module named pytest`)
-- `pytest -q tests/test_parallel_track_scheduler.py tests/test_pm_runbooks.py`: [blocked] unavailable in current environment (`No module named pytest`)
-- `python scripts/check_current_pe.py`: PASS
-- `gh_bot.py` import/startup smoke check: PASS
-- `pytest -q tests/test_gate2_auto_merge.py`: [blocked] unavailable in current environment (`No module named pytest`)
-- `pytest -q` for identity tests: [blocked] unavailable in current environment (`No module named pytest`)
-- Legacy-name verification search: [blocked] repo still contains many non-archive references outside this PE scope
+- Config inspection for PM agent declaration: PASS
+- 18-agent allow-list comparison: PASS
+- Elevated exec scope verification: PASS
+- PM dispatch settings verification: PASS
+- `CURRENT_PE.md` smoke test: PASS
+- GitHub identity / permission verification for `elis-pm-bot`: PASS
 
 ### §6.4 Ready to merge
 ```text
-NO — outstanding blocked validation: pytest unavailable in this session, and repo-wide legacy-name references remain outside delete-only PE scope. Fixes #3 and #4 are implemented but not fully test-executed locally on this host.
+YES — awaiting validator review
 ```
