@@ -7,15 +7,15 @@ Reads CURRENT_PE.md to determine the active validator's agent ID and resolves
 the expected reviewer by canonical slot first (a/b/c). This avoids ambiguous
 engine-only matching when multiple validator-capable entries share an engine.
 
-For backwards compatibility, if a canonical slot key is missing from the map,
+For backwards compatibility, if a canonical slot key is missing from the config,
 it falls back to engine-based lookup only when it is unambiguous.
 
 Environment variables
 ---------------------
-REVIEWER_LOGIN    GitHub login of the review submitter (required)
-CURRENT_PE_PATH   Path to CURRENT_PE.md (default: CURRENT_PE.md)
-REVIEWER_MAP_PATH Path to config/reviewer_identity_map.json
-                  (default: config/reviewer_identity_map.json)
+REVIEWER_LOGIN        GitHub login of the review submitter (required)
+CURRENT_PE_PATH       Path to CURRENT_PE.md (default: CURRENT_PE.md)
+OPENCLAW_CONFIG_PATH  Path to openclaw/openclaw.json
+                      (default: openclaw/openclaw.json)
 
 Exit codes
 ----------
@@ -29,9 +29,7 @@ import re
 import sys
 
 CURRENT_PE_PATH = os.environ.get("CURRENT_PE_PATH", "CURRENT_PE.md")
-REVIEWER_MAP_PATH = os.environ.get(
-    "REVIEWER_MAP_PATH", "config/reviewer_identity_map.json"
-)
+OPENCLAW_CONFIG_PATH = os.environ.get("OPENCLAW_CONFIG_PATH", "openclaw/openclaw.json")
 
 # Canonical slot-to-engine mapping (AGENTS.md §14.2)
 _SLOT_TO_ENGINE: dict[str, str] = {"a": "codex", "b": "claude", "c": "gemini"}
@@ -47,17 +45,51 @@ def _load_json(path: str) -> dict:
         return json.load(fh)
 
 
-def _get_validator_agent_id(current_pe_path: str) -> str | None:
-    """Return the validator agentId from the note line in CURRENT_PE.md.
+def _load_reviewer_identities(path: str) -> dict:
+    data = _load_json(path)
+    agents = data.get("agents")
+    if not isinstance(agents, dict):
+        raise KeyError("agents")
+    identities = agents.get("reviewerIdentities")
+    if not isinstance(identities, dict):
+        raise KeyError("agents.reviewerIdentities")
+    return {"agents": identities}
 
-    Matches lines of the form:
+
+def _get_validator_agent_id(current_pe_path: str) -> str | None:
+    """Return the validator agentId from CURRENT_PE.md.
+
+    Supports both the legacy note line format:
         `infra-val-a` (CODEX @ `elis-server`) as Validator.
+
+    And the current ``## Agent roles`` markdown table format:
+        | slot-a | Validator |
     """
     with open(current_pe_path, encoding="utf-8") as fh:
         content = fh.read()
-    m = re.search(r"`([\w-]+)`\s*\([^)]+\)\s+as Validator", content)
-    if m:
-        return m.group(1)
+
+    note_match = re.search(r"`([\w-]+)`\s*([^)]+)\s+as Validator", content)
+    if note_match:
+        return note_match.group(1)
+
+    agent_roles_match = re.search(
+        r"^## Agent roles\s*$([\s\S]*?)(?=^## |\Z)",
+        content,
+        flags=re.MULTILINE,
+    )
+    if not agent_roles_match:
+        return None
+
+    agent_roles_section = agent_roles_match.group(1)
+    for line in agent_roles_section.splitlines():
+        table_match = re.match(r"^\|\s*([^|]+?)\s*\|\s*Validator\s*\|", line)
+        if not table_match:
+            continue
+        agent_label = table_match.group(1).strip()
+        slot_match = re.fullmatch(r"slot-([abc])", agent_label)
+        if slot_match:
+            return f"infra-val-{slot_match.group(1)}"
+
     return None
 
 
@@ -122,10 +154,16 @@ def main() -> int:
         return 1
 
     try:
-        reviewer_map = _load_json(REVIEWER_MAP_PATH)
+        reviewer_map = _load_reviewer_identities(OPENCLAW_CONFIG_PATH)
     except FileNotFoundError:
         print(
-            f"ERROR: reviewer_identity_map not found at '{REVIEWER_MAP_PATH}'.",
+            f"ERROR: openclaw config not found at '{OPENCLAW_CONFIG_PATH}'.",
+            file=sys.stderr,
+        )
+        return 1
+    except KeyError as exc:
+        print(
+            f"ERROR: openclaw config missing reviewer identities ({exc}).",
             file=sys.stderr,
         )
         return 1
@@ -162,7 +200,7 @@ def main() -> int:
             f"  validator_id={validator_id} slot={slot or '?'} engine={engine}\n"
             "  Expected canonical slot key mapping first (CODEX/Claude Code/Gemini CLI),\n"
             "  else an unambiguous single validator-capable engine match in\n"
-            f"  '{REVIEWER_MAP_PATH}'.",
+            f"  '{OPENCLAW_CONFIG_PATH}'.",
             file=sys.stderr,
         )
         return 1

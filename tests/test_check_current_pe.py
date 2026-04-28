@@ -87,6 +87,40 @@ VALID_CURRENT_PE_GEMINI = """\
 | PE-SLR-01   | slr    | prog-impl-codex     | gemini-cli        | feature/pe-slr-01-harvest-workflow-contract   | gate-2-pending  | 2026-04-13   |
 """
 
+VALID_CURRENT_PE_SLOT_LABELS = """\
+# Current PE Assignment
+
+## Release context
+
+| Field          | Value                                       |
+|----------------|---------------------------------------------|
+| Release        | ELIS Multi-Agent Implementation Plan · v2.0.1 |
+| Base branch    | main                                        |
+| Plan file      | ELIS_MultiAgent_Implementation_Plan_v2_0.md |
+| Plan location  | repo root                                   |
+
+## Current PE
+
+| Field   | Value                                       |
+|---------|---------------------------------------------|
+| PE      | PE-INFRA-AGENT-01                           |
+| Branch  | feature/pe-infra-agent-01-doc-consolidation |
+
+## Agent roles
+
+| Agent  | Role        |
+|--------|-------------|
+| slot-b | Implementer |
+| slot-a | Validator   |
+
+## Active PE Registry
+
+| PE-ID             | Domain | Implementer-agentId | Validator-agentId | Branch                                        | Status         | Last-updated |
+|-------------------|--------|---------------------|-------------------|-----------------------------------------------|----------------|--------------|
+| PE-AGT-00         | agt    | infra-impl-a        | infra-val-b       | feature/pe-agt-00-model-authentication-setup  | merged         | 2026-04-26   |
+| PE-INFRA-AGENT-01 | agt    | infra-impl-b        | infra-val-a       | feature/pe-infra-agent-01-doc-consolidation   | implementing   | 2026-04-28   |
+"""
+
 
 def _write_current_pe(tmp_path: Path, content: str) -> Path:
     path = tmp_path / "CURRENT_PE.md"
@@ -196,6 +230,27 @@ def test_agent_roles_table_must_match_registry_engines(tmp_path, monkeypatch):
     content = content.replace(
         "| Claude Code | Validator   |",
         "| Claude Code | Implementer |",
+    )
+    path = _write_current_pe(tmp_path, content)
+    monkeypatch.setenv("CURRENT_PE_PATH", str(path))
+    assert MODULE.main() == 1
+
+
+def test_main_accepts_slot_based_roles_table(tmp_path, monkeypatch, capsys):
+    path = _write_current_pe(tmp_path, VALID_CURRENT_PE_SLOT_LABELS)
+    monkeypatch.setenv("CURRENT_PE_PATH", str(path))
+    assert MODULE.main() == 0
+    assert "CURRENT_PE.md OK" in capsys.readouterr().out
+
+
+def test_slot_based_roles_table_must_match_registry_engines(tmp_path, monkeypatch):
+    content = VALID_CURRENT_PE_SLOT_LABELS.replace(
+        "| slot-b | Implementer |",
+        "| slot-b | Validator   |",
+    )
+    content = content.replace(
+        "| slot-a | Validator   |",
+        "| slot-a | Implementer |",
     )
     path = _write_current_pe(tmp_path, content)
     monkeypatch.setenv("CURRENT_PE_PATH", str(path))

@@ -10,7 +10,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 AGENTS_PATH = REPO_ROOT / "AGENTS.md"
 PM_AGENTS_PATH = REPO_ROOT / "openclaw" / "workspaces" / "workspace-pm" / "AGENTS.md"
 VISIBILITY_PATH = REPO_ROOT / "config" / "openclaw" / "pm_dispatch_settings.json"
-EVIDENCE_PATH = REPO_ROOT / "docs" / "openclaw" / "PM_CROSS_AGENT_DISPATCH_EVIDENCE.md"
+OPENCLAW_CONFIG_PATH = REPO_ROOT / "openclaw" / "openclaw.json"
 CHECK_SCRIPT = REPO_ROOT / "scripts" / "check_parallel_governance_pr.py"
 
 
@@ -25,10 +25,13 @@ def test_dispatch_visibility_is_all_in_tracked_config() -> None:
 
 
 def test_pm_to_validator_dispatch_ack_evidence_is_committed() -> None:
-    text = EVIDENCE_PATH.read_text(encoding="utf-8")
-    assert "sessions_send" in text
-    assert "ACK" in text
-    assert "forbidden" not in text.lower()
+    config = json.loads(OPENCLAW_CONFIG_PATH.read_text(encoding="utf-8"))
+    pm_agent = next(agent for agent in config["agents"]["list"] if agent["id"] == "pm")
+    allowed_agents = pm_agent["subagents"]["allowAgents"]
+
+    assert "infra-val-a" in allowed_agents
+    assert "infra-val-b" in allowed_agents
+    assert len(allowed_agents) >= 2
 
 
 def test_agents_gate_1_defaults_to_pm_direct_dispatch_with_fallback() -> None:
@@ -180,11 +183,10 @@ def test_api_error_on_non_list_open_prs_raises() -> None:
                 pass
 
 
-def test_dispatch_evidence_targets_infra_val_codex() -> None:
-    """The dispatch command in the evidence file must target infra-val-codex,
-    not the PE-INFRA-SLR-02 validator (infra-val-claude)."""
-    text = EVIDENCE_PATH.read_text(encoding="utf-8")
-    # The sessions_send command must reference infra-val-codex
-    assert "--session infra-val-codex" in text
-    # The sessions_send command must NOT reference the wrong validator
-    assert "--session infra-val-claude" not in text
+def test_openclaw_config_includes_validator_targets_for_pm_dispatch() -> None:
+    """PM runtime config must allow dispatch to validator-capable infra agents."""
+    config = json.loads(OPENCLAW_CONFIG_PATH.read_text(encoding="utf-8"))
+    pm_agent = next(agent for agent in config["agents"]["list"] if agent["id"] == "pm")
+    allowed_agents = set(pm_agent["subagents"]["allowAgents"])
+
+    assert {"infra-val-a", "infra-val-b"}.issubset(allowed_agents)

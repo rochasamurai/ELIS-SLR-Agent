@@ -7,7 +7,7 @@ from functools import lru_cache
 from pathlib import Path
 
 
-MAP_PATH = Path("config/reviewer_identity_map.json")
+CONFIG_PATH = Path("openclaw/openclaw.json")
 ENGINE_TO_AGENT = {
     "codex": "CODEX",
     "claude": "Claude Code",
@@ -22,21 +22,27 @@ class ReviewerIdentityError(ValueError):
 
 @lru_cache(maxsize=1)
 def _load_map() -> dict:
-    if not MAP_PATH.exists():
-        raise ReviewerIdentityError(f"Identity map missing: {MAP_PATH}")
+    if not CONFIG_PATH.exists():
+        raise ReviewerIdentityError(f"Identity config missing: {CONFIG_PATH}")
     try:
-        data = json.loads(MAP_PATH.read_text(encoding="utf-8"))
+        data = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
-        raise ReviewerIdentityError(f"Identity map is invalid JSON: {exc}") from exc
+        raise ReviewerIdentityError(f"Identity config is invalid JSON: {exc}") from exc
+
     agents = data.get("agents")
     if not isinstance(agents, dict):
-        raise ReviewerIdentityError("Identity map must contain an 'agents' object.")
-    return data
+        raise ReviewerIdentityError("Identity config must contain an 'agents' object.")
+
+    identities = agents.get("reviewerIdentities")
+    if not isinstance(identities, dict):
+        raise ReviewerIdentityError(
+            "Identity config must contain 'agents.reviewerIdentities'."
+        )
+    return identities
 
 
 def entry_for_agent(agent_label: str) -> dict:
-    data = _load_map()
-    agents = data["agents"]
+    agents = _load_map()
     if agent_label not in agents:
         raise ReviewerIdentityError(f"Agent '{agent_label}' is not in identity map.")
     entry = agents[agent_label]
