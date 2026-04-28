@@ -1,5 +1,5 @@
 ## Summary
-Removed 11 obsolete engine-specific agent documentation/config files so the repo no longer treats them as active guidance. Verified the remaining agent documentation/config source-of-truth surfaces are `openclaw/openclaw.json` and `docs/openclaw/AGENT_CATALOGUE.md`; the deleted files are absent and no longer available as competing references. Added a follow-up fix to `scripts/check_current_pe.py` so `current-pe-check` accepts both legacy agent labels and ADR-009 slot-based labels in the Agent roles table, with regression coverage for the new slot-based format. Added follow-up fix #3 for PR #388 by moving reviewer/bot identity mapping from the deleted `config/reviewer_identity_map.json` into `openclaw/openclaw.json` (`agents.reviewerIdentities`) and updating the runtime/test consumers accordingly.
+Removed 11 obsolete engine-specific agent documentation/config files so the repo no longer treats them as active guidance. Verified the remaining agent documentation/config source-of-truth surfaces are `openclaw/openclaw.json` and `docs/openclaw/AGENT_CATALOGUE.md`; the deleted files are absent and no longer available as competing references. Added follow-up fixes for PR #388 so `scripts/check_current_pe.py` accepts both legacy agent labels and ADR-009 slot-based labels in the Agent roles table, reviewer/bot identity mapping now loads from `openclaw/openclaw.json` (`agents.reviewerIdentities`) instead of the intentionally deleted standalone map file, and `tests/test_gate2_auto_merge.py` now exercises slot-based validator-role fixtures while no longer expecting the intentionally deleted `docs/openclaw/PARALLEL_TRACK_GUIDE.md`.
 
 ## Files Changed
 | Path | Type |
@@ -26,13 +26,14 @@ Removed 11 obsolete engine-specific agent documentation/config files so the repo
 | `tests/test_validator_identity_mapping.py` | modified |
 
 ## Design Decisions
-- Kept the original PE change set focused on the 11 requested deletions, then applied the minimal follow-up code fix needed to unblock PR #388 CI without broadening scope further.
+- Kept the original PE change set focused on the 11 requested deletions, then applied only the minimal follow-up code fixes needed to unblock PR #388 CI.
 - Updated `scripts/check_current_pe.py` to treat role labels as compatibility aliases per engine: `codex` matches either `CODEX` or `slot-a`, `claude` matches either `Claude Code` or `slot-b`, and `gemini` still matches `Gemini CLI`.
-- Chose alias-set validation instead of rewriting role parsing so both legacy and slot-based `CURRENT_PE.md` formats remain valid during migration.
+- Restored reviewer identity loading through the canonical runtime config instead of recreating the deleted standalone map file, so runtime helpers and CI tests share one source of truth.
+- Kept `scripts/check_reviewer_identity.py` black-formatted and aligned the gate-2 acceptance fixtures with the slot-based Agent roles table now used in `CURRENT_PE.md`.
+- Removed the `PARALLEL_TRACK_GUIDE.md` expectation from gate-2 acceptance coverage because that file deletion is intentional PE scope, not a regression.
+- Added a defensive `sys.path` bootstrap to `scripts/gh_bot.py` so direct script execution still resolves the in-repo `elis` package on hosts where `scripts/` becomes `sys.path[0]`.
 - Interpreted the legacy-name verification requirement narrowly: confirm the deleted agent-doc/config surfaces are removed and that the intended surviving source-of-truth files still exist. A repo-wide non-archive search still returns many historical/planning/runtime references to `CODEX`, `codex`, and `Claude Code`, so broader normalization is out of scope for this PE.
 - Recorded the environment gate outcome exactly as observed: `black` and `ruff` passed; `pytest` is unavailable in this session (`No module named pytest`).
-- Restored reviewer identity loading through the canonical runtime config instead of recreating the deleted standalone map file, so runtime helpers and CI tests share one source of truth.
-- Added a defensive `sys.path` bootstrap to `scripts/gh_bot.py` so direct script execution still resolves the in-repo `elis` package on hosts where `scripts/` becomes `sys.path[0]`.
 
 ## Acceptance Criteria
 - [x] Delete `docs/openclaw/CODEX_AGENT_SETUP.md`
@@ -53,11 +54,13 @@ Removed 11 obsolete engine-specific agent documentation/config files so the repo
 - [ ] Verify no remaining files reference legacy engine names beyond archived documents [blocked: repo-wide non-archive search still returns many matches in active historical/planning/runtime files outside this PE scope]
 
 ## Validation Commands
-- `python -m black --check scripts/check_current_pe.py tests/test_check_current_pe.py`
-  - `2 files would be left unchanged.`
-- `python -m ruff check scripts/check_current_pe.py tests/test_check_current_pe.py`
+- `python -m black scripts/check_reviewer_identity.py`
+  - `1 file left unchanged.`
+- `python -m black --check scripts/check_current_pe.py scripts/check_reviewer_identity.py tests/test_check_current_pe.py tests/test_gate2_auto_merge.py`
+  - `4 files would be left unchanged.`
+- `python -m ruff check scripts/check_current_pe.py scripts/check_reviewer_identity.py tests/test_check_current_pe.py tests/test_gate2_auto_merge.py`
   - `All checks passed!`
-- `python -m pytest -q tests/test_check_current_pe.py`
+- `python -m pytest -q tests/test_check_current_pe.py tests/test_gate2_auto_merge.py`
   - `/usr/bin/python: No module named pytest`
 - `python scripts/check_current_pe.py`
   - `CURRENT_PE.md OK — release context, roles, registry, and alternation valid.`
@@ -104,7 +107,7 @@ feature/pe-infra-agent-01-doc-consolidation
 ### §6.3 Quality gates
 - `black --check` (targeted checker + tests): PASS
 - `ruff check` (targeted checker + tests): PASS
-- `pytest -q tests/test_check_current_pe.py`: [blocked] unavailable in current environment (`No module named pytest`)
+- `pytest -q tests/test_check_current_pe.py tests/test_gate2_auto_merge.py`: [blocked] unavailable in current environment (`No module named pytest`)
 - `python scripts/check_current_pe.py`: PASS
 - `gh_bot.py` import/startup smoke check: PASS
 - `pytest -q` for identity tests: [blocked] unavailable in current environment (`No module named pytest`)
@@ -112,5 +115,5 @@ feature/pe-infra-agent-01-doc-consolidation
 
 ### §6.4 Ready to merge
 ```text
-NO — outstanding blocked validation: pytest unavailable in this session, and repo-wide legacy-name references remain outside delete-only PE scope. Fix #3 is implemented but not fully test-executed locally on this host.
+NO — outstanding blocked validation: pytest unavailable in this session, and repo-wide legacy-name references remain outside delete-only PE scope. Fixes #3 and #4 are implemented but not fully test-executed locally on this host.
 ```
