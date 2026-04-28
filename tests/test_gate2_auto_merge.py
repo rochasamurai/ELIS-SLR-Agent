@@ -16,7 +16,7 @@ import yaml
 REPO_ROOT = Path(__file__).parent.parent
 WORKFLOW_PATH = REPO_ROOT / ".github" / "workflows" / "auto-merge-on-pass.yml"
 SCRIPT_PATH = REPO_ROOT / "scripts" / "check_reviewer_identity.py"
-REVIEWER_MAP_PATH = REPO_ROOT / "config" / "reviewer_identity_map.json"
+OPENCLAW_CONFIG_PATH = REPO_ROOT / "openclaw" / "openclaw.json"
 
 
 # ─── helpers ──────────────────────────────────────────────────────────────────
@@ -60,12 +60,12 @@ def _workflow_text() -> str:
 def _run_identity_script(
     reviewer_login: str,
     current_pe_path: Path,
-    reviewer_map_path: Path,
+    openclaw_config_path: Path,
 ) -> subprocess.CompletedProcess:
     env = os.environ.copy()
     env["REVIEWER_LOGIN"] = reviewer_login
     env["CURRENT_PE_PATH"] = str(current_pe_path)
-    env["REVIEWER_MAP_PATH"] = str(reviewer_map_path)
+    env["OPENCLAW_CONFIG_PATH"] = str(openclaw_config_path)
     return subprocess.run(
         [sys.executable, str(SCRIPT_PATH)],
         capture_output=True,
@@ -111,27 +111,29 @@ def pe_file_val_b(tmp_path: Path) -> Path:
 
 @pytest.fixture()
 def reviewer_map(tmp_path: Path) -> Path:
-    """Minimal reviewer_identity_map.json."""
-    p = tmp_path / "reviewer_identity_map.json"
+    """Minimal openclaw.json reviewer identity config."""
+    p = tmp_path / "openclaw.json"
     p.write_text(
         json.dumps(
             {
                 "agents": {
-                    "CODEX": {
-                        "engine": "codex",
-                        "review_login": "elis-codex-bot",
-                        "validator_capable_on_protected_branches": True,
-                    },
-                    "Claude Code": {
-                        "engine": "claude",
-                        "review_login": "elis-claude-bot",
-                        "validator_capable_on_protected_branches": True,
-                    },
-                    "PM": {
-                        "engine": "pm",
-                        "review_login": "elis-pm-bot",
-                        "validator_capable_on_protected_branches": False,
-                    },
+                    "reviewerIdentities": {
+                        "CODEX": {
+                            "engine": "codex",
+                            "review_login": "elis-codex-bot",
+                            "validator_capable_on_protected_branches": True,
+                        },
+                        "Claude Code": {
+                            "engine": "claude",
+                            "review_login": "elis-claude-bot",
+                            "validator_capable_on_protected_branches": True,
+                        },
+                        "PM": {
+                            "engine": "pm",
+                            "review_login": "elis-pm-bot",
+                            "validator_capable_on_protected_branches": False,
+                        },
+                    }
                 }
             }
         ),
@@ -142,27 +144,29 @@ def reviewer_map(tmp_path: Path) -> Path:
 
 @pytest.fixture()
 def reviewer_map_ambiguous_engine(tmp_path: Path) -> Path:
-    """Map with two validator-capable codex entries to test ambiguity guard."""
-    p = tmp_path / "reviewer_identity_map.json"
+    """Config with two validator-capable codex entries to test ambiguity guard."""
+    p = tmp_path / "openclaw.json"
     p.write_text(
         json.dumps(
             {
                 "agents": {
-                    "CODEX": {
-                        "engine": "codex",
-                        "review_login": "elis-codex-bot",
-                        "validator_capable_on_protected_branches": True,
-                    },
-                    "Codex Alt": {
-                        "engine": "codex",
-                        "review_login": "elis-codex-bot-alt",
-                        "validator_capable_on_protected_branches": True,
-                    },
-                    "Claude Code": {
-                        "engine": "claude",
-                        "review_login": "elis-claude-bot",
-                        "validator_capable_on_protected_branches": True,
-                    },
+                    "reviewerIdentities": {
+                        "CODEX": {
+                            "engine": "codex",
+                            "review_login": "elis-codex-bot",
+                            "validator_capable_on_protected_branches": True,
+                        },
+                        "Codex Alt": {
+                            "engine": "codex",
+                            "review_login": "elis-codex-bot-alt",
+                            "validator_capable_on_protected_branches": True,
+                        },
+                        "Claude Code": {
+                            "engine": "claude",
+                            "review_login": "elis-claude-bot",
+                            "validator_capable_on_protected_branches": True,
+                        },
+                    }
                 }
             }
         ),
@@ -173,27 +177,29 @@ def reviewer_map_ambiguous_engine(tmp_path: Path) -> Path:
 
 @pytest.fixture()
 def reviewer_map_engine_fallback_ambiguous(tmp_path: Path) -> Path:
-    """Map with no canonical CODEX key to force engine fallback ambiguity."""
-    p = tmp_path / "reviewer_identity_map.json"
+    """Config with no canonical CODEX key to force engine fallback ambiguity."""
+    p = tmp_path / "openclaw.json"
     p.write_text(
         json.dumps(
             {
                 "agents": {
-                    "Codex Alt 1": {
-                        "engine": "codex",
-                        "review_login": "elis-codex-bot",
-                        "validator_capable_on_protected_branches": True,
-                    },
-                    "Codex Alt 2": {
-                        "engine": "codex",
-                        "review_login": "elis-codex-bot-alt",
-                        "validator_capable_on_protected_branches": True,
-                    },
-                    "Claude Code": {
-                        "engine": "claude",
-                        "review_login": "elis-claude-bot",
-                        "validator_capable_on_protected_branches": True,
-                    },
+                    "reviewerIdentities": {
+                        "Codex Alt 1": {
+                            "engine": "codex",
+                            "review_login": "elis-codex-bot",
+                            "validator_capable_on_protected_branches": True,
+                        },
+                        "Codex Alt 2": {
+                            "engine": "codex",
+                            "review_login": "elis-codex-bot-alt",
+                            "validator_capable_on_protected_branches": True,
+                        },
+                        "Claude Code": {
+                            "engine": "claude",
+                            "review_login": "elis-claude-bot",
+                            "validator_capable_on_protected_branches": True,
+                        },
+                    }
                 }
             }
         ),

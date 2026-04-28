@@ -128,7 +128,30 @@
         "workspace": "/home/samurai/openclaw/workspace-infra-val",
         "model": "z-ai/glm-5.1"
       }
-    ]
+    ],
+    "reviewerIdentities": {
+      "CODEX": {
+        "engine": "codex",
+        "review_handle": "@codex",
+        "review_login": "elis-codex-bot",
+        "token_env": "CODEX_BOT_TOKEN",
+        "validator_capable_on_protected_branches": true
+      },
+      "Claude Code": {
+        "engine": "claude",
+        "review_handle": "@claude-code",
+        "review_login": "elis-claude-bot",
+        "token_env": "CLAUDE_BOT_TOKEN",
+        "validator_capable_on_protected_branches": true
+      },
+      "PM": {
+        "engine": "pm",
+        "review_handle": "@pm",
+        "review_login": "elis-pm-bot",
+        "token_env": "PM_BOT_TOKEN",
+        "validator_capable_on_protected_branches": false
+      }
+    }
   },
   "bindings": [
     {

@@ -7,22 +7,22 @@ from elis.reviewer_identity import review_handle_for_engine, review_login_for_en
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-MAP_PATH = REPO_ROOT / "config" / "reviewer_identity_map.json"
+CONFIG_PATH = REPO_ROOT / "openclaw" / "openclaw.json"
 AGENTS_PATH = REPO_ROOT / "AGENTS.md"
 WORKFLOW_PATH = REPO_ROOT / ".github" / "workflows" / "auto-assign-validator.yml"
 
 
 def test_identity_map_contains_required_agent_rows() -> None:
-    data = json.loads(MAP_PATH.read_text(encoding="utf-8"))
-    agents = data["agents"]
+    data = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
+    identities = data["agents"]["reviewerIdentities"]
 
-    assert "CODEX" in agents
-    assert "Claude Code" in agents
-    assert "PM" in agents
+    assert "CODEX" in identities
+    assert "Claude Code" in identities
+    assert "PM" in identities
 
-    assert agents["CODEX"]["review_login"] == "elis-codex-bot"
-    assert agents["Claude Code"]["review_login"] == "elis-claude-bot"
-    assert agents["PM"]["review_login"] == "elis-pm-bot"
+    assert identities["CODEX"]["review_login"] == "elis-codex-bot"
+    assert identities["Claude Code"]["review_login"] == "elis-claude-bot"
+    assert identities["PM"]["review_login"] == "elis-pm-bot"
 
 
 def test_runtime_lookup_is_data_driven() -> None:
