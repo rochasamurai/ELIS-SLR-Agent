@@ -4,7 +4,7 @@
       {
         "id": "pm",
         "workspace": "/home/samurai/openclaw/workspace-pm",
-        "model": "deepseek/deepseek-v4-pro",
+        "model": "openai-codex/gpt-5.4-mini",
         "tools": {
           "elevated": {
             "enabled": false,
