@@ -32,10 +32,10 @@
 
 | Agent       | Role |
 |-------------|------|
-| slot-a      | Implementer |
-| slot-b      | Validator |
+| infra-impl-a | Implementer |
+| infra-val-b  | Validator |
 
-> Active PE roles: slot-a = Implementer, slot-b = Validator. PE-AGT-01 is Phase 1 of plan v2.0.1.
+> Active PE roles: infra-impl-a = Implementer, infra-val-b = Validator. PE-AGT-01 is Phase 1 of plan v2.0.1.
 
 ---
 
@@ -218,8 +218,8 @@ PM housekeeping entries (prefix `PM-CHORE-XX`):
 | PM-CHORE-71  | Adopted ELIS_MultiAgent_Implementation_Plan_v2_0.md (release v2.0.1). Opened PE-AGT-00 (Model Authentication Setup) with `infra-impl-a` (CODEX) as Implementer and `infra-val-b` (Claude Code) as Validator per PO directive. Implementer start is gated: PO must run Claude Code and Codex OAuth logins on elis-server and confirm `python scripts/verify_claude_auth.py` and `python scripts/verify_codex_auth.py` both exit 0 before branch work begins. | 2026-04-26 |
 | PE-AGT-00    | infra           | infra-impl-a         | infra-val-b        | feature/pe-agt-00-model-authentication-setup      | cancelled       | 2026-04-26   |
 | PM-CHORE-78  | Cancelled PE-AGT-00 (Model Authentication Setup). All models authenticate via OpenRouter — OAuth credentials are obsolete. AC-6 (OAuth primary, API key fallback) removed from all standard acceptance criteria in plan v2.0.1. | 2026-04-28 |
-| PM-CHORE-79  | Opened PE-AGT-01 (PM Agent Configuration and Dispatch Review) with `infra-impl-a` (slot-a) as Implementer and `infra-val-b` (slot-b) as Validator per alternation rule. Phase 1 of plan v2.0.1.
-| PM-CHORE-72  | Opened PE-INFRA-AGENT-01 (Agent Documentation Consolidation) with `infra-impl-b` (slot-b) as Implementer and `infra-val-a` (slot-a) as Validator per alternation rule (PE-AGT-00 used infra-impl-a). Removes 11 engine-specific docs; only openclaw.json + AGENT_CATALOGUE.md remain as agent source of truth. | 2026-04-28 |
+| PM-CHORE-79  | Opened PE-AGT-01 (PM Agent Configuration and Dispatch Review) with `infra-impl-a` as Implementer and `infra-val-b` as Validator per alternation rule. Phase 1 of plan v2.0.1.
+| PM-CHORE-72  | Opened PE-INFRA-AGENT-01 (Agent Documentation Consolidation) with `infra-impl-b` as Implementer and `infra-val-a` as Validator per alternation rule (PE-AGT-00 used infra-impl-a). Removes 11 engine-specific docs; only openclaw.json + AGENT_CATALOGUE.md remain as agent source of truth. | 2026-04-28 |
 
 
 Alternation rule:
