@@ -105,6 +105,8 @@ The PM agent should:
 
 The PM agent should not normally carry:
 
+When possible, keep active PM context to a short rolling summary plus the current task state.
+
 - full repository context;
 - full `AGENTS.md` doctrine;
 - all skills;
@@ -115,7 +117,7 @@ The PM agent should not normally carry:
 
 ### 5.2 Implementer Agents
 
-Implementer agents may load:
+Implementer agents may load only the task context they need, such as:
 
 - relevant source files;
 - relevant tests;
@@ -123,11 +125,11 @@ Implementer agents may load:
 - task-specific skills;
 - command outputs needed to implement the change.
 
-They should produce concise `HANDOFF.md` content or equivalent handoff notes.
+They own implementation evidence and should produce concise `HANDOFF.md` content or equivalent handoff notes.
 
 ### 5.3 Validator Agents
 
-Validator agents may load:
+Validator agents may load only the evidence needed to verify the change, such as:
 
 - implementation diff;
 - relevant tests;
@@ -159,7 +161,7 @@ Target: **under 5,000 input tokens.**
 
 ### 6.3 Demand-Loaded Context
 
-Demand-load the following only when the task requires them:
+Demand-load the following only when the task requires them and only for the scoped agent that needs them:
 
 - full specialist skills;
 - release-plan details;
@@ -243,7 +245,7 @@ Tool schemas are often large and expensive. The PM must not carry every tool sch
 
 ### 8.1 PM Default Tools
 
-The PM should normally have only:
+The PM should normally have only a small routing set of tools, such as:
 
 ```text
 read_recent_messages
@@ -257,7 +259,7 @@ record_decision
 
 ### 8.2 Specialist-Only Tools
 
-The following tools should normally be reserved for specialist agents or explicit escalation:
+The following tools should normally be reserved for specialist agents or explicit escalation; the exact list is implementation-specific:
 
 ```text
 shell execution

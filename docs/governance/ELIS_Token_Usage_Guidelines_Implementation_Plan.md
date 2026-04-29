@@ -66,6 +66,8 @@ pm-full — explicit escalation mode
 | `pm-lite` | 8k input tokens | 15k input tokens | routine coordination |
 | `pm-full` | 20k input tokens | 30k input tokens | architecture, release, validation conflict |
 
+Escalation from `pm-lite` to `pm-full` must record the reason and the triggering task.
+
 ### 3.3 Expected Reduction
 
 | Layer | Current | Target |
@@ -92,6 +94,7 @@ pm-full — explicit escalation mode
 | WP8 | OpenRouter guardrails | Implementer | P0 |
 | WP9 | Validator gates | Validator | P0 |
 | WP10 | Documentation and release integration | PM + Validator | P1 |
+| WP11 | Rollout and migration order | PM | P0 |
 
 ---
 
