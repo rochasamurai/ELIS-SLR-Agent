@@ -33,6 +33,9 @@ M	HANDOFF.md
 A	docs/reviews/archive/REVIEW_PE_AGT_01.md
 ```
 
+### Pre-existing defects
+1. `current-pe-check` CI failure: `ENGINE_TO_AGENT` in `scripts/check_current_pe.py` does not include canonical agent IDs (e.g. `infra-impl-a`), only legacy/slot names (`CODEX`, `slot-a`). When main's CURRENT_PE.md uses canonical IDs in the roles table, the merge commit causes a mismatch. Smallest safe fix: extend `ENGINE_TO_AGENT` or resolve via `elis/agent_id.py` canonical-to-legacy mapping. Not blocking for this PE — defect predates the PR and does not affect the PR's actual scope.
+
 ### Required fixes
 None — no blocking findings.
 
