@@ -261,9 +261,7 @@ def _validate_roles_table(
     expected_impl_agents = ENGINE_TO_AGENT.get(impl_engine)
     expected_val_agents = ENGINE_TO_AGENT.get(val_engine)
     if expected_impl_agents is None or expected_val_agents is None:
-        missing_engine = (
-            impl_engine if expected_impl_agents is None else val_engine
-        )
+        missing_engine = impl_engine if expected_impl_agents is None else val_engine
         raise ValueError(
             f"Active PE registry engine '{missing_engine}' does not map "
             "to known agent labels."
@@ -421,7 +419,9 @@ def main() -> int:
         impl_engine, val_engine = _validate_engines(current)
         _validate_alternation(current, rows, impl_engine)
         _validate_roles_table(
-            roles, impl_engine, val_engine,
+            roles,
+            impl_engine,
+            val_engine,
             impl_agent_id=current["implementer-agentid"],
             val_agent_id=current["validator-agentid"],
         )
