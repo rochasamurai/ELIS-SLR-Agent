@@ -12,7 +12,9 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-engine_from_agent_id = import_module("elis.agent_id").engine_from_agent_id
+agent_id_module = import_module("elis.agent_id")
+engine_from_agent_id = agent_id_module.engine_from_agent_id
+canonical_agent_id = agent_id_module.canonical_agent_id
 workflow_state_machine = import_module("elis.workflow_state_machine")
 
 VALID_ACTIVE_STATUSES = set(workflow_state_machine.ACTIVE_STATES)
@@ -226,12 +228,44 @@ def _validate_alternation(
 
 
 def _validate_roles_table(
-    roles: dict[str, str], impl_engine: str, val_engine: str
+    roles: dict[str, str],
+    impl_engine: str,
+    val_engine: str,
+    impl_agent_id: str | None = None,
+    val_agent_id: str | None = None,
 ) -> None:
+    if impl_engine == val_engine:
+        raise ValueError("Active PE registry engines are not opposite.")
+
+    # Strategy 1: match by canonical agent ID from the registry directly.
+    # Both the roles table and registry use the same naming convention
+    # (<domain>-<role>-<slot>), so the canonical implementer-agentid from
+    # the registry row should match the agent name in the roles table.
+    canonical_impl = canonical_agent_id(impl_agent_id) if impl_agent_id else None
+    canonical_val = canonical_agent_id(val_agent_id) if val_agent_id else None
+
+    if canonical_impl and roles.get(canonical_impl) is not None:
+        impl_match = roles[canonical_impl] == "Implementer"
+    else:
+        impl_match = None
+
+    if canonical_val and roles.get(canonical_val) is not None:
+        val_match = roles[canonical_val] == "Validator"
+    else:
+        val_match = None
+
+    if impl_match is True and val_match is True:
+        return  # Pass: canonical IDs matched.
+
+    # Strategy 2: fall back to legacy ENGINE_TO_AGENT labels.
     expected_impl_agents = ENGINE_TO_AGENT.get(impl_engine)
     expected_val_agents = ENGINE_TO_AGENT.get(val_engine)
     if expected_impl_agents is None or expected_val_agents is None:
-        raise ValueError("Active PE registry engines do not map to known agent labels.")
+        missing_engine = impl_engine if expected_impl_agents is None else val_engine
+        raise ValueError(
+            f"Active PE registry engine '{missing_engine}' does not map "
+            "to known agent labels."
+        )
     if not any(roles.get(agent) == "Implementer" for agent in expected_impl_agents):
         raise ValueError(
             "Agent roles table does not match the active PE registry implementer."
@@ -240,8 +274,6 @@ def _validate_roles_table(
         raise ValueError(
             "Agent roles table does not match the active PE registry validator."
         )
-    if impl_engine == val_engine:
-        raise ValueError("Active PE registry engines are not opposite.")
 
 
 def _is_dual_track(content: str) -> bool:
@@ -386,7 +418,13 @@ def main() -> int:
         _validate_status_and_date(current)
         impl_engine, val_engine = _validate_engines(current)
         _validate_alternation(current, rows, impl_engine)
-        _validate_roles_table(roles, impl_engine, val_engine)
+        _validate_roles_table(
+            roles,
+            impl_engine,
+            val_engine,
+            impl_agent_id=current["implementer-agentid"],
+            val_agent_id=current["validator-agentid"],
+        )
     except ValueError as exc:
         return fail(str(exc))
 
