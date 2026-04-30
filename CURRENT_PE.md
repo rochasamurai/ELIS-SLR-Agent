@@ -21,8 +21,8 @@
 
 | Field   | Value |
 |---------|-------|
-| PE      | PE-AGT-01 |
-| Branch  | feature/pe-agt-01-pm-agent-review |
+| PE      | PE-INFRA-AGENT-02 |
+| Branch  | feature/pe-infra-agent-02-current-pe-check-canonical-ids |
 
 > **Active PE.** PE-AGT-01 — PM Agent Configuration and Dispatch Review. Verify the `pm` agent is correctly declared in openclaw.json, has correct subagent allow-list, elevated exec scope, and passes a smoke test. PE-AGT-00 cancelled (OAuth obsolete; all auth via OpenRouter). AC-6 removed from all standard acceptance criteria.
 
@@ -127,6 +127,7 @@
 | PE-SLR-15       | slr            | prog-impl-a          | prog-val-b         | feature/pe-slr-15-hybrid-slr-end-to-end-validation-and-housekeeping     | merged          | 2026-04-26   |
 | PE-AGT-00       | agt            | infra-impl-a         | infra-val-b        | feature/pe-agt-00-model-authentication-setup                            | cancelled       | 2026-04-26   |
 | PE-INFRA-AGENT-01 | infra         | infra-impl-b         | infra-val-a        | feature/pe-infra-agent-01-doc-consolidation                             | merged          | 2026-04-28   |
+| PE-INFRA-AGENT-02 | infra         | infra-impl-b         | infra-val-a        | feature/pe-infra-agent-02-current-pe-check-canonical-ids                | implementing    | 2026-04-30   |
 | PE-AGT-01       | infra          | infra-impl-a         | infra-val-b        | feature/pe-agt-01-pm-agent-review                                       | implementing    | 2026-04-28   |
 
 Valid status values:
