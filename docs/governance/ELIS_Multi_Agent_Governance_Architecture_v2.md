@@ -3,7 +3,12 @@
 **Status:** Proposed replacement for previous ELIS multi-agent governance / monitoring architecture documents  
 **Date:** 2026-04-30  
 **Owner:** Carlos Rocha, Product Owner  
-**Scope:** ELIS-SLR-Agent / OpenClaw / Hermes operating model for reliable multi-PE execution
+**Scope:** ELIS-SLR-Agent / OpenClaw / Hermes operating model for reliable multi-PE execution  
+**Related documents:**
+- `docs/governance/ELIS_General_Guidance.md`
+- `docs/governance/ELIS_Multi_Agent_Governance_Implementation_Plan_v2.md`
+- `docs/governance/ELIS_Token_Usage_Guidelines_for_Multi_AI_Agents.md`
+- `docs/governance/ELIS_Token_Usage_Guidelines_Implementation_Plan.md`
 
 ---
 
@@ -124,6 +129,19 @@ Invalid outcomes include:
 - “completed” with no commit/HANDOFF/REVIEW;
 - silent timeout;
 - non-visible agent run.
+
+
+### 3.8 Workspace and Worktree Safety
+
+OpenClaw `workspace` is an agent operational home, not a clean Git repository root.
+
+Therefore:
+
+- `/opt/elis/repo` remains the canonical clean repository.
+- OpenClaw workspace must not be bound directly to `/opt/elis/repo`.
+- PE implementation and validation should use PE-specific Git worktrees under `/opt/elis/agent-worktrees/`.
+- No two active agents should share the same mutable working directory.
+- Agents must distinguish shell current directory from OpenClaw file-tool root.
 
 ---
 
@@ -381,12 +399,14 @@ Run mandatory pre-dispatch readiness checks before PM dispatches an implementer 
 - Dependency status is clear.
 - PE state is `ready-for-dispatch` or equivalent.
 
-#### Repository
+#### Repository and worktree
 
-- `/opt/elis/repo` exists.
-- Correct branch exists or can be created.
-- Worktree is clean or expected dirty state is documented.
-- Target files exist.
+- Canonical repository `/opt/elis/repo` exists.
+- Assigned PE worktree exists or can be created under `/opt/elis/agent-worktrees/<PE-ID>-<agent-id>`.
+- Correct branch exists or can be created in the assigned worktree.
+- Assigned worktree is clean or expected dirty state is documented.
+- OpenClaw workspace is not bound directly to `/opt/elis/repo`.
+- Target files exist in the assigned worktree.
 - Allowed and forbidden file scope is defined.
 
 #### Task packet
@@ -534,7 +554,7 @@ DONE
 
 Execute bounded implementation tasks.
 
-Each implementer run must use a fresh session ID, read the PE task packet, use `/opt/elis/repo` as the repository path, work only on the approved branch, modify only allowed files, run required tests, produce commit(s), produce `HANDOFF.md`, produce a Status Packet, and report blockers with evidence.
+Each implementer run must use a fresh session ID, read the PE task packet, use the assigned PE-specific Git worktree under `/opt/elis/agent-worktrees/`, work only on the approved branch, modify only allowed files, run required tests, produce commit(s), produce `HANDOFF.md`, produce a Status Packet, and report blockers with evidence.
 
 Implementers must not validate their own work, merge, approve PRs, change branch protection, change scope, or modify forbidden files.
 

@@ -2,7 +2,12 @@
 
 **Document status:** Draft v1.0  
 **Scope:** ELIS-SLR-Agent, OpenClaw, Codex, Claude Code, OpenRouter, local `elis-server`, Dockerised agent sessions  
-**Objective:** Implement the ELIS Token Usage Guidelines with measurable reduction in PM input tokens, controlled OpenRouter usage, and preserved Implementer/Validator audit discipline.
+**Objective:** Implement the ELIS Token Usage Guidelines with measurable reduction in PM input tokens, controlled OpenRouter usage, and preserved Implementer/Validator audit discipline.  
+**Related documents:**
+- `docs/governance/ELIS_General_Guidance.md`
+- `docs/governance/ELIS_Multi_Agent_Governance_Architecture_v2.md`
+- `docs/governance/ELIS_Multi_Agent_Governance_Implementation_Plan_v2.md`
+- `docs/governance/ELIS_Token_Usage_Guidelines_for_Multi_AI_Agents.md`
 
 ---
 
@@ -535,6 +540,44 @@ FAIL if OpenRouter can be used by PM silently.
 
 ---
 
+## 12A. Codex OAuth Usage-Limit Guardrail
+
+### Objective
+
+Handle Codex OAuth usage-limit failures separately from OpenAI API-key RPM/TPM limits and OpenRouter credit exhaustion.
+
+### Required behaviour
+
+When an OAuth-backed Hermes/OpenClaw path receives:
+
+```text
+HTTP 429: The usage limit has been reached
+```
+
+the agent or wrapper must:
+
+1. Stop safely after the first failed retry cycle.
+2. Record provider, model, approximate context size, task, and timestamp.
+3. Avoid mutating files after the limit event.
+4. Recommend `SESSION_HANDOFF` or a fresh session.
+5. Require PO approval before fallback to another provider.
+6. Never treat repeated 429 retries as productive work.
+
+### Deliverables
+
+```text
+docs/checklists/codex_oauth_usage_limit_checklist.md
+```
+
+### Acceptance Criteria
+
+```text
+PASS if Codex OAuth 429 usage-limit events are classified separately from API RPM/TPM and OpenRouter credit failures.
+PASS if fallback providers require a recorded PO approval.
+FAIL if the agent silently retries until the user receives only a failed response.
+```
+
+
 ## 13. WP9 — Validator Gates
 
 ### Objective
@@ -596,9 +639,11 @@ Make token governance part of the ELIS development protocol.
 ### Proposed Locations
 
 ```text
+docs/governance/ELIS_General_Guidance.md
 docs/governance/ELIS_Token_Usage_Guidelines_for_Multi_AI_Agents.md
 docs/governance/ELIS_Token_Usage_Guidelines_Implementation_Plan.md
 docs/checklists/token_guidelines_validator_checklist.md
+docs/checklists/codex_oauth_usage_limit_checklist.md
 ```
 
 ### Acceptance Criteria
