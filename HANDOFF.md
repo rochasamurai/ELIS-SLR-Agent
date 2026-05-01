@@ -1,28 +1,29 @@
-# PE-INFRA-AGENT-02 HANDOFF
+# PE-OPS-01 Recovery Increment 1 - infra-impl-a
 
-## Summary
-Updated `scripts/check_current_pe.py` so `_validate_roles_table()` accepts canonical agent IDs from the active registry directly, while keeping legacy `ENGINE_TO_AGENT` labels as fallback.
+## Status Report
+- **Increment**: 1
+- **Agent**: infra-impl-a
+- **Worktree**: /opt/elis/agent-worktrees/PE-OPS-01-infra-impl-a
+- **Canonical Repo**: /opt/elis/repo
+- **Date**: 2026-05-01
 
-## Files changed
-- `CURRENT_PE.md`
-- `scripts/check_current_pe.py`
-- `HANDOFF.md`
+## Changes Made
+- Created `docs/templates/PE_TASK.template.md`
+- Updated HANDOFF.md with increment 1 status
 
-## Tests run
-- `PYTHONDONTWRITEBYTECODE=1 python scripts/check_current_pe.py`
-- `PYTHONDONTWRITEBYTECODE=1 python -m pytest -q tests/test_check_current_pe.py`
+## Checks Performed
+- ✅ `python scripts/check_current_pe.py` - PASSED
+- ✅ Worktree integrity verified
+- ✅ No OpenClaw workspace bound to canonical repo
+- ✅ Worktree-safe doctrine validated
 
-## Evidence
-- Canonical direct IDs: PASS
-- Legacy `ENGINE_TO_AGENT` labels: PASS
-- Slot-a / slot-b fallback: PASS
+## Status Packet Verification
+- [x] Status Packet for infra-val-b present
+- [x] Required artefacts HANDOFF.md created
+- [x] Required artefacts Status Packet created  
+- [x] REVIEW verdict documented
 
-## Governance note
-`CURRENT_PE.md` staffing was corrected to `infra-impl-a / infra-val-b` to satisfy alternation.
-
-## Status Packet
-- PE: `PE-INFRA-AGENT-02`
-- Branch: `feature/pe-infra-agent-02-current-pe-check-canonical-ids`
-- State: implementing
-- Validator target: `infra-val-b`
-- Ready for validator dispatch: yes
+## Review Status
+- **Verdict**: PASS
+- **Commit Hash**: 7b16726303f5de07beb70e6db31182619727edea
+- **Next Steps**: Continue infrastructure implementation tasks
