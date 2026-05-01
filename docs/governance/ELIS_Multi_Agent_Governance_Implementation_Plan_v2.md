@@ -3,7 +3,11 @@
 **Status:** Proposed implementation plan replacing previous implementation documents for this purpose  
 **Date:** 2026-04-30  
 **Owner:** Carlos Rocha, Product Owner  
-**Related architecture:** `ELIS_Multi_Agent_Governance_Architecture_v2.md`
+**Related architecture:** `ELIS_Multi_Agent_Governance_Architecture_v2.md`  
+**Related guidance:**
+- `docs/governance/ELIS_General_Guidance.md`
+- `docs/governance/ELIS_Token_Usage_Guidelines_for_Multi_AI_Agents.md`
+- `docs/governance/ELIS_Token_Usage_Guidelines_Implementation_Plan.md`
 
 ---
 
@@ -205,8 +209,11 @@ Suggested content:
 <one clear objective>
 
 ## Repository
-Repo path: `/opt/elis/repo`
+Canonical repo: `/opt/elis/repo`
+Assigned worktree: `/opt/elis/agent-worktrees/<PE-ID>-<agent-id>`
 Branch: `<branch>`
+
+All implementation and validation file operations must occur in the assigned PE worktree, not directly in `/opt/elis/repo` and not in an OpenClaw operational workspace.
 
 ## Implementer
 <agent id>
@@ -221,7 +228,9 @@ Branch: `<branch>`
 - ...
 
 ## Required commands
-- cd /opt/elis/repo
+- cd /opt/elis/agent-worktrees/<PE-ID>-<agent-id>
+- test "$(git rev-parse --show-toplevel)" = "/opt/elis/agent-worktrees/<PE-ID>-<agent-id>"
+- git status --short --branch
 - ...
 
 ## Acceptance criteria
@@ -388,9 +397,11 @@ scripts/elis_dispatch_agent.sh \
 ### Enforced behaviours
 
 - Generates fresh session ID.
-- Injects `/opt/elis/repo`.
+- Injects canonical repo path `/opt/elis/repo`.
+- Injects assigned PE worktree path `/opt/elis/agent-worktrees/<PE-ID>-<agent-id>`.
 - Injects branch.
 - Injects PE task packet.
+- Refuses to run if the assigned worktree path is missing or if OpenClaw workspace is being used as the repo root.
 - Requires artefacts.
 - Saves raw output under `.elis/runs/<PE-ID>/`.
 - Returns concise status.
@@ -410,7 +421,8 @@ scripts/elis_dispatch_agent.sh \
 - Wrapper writes raw logs.
 - Wrapper reports provider/model/session ID.
 - Wrapper refuses missing PE_TASK.md.
-- Wrapper refuses missing repo path.
+- Wrapper refuses missing assigned worktree path.
+- Wrapper verifies `git rev-parse --show-toplevel` matches the assigned worktree.
 
 ---
 
@@ -603,6 +615,21 @@ Make the architecture the default process for all future PEs.
 
 ---
 
+## 12A. Worktree-Safe Execution Update
+
+PE execution must distinguish three paths:
+
+```text
+Canonical repo:      /opt/elis/repo
+Agent worktree root: /opt/elis/agent-worktrees/
+Assigned worktree:   /opt/elis/agent-worktrees/<PE-ID>-<agent-id>
+```
+
+OpenClaw workspace must not be configured directly as `/opt/elis/repo`, because OpenClaw may write agent bootstrap/context files into its workspace root.
+
+The dispatch wrapper, Gatekeeper, and Watchdog must therefore verify the assigned PE worktree, not only the canonical repository. The canonical repository remains the source from which Git worktrees are created and the reference point for `main`, but routine agent file operations must occur in assigned PE worktrees.
+
+
 ## 13. Suggested Repository Files
 
 Create or update:
@@ -610,6 +637,7 @@ Create or update:
 ```text
 docs/governance/ELIS_Multi_Agent_Governance_Architecture_v2.md
 docs/governance/ELIS_Multi_Agent_Governance_Implementation_Plan_v2.md
+docs/governance/ELIS_General_Guidance.md
 docs/governance/PE_GATEKEEPER_CHECKLIST.md
 docs/governance/PE_ARTEFACT_GATES.md
 docs/templates/PE_TASK.template.md
@@ -664,7 +692,7 @@ Replaced by ELIS Multi-Agent Governance Architecture v2.0 and Implementation Pla
 | Platform Monitor dispatches agents | High | Explicit prohibition |
 | PE_TASK.md becomes stale | Medium | Gatekeeper checks consistency |
 | Wrapper script becomes too complex | Medium | Start minimal |
-| Agents still use wrong repo path | High | Wrapper injects `/opt/elis/repo`; Gatekeeper checks |
+| Agents still use wrong repo/worktree path | High | PM assigns a PE-specific Git worktree under `/opt/elis/agent-worktrees/`; wrapper injects the assigned worktree path; Gatekeeper verifies `git rev-parse --show-toplevel`; OpenClaw workspace must not be bound directly to `/opt/elis/repo`. |
 | Token bloat remains high | Medium | Fresh sessions and PE packets |
 | Old sessions contaminate new PEs | High | Fresh session IDs mandatory |
 

@@ -2,7 +2,12 @@
 
 **Document status:** Draft v1.0  
 **Scope:** ELIS-SLR-Agent, OpenClaw, Codex, Claude Code, OpenRouter-backed models, local and VPS agent sessions  
-**Purpose:** Define conceptual rules for reducing token consumption, preserving auditability, and avoiding uncontrolled prompt/context growth in ELIS multi-agent workflows.
+**Purpose:** Define conceptual rules for reducing token consumption, preserving auditability, and avoiding uncontrolled prompt/context growth in ELIS multi-agent workflows.  
+**Related documents:**
+- `docs/governance/ELIS_General_Guidance.md`
+- `docs/governance/ELIS_Multi_Agent_Governance_Architecture_v2.md`
+- `docs/governance/ELIS_Multi_Agent_Governance_Implementation_Plan_v2.md`
+- `docs/governance/ELIS_Token_Usage_Guidelines_Implementation_Plan.md`
 
 ---
 
@@ -357,6 +362,27 @@ OpenRouter-backed PM calls should be blocked unless one of the following applies
 ### 11.3 OpenRouter Context Limit
 
 No PM OpenRouter call should exceed **30,000 input tokens** without explicit recorded justification.
+
+### 11.4 Codex OAuth Usage-Limit Handling
+
+Codex OAuth usage limits are not the same as OpenAI API-key RPM/TPM limits.
+
+When Hermes or another OAuth-backed agent receives:
+
+```text
+HTTP 429: The usage limit has been reached
+```
+
+the agent must:
+
+- stop safely instead of repeatedly retrying;
+- record the provider, model, approximate message/token context, and task attempted;
+- avoid mutating files after the limit event;
+- recommend a fresh session or PO-approved fallback provider;
+- distinguish this from OpenRouter credit exhaustion and OpenAI API-key quota/RPM/TPM limits.
+
+Fallback providers must not be enabled automatically unless the PO has explicitly approved the fallback path.
+
 
 ---
 
