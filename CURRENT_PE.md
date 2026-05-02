@@ -21,10 +21,10 @@
 
 | Field   | Value |
 |---------|-------|
-| PE      | PE-ARCH-04 |
-| Branch  | feature/pe-arch-04-lobster-controlled-workflow-dry-run |
+| PE      | PE-AGT-01 |
+| Branch  | feature/pe-agt-01-pm-agent-review |
 
-> **Active PE.** PE-ARCH-04 — Execute Lobster-Controlled Workflow Dry-Run.
+> **Active PE.** PE-AGT-01 — PM Agent Review. Continue the infra review work now that PE-ARCH-04 is merged.
 
 ---
 
@@ -32,10 +32,10 @@
 
 | Agent       | Role |
 |-------------|------|
-| infra-impl-b | Implementer |
-| infra-val-a  | Validator |
+| infra-impl-a | Implementer |
+| infra-val-b  | Validator |
 
-> Active PE roles: infra-impl-b = Implementer, infra-val-a = Validator. PE-ARCH-04 follows the alternating architecture track.
+> Active PE roles: infra-impl-a = Implementer, infra-val-b = Validator. PE-AGT-01 follows the alternating infra track.
 
 ---
 
@@ -130,8 +130,8 @@
 | PE-ARCH-01      | architecture   | infra-impl-a         | infra-val-b        | feature/pe-arch-01-deterministic-multi-agent-architecture               | merged          | 2026-05-02   |
 | PE-ARCH-02      | architecture   | infra-impl-b         | infra-val-a        | feature/pe-arch-02-operationalise-lobster-mvp                           | merged          | 2026-05-02   |
 | PE-ARCH-03      | architecture   | infra-impl-a         | infra-val-b        | feature/pe-arch-03-lobster-dry-run-stub                                 | merged          | 2026-05-02   |
-| PE-ARCH-04      | architecture   | infra-impl-b         | infra-val-a        | feature/pe-arch-04-lobster-controlled-workflow-dry-run                  | planning        | 2026-05-02   |
-| PE-AGT-01       | infra          | infra-impl-a         | infra-val-b        | feature/pe-agt-01-pm-agent-review                                       | superseded      | 2026-04-28   |
+| PE-ARCH-04      | architecture   | infra-impl-b         | infra-val-a        | feature/pe-arch-04-lobster-controlled-workflow-dry-run                  | merged          | 2026-05-02   |
+| PE-AGT-01       | infra          | infra-impl-a         | infra-val-b        | feature/pe-agt-01-pm-agent-review                                       | implementing    | 2026-04-28   |
 
 Valid status values:
 - `planning`
