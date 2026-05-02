@@ -21,10 +21,10 @@
 
 | Field   | Value |
 |---------|-------|
-| PE      | PE-ARCH-03 |
-| Branch  | feature/pe-arch-03-lobster-dry-run-stub |
+| PE      | PE-AGT-01 |
+| Branch  | feature/pe-agt-01-pm-agent-review |
 
-> **Active PE.** PE-ARCH-03 — Dry-run Lobster PE Workflow on Harmless Stub Artefact. Test the Lobster-controlled implement → validate workflow using a harmless documentation stub.
+> **Active PE.** PE-AGT-01 — PM Agent Review. Continue the infra review work now that PE-ARCH-03 is merged.
 
 ---
 
@@ -129,7 +129,7 @@
 | PE-INFRA-AGENT-01 | infra         | infra-impl-b         | infra-val-a        | feature/pe-infra-agent-01-doc-consolidation                             | merged          | 2026-04-28   |
 | PE-ARCH-01      | architecture   | infra-impl-a         | infra-val-b        | feature/pe-arch-01-deterministic-multi-agent-architecture               | merged          | 2026-05-02   |
 | PE-ARCH-02      | architecture   | infra-impl-b         | infra-val-a        | feature/pe-arch-02-operationalise-lobster-mvp                           | merged          | 2026-05-02   |
-| PE-ARCH-03      | architecture   | infra-impl-a         | infra-val-b        | feature/pe-arch-03-lobster-dry-run-stub                                 | planning        | 2026-05-02   |
+| PE-ARCH-03      | architecture   | infra-impl-a         | infra-val-b        | feature/pe-arch-03-lobster-dry-run-stub                                 | merged          | 2026-05-02   |
 | PE-AGT-01       | infra          | infra-impl-a         | infra-val-b        | feature/pe-agt-01-pm-agent-review                                       | implementing    | 2026-04-28   |
 
 Valid status values:
