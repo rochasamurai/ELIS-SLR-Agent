@@ -21,10 +21,10 @@
 
 | Field   | Value |
 |---------|-------|
-| PE      | PE-AGT-01 |
-| Branch  | feature/pe-agt-01-pm-agent-review |
+| PE      | PE-ARCH-07 |
+| Branch  | feature/pe-arch-07-execute-isolated-lobster-plugin-self-test |
 
-> **Active PE.** PE-AGT-01 — PM Agent Review. PE-ARCH-05 is merged; PE-AGT-01 remains held pending authorised continuation.
+> **Active PE.** PE-ARCH-07 — Execute Isolated Lobster Plugin Self-Test. PE-AGT-01 remains held; PE-ARCH-06 stays planning until separately resolved.
 
 ---
 
@@ -32,10 +32,10 @@
 
 | Agent       | Role |
 |-------------|------|
-| infra-impl-a | Implementer |
-| infra-val-b  | Validator |
+| infra-impl-b | Implementer |
+| infra-val-a  | Validator |
 
-> Active PE roles: infra-impl-a = Implementer, infra-val-b = Validator. PE-AGT-01 follows the alternating infra track.
+> Active PE roles: infra-impl-b = Implementer, infra-val-a = Validator. PE-ARCH-07 follows the alternating infra track; provider guard still applies before dispatch.
 
 ---
 
@@ -133,6 +133,7 @@
 | PE-ARCH-04      | architecture   | infra-impl-b         | infra-val-a        | feature/pe-arch-04-lobster-controlled-workflow-dry-run                  | merged          | 2026-05-02   |
 | PE-ARCH-05      | architecture   | infra-impl-a         | infra-val-b        | feature/pe-arch-05-lobster-plugin-controlled-test-profile               | merged          | 2026-05-02   |
 | PE-ARCH-06      | architecture   | infra-impl-a         | infra-val-b        | feature/pe-arch-06-controlled-lobster-plugin-activation-self-test       | planning        | 2026-05-02   |
+| PE-ARCH-07      | architecture   | infra-impl-b         | infra-val-a        | feature/pe-arch-07-execute-isolated-lobster-plugin-self-test            | planning        | 2026-05-02   |
 | PE-AGT-01       | infra          | infra-impl-a         | infra-val-b        | feature/pe-agt-01-pm-agent-review                                       | blocked         | 2026-05-02   |
 
 Valid status values:

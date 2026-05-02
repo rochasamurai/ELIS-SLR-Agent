@@ -138,3 +138,50 @@ Opened PE-ARCH-06 — Controlled Lobster Plugin Activation Self-Test as a planni
 - `docs/architecture/ELIS_Lobster_Plugin_Test_Enablement.md` only if needed
 - `HANDOFF.md`
 - `workflows/README.md` only if the invocation contract changes
+
+# PE-ARCH-07 Planning Note
+
+## Summary
+Opened PE-ARCH-07 — Execute Isolated Lobster Plugin Self-Test as the next architecture PE. The goal is to validate the Lobster plugin in the isolated `lobster-test` profile without enabling production Lobster or running production PE workflows.
+
+## PE context
+
+| Field | Value |
+|-------|-------|
+| PE-ID | PE-ARCH-07 |
+| Title | Execute Isolated Lobster Plugin Self-Test |
+| Branch | `feature/pe-arch-07-execute-isolated-lobster-plugin-self-test` |
+| Implementer | infra-impl-b (provider-guarded; alternation-aligned) |
+| Validator | infra-val-a |
+| Status | planning |
+
+## Notes
+- The isolated `lobster-test` profile is the only target.
+- Production OpenClaw config remains untouched.
+- PE-AGT-01 remains held.
+- PE-OPS-01 Increment 3 remains paused.
+- Do not dispatch implementation until the worktree is prepared and provider status is confirmed or explicitly waived by Carlos.
+
+## Expected deliverables for the implementation step
+- `.elis/pe/PE-ARCH-07/PE_TASK.md`
+- `HANDOFF.md`
+- `docs/reports/PE_ARCH_07_Lobster_Self_Test_Report.md` (if evidence is recorded)
+- `docs/runbooks/ELIS_Lobster_Plugin_Self_Test_Runbook.md` (only if appending results)
+- `docs/architecture/ELIS_Lobster_Plugin_Test_Enablement.md` (only if findings change the enablement model)
+
+## Status packet
+
+| Field | Value |
+|-------|-------|
+| PE | PE-ARCH-07 |
+| Branch | `feature/pe-arch-07-execute-isolated-lobster-plugin-self-test` |
+| Current state | planning |
+| Last activity | Opened PE-ARCH-07, created task packet, and recorded the isolated self-test plan |
+| Expected artefacts | `PE_TASK.md` ✅, `HANDOFF.md` ✅ |
+| Missing artefacts | None for planning; implementation artefacts not yet expected |
+| Errors | None |
+| Next owner | infra-impl-b (after provider status confirmation) |
+| Next action | Prepare the isolated worktree and dispatch implementation only after Carlos authorises |
+| Provider guard | Implementation is provisionally assigned to infra-impl-b to satisfy alternation; do not dispatch until provider status is verified PASS or Carlos waives the guard |
+| Production config | Untouched |
+| Safe to dispatch implementation | Yes, once the worktree is prepared and the provider guard is satisfied |
