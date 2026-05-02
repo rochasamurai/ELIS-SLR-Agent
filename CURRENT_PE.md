@@ -21,10 +21,10 @@
 
 | Field   | Value |
 |---------|-------|
-| PE      | PE-ARCH-02 |
-| Branch  | feature/pe-arch-02-operationalise-lobster-mvp |
+| PE      | PE-ARCH-03 |
+| Branch  | feature/pe-arch-03-lobster-dry-run-stub |
 
-> **Active PE.** PE-ARCH-02 — Operationalise Lobster MVP. Turn the architecture into a working minimum viable deterministic workflow model for ELIS, without replacing the production PE process yet.
+> **Active PE.** PE-ARCH-03 — Dry-run Lobster PE Workflow on Harmless Stub Artefact. Test the Lobster-controlled implement → validate workflow using a harmless documentation stub.
 
 ---
 
@@ -32,10 +32,10 @@
 
 | Agent       | Role |
 |-------------|------|
-| infra-impl-b | Implementer |
-| infra-val-a  | Validator |
+| infra-impl-a | Implementer |
+| infra-val-b  | Validator |
 
-> Active PE roles: infra-impl-b = Implementer, infra-val-a = Validator. PE-ARCH-02 is the Lobster MVP PE.
+> Active PE roles: infra-impl-a = Implementer, infra-val-b = Validator. PE-ARCH-03 is the Lobster dry-run PE.
 
 ---
 
@@ -128,7 +128,8 @@
 | PE-AGT-00       | agt            | infra-impl-a         | infra-val-b        | feature/pe-agt-00-model-authentication-setup                            | cancelled       | 2026-04-26   |
 | PE-INFRA-AGENT-01 | infra         | infra-impl-b         | infra-val-a        | feature/pe-infra-agent-01-doc-consolidation                             | merged          | 2026-04-28   |
 | PE-ARCH-01      | architecture   | infra-impl-a         | infra-val-b        | feature/pe-arch-01-deterministic-multi-agent-architecture               | merged          | 2026-05-02   |
-| PE-ARCH-02      | architecture   | infra-impl-b         | infra-val-a        | feature/pe-arch-02-operationalise-lobster-mvp                           | planning        | 2026-05-02   |
+| PE-ARCH-02      | architecture   | infra-impl-b         | infra-val-a        | feature/pe-arch-02-operationalise-lobster-mvp                           | merged          | 2026-05-02   |
+| PE-ARCH-03      | architecture   | infra-impl-a         | infra-val-b        | feature/pe-arch-03-lobster-dry-run-stub                                 | planning        | 2026-05-02   |
 | PE-AGT-01       | infra          | infra-impl-a         | infra-val-b        | feature/pe-agt-01-pm-agent-review                                       | implementing    | 2026-04-28   |
 
 Valid status values:
