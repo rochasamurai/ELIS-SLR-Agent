@@ -21,10 +21,10 @@
 
 | Field   | Value |
 |---------|-------|
-| PE      | PE-AGT-01 |
-| Branch  | feature/pe-agt-01-pm-agent-review |
+| PE      | PE-E2E-01 |
+| Branch  | feature/pe-e2e-01-smoke |
 
-> **Active PE.** PE-AGT-01 — PM Agent Review. Continue the infra review work now that PE-ARCH-03 is merged.
+> **Active PE.** PE-E2E-01 — E2E Smoke. Continue the end-to-end smoke validation work.
 
 ---
 
@@ -32,10 +32,10 @@
 
 | Agent       | Role |
 |-------------|------|
-| infra-impl-a | Implementer |
-| infra-val-b  | Validator |
+| e2e-impl-a   | Implementer |
+| e2e-val-b    | Validator |
 
-> Active PE roles: infra-impl-a = Implementer, infra-val-b = Validator. PE-ARCH-03 is the Lobster dry-run PE.
+> Active PE roles: e2e-impl-a = Implementer, e2e-val-b = Validator. PE-E2E-01 is the active E2E smoke PE.
 
 ---
 
@@ -130,7 +130,7 @@
 | PE-ARCH-01      | architecture   | infra-impl-a         | infra-val-b        | feature/pe-arch-01-deterministic-multi-agent-architecture               | merged          | 2026-05-02   |
 | PE-ARCH-02      | architecture   | infra-impl-b         | infra-val-a        | feature/pe-arch-02-operationalise-lobster-mvp                           | merged          | 2026-05-02   |
 | PE-ARCH-03      | architecture   | infra-impl-a         | infra-val-b        | feature/pe-arch-03-lobster-dry-run-stub                                 | merged          | 2026-05-02   |
-| PE-AGT-01       | infra          | infra-impl-a         | infra-val-b        | feature/pe-agt-01-pm-agent-review                                       | implementing    | 2026-04-28   |
+| PE-AGT-01       | infra          | infra-impl-a         | infra-val-b        | feature/pe-agt-01-pm-agent-review                                       | superseded      | 2026-04-28   |
 
 Valid status values:
 - `planning`
