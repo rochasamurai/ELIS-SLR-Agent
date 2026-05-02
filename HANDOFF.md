@@ -1,76 +1,45 @@
-# PE-ARCH-02 Operationalise Lobster MVP — Handoff
+# PE-ARCH-03 Handoff — infra-impl-b → infra-val-a
 
-## Status
-Implementation complete. Ready for validator (infra-val-a).
+## Summary
+Completed the PE-ARCH-03 harmless Lobster dry-run artefact creation (recovery attempt after connect-session timeout).
 
-## PE context
-| Field | Value |
-|-------|-------|
-| PE-ID | PE-ARCH-02 |
-| Title | Operationalise Lobster MVP |
-| Branch | `feature/pe-arch-02-operationalise-lobster-mvp` |
-| Implementer | infra-impl-b |
-| Validator | infra-val-a |
-| Status | implementing → handoff-written |
+## Files created
+- `.elis/pe/PE-ARCH-03/PE_TASK.md` — task definition, scope, restrictions, acceptance criteria
+- `docs/sandbox/PE_ARCH_03_Lobster_Dry_Run_Stub.md` — harmless dry-run stub with implement→validate checklist
+- `HANDOFF.md` — this file
 
-## Current PE check evidence
+## Base state
+- **Worktree**: `/opt/elis/agent-worktrees/PE-ARCH-03-infra-impl-b`
+- **Base commit**: `47cf252ea5fdb29da6b85c01a895a9bac21009f2`
+- **Branch**: detached HEAD (no branch)
+- **Git status**: only 3 new untracked files; no modifications to existing files
 
-**Run**: `current-pe-check` (manual)
-**Worktree**: `/opt/elis/agent-worktrees/PE-ARCH-02-infra-impl-b`
-**Branch**: `feature/pe-arch-02-operationalise-lobster-mvp`
-**HEAD**: `4cb274e` — `PM-CHORE: open PE-ARCH-02 Lobster MVP`
-**Canonical repo**: `/opt/elis/repo` — clean (no uncommitted changes)
-**CURRENT_PE.md**: Reads PE-ARCH-02 as active PE, infra-impl-b as implementer, infra-val-a as validator — confirmed.
-**Worktree check**: `git rev-parse --show-toplevel` returns this worktree — correct.
-**Branch base**: `origin/main` — no drift.
-**No wrong-workspace duplicates**: Verified — this is the only PE-ARCH-02 worktree.
+## Checks run
+| Check | Result |
+|-------|--------|
+| `git rev-parse --show-toplevel` | `/opt/elis/agent-worktrees/PE-ARCH-03-infra-impl-b` |
+| `git status --short --branch` | `## HEAD (no branch)` + 3 untracked files |
+| `git branch --show-current` | (empty — detached HEAD) |
+| `git rev-parse HEAD` | `47cf252ea5fdb29da6b85c01a895a9bac21009f2` |
+| `test -f CURRENT_PE.md` | ✅ CURRENT_PE_OK (exists, unmodified) |
+| `test -f .elis/pe/PE-ARCH-03/PE_TASK.md` | ✅ TASK_PACKET_OK |
+| `test -f docs/sandbox/PE_ARCH_03_Lobster_Dry_Run_Stub.md` | ✅ STUB_OK |
+| `test -f HANDOFF.md` | ✅ HANDOFF_OK |
+| `python scripts/check_current_pe.py` | ✅ PASS (CURRENT_PE.md OK) |
+| No existing files modified | ✅ (only new files) |
 
-## Changed files
-1. `.elis/pe/PE-ARCH-02/PE_TASK.md` — **created** — PE-ARCH-02 task packet with scope, deliverables, agent assignments, MVP behaviour requirements, worktree constraints, verification checklist, and recovery rules.
-2. `HANDOFF.md` — **updated** — This file.
+## Commit hash
+No commit was created. All artefacts are untracked. Base commit: `47cf252ea5fdb29da6b85c01a895a9bac21009f2`.
 
-## Files reviewed but not modified (already correct)
-- `docs/architecture/ELIS_Deterministic_Multi_Agent_Architecture.md` — comprehensive, no refinement needed for PE-ARCH-02
-- `docs/governance/ELIS_Agent_Roles_and_Boundaries.md` — comprehensive, no refinement needed for PE-ARCH-02
-- `workflows/pe-implement-validate-loop.lobster` — parameterised (implementer/validator as inputs), correct as-is
-- `workflows/pe-recovery-check.lobster` — comprehensive failure classification, correct as-is
+## Next stage
+**Validator** (infra-val-a) should:
+1. Verify all three artefacts exist and are correct
+2. Confirm no existing files were modified
+3. Confirm the implement→validate checklist in the stub file
+4. Produce a REVIEW.md with PASS/FAIL
+5. Indicate whether the dry-run PASS qualifies the workflow for production testing
 
-## Artefact inventory
-
-| Artefact | Status |
-|----------|--------|
-| `.elis/pe/PE-ARCH-02/PE_TASK.md` | ✓ Created |
-| `docs/architecture/ELIS_Deterministic_Multi_Agent_Architecture.md` | ✓ Already correct (no refinement needed) |
-| `docs/governance/ELIS_Agent_Roles_and_Boundaries.md` | ✓ Already correct (no refinement needed) |
-| `workflows/pe-implement-validate-loop.lobster` | ✓ Already correct (parameterised) |
-| `workflows/pe-recovery-check.lobster` | ✓ Already correct (comprehensive) |
-| `HANDOFF.md` | ✓ Updated (this file) |
-
-## Status packet (for validator)
-
-| Field | Value |
-|-------|-------|
-| PE | PE-ARCH-02 |
-| Branch | `feature/pe-arch-02-operationalise-lobster-mvp` |
-| Current state | implement-handoff-complete |
-| Last activity | Created PE task packet + updated HANDOFF.md |
-| Expected artefacts | PE_TASK.md, ARCH doc, Boundaries doc, 2 lobster workflows, HANDOFF.md |
-| Found artefacts | PE_TASK.md ✓, ARCH doc ✓, Boundaries doc ✓, implement-validate-loop ✓, recovery-check ✓, HANDOFF.md ✓ |
-| Missing artefacts | None |
-| Errors | None |
-| Next owner | infra-val-a (validator) |
-| Next action | REVIEW.md — verify all artefacts, run checks, issue PASS/FAIL/BLOCKED verdict |
-| Evidence | See above: artefact inventory, git state, CURRENT_PE.md confirmation, worktree path confirmation |
-
-## Commit tracking
-- **HEAD**: `4cb274e`
-- **New commits in this session**: none yet (task packet and docs are pre-existing merged artefacts; Handoff written after artefact confirmation)
-- **GPG-signed**: not configured (bot commit)
-
-## Recovery check classification
-**Not needed** — no tool delivery failure occurred.
-
-## Validator notes
-- The PE-ARCH-01 architecture and boundary docs are already comprehensive for this MVP. They define the parameterised workflow model; PE-ARCH-02 operationalises it by confirming the artefact package is complete and ready for the implement-validate loop.
-- The lobster workflow files use string inputs (`implementer`, `validator`) and are environment-agnostic — no agent identity hardcoding needed.
-- All work is within the assigned worktree only. No changes to `/opt/elis/repo`, no runtime config changes, no PRs, no merges.
+## Notes
+- This is a recovery attempt after a connect-session timeout on the first try
+- No commits were made; files should be staged and committed by the validator or follow the PE process convention
+- No PRs, pushes, or merges performed
