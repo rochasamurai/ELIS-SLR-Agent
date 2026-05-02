@@ -132,7 +132,7 @@
 | PE-ARCH-03      | architecture   | infra-impl-a         | infra-val-b        | feature/pe-arch-03-lobster-dry-run-stub                                 | merged          | 2026-05-02   |
 | PE-ARCH-04      | architecture   | infra-impl-b         | infra-val-a        | feature/pe-arch-04-lobster-controlled-workflow-dry-run                  | merged          | 2026-05-02   |
 | PE-ARCH-05      | architecture   | infra-impl-a         | infra-val-b        | feature/pe-arch-05-lobster-plugin-controlled-test-profile               | merged          | 2026-05-02   |
-| PE-ARCH-06      | architecture   | infra-impl-a         | infra-val-b        | feature/pe-arch-06-controlled-lobster-plugin-activation-self-test       | planning        | 2026-05-02   |
+| PE-ARCH-06      | architecture   | infra-impl-a         | infra-val-b        | feature/pe-arch-06-controlled-lobster-plugin-activation-self-test       | merged          | 2026-05-02   |
 | PE-ARCH-07      | architecture   | infra-impl-b         | infra-val-a        | feature/pe-arch-07-execute-isolated-lobster-plugin-self-test            | planning        | 2026-05-02   |
 | PE-AGT-01       | infra          | infra-impl-a         | infra-val-b        | feature/pe-agt-01-pm-agent-review                                       | blocked         | 2026-05-02   |
 
