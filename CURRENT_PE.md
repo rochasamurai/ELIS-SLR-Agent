@@ -21,10 +21,10 @@
 
 | Field   | Value |
 |---------|-------|
-| PE      | PE-E2E-01 |
-| Branch  | feature/pe-e2e-01-smoke |
+| PE      | — |
+| Branch  | — |
 
-> **Active PE.** PE-E2E-01 — E2E Smoke. Continue the end-to-end smoke validation work.
+> **No active PE.** PE-E2E-01 has been superseded; awaiting PM assignment of the next PE.
 
 ---
 
@@ -32,10 +32,10 @@
 
 | Agent       | Role |
 |-------------|------|
-| e2e-impl-a   | Implementer |
-| e2e-val-b    | Validator |
+| — | — |
+| — | — |
 
-> Active PE roles: e2e-impl-a = Implementer, e2e-val-b = Validator. PE-E2E-01 is the active E2E smoke PE.
+> No active PE roles. Awaiting PM assignment.
 
 ---
 
@@ -116,7 +116,7 @@
 | PE-GHA-01       | ci             | gha-impl-a           | gha-val-b          | feature/pe-gha-01-agents-md-ci-authority                                | merged         | 2026-04-22   |
 | PE-GHA-02       | ci             | gha-impl-b           | gha-val-a          | feature/pe-gha-02-workflow-classification-and-branch-protection          | merged         | 2026-04-22   |
 | PE-RUNNER-01    | infra           | infra-impl-claude    | infra-val-codex    | fix/pe-runner-01-codex-headless-invocation                              | merged          | 2026-04-24   |
-| PE-E2E-01       | e2e            | e2e-impl-a           | e2e-val-b          | feature/pe-e2e-01-smoke                                                 | implementing    | 2026-04-24   |
+| PE-E2E-01       | e2e            | e2e-impl-a           | e2e-val-b          | feature/pe-e2e-01-smoke                                                 | superseded      | 2026-04-24   |
 | PE-INFRA-SLR-06 | infra          | infra-impl-a         | infra-val-b        | feature/pe-infra-slr-06-workflow-state-machine-formalisation            | merged          | 2026-04-24   |
 | PE-INFRA-SLR-07 | infra          | infra-impl-b         | infra-val-a        | feature/pe-infra-slr-07-review-archive-migration                        | merged          | 2026-04-24   |
 | PE-INFRA-SLR-08 | infra          | infra-impl-a         | infra-val-b        | feature/pe-infra-slr-08-control-plane-workflow-wiring                   | merged          | 2026-04-25   |
