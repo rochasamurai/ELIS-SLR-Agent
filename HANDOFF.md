@@ -107,3 +107,34 @@ Documented the architecture and procedure for enabling the bundled Lobster plugi
 - Verify that no file outside the four expected deliverables was modified.
 - Verify that production config (`~/.openclaw/openclaw.json`) is not referenced as modified.
 - Verify that no Lobster workflow execution or test-profile creation is claimed.
+
+---
+
+# PE-ARCH-06 Planning Note
+
+## Summary
+Opened PE-ARCH-06 — Controlled Lobster Plugin Activation Self-Test as a planning entry only. This prepares the isolated OpenClaw test-profile enablement task without dispatching implementation.
+
+## PE context
+
+| Field | Value |
+|-------|-------|
+| PE-ID | PE-ARCH-06 |
+| Title | Controlled Lobster Plugin Activation Self-Test |
+| Branch | `feature/pe-arch-06-controlled-lobster-plugin-activation-self-test` |
+| Implementer | infra-impl-a (provisional; provider guard pending recheck) |
+| Validator | infra-val-b (provisional) |
+| Status | planning |
+
+## Notes
+- PE-AGT-01 remains held.
+- PE-OPS-01 Increment 3 remains paused.
+- No implementation work, test profile creation, or Lobster execution has been dispatched yet.
+- The next step is to validate provider status and then dispatch implementation only if Carlos authorises it.
+
+## Expected deliverables for the future implementation step
+- `.elis/pe/PE-ARCH-06/PE_TASK.md`
+- `docs/runbooks/ELIS_Lobster_Plugin_Self_Test_Runbook.md`
+- `docs/architecture/ELIS_Lobster_Plugin_Test_Enablement.md` only if needed
+- `HANDOFF.md`
+- `workflows/README.md` only if the invocation contract changes
