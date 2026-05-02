@@ -57,3 +57,15 @@ Documentation, analysis, and test-profile enablement specification only. No prod
 - **Do not claim production readiness** — the test profile is isolated and non-production by design
 - **Do not run production workflows** — any Lobster use must remain within the isolated test profile
 - **All work within this repository only**: `/opt/elis/repo`
+
+---
+
+## PE-ARCH-06 implementation update
+
+The PE-ARCH-06 documentation package has now been updated in the correct worktree:
+
+- `docs/architecture/ELIS_Lobster_Plugin_Test_Enablement.md`
+- `docs/runbooks/ELIS_Lobster_Plugin_Self_Test_Runbook.md`
+- `HANDOFF.md`
+
+The implementation remains documentation-only. No production config, gateway, or live Lobster workflow was modified or executed.
