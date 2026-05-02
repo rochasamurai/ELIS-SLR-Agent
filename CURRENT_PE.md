@@ -24,7 +24,7 @@
 | PE      | PE-ARCH-07 |
 | Branch  | feature/pe-arch-07-execute-isolated-lobster-plugin-self-test |
 
-> **Active PE.** PE-ARCH-07 — Execute Isolated Lobster Plugin Self-Test. PE-AGT-01 remains held; PE-ARCH-06 stays planning until separately resolved.
+> **Active PE.** PE-ARCH-07 — Execute Isolated Lobster Plugin Self-Test. Implementation is in progress; PE-AGT-01 remains held and PE-ARCH-06 stays planning until separately resolved.
 
 ---
 
@@ -35,7 +35,7 @@
 | infra-impl-b | Implementer |
 | infra-val-a  | Validator |
 
-> Active PE roles: infra-impl-b = Implementer, infra-val-a = Validator. PE-ARCH-07 follows the alternating infra track; provider guard still applies before dispatch.
+> Active PE roles: infra-impl-b = Implementer, infra-val-a = Validator. PE-ARCH-07 follows the alternating infra track; provider guard was satisfied and implementation is now in progress.
 
 ---
 
@@ -133,7 +133,7 @@
 | PE-ARCH-04      | architecture   | infra-impl-b         | infra-val-a        | feature/pe-arch-04-lobster-controlled-workflow-dry-run                  | merged          | 2026-05-02   |
 | PE-ARCH-05      | architecture   | infra-impl-a         | infra-val-b        | feature/pe-arch-05-lobster-plugin-controlled-test-profile               | merged          | 2026-05-02   |
 | PE-ARCH-06      | architecture   | infra-impl-a         | infra-val-b        | feature/pe-arch-06-controlled-lobster-plugin-activation-self-test       | merged          | 2026-05-02   |
-| PE-ARCH-07      | architecture   | infra-impl-b         | infra-val-a        | feature/pe-arch-07-execute-isolated-lobster-plugin-self-test            | planning        | 2026-05-02   |
+| PE-ARCH-07      | architecture   | infra-impl-b         | infra-val-a        | feature/pe-arch-07-execute-isolated-lobster-plugin-self-test            | implementing    | 2026-05-02   |
 | PE-AGT-01       | infra          | infra-impl-a         | infra-val-b        | feature/pe-agt-01-pm-agent-review                                       | blocked         | 2026-05-02   |
 
 Valid status values:
