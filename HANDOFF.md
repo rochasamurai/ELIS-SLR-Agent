@@ -1,35 +1,38 @@
-# PE-OPS-01 Recovery Increment 1 - infra-impl-a
+# PE-ARCH-01 Bootstrap Handoff
 
-## Status Report
-- **Increment**: 1
-- **Agent**: infra-impl-a
-- **Worktree**: /opt/elis/agent-worktrees/PE-OPS-01-infra-impl-a
-- **Canonical Repo**: /opt/elis/repo
-- **Date**: 2026-05-01
+## Status
+- PE-ARCH-01 created: yes
+- implementer assigned: yes
+- validator reserved: yes
+- target files listed: yes
+- Increment 3 remains paused: yes
 
-## Changes Made
-- Created `docs/templates/PE_TASK.template.md`
-- Updated HANDOFF.md with increment 1 status
+## PE
+- **PE-ID**: PE-ARCH-01
+- **Title**: ELIS Deterministic Multi-Agent Architecture
+- **Branch**: feature/pe-arch-01-deterministic-multi-agent-architecture
+- **Implementer**: infra-impl-a
+- **Validator**: infra-val-b
+- **Status**: planning
 
-## Checks Performed
-- ✅ `python scripts/check_current_pe.py` - PASSED
-- ✅ Worktree integrity verified
-- ✅ No OpenClaw workspace bound to canonical repo
-- ✅ Worktree-safe doctrine validated
+## Required deliverables
+1. `docs/architecture/ELIS_Deterministic_Multi_Agent_Architecture.md`
+2. `docs/governance/ELIS_Agent_Roles_and_Boundaries.md`
+3. `workflows/pe-implement-validate-loop.lobster`
+4. `workflows/pe-recovery-check.lobster`
+5. `HANDOFF.md`
 
-## Status Packet Verification
-- [x] Status Packet for infra-val-b present
-- [x] Required artefacts HANDOFF.md created
-- [x] Required artefacts Status Packet created  
-- [x] REVIEW verdict documented
+## Constraints
+- Document-first architecture PE.
+- No automatic push/PR/merge.
+- No production dispatch changes yet.
+- Carlos remains final approval authority.
+- Increment 3 stays paused until explicitly resumed.
 
-## Review Status
-- **Verdict**: PASS
-- **Commit Hash**: 7b16726303f5de07beb70e6db31182619727edea
-- **Next Steps**: Continue infrastructure implementation tasks
+## Validator status packet
+- **Target validator**: infra-val-b
+- **State**: reserved
+- **Evidence required**: commit hash, reviewed files, checks run, findings, readiness verdict
 
-## Increment 2 Status Packet
-- Status: PASS
-- Files changed: docs/governance/ELIS_PE_Gatekeeper_Checklist.md
-- Checks run: python scripts/check_current_pe.py
-- Validator target: infra-val-b
+## Next action
+Draft the PE artefacts and then validate the architecture/governance model before any dispatch changes.
