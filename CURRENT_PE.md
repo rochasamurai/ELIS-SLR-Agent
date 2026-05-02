@@ -21,10 +21,10 @@
 
 | Field   | Value |
 |---------|-------|
-| PE      | PE-ARCH-03 |
-| Branch  | feature/pe-arch-03-lobster-dry-run-stub |
+| PE      | PE-ARCH-04 |
+| Branch  | feature/pe-arch-04-lobster-controlled-workflow-dry-run |
 
-> **Active PE.** PE-ARCH-03 — Dry-run Lobster PE Workflow on Harmless Stub Artefact. Test the Lobster-controlled implement → validate workflow using a harmless documentation stub.
+> **Active PE.** PE-ARCH-04 — Execute Lobster-Controlled Workflow Dry-Run.
 
 ---
 
@@ -32,10 +32,10 @@
 
 | Agent       | Role |
 |-------------|------|
-| infra-impl-a | Implementer |
-| infra-val-b  | Validator |
+| infra-impl-b | Implementer |
+| infra-val-a  | Validator |
 
-> Active PE roles: infra-impl-a = Implementer, infra-val-b = Validator. PE-ARCH-03 is the Lobster dry-run PE.
+> Active PE roles: infra-impl-b = Implementer, infra-val-a = Validator. PE-ARCH-04 follows the alternating architecture track.
 
 ---
 
@@ -116,7 +116,7 @@
 | PE-GHA-01       | ci             | gha-impl-a           | gha-val-b          | feature/pe-gha-01-agents-md-ci-authority                                | merged         | 2026-04-22   |
 | PE-GHA-02       | ci             | gha-impl-b           | gha-val-a          | feature/pe-gha-02-workflow-classification-and-branch-protection          | merged         | 2026-04-22   |
 | PE-RUNNER-01    | infra           | infra-impl-claude    | infra-val-codex    | fix/pe-runner-01-codex-headless-invocation                              | merged          | 2026-04-24   |
-| PE-E2E-01       | e2e            | e2e-impl-a           | e2e-val-b          | feature/pe-e2e-01-smoke                                                 | implementing    | 2026-04-24   |
+| PE-E2E-01       | e2e            | e2e-impl-a           | e2e-val-b          | feature/pe-e2e-01-smoke                                                 | superseded      | 2026-04-24   |
 | PE-INFRA-SLR-06 | infra          | infra-impl-a         | infra-val-b        | feature/pe-infra-slr-06-workflow-state-machine-formalisation            | merged          | 2026-04-24   |
 | PE-INFRA-SLR-07 | infra          | infra-impl-b         | infra-val-a        | feature/pe-infra-slr-07-review-archive-migration                        | merged          | 2026-04-24   |
 | PE-INFRA-SLR-08 | infra          | infra-impl-a         | infra-val-b        | feature/pe-infra-slr-08-control-plane-workflow-wiring                   | merged          | 2026-04-25   |
@@ -129,8 +129,9 @@
 | PE-INFRA-AGENT-01 | infra         | infra-impl-b         | infra-val-a        | feature/pe-infra-agent-01-doc-consolidation                             | merged          | 2026-04-28   |
 | PE-ARCH-01      | architecture   | infra-impl-a         | infra-val-b        | feature/pe-arch-01-deterministic-multi-agent-architecture               | merged          | 2026-05-02   |
 | PE-ARCH-02      | architecture   | infra-impl-b         | infra-val-a        | feature/pe-arch-02-operationalise-lobster-mvp                           | merged          | 2026-05-02   |
-| PE-ARCH-03      | architecture   | infra-impl-a         | infra-val-b        | feature/pe-arch-03-lobster-dry-run-stub                                 | planning        | 2026-05-02   |
-| PE-AGT-01       | infra          | infra-impl-a         | infra-val-b        | feature/pe-agt-01-pm-agent-review                                       | implementing    | 2026-04-28   |
+| PE-ARCH-03      | architecture   | infra-impl-a         | infra-val-b        | feature/pe-arch-03-lobster-dry-run-stub                                 | merged          | 2026-05-02   |
+| PE-ARCH-04      | architecture   | infra-impl-b         | infra-val-a        | feature/pe-arch-04-lobster-controlled-workflow-dry-run                  | planning        | 2026-05-02   |
+| PE-AGT-01       | infra          | infra-impl-a         | infra-val-b        | feature/pe-agt-01-pm-agent-review                                       | superseded      | 2026-04-28   |
 
 Valid status values:
 - `planning`
