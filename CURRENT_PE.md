@@ -21,10 +21,10 @@
 
 | Field   | Value |
 |---------|-------|
-| PE      | PE-ARCH-01 |
-| Branch  | feature/pe-arch-01-deterministic-multi-agent-architecture |
+| PE      | PE-ARCH-02 |
+| Branch  | feature/pe-arch-02-operationalise-lobster-mvp |
 
-> **Active PE.** PE-ARCH-01 — ELIS Deterministic Multi-Agent Architecture. Formalise the multi-agent operating model before further OpenClaw dispatch changes. Increment 3 remains paused until Carlos explicitly authorises otherwise.
+> **Active PE.** PE-ARCH-02 — Operationalise Lobster MVP. Turn the architecture into a working minimum viable deterministic workflow model for ELIS, without replacing the production PE process yet.
 
 ---
 
@@ -32,10 +32,10 @@
 
 | Agent       | Role |
 |-------------|------|
-| infra-impl-a | Implementer |
-| infra-val-b  | Validator |
+| infra-impl-b | Implementer |
+| infra-val-a  | Validator |
 
-> Active PE roles: infra-impl-a = Implementer, infra-val-b = Validator. PE-ARCH-01 is the document-first architecture/governance PE.
+> Active PE roles: infra-impl-b = Implementer, infra-val-a = Validator. PE-ARCH-02 is the Lobster MVP PE.
 
 ---
 
@@ -127,7 +127,8 @@
 | PE-SLR-15       | slr            | prog-impl-a          | prog-val-b         | feature/pe-slr-15-hybrid-slr-end-to-end-validation-and-housekeeping     | merged          | 2026-04-26   |
 | PE-AGT-00       | agt            | infra-impl-a         | infra-val-b        | feature/pe-agt-00-model-authentication-setup                            | cancelled       | 2026-04-26   |
 | PE-INFRA-AGENT-01 | infra         | infra-impl-b         | infra-val-a        | feature/pe-infra-agent-01-doc-consolidation                             | merged          | 2026-04-28   |
-| PE-ARCH-01      | architecture   | infra-impl-a         | infra-val-b        | feature/pe-arch-01-deterministic-multi-agent-architecture               | planning        | 2026-05-02   |
+| PE-ARCH-01      | architecture   | infra-impl-a         | infra-val-b        | feature/pe-arch-01-deterministic-multi-agent-architecture               | merged          | 2026-05-02   |
+| PE-ARCH-02      | architecture   | infra-impl-b         | infra-val-a        | feature/pe-arch-02-operationalise-lobster-mvp                           | planning        | 2026-05-02   |
 | PE-AGT-01       | infra          | infra-impl-a         | infra-val-b        | feature/pe-agt-01-pm-agent-review                                       | implementing    | 2026-04-28   |
 
 Valid status values:
