@@ -21,10 +21,10 @@
 
 | Field   | Value |
 |---------|-------|
-| PE      | PE-ARCH-05 |
-| Branch  | feature/pe-arch-05-lobster-plugin-controlled-test-profile |
+| PE      | PE-AGT-01 |
+| Branch  | feature/pe-agt-01-pm-agent-review |
 
-> **Active PE.** PE-ARCH-05 — Enable Bundled Lobster Plugin in a Controlled Test Profile. PE-AGT-01 remains held while the Lobster test profile is prepared.
+> **Active PE.** PE-AGT-01 — PM Agent Review. PE-ARCH-05 is merged; PE-AGT-01 remains held pending authorised continuation.
 
 ---
 
@@ -131,7 +131,7 @@
 | PE-ARCH-02      | architecture   | infra-impl-b         | infra-val-a        | feature/pe-arch-02-operationalise-lobster-mvp                           | merged          | 2026-05-02   |
 | PE-ARCH-03      | architecture   | infra-impl-a         | infra-val-b        | feature/pe-arch-03-lobster-dry-run-stub                                 | merged          | 2026-05-02   |
 | PE-ARCH-04      | architecture   | infra-impl-b         | infra-val-a        | feature/pe-arch-04-lobster-controlled-workflow-dry-run                  | merged          | 2026-05-02   |
-| PE-ARCH-05      | architecture   | infra-impl-a         | infra-val-b        | feature/pe-arch-05-lobster-plugin-controlled-test-profile               | planning        | 2026-05-02   |
+| PE-ARCH-05      | architecture   | infra-impl-a         | infra-val-b        | feature/pe-arch-05-lobster-plugin-controlled-test-profile               | merged          | 2026-05-02   |
 | PE-AGT-01       | infra          | infra-impl-a         | infra-val-b        | feature/pe-agt-01-pm-agent-review                                       | blocked         | 2026-05-02   |
 
 Valid status values:
