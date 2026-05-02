@@ -1,7 +1,7 @@
-# PE-ARCH-03 Handoff — infra-impl-b → infra-val-a
+# PE-ARCH-03 Handoff — infra-impl-b → infra-val-b
 
 ## Summary
-Completed the PE-ARCH-03 harmless Lobster dry-run artefact creation (recovery attempt after connect-session timeout).
+Completed the PE-ARCH-03 harmless Lobster dry-run artefact creation (fallback recovery after TOOL_CONTEXT_FAILURE).
 
 ## Files created
 - `.elis/pe/PE-ARCH-03/PE_TASK.md` — task definition, scope, restrictions, acceptance criteria
@@ -29,10 +29,10 @@ Completed the PE-ARCH-03 harmless Lobster dry-run artefact creation (recovery at
 | No existing files modified | ✅ (only new files) |
 
 ## Commit hash
-No commit was created. All artefacts are untracked. Base commit: `47cf252ea5fdb29da6b85c01a895a9bac21009f2`.
+`5798388f4673f93842b3dc8e0d560305ed4546e9` — `PE-ARCH-03: add Lobster dry-run stub artefact`
 
 ## Next stage
-**Validator** (infra-val-a) should:
+**Validator** (infra-val-b) should:
 1. Verify all three artefacts exist and are correct
 2. Confirm no existing files were modified
 3. Confirm the implement→validate checklist in the stub file
@@ -40,6 +40,5 @@ No commit was created. All artefacts are untracked. Base commit: `47cf252ea5fdb2
 5. Indicate whether the dry-run PASS qualifies the workflow for production testing
 
 ## Notes
-- This is a recovery attempt after a connect-session timeout on the first try
-- No commits were made; files should be staged and committed by the validator or follow the PE process convention
-- No PRs, pushes, or merges performed
+- Fallback recovery switched from infra-impl-a to infra-impl-b after a TOOL_CONTEXT_FAILURE in the original session
+- The implementation is committed; this handoff now reflects the committed state
