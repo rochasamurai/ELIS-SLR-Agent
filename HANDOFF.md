@@ -1,18 +1,19 @@
-# PE-ARCH-05 Lobster Plugin Controlled Test Profile — Handoff
+# PE-ARCH-06 — Controlled Lobster Plugin Activation Self-Test
 
 ## Summary
-Documented the architecture and procedure for enabling the bundled Lobster plugin in an isolated OpenClaw test profile (`lobster-test`). Delivered a 4-file documentation package covering the test-profile architecture, isolation model, safe invocation path, enablement/preflight/self-test/rollback runbook, and explicit no-production-readiness statements. This PE is documentation-only; no test profile was created, no production config was modified, no Lobster workflow was executed.
+
+Documented the isolated test-profile self-test path for the bundled Lobster plugin. This PE now has a clean documentation package for PE-ARCH-06 covering the test-profile architecture, the self-test runbook, and the implementation handoff. No production OpenClaw config was modified and no Lobster workflow was executed.
 
 ## PE context
 
 | Field | Value |
-|-------|-------|
-| PE-ID | PE-ARCH-05 |
-| Title | Enable Bundled Lobster Plugin in a Controlled Test Profile |
-| Branch | `feature/pe-arch-05-lobster-plugin-controlled-test-profile` |
-| Worktree | `/opt/elis/agent-worktrees/PE-ARCH-05-infra-impl-b` |
-| Implementer | infra-impl-b |
-| Validator | infra-val-a |
+|---|---|
+| PE-ID | PE-ARCH-06 |
+| Title | Controlled Lobster Plugin Activation Self-Test |
+| Branch | `feature/pe-arch-06-controlled-lobster-plugin-activation-self-test` |
+| Worktree | `/opt/elis/agent-worktrees/PE-ARCH-06-infra-impl-a` |
+| Implementer | infra-impl-a |
+| Validator | infra-val-b |
 | Status | implementing → handoff-written |
 
 ## Implementation summary
@@ -20,90 +21,62 @@ Documented the architecture and procedure for enabling the bundled Lobster plugi
 ### What was delivered
 
 | File | Action | Description |
-|------|--------|-------------|
-| `.elis/pe/PE-ARCH-05/PE_TASK.md` | Created | PE task packet with scope, current state analysis, acceptance criteria, and mandatory principles |
-| `docs/architecture/ELIS_Lobster_Plugin_Test_Enablement.md` | Created | Architecture analysis: OpenClaw profiles model, isolation boundaries, test-profile-only guardrails, safe invocation path, security boundaries, rollback procedure, and explicit no-production-readiness statement |
-| `docs/runbooks/ELIS_Lobster_Plugin_Enablement_Runbook.md` | Created | Step-by-step runbook: preflight checks (4 categories), test-profile creation, self-test (4 verifications), daily-use invocation, rollback (5 steps), troubleshooting table, quick-reference appendix, and no-production-readiness reminder |
-| `HANDOFF.md` | Overwritten | This file — implementation handoff with complete status packet (replaces stale PE-ARCH-04 handoff) |
+|---|---|---|
+| `.elis/pe/PE-ARCH-06/PE_TASK.md` | Updated | PE task packet retained for PE-ARCH-06 context |
+| `docs/architecture/ELIS_Lobster_Plugin_Test_Enablement.md` | Updated | PE-ARCH-06 test-profile architecture and enablement analysis |
+| `docs/runbooks/ELIS_Lobster_Plugin_Self_Test_Runbook.md` | Created | PE-ARCH-06 self-test runbook for isolated profile activation, verification, rollback, and failure modes |
+| `HANDOFF.md` | Overwritten | This implementation handoff |
 
-### Key architectural choices
+### What changed in this retry
 
-1. **Profile isolation**: Uses OpenClaw's native profile mechanism (`OPENCLAW_PROFILE` env / `--profile` flag) to create a fully isolated gateway with its own config, data directory, and port binding. Production config (`~/.openclaw/openclaw.json`) is never touched.
-2. **Lobster extension registration**: The Lobster extension is registered only in `~/.openclaw/profiles/lobster-test/openclaw.json` via the `"extensions": ["lobster"]` key. No modifications to production config.
-3. **Safe invocation path**: Agents invoke Lobster via `node /opt/openclaw/lib/node_modules/openclaw/dist/extensions/lobster/index.js run ...`, not through a system-level binary. This keeps the invocation scoped to the existing OpenClaw installation.
-4. **Guardrails**: Every invocation requires profile-isolation preflight, dry-run, and human approval gates. Explicit no-production-readiness statements in every document.
+1. The documentation was aligned to PE-ARCH-06 instead of the earlier PE-ARCH-05 context.
+2. A dedicated self-test runbook was added for the isolated Lobster profile.
+3. The architecture note was refreshed to describe the PE-ARCH-06 self-test posture.
+4. The handoff now records the implementation status packet for validator review.
 
-### What was NOT done
+### What was not done
 
-- ❌ No production config modified (`~/.openclaw/openclaw.json` untouched)
-- ❌ No test profile created (documentation-only PE)
+- ❌ No production config modified
+- ❌ No test profile created
 - ❌ No gateway restarted or started
 - ❌ No Lobster workflow executed
-- ❌ No `.lobster` files modified
-- ❌ No workflows/README.md modified
-- ❌ No CI configuration modified
+- ❌ No workflow README change was needed
 - ❌ No pushes, PRs, or merges
-
-## Changed files
-
-| File | Action |
-|------|--------|
-| `.elis/pe/PE-ARCH-05/PE_TASK.md` | Created |
-| `docs/architecture/ELIS_Lobster_Plugin_Test_Enablement.md` | Created |
-| `docs/runbooks/ELIS_Lobster_Plugin_Enablement_Runbook.md` | Created |
-| `HANDOFF.md` | Overwritten (was stale PE-ARCH-04 handoff) |
 
 ## Checks run
 
 | Check | Result |
-|-------|--------|
-| `pwd` | `/opt/elis/agent-worktrees/PE-ARCH-05-infra-impl-b` ✅ |
-| `git rev-parse --abbrev-ref HEAD` | `feature/pe-arch-05-lobster-plugin-controlled-test-profile` ✅ |
-| `git rev-parse HEAD` | `877498a206528dc2e759e1fd092c29d2da53de7c` (pre-commit) |
-| `git status --short` | See below |
-| `test -f .elis/pe/PE-ARCH-05/PE_TASK.md` | ✅ Created |
-| `test -f docs/architecture/ELIS_Lobster_Plugin_Test_Enablement.md` | ✅ Created |
-| `test -f docs/runbooks/ELIS_Lobster_Plugin_Enablement_Runbook.md` | ✅ Created |
-| `test -f HANDOFF.md` | ✅ Created |
-| `python scripts/check_current_pe.py` | TBD (will run before commit) |
-| No production config modified | ✅ Confirmed (no writes outside worktree) |
-| No `.lobster` files modified | ✅ Confirmed (`git diff --name-only` shows no `.lobster` changes) |
-| No workflow execution claimed | ✅ Confirmed — all deliverables state documentation-only status |
+|---|---|
+| `pwd` | `/opt/elis/agent-worktrees/PE-ARCH-06-infra-impl-a` |
+| `git rev-parse --show-toplevel` | `/opt/elis/agent-worktrees/PE-ARCH-06-infra-impl-a` |
+| `git rev-parse HEAD` | `e86f27a29a1d5109b6876bf0db7d699e3af029bb` before commit |
+| `git status --short` | clean before edits |
+| Production config modified | No |
+| Lobster workflow executed | No |
 
 ## Status packet
 
 | Field | Value |
-|-------|-------|
-| PE | PE-ARCH-05 |
-| Branch | `feature/pe-arch-05-lobster-plugin-controlled-test-profile` |
-| Current state | implement-handoff-complete |
-| Last activity | Created PE task packet + Lobster test-profile enablement architecture + runbook + handoff |
-| Expected artefacts | `PE_TASK.md` ✅, `ELIS_Lobster_Plugin_Test_Enablement.md` ✅, `ELIS_Lobster_Plugin_Enablement_Runbook.md` ✅, `HANDOFF.md` ✅ |
+|---|---|
+| PE | PE-ARCH-06 |
+| Branch | `feature/pe-arch-06-controlled-lobster-plugin-activation-self-test` |
+| Current state | handoff-written |
+| Last activity | Updated PE-ARCH-06 test-profile architecture + self-test runbook + handoff |
+| Expected artefacts | `.elis/pe/PE-ARCH-06/PE_TASK.md`, `docs/architecture/ELIS_Lobster_Plugin_Test_Enablement.md`, `docs/runbooks/ELIS_Lobster_Plugin_Self_Test_Runbook.md`, `HANDOFF.md` |
 | Missing artefacts | None |
 | Errors | None |
-| Next owner | infra-val-a (validator) |
-| Next action | REVIEW.md — verify artefacts, confirm no production config changes, confirm no false execution claims, confirm no-production-readiness statements present, run checks, issue PASS/FAIL verdict |
-| Lobster plugin state | Documented: bundled but disabled in production; test-profile enablement path specified; no active test profile |
-| Invocation contract | Documented in `docs/architecture/ELIS_Lobster_Plugin_Test_Enablement.md` |
-| Test-profile isolation | Documented — OpenClaw native profile mechanism, separate config/data/logs, localhost-only port binding |
-| No-production-readiness | Stated explicitly in all 3 authored documents |
-| False execution claims | Avoided — all deliverables state current state truthfully |
-| Working tree clean | TBD (before commit) |
-| Ready for validator | ✅ Yes (after commit) |
-
-## Commit tracking (to be populated)
-
-| Field | Value |
-|-------|-------|
-| HEAD (before commit) | `877498a206528dc2e759e1fd092c29d2da53de7c` |
-| Commit status | Pending (will commit after all artefacts verified) |
-| GPG-signed | Not configured (bot commit) |
+| Next owner | infra-val-b |
+| Next action | Validate docs, confirm no production config changes, confirm self-test is harmless, and confirm no production readiness claim |
+| Lobster plugin state | Bundled, documented, still isolated to the test profile |
+| Invocation contract | Unchanged |
+| Working tree clean | No — implementation changes pending commit |
+| Ready for validator | Yes after commit |
 
 ## Validator notes
-- All deliverables are documentation-only. No code, CI, or workflow modification.
-- The test-profile enablement path describes a future action, not a current one.
-- No `.lobster` file is claimed as executable.
-- The no-production-readiness statement appears in all three authored documents.
-- Verify that no file outside the four expected deliverables was modified.
-- Verify that production config (`~/.openclaw/openclaw.json`) is not referenced as modified.
-- Verify that no Lobster workflow execution or test-profile creation is claimed.
+
+- All deliverables are documentation-only.
+- No `.lobster` file is claimed as production-executable.
+- No production OpenClaw config is modified or referenced as changed.
+- The self-test remains profile-scoped, reversible, and harmless.
+
+*ELIS PM handoff · PE-ARCH-06 · 2026-05-02*
