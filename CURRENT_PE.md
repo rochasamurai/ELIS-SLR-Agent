@@ -21,10 +21,10 @@
 
 | Field   | Value |
 |---------|-------|
-| PE      | — |
-| Branch  | — |
+| PE      | PE-ARCH-04 |
+| Branch  | feature/pe-arch-04-lobster-controlled-workflow-dry-run |
 
-> **No active PE.** PE-E2E-01 has been superseded; awaiting PM assignment of the next PE.
+> **Active PE.** PE-ARCH-04 — Execute Lobster-Controlled Workflow Dry-Run.
 
 ---
 
@@ -32,10 +32,10 @@
 
 | Agent       | Role |
 |-------------|------|
-| — | — |
-| — | — |
+| infra-impl-b | Implementer |
+| infra-val-a  | Validator |
 
-> No active PE roles. Awaiting PM assignment.
+> Active PE roles: infra-impl-b = Implementer, infra-val-a = Validator. PE-ARCH-04 follows the alternating architecture track.
 
 ---
 
@@ -130,6 +130,7 @@
 | PE-ARCH-01      | architecture   | infra-impl-a         | infra-val-b        | feature/pe-arch-01-deterministic-multi-agent-architecture               | merged          | 2026-05-02   |
 | PE-ARCH-02      | architecture   | infra-impl-b         | infra-val-a        | feature/pe-arch-02-operationalise-lobster-mvp                           | merged          | 2026-05-02   |
 | PE-ARCH-03      | architecture   | infra-impl-a         | infra-val-b        | feature/pe-arch-03-lobster-dry-run-stub                                 | merged          | 2026-05-02   |
+| PE-ARCH-04      | architecture   | infra-impl-b         | infra-val-a        | feature/pe-arch-04-lobster-controlled-workflow-dry-run                  | planning        | 2026-05-02   |
 | PE-AGT-01       | infra          | infra-impl-a         | infra-val-b        | feature/pe-agt-01-pm-agent-review                                       | superseded      | 2026-04-28   |
 
 Valid status values:
