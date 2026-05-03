@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "types": ["node", "mocha"],
+    "ignoreDeprecations": "6.0"
+  },
+  "include": [
+    "plugins/taskflow-controller-prototype/src/**/*.ts",
+    "tests/**/*.ts"
+  ]
+}

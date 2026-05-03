@@ -111,3 +111,6 @@ secrets/
 .claude/
 codex_config.*
 claude_config.*
+
+# Node.js dependencies (installed for prototype TypeScript compilation)
+node_modules/
