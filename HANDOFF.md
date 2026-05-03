@@ -1,27 +1,43 @@
-# HANDOFF — PE-ARCH-08
+# HANDOFF — PE-ARCH-09
 
 ## Status
-Discovery completed; implementation commit in progress.
+Draft completed; ready for validation.
 
 ## Scope
-Determine the minimal safe OpenClaw plugin/controller needed for ELIS to create and manage a Task Flow around the isolated Lobster self-test.
+Design the minimal OpenClaw plugin/controller needed to create and manage a Task Flow around the isolated Lobster self-test.
+
+## Deliverables
+- `docs/architecture/ELIS_Minimal_Task_Flow_Controller_for_Lobster_Self_Test.md`
+- `HANDOFF.md`
 
 ## Current facts
-- Task Flow CLI exists (`openclaw tasks flow list/show/cancel`).
-- The canonical runtime shape is `api.runtime.tasks.flow` (with `api.runtime.taskFlow` as alias).
-- Managed TaskFlow lifecycle methods are documented: `createManaged`, `runTask`, `setWaiting`, `resume`, `finish`.
-- The safe path for PE-ARCH-08 is a minimal managed wrapper around the isolated Lobster self-test, not a general controller.
+- The design is minimal and TaskFlow-based.
+- It uses the managed TaskFlow surface only.
+- It keeps Lobster isolated and off production config.
+- It does not implement the controller.
+- It does not authorise production PE workflow execution.
+- It does not create PRs, push, or merge.
 
 ## Constraints
+- design only
 - no production config changes
+- no production Lobster enablement
 - no production PE workflow execution
 - no controller implementation unless separately authorised
-- no touch of PR #390
-- keep Lobster off production
+- do not resume PE-AGT-01
+- do not resume PE-OPS-01 Increment 3
+- do not touch PR #390
 
 ## Checks
-- `python scripts/check_current_pe.py` — pending in this worktree
+- `python scripts/check_current_pe.py` — to run in this worktree
 - canonical repo state — must remain clean
+- worktree path — must match PE-ARCH-09
+
+## Evidence to capture on validation
+- file contents
+- current commit hash
+- check_current_pe result
+- worktree cleanliness
 
 ## Next step
-Commit the discovery artefacts, run `python scripts/check_current_pe.py`, and keep the worktree clean.
+Run validation against the design artefacts and confirm the task flow boundary remains minimal and side-effect free.
