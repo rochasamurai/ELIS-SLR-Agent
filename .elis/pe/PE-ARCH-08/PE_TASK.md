@@ -1,4 +1,4 @@
-# PE-ARCH-08A — Discover Task Flow Plugin Controller Surface
+# PE-ARCH-08 — Discover Task Flow Plugin Controller Surface
 
 ## Objective
 Determine the minimal safe OpenClaw plugin/controller needed for ELIS to create and manage a Task Flow around the isolated Lobster self-test.
