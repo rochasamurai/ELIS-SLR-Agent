@@ -1,0 +1,23 @@
+{
+  "name": "pe-arch-11-infra-impl-b",
+  "version": "1.0.0",
+  "description": "ELIS Multi AI Agent Platform is a multi-agent AI platform for ELIS research and engineering workflows, with reproducible pipelines, orchestration, validation, and auditability.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^25.6.0",
+    "mocha": "^11.7.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^6.0.3"
+  }
+}
