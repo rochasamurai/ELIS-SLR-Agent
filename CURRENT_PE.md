@@ -24,7 +24,7 @@
 | PE      | — |
 | Branch  | — |
 
-> **Plan-complete mode.** PE-ARCH-08 — Discover Task Flow Plugin Controller Surface. PE-AGT-01 remains held; PE-OPS-01 Increment 3 remains paused.
+> **Planning mode.** PE-ARCH-09 — Minimal Task Flow Controller for Lobster Self-Test. PE-AGT-01 remains held; PE-OPS-01 Increment 3 remains paused.
 
 ---
 
@@ -35,7 +35,7 @@
 | infra-impl-a | Implementer |
 | infra-val-b  | Validator |
 
-> Historical PE roles: infra-impl-b = Implementer, infra-val-a = Validator. PE-ARCH-08 follows the alternating infra track after PE-ARCH-07; provider guard applies before dispatch.
+> Historical PE roles: infra-impl-b = Implementer, infra-val-a = Validator. PE-ARCH-09 follows the alternating infra track after PE-ARCH-08; provider guard applies before dispatch.
 
 ---
 
@@ -135,6 +135,7 @@
 | PE-ARCH-06      | architecture   | infra-impl-a         | infra-val-b        | feature/pe-arch-06-controlled-lobster-plugin-activation-self-test       | merged          | 2026-05-02   |
 | PE-ARCH-07      | architecture   | infra-impl-b         | infra-val-a        | feature/pe-arch-07-execute-isolated-lobster-plugin-self-test            | merged          | 2026-05-02   |
 | PE-ARCH-08      | architecture   | infra-impl-a         | infra-val-b        | feature/pe-arch-08-discover-task-flow-plugin-controller-surface        | merged          | 2026-05-03   |
+| PE-ARCH-09      | architecture   | infra-impl-b         | infra-val-a        | feature/pe-arch-09-minimal-task-flow-controller-lobster-self-test      | planning        | 2026-05-03   |
 | PE-AGT-01       | infra          | infra-impl-a         | infra-val-b        | feature/pe-agt-01-pm-agent-review                                       | blocked         | 2026-05-02   |
 
 Valid status values:
