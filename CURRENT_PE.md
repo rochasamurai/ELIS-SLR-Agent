@@ -21,10 +21,10 @@
 
 | Field   | Value |
 |---------|-------|
-| PE      | PE-GOV-01 |
-| Branch  | feature/pe-gov-01-operating-protocol-templates |
+| PE      | — |
+| Branch  | — |
 
-> **Planning mode.** PE-GOV-01 — Consolidate ELIS PE Operating Protocol Templates. PE-AGT-01 remains held; PE-OPS-01 Increment 3 remains paused.
+> **Plan-complete mode.** PE-GOV-01 — Consolidate ELIS PE Operating Protocol Templates. PE-AGT-01 remains held; PE-OPS-01 Increment 3 remains paused.
 
 ---
 
@@ -43,7 +43,7 @@
 
 | PE-ID       | Domain          | Implementer-agentId  | Validator-agentId  | Branch                                            | Status          | Last-updated |
 |-------------|-----------------|----------------------|--------------------|---------------------------------------------------|-----------------|--------------|
-| PE-GOV-01   | governance      | infra-impl-b         | infra-val-a        | feature/pe-gov-01-operating-protocol-templates    | planning        | 2026-05-03   |
+| PE-GOV-01   | governance      | infra-impl-b         | infra-val-a        | feature/pe-gov-01-operating-protocol-templates    | merged          | 2026-05-03   |
 | PE-INFRA-01 | infra           | infra-impl-codex     | infra-val-claude   | feature/pe-infra-01-branch-policy                 | merged          | 2026-02-18   |
 | PE-INFRA-02 | infra           | infra-impl-codex     | prog-val-claude    | feature/pe-infra-02-role-registration             | merged          | 2026-02-19   |
 | PE-INFRA-03 | infra           | infra-impl-codex     | prog-val-claude    | feature/pe-infra-03-release-agnostic              | merged          | 2026-02-19   |
