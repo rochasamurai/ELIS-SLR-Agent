@@ -1,15 +1,16 @@
 # HANDOFF — PE-ARCH-08
 
 ## Status
-Opened for discovery only.
+Discovery completed; implementation commit in progress.
 
 ## Scope
 Determine the minimal safe OpenClaw plugin/controller needed for ELIS to create and manage a Task Flow around the isolated Lobster self-test.
 
 ## Current facts
 - Task Flow CLI exists (`openclaw tasks flow list/show/cancel`).
-- A verified public create/run CLI was not found.
-- A documented plugin/runtime API surface is now expected to be the likely path for creation/execution.
+- The canonical runtime shape is `api.runtime.tasks.flow` (with `api.runtime.taskFlow` as alias).
+- Managed TaskFlow lifecycle methods are documented: `createManaged`, `runTask`, `setWaiting`, `resume`, `finish`.
+- The safe path for PE-ARCH-08 is a minimal managed wrapper around the isolated Lobster self-test, not a general controller.
 
 ## Constraints
 - no production config changes
@@ -23,4 +24,4 @@ Determine the minimal safe OpenClaw plugin/controller needed for ELIS to create 
 - canonical repo state — must remain clean
 
 ## Next step
-Run read-only discovery and prepare a short report on the plugin/controller surface.
+Commit the discovery artefacts, run `python scripts/check_current_pe.py`, and keep the worktree clean.
