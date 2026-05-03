@@ -21,10 +21,10 @@
 
 | Field   | Value |
 |---------|-------|
-| PE      | — |
-| Branch  | — |
+| PE      | PE-ARCH-10 |
+| Branch  | feature/pe-arch-10-taskflow-controller-placement-api-imports |
 
-> **Plan-complete mode.** PE-ARCH-09 — Minimal Task Flow Controller for Lobster Self-Test. PE-AGT-01 remains held; PE-OPS-01 Increment 3 remains paused.
+> **Planning mode.** PE-ARCH-10 — Verify Task Flow Controller Prototype Placement and API Imports. PE-AGT-01 remains held; PE-OPS-01 Increment 3 remains paused.
 
 ---
 
@@ -136,6 +136,7 @@
 | PE-ARCH-07      | architecture   | infra-impl-b         | infra-val-a        | feature/pe-arch-07-execute-isolated-lobster-plugin-self-test            | merged          | 2026-05-02   |
 | PE-ARCH-08      | architecture   | infra-impl-a         | infra-val-b        | feature/pe-arch-08-discover-task-flow-plugin-controller-surface        | merged          | 2026-05-03   |
 | PE-ARCH-09      | architecture   | infra-impl-b         | infra-val-a        | feature/pe-arch-09-minimal-task-flow-controller-lobster-self-test      | merged          | 2026-05-03   |
+| PE-ARCH-10      | architecture   | infra-impl-a         | infra-val-b        | feature/pe-arch-10-taskflow-controller-placement-api-imports          | planning        | 2026-05-03   |
 | PE-AGT-01       | infra          | infra-impl-a         | infra-val-b        | feature/pe-agt-01-pm-agent-review                                       | blocked         | 2026-05-02   |
 
 Valid status values:
