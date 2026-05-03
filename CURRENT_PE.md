@@ -21,10 +21,10 @@
 
 | Field   | Value |
 |---------|-------|
-| PE      | — |
-| Branch  | — |
+| PE      | PE-GOV-01 |
+| Branch  | feature/pe-gov-01-operating-protocol-templates |
 
-> **Plan-complete mode.** PE-ARCH-10 — Verify Task Flow Controller Prototype Placement and API Imports. PE-AGT-01 remains held; PE-OPS-01 Increment 3 remains paused.
+> **Planning mode.** PE-GOV-01 — Consolidate ELIS PE Operating Protocol Templates. PE-AGT-01 remains held; PE-OPS-01 Increment 3 remains paused.
 
 ---
 
@@ -32,10 +32,10 @@
 
 | Agent       | Role |
 |-------------|------|
-| infra-impl-a | Implementer |
-| infra-val-b  | Validator |
+| infra-impl-b | Implementer |
+| infra-val-a  | Validator |
 
-> Historical PE roles: infra-impl-b = Implementer, infra-val-a = Validator. PE-ARCH-09 follows the alternating infra track after PE-ARCH-08; provider guard applies before dispatch.
+> Historical PE roles: infra-impl-a = Implementer, infra-val-b = Validator. PE-ARCH-09 follows the alternating infra track after PE-ARCH-08; provider guard applies before dispatch.
 
 ---
 
@@ -43,6 +43,7 @@
 
 | PE-ID       | Domain          | Implementer-agentId  | Validator-agentId  | Branch                                            | Status          | Last-updated |
 |-------------|-----------------|----------------------|--------------------|---------------------------------------------------|-----------------|--------------|
+| PE-GOV-01   | governance      | infra-impl-b         | infra-val-a        | feature/pe-gov-01-operating-protocol-templates    | planning        | 2026-05-03   |
 | PE-INFRA-01 | infra           | infra-impl-codex     | infra-val-claude   | feature/pe-infra-01-branch-policy                 | merged          | 2026-02-18   |
 | PE-INFRA-02 | infra           | infra-impl-codex     | prog-val-claude    | feature/pe-infra-02-role-registration             | merged          | 2026-02-19   |
 | PE-INFRA-03 | infra           | infra-impl-codex     | prog-val-claude    | feature/pe-infra-03-release-agnostic              | merged          | 2026-02-19   |
