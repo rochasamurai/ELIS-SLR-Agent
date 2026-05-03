@@ -21,10 +21,10 @@
 
 | Field   | Value |
 |---------|-------|
-| PE      | — |
-| Branch  | — |
+| PE      | PE-ARCH-11 |
+| Branch  | feature/pe-arch-11-inert-task-flow-controller-prototype |
 
-> **Plan-complete mode.** PE-GOV-01 — Consolidate ELIS PE Operating Protocol Templates. PE-AGT-01 remains held; PE-OPS-01 Increment 3 remains paused.
+> **PE-ARCH-11 open.** PE-ARCH-11 — Implement Inert Task Flow Controller Prototype. PE-AGT-01 remains held; PE-OPS-01 Increment 3 remains paused.
 
 ---
 
@@ -138,6 +138,7 @@
 | PE-ARCH-08      | architecture   | infra-impl-a         | infra-val-b        | feature/pe-arch-08-discover-task-flow-plugin-controller-surface        | merged          | 2026-05-03   |
 | PE-ARCH-09      | architecture   | infra-impl-b         | infra-val-a        | feature/pe-arch-09-minimal-task-flow-controller-lobster-self-test      | merged          | 2026-05-03   |
 | PE-ARCH-10      | architecture   | infra-impl-a         | infra-val-b        | feature/pe-arch-10-taskflow-controller-placement-api-imports          | merged          | 2026-05-03   |
+| PE-ARCH-11      | architecture   | infra-impl-b         | infra-val-a        | feature/pe-arch-11-inert-task-flow-controller-prototype                | planning        | 2026-05-03   |
 | PE-AGT-01       | infra          | infra-impl-a         | infra-val-b        | feature/pe-agt-01-pm-agent-review                                       | blocked         | 2026-05-02   |
 
 Valid status values:
@@ -231,6 +232,7 @@ PM housekeeping entries (prefix `PM-CHORE-XX`):
 | PM-CHORE-78  | Cancelled PE-AGT-00 (Model Authentication Setup). All models authenticate via OpenRouter — OAuth credentials are obsolete. AC-6 (OAuth primary, API key fallback) removed from all standard acceptance criteria in plan v2.0.1. | 2026-04-28 |
 | PM-CHORE-79  | Opened PE-AGT-01 (PM Agent Configuration and Dispatch Review) with `infra-impl-a` as Implementer and `infra-val-b` as Validator per alternation rule. Phase 1 of plan v2.0.1.
 | PM-CHORE-72  | Opened PE-INFRA-AGENT-01 (Agent Documentation Consolidation) with `infra-impl-b` as Implementer and `infra-val-a` as Validator per alternation rule (PE-AGT-00 used infra-impl-a). Removes 11 engine-specific docs; only openclaw.json + AGENT_CATALOGUE.md remain as agent source of truth. | 2026-04-28 |
+| PM-CHORE-80  | Opened PE-ARCH-11 (Implement Inert Task Flow Controller Prototype) with `infra-impl-b` as Implementer and `infra-val-a` as Validator per alternation rule. Inert prototype only; no production OpenClaw config changes, no automatic push/PR/merge. | 2026-05-03 |
 
 
 Alternation rule:
