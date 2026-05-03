@@ -50,6 +50,11 @@ Before any PE execution begins, the agent must verify:
 ### 2.9 No Automatic Push, PR, or Merge
 Agents never push, open PRs, or merge without explicit PM direction. These actions are PM-owned.
 
+### 2.10 Discord / PO Checkpoint Governance
+Discord is for human-visible coordination, but the PE thread is the operational checkpoint trail. Use the main Discord channel for portfolio-level control and escalation, and use the PE thread for compact checkpoint updates, audit notes, and continuation markers. GitHub remains the canonical evidence record; Discord never replaces commits, PRs, CI output, or versioned artefacts.
+
+See `docs/governance/ELIS_Discord_PO_PM_Checkpoint_Governance.md` for thread usage, message-boundary, and checkpoint packet rules.
+
 ---
 
 ## 3. PE Lifecycle

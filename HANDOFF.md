@@ -8,7 +8,7 @@
 Implementation complete.
 
 ## Scope
-PE-GOV-01: Consolidate repeated ELIS PM / Discord operating instructions into canonical, versioned repo files. Created five governance documents in `docs/governance/`, created PE task packet, updated PE_TASK template, created HANDOFF and REVIEW templates, and updated HANDOFF.md.
+PE-GOV-01: Consolidate repeated ELIS PM / Discord operating instructions into canonical, versioned repo files. Created governance documents in `docs/governance/`, created PE task packet, updated PE_TASK template, created HANDOFF and REVIEW templates, and updated HANDOFF.md. Added Discord/PO checkpoint governance for thread usage, compact checkpoint packets, and message boundary rules.
 
 ## Session Identity
 - PE: PE-GOV-01
@@ -120,6 +120,7 @@ All checks passed!
 | `docs/governance/ELIS_Worktree_Preflight_Checklist.md` | Created | Done |
 | `docs/governance/ELIS_Provider_Preflight_Checklist.md` | Created | Done |
 | `docs/governance/ELIS_No_Silent_Failure_Recovery.md` | Created | Done |
+| `docs/governance/ELIS_Discord_PO_PM_Checkpoint_Governance.md` | Created | Done |
 | `docs/templates/PE_TASK.template.md` | Updated | Done |
 | `docs/templates/HANDOFF.template.md` | Created | Done |
 | `docs/templates/REVIEW.template.md` | Created | Done |
