@@ -1,43 +1,26 @@
-# PE-ARCH-07 — Execute Isolated Lobster Plugin Self-Test
+# HANDOFF — PE-ARCH-08A
 
-## Summary
-Implemented the isolated `lobster-test` profile fixture, ran the harmless Lobster self-test checks, and documented the results. Production OpenClaw config was not modified and no production PE workflow was run.
+## Status
+Opened for discovery only.
 
-## PE context
+## Scope
+Determine the minimal safe OpenClaw plugin/controller needed for ELIS to create and manage a Task Flow around the isolated Lobster self-test.
 
-| Field | Value |
-|---|---|
-| PE-ID | PE-ARCH-07 |
-| Title | Execute Isolated Lobster Plugin Self-Test |
-| Branch | `feature/pe-arch-07-execute-isolated-lobster-plugin-self-test` |
-| Worktree | `/opt/elis/agent-worktrees/PE-ARCH-07-infra-impl-b` |
-| Implementer | infra-impl-b |
-| Validator | infra-val-a |
-| Status | implementing → handoff-written |
+## Current facts
+- Task Flow CLI exists (`openclaw tasks flow list/show/cancel`).
+- A verified public create/run CLI was not found.
+- A documented plugin/runtime API surface is now expected to be the likely path for creation/execution.
 
-## What changed
+## Constraints
+- no production config changes
+- no production PE workflow execution
+- no controller implementation unless separately authorised
+- no touch of PR #390
+- keep Lobster off production
 
-| File | Action |
-|---|---|
-| `CURRENT_PE.md` | Updated PE-ARCH-07 from planning to implementing |
-| `docs/reports/PE_ARCH_07_Lobster_Self_Test_Report.md` | Created |
-| `docs/runbooks/ELIS_Lobster_Plugin_Self_Test_Runbook.md` | Created |
+## Checks
+- `python scripts/check_current_pe.py` — pending in this worktree
+- canonical repo state — must remain clean
 
-## Self-test evidence
-
-- Test profile created at `~/.openclaw/profiles/lobster-test/openclaw.json`
-- Lobster registered in the test profile
-- Production config exists and still has no `extensions` section
-- Lobster extension binary is reachable at `/opt/openclaw/lib/node_modules/openclaw/dist/extensions/lobster/index.js`
-- No production PE workflow was run
-
-## Status packet
-
-| Field | Value |
-|---|---|
-| Current state | implement-handoff-complete |
-| Next owner | infra-val-a |
-| Next action | Review the repo artefacts, confirm the self-test evidence, and write REVIEW.md |
-| Production config | Untouched |
-| Test profile | Present and isolated |
-| Ready for validator | Yes |
+## Next step
+Run read-only discovery and prepare a short report on the plugin/controller surface.
