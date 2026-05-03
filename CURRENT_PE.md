@@ -21,10 +21,10 @@
 
 | Field   | Value |
 |---------|-------|
-| PE      | — |
-| Branch  | — |
+| PE      | PE-ARCH-12 |
+| Branch  | feature/pe-arch-12-isolated-task-flow-controller-smoke-test |
 
-> **Plan-complete mode.** PE-ARCH-11 — Implement Inert Task Flow Controller Prototype merged. PE-AGT-01 remains held; PE-OPS-01 Increment 3 remains paused.
+> **Planning mode.** PE-ARCH-12 — Run Isolated Task Flow Controller Smoke Test opened. PE-AGT-01 remains held; PE-OPS-01 Increment 3 remains paused.
 
 ---
 
@@ -32,10 +32,10 @@
 
 | Agent       | Role |
 |-------------|------|
-| infra-impl-b | Implementer |
-| infra-val-a  | Validator |
+| infra-impl-a | Implementer |
+| infra-val-b  | Validator |
 
-> Historical PE roles: infra-impl-a = Implementer, infra-val-b = Validator. PE-ARCH-09 follows the alternating infra track after PE-ARCH-08; provider guard applies before dispatch.
+> Historical PE roles: infra-impl-b = Implementer, infra-val-a = Validator. PE-ARCH-12 follows the alternating infra track after PE-ARCH-11; provider guard applies before dispatch.
 
 ---
 
@@ -139,6 +139,7 @@
 | PE-ARCH-09      | architecture   | infra-impl-b         | infra-val-a        | feature/pe-arch-09-minimal-task-flow-controller-lobster-self-test      | merged          | 2026-05-03   |
 | PE-ARCH-10      | architecture   | infra-impl-a         | infra-val-b        | feature/pe-arch-10-taskflow-controller-placement-api-imports          | merged          | 2026-05-03   |
 | PE-ARCH-11      | architecture   | infra-impl-b         | infra-val-a        | feature/pe-arch-11-inert-task-flow-controller-prototype                | merged          | 2026-05-03   |
+| PE-ARCH-12      | architecture   | infra-impl-a         | infra-val-b        | feature/pe-arch-12-isolated-task-flow-controller-smoke-test           | planning        | 2026-05-03   |
 | PE-AGT-01       | infra          | infra-impl-a         | infra-val-b        | feature/pe-agt-01-pm-agent-review                                       | blocked         | 2026-05-02   |
 
 Valid status values:
@@ -234,6 +235,7 @@ PM housekeeping entries (prefix `PM-CHORE-XX`):
 | PM-CHORE-72  | Opened PE-INFRA-AGENT-01 (Agent Documentation Consolidation) with `infra-impl-b` as Implementer and `infra-val-a` as Validator per alternation rule (PE-AGT-00 used infra-impl-a). Removes 11 engine-specific docs; only openclaw.json + AGENT_CATALOGUE.md remain as agent source of truth. | 2026-04-28 |
 | PM-CHORE-80  | Opened PE-ARCH-11 (Implement Inert Task Flow Controller Prototype) with `infra-impl-b` as Implementer and `infra-val-a` as Validator per alternation rule. Inert prototype only; no production OpenClaw config changes, no automatic push/PR/merge. | 2026-05-03 |
 | PM-CHORE-81  | Closed PE-ARCH-11 as merged (PR #408, PASS verdict — infra-val-a). Plan-complete mode restored: PE and Branch cleared; PE-AGT-01 remains held; PE-OPS-01 Increment 3 remains paused. | 2026-05-03 |
+| PM-CHORE-82  | Opened PE-ARCH-12 (Run Isolated Task Flow Controller Smoke Test) with `infra-impl-a` as Implementer and `infra-val-b` as Validator per alternation rule. Isolated smoke test only; no production OpenClaw config changes, no production Lobster enablement, no automatic push/PR/merge. | 2026-05-03 |
 
 
 Alternation rule:
