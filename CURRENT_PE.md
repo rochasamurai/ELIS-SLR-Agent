@@ -32,8 +32,8 @@
 
 | Agent       | Role |
 |-------------|------|
-| infra-impl-a | TBD / blocked pending profile creation |
-| infra-val-b  | TBD / blocked pending safe binding |
+| infra-impl-b | Implementer |
+| infra-val-a  | Validator |
 
 > Historical PE roles: infra-impl-b = Implementer, infra-val-a = Validator. PE-OPS-CONFIG-01 is governance-only until safe binding exists.
 
@@ -139,7 +139,7 @@
 | PE-ARCH-09      | architecture   | infra-impl-b         | infra-val-a        | feature/pe-arch-09-minimal-task-flow-controller-lobster-self-test      | merged          | 2026-05-03   |
 | PE-ARCH-10      | architecture   | infra-impl-a         | infra-val-b        | feature/pe-arch-10-taskflow-controller-placement-api-imports          | merged          | 2026-05-03   |
 | PE-ARCH-11      | architecture   | infra-impl-b         | infra-val-a        | feature/pe-arch-11-inert-task-flow-controller-prototype                | merged          | 2026-05-03   |
-| PE-OPS-CONFIG-01 | config          | TBD                  | TBD                | feature/pe-ops-config-01-pe-specific-agent-profile-binding-procedure | planning        | 2026-05-04   |
+| PE-OPS-CONFIG-01 | config          | infra-impl-b         | infra-val-a        | feature/pe-ops-config-01-pe-specific-agent-profile-binding-procedure | planning        | 2026-05-04   |
 | PE-AGT-01       | infra          | infra-impl-a         | infra-val-b        | feature/pe-agt-01-pm-agent-review                                       | blocked         | 2026-05-02   |
 
 Valid status values:
