@@ -1,11 +1,25 @@
-# HANDOFF — PE-ARCH-11
+# HANDOFF — PE-OPS-CONFIG-01
 
-> **Status Packet** — standard evidence bundle for every agent update to PM (AGENTS.md §6).
+> **Status Packet** — setup evidence bundle for PE-OPS-CONFIG-01.
 
 ---
 
 ## Status
-Implementation complete.
+Platform setup complete; ready for safe profile use.
+
+## PE-OPS-CONFIG-01 Setup Evidence
+- Profile created and verified: `pe-ops-config-01-impl`
+- Workspace binding verified: `/opt/elis/agent-worktrees/PE-OPS-CONFIG-01-impl`
+- Worktree is a real ELIS Git worktree on `feature/pe-ops-config-01-pe-specific-agent-profile-binding-procedure`
+- Verified HEAD: `294459694fe38f00968af298bc04c3de5552a3e7`
+- Bootstrap evidence preserved: `/opt/elis/agent-worktrees/PE-OPS-CONFIG-01-impl.bootstrap-evidence.20260504T154049Z`
+- Infra-impl-a/b unchanged
+- No routing bindings added
+- No secrets/auth profile changes made
+- OpenClaw config changed only to add `pe-ops-config-01-impl`
+- No implementer/validator dispatch occurred
+
+---
 
 ## Scope
 PE-ARCH-11: Implement Inert Task Flow Controller Prototype. Created TypeScript source files for the inert TaskFlow controller prototype (bridge, self-test wrapper, and orchestration entry point), unit tests, architecture documentation, task packet, and implementation handoff. The prototype is fully inert — no production OpenClaw config changes, no production Lobster enablement, no automatic push/PR/merge behaviour. PE-ARCH-08/09/10 findings are incorporated in the prototype source files, tests, and architecture doc.
