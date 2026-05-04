@@ -6,6 +6,18 @@ Define and document the safe binding procedure for PE-specific agent profiles, s
 ## Status
 Governance-only planning PE. Implementer/validator binding is TBD / blocked pending profile creation and safe binding verification.
 
+## Setup Evidence
+- Profile created and verified: `pe-ops-config-01-impl`
+- Workspace binding verified: `/opt/elis/agent-worktrees/PE-OPS-CONFIG-01-impl`
+- Worktree is a real ELIS Git worktree
+- Verified HEAD: `294459694fe38f00968af298bc04c3de5552a3e7`
+- Bootstrap evidence preserved: `/opt/elis/agent-worktrees/PE-OPS-CONFIG-01-impl.bootstrap-evidence.20260504T154049Z`
+- Infra-impl-a/b unchanged
+- No routing bindings added
+- No secrets/auth profile changes made
+- OpenClaw config changed only to add `pe-ops-config-01-impl`
+- No implementer/validator dispatch occurred
+
 ## Repository
 Canonical repo: `/opt/elis/repo`
 Assigned worktree: TBD / blocked pending profile creation
