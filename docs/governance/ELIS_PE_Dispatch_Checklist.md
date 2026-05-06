@@ -90,7 +90,8 @@ This checklist ensures every PE dispatch follows a consistent, verifiable proces
 - [ ] Gate 1 has passed or CI bot has assigned the Validator
 - [ ] Validator has explicit PM or CI-bot assignment (`@agent — assigned as Validator. Begin review.`)
 - [ ] Validator has a fresh session ID (`<PE-ID>-val-YYYYMMDD-HHMMSS`)
-- [ ] Validator session uses a separate validation worktree
+- [ ] Validator session uses a fixed validation workspace (`/opt/elis/agent-worktrees/<role>-<slot>`, distinct from implementer workspace)
+- [ ] Validator fixed workspace has been reset: clean state, correct branch checked out
 - [ ] Validator knows the implementer's commit SHA
 
 ---
@@ -102,21 +103,23 @@ After completing the checklist, PM decides:
 | Condition | Action |
 |-----------|--------|
 | All checks pass | Dispatch implementer or validator |
-| Worktree issue | Fix worktree; recheck |
+| Fixed worktree issue | Reset fixed workspace or create PE branch; recheck |
 | Registry/plan issue | Fix CURRENT_PE.md or PE_TASK.md; recheck |
 | Provider/rate-limit issue | Platform Monitor investigates; recheck |
 | Task packet incomplete | PM completes task packet; recheck |
+| GitHub boundary violation | Report to PM; do not dispatch; escalate to PO |
 | PO decision needed | Escalate to PO; wait for resolution |
 
 ---
 
 ## 4. Post-Dispatch Verification
 
-- [ ] Agent confirms correct worktree path (Step 0 output evidence)
-- [ ] Agent confirms correct branch
+- [ ] Agent confirms correct fixed worktree path (Step 0 output evidence — must match role+slot path)
+- [ ] Agent confirms correct branch for the current PE
 - [ ] Agent confirms task packet is accessible
 - [ ] PM receives Status Packet at start of implementation/validation
 - [ ] Watchdog confirms artefacts after implementer commit
+- [ ] No GitHub write operations originated from the wrong role or workspace
 
 ---
 
@@ -124,4 +127,5 @@ After completing the checklist, PM decides:
 
 | Version | Date       | Author | Changes |
 |---------|------------|--------|---------|
+| 1.1     | 2026-05-06 | PM     | Adopt fixed workspace paths. Add GitHub write boundary gates to artefact checklist. Update worktree, implementer start, validator start sections for fixed workspaces. |
 | 1.0     | 2026-05-03 | PM     | Initial canonical consolidation. |

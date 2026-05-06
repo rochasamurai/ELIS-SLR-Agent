@@ -240,35 +240,49 @@ ADR format and lifecycle are defined in `docs/decisions/README.md`.
 
 ## 3) Worktree lifecycle — mandatory for every PE
 
-### 3.1 Why worktrees
-Worktrees prevent:
+### 3.1 Why fixed workspaces
+Fixed workspaces (persistent worktrees per role slot) prevent:
 - checkout failures ("local changes would be overwritten"),
 - branch contamination (PE1 edits leaking into PE2),
 - agent collisions on shared files (e.g., `HANDOFF.md` / `REVIEW_PE<N>.md`),
-- VS Code Source Control accumulating stale GitHub connections from old branches.
+- stale worktree accumulation (no per-PE worktree lifecycle),
+- agent path confusion (each agent always knows its own fixed path).
 
 ### 3.2 When to use
-Worktrees are **required for every PE**, regardless of whether parallel work exists.
-The main repo folder always stays on `main`. Each PE branch lives in its own worktree.
+Fixed workspaces are **required for every PE**. Each agent role slot has a persistent worktree:
+```
+/opt/elis/agent-worktrees/<role>-<slot>
+```
+Examples: `/opt/elis/agent-worktrees/infra-impl-b`, `/opt/elis/agent-worktrees/infra-val-a`
 
-### 3.3 Worktree lifecycle rule
-**Create one worktree per PE at the start of the PE. Remove it immediately after the PR merges.**
-Never leave a worktree open for a merged branch.
+The main repo folder always stays on `main`. The branch checked out in each fixed workspace changes per PE; the worktree path does not.
 
-### 3.4 Commands (Windows / PowerShell friendly)
-From the *main* repo folder:
+### 3.3 Fixed workspace lifecycle
+**At PE start: reset the fixed workspace to a clean state and check out the PE branch.**
+After PE merge: the workspace is not removed (it is persistent). The branch is left in place until the next PE assignment, when it will be reset again.
+
+### 3.4 Reset procedure (start of each PE)
+From the fixed workspace root:
 
 ```bash
-# PE START — Implementer creates worktree on first commit
+# PE START — reset fixed workspace for new PE assignment
 git fetch --all --prune
-git worktree add ../ELIS_worktrees/pe-oc-XX feature/pe-oc-XX-description
+git checkout <pe-branch> 2>/dev/null || git checkout -b <pe-branch> origin/$BASE
+git rebase origin/$BASE 2>/dev/null || true
+git status -sb  # confirm clean
+```
 
-# Verify
-git worktree list
+If switching away from a previous PE branch that still has uncommitted work:
+```bash
+git stash  # or git reset --hard if state is disposable
+git checkout <new-pe-branch>
+```
 
-# PR MERGED — remove worktree immediately
-git worktree remove ../ELIS_worktrees/pe-oc-XX
-git worktree list   # confirm removed
+### 3.5 Commands
+```bash
+# Verify fixed workspace identity
+echo "Fixed workspace: $(pwd)"
+git worktree list | grep "$(pwd)"
 ```
 
 ---
@@ -379,6 +393,11 @@ Rules:
 - Completed steps must be marked `[x]` immediately, with pasted command output confirming the step.
 - If a step fails and is retried, keep it `[→]` until verification passes.
 
+**GitHub write boundary reminder for Implementer:**
+- Do NOT push, create PRs, or merge. These are PM/GitHub Agent operations.
+- Local commits only. PM receives Status Packet and handles remote writes.
+- If PM instructs push, verify the instruction came from PM explicitly. Never auto-push.
+
 **Tool note (both agents):** use the `TodoWrite` tool to maintain this list. Set status to
 `in_progress` before starting each step; set `completed` immediately after the step is
 verified with pasted output. Never batch completions.
@@ -448,6 +467,12 @@ Rules:
 - Completed steps must be marked `[x]` immediately, with pasted command output confirming the step.
 - In re-validation rounds, restart Updated Todos from step 1 and include round ID.
 
+**GitHub write boundary reminder for Validator:**
+- Do NOT push, create PRs, or merge. These are PM/GitHub Agent operations.
+- Validator local commits are limited to REVIEW file + adversarial tests.
+- PR comments and formal GitHub reviews are authorised when explicitly assigned by PM.
+- Never push implementation file changes.
+
 **Tool note (both agents):** use the `TodoWrite` tool to maintain this list. Set status to
 `in_progress` before starting each step; set `completed` immediately after the step is
 verified with pasted output. Never batch completions.
@@ -505,6 +530,9 @@ git log -5 --oneline --decorate
 ### 6.3 Scope evidence (against `origin/<base-branch>`)
 ```bash
 # BASE=$(grep "Base branch" CURRENT_PE.md | awk '{print $NF}')
+# The fixed workspace path MUST be the correct role+slot path:
+echo "Fixed workspace: $(pwd)"
+git rev-parse --show-toplevel
 git diff --name-status origin/$BASE..HEAD
 git diff --stat        origin/$BASE..HEAD
 ```
@@ -523,8 +551,19 @@ python -m pytest -q
 ### 6.5 PR evidence (if applicable)
 ```bash
 # BASE=$(grep "Base branch" CURRENT_PE.md | awk '{print $NF}')
-gh pr list --state open --base $BASE
-gh pr view <PR_NUMBER>
+# GitHub write boundary: implementer/validator run gh read-only commands only.
+# Push, PR creation, merge are PM or GitHub Agent operations.
+gh pr list --state open --base $BASE   # read-only — allowed for all roles
+git log -1 --oneline                    # confirm current commit
+```
+
+### 6.6 GitHub write boundary checklist (pre-remote-write gate)
+```bash
+# Verify role is authorised for remote write
+echo "Role: $(grep -i 'agent.*role' AGENTS.md 2>/dev/null || echo 'unknown')"
+# If role is implementer or validator: DO NOT PUSH. Notify PM instead.
+# Check CURRENT_PE.md for the authorised GitHub write operator:
+grep 'github.*write\|GitHub.*operator\|push.*authorised' CURRENT_PE.md 2>/dev/null
 ```
 
 ---
@@ -571,6 +610,8 @@ See `AUDITS.md` for the full audit spec and report templates.
 - Do not open, read, or reference any file listed in `.agentignore`.
 - Do not include secret values in Status Packets, HANDOFF.md, or any PR content.
 - Do not proceed if `check_agent_scope.py` returns exit code 1.
+- **Do NOT push, PR, or merge** as implementer or validator. Remote GitHub writes are PM/GitHub Agent operations.
+- **Do NOT work outside your fixed workspace.** Verify `pwd` matches your role's assigned path before any operation.
 
 ---
 

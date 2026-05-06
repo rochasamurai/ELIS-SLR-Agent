@@ -9,7 +9,9 @@ This template defines the structured approach for implementing a PE within the E
 ## Repository Structure
 - Canonical repository: `/opt/elis/repo`
 - Assigned worktree root: `/opt/elis/agent-worktrees/`
-- Assigned worktree: `/opt/elis/agent-worktrees/<PE-ID>-<agent-id>`
+- Assigned worktree: `/opt/elis/agent-worktrees/<role>-<slot>` (fixed workspace — e.g. `infra-impl-b`)
+  - Implementer: `/opt/elis/agent-worktrees/<implementer-role-slot>`
+  - Validator: `/opt/elis/agent-worktrees/<validator-role-slot>`
 
 ## Branch
 `feature/<pe-id-branch-name>`
@@ -28,12 +30,14 @@ This template defines the structured approach for implementing a PE within the E
 - `docs/governance/ELIS_Provider_Preflight_Checklist.md` — provider readiness
 - `docs/governance/ELIS_No_Silent_Failure_Recovery.md` — artefact and evidence requirements
 
-## Worktree Safety Practices
+## Fixed Workspace Safety Practices
 - No OpenClaw workspace directly bound to `/opt/elis/repo`
 - No shared mutable working directory between active agents
 - Mandatory wrong-path checks before execution: `pwd`, `git rev-parse --show-toplevel`, `git branch --show-current`
-- All artefacts committed to worktree only; no writes to canonical repo
-- Rebase onto `origin/$BASE` before starting if other PEs merged since branch creation
+- Path must match the agent's fixed workspace (`/opt/elis/agent-worktrees/<role>-<slot>`), not a per-PE path
+- All artefacts committed to fixed workspace only; no writes to canonical repo
+- Fixed workspace reset at start of each PE: fetch + clean + checkout correct branch + rebase onto `origin/$BASE`
+- GitHub write boundary: implementer does not push/PR/merge. Validator commits only REVIEW + tests locally. PM/GitHub Agent handles remote writes.
 
 ## Allowed Files
 - <list files this PE may create or modify>

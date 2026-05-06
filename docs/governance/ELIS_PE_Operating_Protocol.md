@@ -1,7 +1,7 @@
 # ELIS PE Operating Protocol
 
-**Status:** Canonical — v1.0  
-**Date:** 2026-05-03  
+**Status:** Canonical — v1.1  
+**Date:** 2026-05-06  
 **Owner:** Carlos Rocha, Product Owner  
 **Applies to:** All ELIS agents (PM, Gatekeeper, Watchdog, Implementers, Validators, Platform Monitor)  
 **Authoritative sources:** AGENTS.md, CLAUDE.md, ELIS_General_Guidance.md, LESSONS_LEARNED.md  
@@ -40,17 +40,47 @@ All implementation commits must precede validation. Validators review committed 
 ### 2.7 No Silent Failure Recovery
 A run that produces no required artefacts (commit, HANDOFF, Status Packet, or REVIEW) is not a success. Valid outcomes are PASS, FAIL, or BLOCKED — each backed by evidence. Recovery from silent failure is a separate, PO-authorised process.
 
-### 2.8 Worktree and Provider Preflight Required
+### 2.8 Fixed Agent Workspace Model
+Every agent role has a persistent, dedicated worktree path that persists across PEs. This replaces the per-PE worktree pattern.
+
+**Fixed worktree paths:**
+- `infra-impl-a` → `/opt/elis/agent-worktrees/infra-impl-a`
+- `infra-impl-b` → `/opt/elis/agent-worktrees/infra-impl-b`
+- `infra-val-a`  → `/opt/elis/agent-worktrees/infra-val-a`
+- `infra-val-b`   → `/opt/elis/agent-worktrees/infra-val-b`
+- (same pattern for programme and SLR roles)
+
+The worktree is reset and rebased at the start of each PE assignment. The branch checked out in the fixed worktree changes per PE. The worktree path itself does not.
+
+**Advantages:**
+- Agent sessions always bind to the same filesystem path
+- Shell and PM know exactly where each agent works
+- No stale worktrees accumulate per PE
+- CI/CD runners, monitoring, and recovery scripts use stable paths
+
+### 2.9 Worktree and Provider Preflight Required
 Before any PE execution begins, the agent must verify:
-- Correct worktree path and branch
+- Correct fixed worktree path (role-specific, not PE-specific)
+- Correct branch checked out for the current PE
 - Provider/model availability and credentials
 - Clean or expected working-tree state
 - Task packet exists and is current
 
-### 2.9 No Automatic Push, PR, or Merge
+### 2.10 GitHub Write Boundary Model
+gitHub write access is gated by role and explicit authorisation. No agent may perform a GitHub write operation unless the action is within its authorised boundary.
+
+**Allowed GitHub writes per role:**
+- **Implementer:** Local branch commits only. No git push, PR creation, or remote writes unless explicitly authorised by PM.
+- **Validator:** Local commits to the shared PE branch (REVIEW file, adversarial tests only). PR comments and formal GitHub reviews when explicitly authorised.
+- **PM:** All GitHub operations including push, PR creation, label/comment, merge (with PO approval for merge).
+- **GitHub Agent (dedicated bot):** Push, PR ops, labels/comments, merge status reporting under PE-scoped activation.
+
+**All roles:** Merge requires explicit PO approval. No automatic merge.
+
+### 2.11 No Automatic Push, PR, or Merge
 Agents never push, open PRs, or merge without explicit PM direction. These actions are PM-owned.
 
-### 2.10 Discord / PO Checkpoint Governance
+### 2.12 Discord / PO Checkpoint Governance
 Discord is for human-visible coordination, but the PE thread is the operational checkpoint trail. Use the main Discord channel for portfolio-level control and escalation, and use the PE thread for compact checkpoint updates, audit notes, and continuation markers. GitHub remains the canonical evidence record; Discord never replaces commits, PRs, CI output, or versioned artefacts.
 
 See `docs/governance/ELIS_Discord_PO_PM_Checkpoint_Governance.md` for thread usage, message-boundary, and checkpoint packet rules.
@@ -67,7 +97,7 @@ See `docs/governance/ELIS_Discord_PO_PM_Checkpoint_Governance.md` for thread usa
 
 ### 3.2 Pre-Dispatch (Gatekeeper)
 1. PM runs Gatekeeper preflight (or requests Gatekeeper readiness check).
-2. Gatekeeper verifies: worktree path, branch, task packet existence, clean state, provider readiness, artefact gates.
+2. Gatekeeper verifies: fixed worktree path for the role, branch matches PE, task packet existence, clean state after reset/rebase, provider readiness, artefact gates.
 3. Gatekeeper returns one of: `READY`, `NOT_READY`, `NEEDS_PLATFORM_FIX`, `NEEDS_PO_DECISION`.
 4. PM dispatches only on `READY` or PO-authorised override.
 
@@ -98,10 +128,13 @@ See `docs/governance/ELIS_Discord_PO_PM_Checkpoint_Governance.md` for thread usa
 Gate 1 is a CI-driven automated check. On a READY verdict from Gatekeeper, PM dispatches the Validator. Gate 1 CI runs on the feature branch and assigns the Validator via PR comment. The Validator may start only after receiving explicit PM or CI-bot assignment.
 
 ### 3.7 Gate 2 (Merge)
-Gate 2 is a CI-driven automated merge. On a PASS verdict from the Validator (PR comment + formal GitHub review), CI checks re-run. If all required checks pass, the PR auto-merges if:
+Gate 2 is a PE-completion gate. On a PASS verdict from the Validator (PR comment + formal GitHub review), CI checks re-run. Merge is PM-owned and requires:
 - Branch protection rules are satisfied
 - No `pm-review-required` label is set
 - Validator is the correct assigned agent
+- Explicit PO approval (per §3.8)
+
+Gate 2 does not auto-merge. The PM merges after confirming all gates are green and PO has approved.
 
 ### 3.8 PO Approval and Override
 PO approval is required for:
@@ -214,22 +247,30 @@ PO approval is required for:
 
 ## 5. Worktree and Workspace Rules
 
-### 5.1 Worktree Isolation
-Every active PE uses a dedicated Git worktree:
+### 5.1 Fixed Agent Worktree Model
+Each agent role has a persistent, dedicated worktree path that does not change between PEs:
 ```
-/opt/elis/agent-worktrees/<PE-ID>-<agent-id>
+/opt/elis/agent-worktrees/<role>-<slot>
 ```
+Examples: `/opt/elis/agent-worktrees/infra-impl-b`, `/opt/elis/agent-worktrees/infra-val-a`
 
-### 5.2 No Shared Mutable Working Directory
-Two active agents must never write to the same working directory. Rule: one PE branch + one active writer at a time.
+### 5.2 Worktree Reset Between PEs
+At the start of each PE assignment, the fixed worktree is:
+1. Cleaned of uncommitted changes (stash or discard disposable state)
+2. Fetched from origin
+3. Rebased onto the current `origin/$BASE`
+4. Switched to the PE branch (created if new)
 
-### 5.3 Canonical Repository
+### 5.3 No Shared Mutable Working Directory
+Two active agents must never write to the same working directory. Each fixed worktree hosts exactly one role. Rule: one PE branch + one active writer at a time.
+
+### 5.4 Canonical Repository
 `/opt/elis/repo` is the canonical ELIS repository. It must remain clean unless a controlled, approved PE is actively modifying it.
 
-### 5.4 No OpenClaw Workspace on Canonical Repo
+### 5.5 No OpenClaw Workspace on Canonical Repo
 OpenClaw workspace must not be directly bound to `/opt/elis/repo`. OpenClaw may write bootstrap/context files into its workspace.
 
-### 5.5 Path Preflight
+### 5.6 Path Preflight
 Before any PE work, the agent must run:
 ```bash
 pwd
@@ -237,7 +278,7 @@ git rev-parse --show-toplevel
 git status --short --branch
 git branch --show-current
 ```
-The verified path must match the assigned PE worktree.
+The verified path must match the agent's fixed worktree path. The branch must match the current PE branch from CURRENT_PE.md.
 
 ---
 
@@ -351,4 +392,5 @@ Agents must not self-initiate recovery from silent failure. All recovery is PM-d
 
 | Version | Date       | Author     | Changes |
 |---------|------------|------------|---------|
+| 1.1     | 2026-05-06 | PM         | Adopt fixed agent worktree model and GitHub write boundary model. Worktree paths are now role+slot based, not PE-ID based. Gate 2 no longer auto-merges. Explicit write boundaries per role. |
 | 1.0     | 2026-05-03 | PM         | Initial canonical consolidation from AGENTS.md, CLAUDE.md, ELIS_General_Guidance.md, LESSONS_LEARNED.md, and accumulated PM directives. |

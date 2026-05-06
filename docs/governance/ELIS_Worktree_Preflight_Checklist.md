@@ -1,10 +1,10 @@
 # ELIS Worktree Preflight Checklist
 
-**Status:** Canonical — v1.0  
-**Date:** 2026-05-03  
+**Status:** Canonical — v1.1  
+**Date:** 2026-05-06  
 **Owner:** Carlos Rocha, Product Owner  
 **Applies to:** All ELIS agents before starting any PE work  
-**Authoritative sources:** ELIS_General_Guidance.md §5, AGENTS.md §2.2, LESSONS_LEARNED.md  
+**Authoritative sources:** ELIS_General_Guidance.md §5, AGENTS.md §2.2, LESSONS_LEARNED.md, ELIS_PE_Operating_Protocol.md §5 (Fixed Workspace Model)  
 **Canonical record:** GitHub (this document)
 
 ---
@@ -27,18 +27,19 @@ git branch --show-current
 ```
 
 ### Expected Results
-- `pwd`: must match the assigned PE worktree, e.g. `/opt/elis/agent-worktrees/PE-GOV-01-infra-impl-b`
-- `git rev-parse --show-toplevel`: must return the worktree root, NOT `/opt/elis/repo`
-- `git status --short --branch`: clean state or only expected files
-- `git branch --show-current`: must match the PE branch, e.g. `feature/pe-gov-01-operating-protocol-templates`
+- `pwd`: must match the agent's **fixed worktree path**, e.g. `/opt/elis/agent-worktrees/infra-impl-b` (NOT a per-PE path)
+- `git rev-parse --show-toplevel`: must return the fixed worktree root, NOT `/opt/elis/repo`
+- `git status --short --branch`: clean state or only expected files after reset
+- `git branch --show-current`: must match the PE branch for the current assignment, e.g. `feature/pe-ops-fixed-workspaces-01-adopt-fixed-agent-workspace-and-github-write-boundary-model`
 
 ---
 
 ## 3. Worktree Isolation Checklist
 
 ### 3.1 General Isolation
-- [ ] Worktree path follows convention: `/opt/elis/agent-worktrees/<PE-ID>-<agent-id>`
-- [ ] No other active agent writes to this same worktree
+- [ ] Worktree path follows fixed workspace convention: `/opt/elis/agent-worktrees/<role>-<slot>` (e.g. `infra-impl-b`, `infra-val-a`)
+- [ ] The branch checked out in this fixed worktree matches the current PE branch from CURRENT_PE.md
+- [ ] No other active agent writes to this same fixed worktree
 - [ ] No shared mutable working directory between active agents
 - [ ] OpenClaw workspace is NOT bound to `/opt/elis/repo`
 - [ ] Read `.agentignore` — none of those files may be open or in context
@@ -63,14 +64,15 @@ A command such as `cd /opt/elis/repo && git status` does not change where OpenCl
 
 ## 4. Branch and Base Checklist
 
-### 4.1 Branch
+### 4.1 Branch in Fixed Workspace
 - [ ] Branch name matches CURRENT_PE.md registry for this PE
-- [ ] Branch is created from the base branch declared in CURRENT_PE.md
+- [ ] Branch exists and is checked out in the fixed worktree
+- [ ] If the PE branch does not exist yet in the fixed worktree, create it from the base: `git checkout -b feature/<pe-branch> origin/$BASE`
 - [ ] No commits from unrelated PEs on this branch
 
 ### 4.2 Base
 - [ ] Base branch is up to date (`git fetch origin && git merge-base origin/$BASE HEAD` returns the tip of `origin/$BASE`)
-- [ ] If another PE merged since branch creation, rebase: `git rebase origin/$BASE`
+- [ ] If another PE merged since the branch was created or last rebased, rebase: `git rebase origin/$BASE`
 - [ ] Drift check: `git merge-base origin/$BASE HEAD` should equal the tip of `origin/$BASE`
 
 ---
@@ -90,15 +92,18 @@ A command such as `cd /opt/elis/repo && git status` does not change where OpenCl
 ### 6.1 Clean State
 - [ ] `git status -sb` shows clean or expected state
 - [ ] If dirty: the state is expected and authorised for this phase
-- [ ] No uncommitted files from a previous session (stashing across sessions is prohibited)
+- [ ] No uncommitted files from a previous (now-completed) PE session (stashing across sessions is prohibited)
+- [ ] All outstanding changes from a prior PE are committed, stashed-and-cleared, or resolved
 
-### 6.2 When Starting from a Fresh Worktree
-- [ ] Worktree is checked out from the base branch
-- [ ] No lingering files from unrelated work
-- [ ] Branch exists and is checked out
+### 6.2 Fixed Workspace Reset (Start of Each New PE)
+- [ ] Worktree is reset: stale branch state is cleaned (stash/discard disposable state)
+- [ ] Base is fetched: `git fetch origin`
+- [ ] Branch is checked out or created for the current PE
+- [ ] No lingering files from the prior PE's branch
+- [ ] Rebase if needed: `git rebase origin/$BASE`
 
-### 6.3 When Resuming Work
-- [ ] Previous commit is on the correct branch
+### 6.3 When Resuming Work (Same PE, Same Branch)
+- [ ] Previous commit is on the correct PE branch
 - [ ] `git log -1 --oneline` shows the expected previous work
 - [ ] No merge conflicts in progress
 
@@ -154,4 +159,5 @@ echo "Task packet: $(ls .elis/pe/*/PE_TASK.md 2>/dev/null || echo NOT FOUND)"
 
 | Version | Date       | Author | Changes |
 |---------|------------|--------|---------|
+| 1.1     | 2026-05-06 | PM     | Adopt fixed workspace paths (role+slot, not PE-ID). Add fixed workspace reset checklist. Update expected path patterns and branch instructions. |
 | 1.0     | 2026-05-03 | PM     | Initial canonical consolidation from ELIS_General_Guidance.md §5, AGENTS.md, LESSONS_LEARNED.md. |

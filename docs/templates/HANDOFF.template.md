@@ -15,7 +15,7 @@
 - PE: `<PE-ID>`
 - Agent: `<agent-id>`
 - Session: `<PE-ID>-<phase>-YYYYMMDD-HHMMSS`
-- Worktree: `/opt/elis/agent-worktrees/<PE-ID>-<agent-id>`
+- Worktree: `/opt/elis/agent-worktrees/<role>-<slot>` (fixed workspace)
 
 ---
 
