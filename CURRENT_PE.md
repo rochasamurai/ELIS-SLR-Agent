@@ -21,10 +21,10 @@
 
 | Field   | Value |
 |---------|-------|
-| PE      | PE-OPS-CONFIG-01 |
-| Branch  | feature/pe-ops-config-01-pe-specific-agent-profile-binding-procedure |
+| PE      | — |
+| Branch  | — |
 
-> **Planning mode.** PE-OPS-CONFIG-01 — PE-specific Agent Profile Binding Procedure opened. PE-ARCH-12 remains blocked; PE-OPS-WORKTREE-01 remains quarantined; PE-AGT-01 remains held; PE-OPS-01 Increment 3 remains paused.
+> **Plan-complete mode.** No active PE.
 
 ---
 
@@ -32,10 +32,9 @@
 
 | Agent       | Role |
 |-------------|------|
-| infra-impl-b | Implementer |
-| infra-val-a  | Validator |
+| —           | —    |
 
-> Historical PE roles: infra-impl-b = Implementer, infra-val-a = Validator. PE-OPS-CONFIG-01 is governance-only until safe binding exists.
+> No active PE roles.
 
 ---
 
@@ -139,7 +138,8 @@
 | PE-ARCH-09      | architecture   | infra-impl-b         | infra-val-a        | feature/pe-arch-09-minimal-task-flow-controller-lobster-self-test      | merged          | 2026-05-03   |
 | PE-ARCH-10      | architecture   | infra-impl-a         | infra-val-b        | feature/pe-arch-10-taskflow-controller-placement-api-imports          | merged          | 2026-05-03   |
 | PE-ARCH-11      | architecture   | infra-impl-b         | infra-val-a        | feature/pe-arch-11-inert-task-flow-controller-prototype                | merged          | 2026-05-03   |
-| PE-OPS-CONFIG-01 | config          | infra-impl-b         | infra-val-a        | feature/pe-ops-config-01-pe-specific-agent-profile-binding-procedure | planning        | 2026-05-04   |
+| PE-OPS-CONFIG-01 | config          | infra-impl-b         | infra-val-a        | feature/pe-ops-config-01-pe-specific-agent-profile-binding-procedure | merged          | 2026-05-04   |
+| PE-OPS-GITHUB-01 | github          | infra-impl-a         | infra-val-b        | feature/pe-ops-github-01-elis-github-agent-role-and-permission-model | merged          | 2026-05-06   |
 | PE-AGT-01       | infra          | infra-impl-a         | infra-val-b        | feature/pe-agt-01-pm-agent-review                                       | blocked         | 2026-05-02   |
 
 Valid status values:
@@ -238,6 +238,7 @@ PM housekeeping entries (prefix `PM-CHORE-XX`):
 | PM-CHORE-82  | Opened PE-ARCH-12 (Run Isolated Task Flow Controller Smoke Test) with `infra-impl-a` as Implementer and `infra-val-b` as Validator per alternation rule. Isolated smoke test only; no production OpenClaw config changes, no production Lobster enablement, no automatic push/PR/merge. | 2026-05-03 |
 | PM-CHORE-83  | Opened PE-OPS-WORKTREE-01 (Deterministic Worktree Binding and Result Attribution Guardrails) with `infra-impl-b` as Implementer and `infra-val-a` as Validator per alternation rule. Governance/template scope only; canonical thread created; no PE-ARCH-12 fix, no contaminated-worktree cleanup, no push/PR/merge. | 2026-05-04 |
 | PM-CHORE-84  | Opened PE-OPS-CONFIG-01 (PE-specific Agent Profile Binding Procedure) as a governance-only planning PE. Implementer/validator binding is TBD pending safe profile creation and safe binding verification; no OpenClaw profile/config changes, no dispatch, no worktree cleanup. | 2026-05-04 |
+| PM-CHORE-85  | Registry correction: cleared Current PE to no active PE; corrected PE-OPS-CONFIG-01 to merged; recorded PE-OPS-GITHUB-01 as merged; excluded PE-OPS-DISCORD-THREAD-01 pending canonical repo evidence. | 2026-05-06 |
 
 
 Alternation rule:
