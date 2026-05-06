@@ -21,10 +21,10 @@
 
 | Field   | Value |
 |---------|-------|
-| PE      | PE-OPS-PO-ADVISOR-01 |
-| Branch  | feature/pe-ops-po-advisor-01-deploy-elis-po-advisor-on-hermes |
+| PE      | — |
+| Branch  | — |
 
-> **Planning mode.** PE-OPS-PO-ADVISOR-01 — Deploy ELIS PO Advisor on Hermes opened. PE-OPS-GITHUB-01 remains merged; PE-AGT-01 remains held; PE-OPS-01 Increment 3 remains paused.
+> **Plan-complete mode.** No active PE.
 
 ---
 
@@ -32,10 +32,9 @@
 
 | Agent       | Role |
 |-------------|------|
-| infra-impl-b | Implementer |
-| infra-val-a  | Validator |
+| —           | —    |
 
-> Historical PE roles: infra-impl-b = Implementer, infra-val-a = Validator. PE-OPS-PO-ADVISOR-01 is advisory-only until operating-model evidence exists.
+> No active PE roles.
 
 ---
 
@@ -141,7 +140,7 @@
 | PE-ARCH-11      | architecture   | infra-impl-b         | infra-val-a        | feature/pe-arch-11-inert-task-flow-controller-prototype                | merged          | 2026-05-03   |
 | PE-OPS-CONFIG-01 | config          | infra-impl-b         | infra-val-a        | feature/pe-ops-config-01-pe-specific-agent-profile-binding-procedure | merged          | 2026-05-04   |
 | PE-OPS-GITHUB-01 | github          | infra-impl-a         | infra-val-b        | feature/pe-ops-github-01-elis-github-agent-role-and-permission-model | merged          | 2026-05-06   |
-| PE-OPS-PO-ADVISOR-01 | ops        | infra-impl-b         | infra-val-a        | feature/pe-ops-po-advisor-01-deploy-elis-po-advisor-on-hermes        | planning        | 2026-05-06   |
+| PE-OPS-PO-ADVISOR-01 | ops        | infra-impl-b         | infra-val-a        | feature/pe-ops-po-advisor-01-deploy-elis-po-advisor-on-hermes        | merged          | 2026-05-06   |
 | PE-AGT-01       | infra          | infra-impl-a         | infra-val-b        | feature/pe-agt-01-pm-agent-review                                       | blocked         | 2026-05-02   |
 
 Valid status values:
@@ -242,6 +241,7 @@ PM housekeeping entries (prefix `PM-CHORE-XX`):
 | PM-CHORE-84  | Opened PE-OPS-CONFIG-01 (PE-specific Agent Profile Binding Procedure) as a governance-only planning PE. Implementer/validator binding is TBD pending safe profile creation and safe binding verification; no OpenClaw profile/config changes, no dispatch, no worktree cleanup. | 2026-05-04 |
 | PM-CHORE-85  | Registry correction: cleared Current PE to no active PE; corrected PE-OPS-CONFIG-01 to merged; recorded PE-OPS-GITHUB-01 as merged; excluded PE-OPS-DISCORD-THREAD-01 pending canonical repo evidence. | 2026-05-06 |
 | PM-CHORE-86  | Opened PE-OPS-PO-ADVISOR-01 (Deploy ELIS PO Advisor on Hermes) with `infra-impl-b` as Implementer and `infra-val-a` as Validator per alternation rule. Advisory-only scope: task packet and registry update only; no Hermes/OpenClaw config changes, no dispatch, no PR/merge. | 2026-05-06 |
+| PM-CHORE-87  | Closed PE-OPS-PO-ADVISOR-01 as merged (PR #414, PASS verdict — infra-val-a). Plan-complete mode restored: PE and Branch cleared; no active PE; PE-OPS-PO-ADVISOR-01 registry row updated to merged. Merge SHA `a060529ec7919751d5e4a930851b0a58fb225b17`. | 2026-05-06 |
 
 
 Alternation rule:
