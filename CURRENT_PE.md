@@ -21,10 +21,10 @@
 
 | Field   | Value |
 |---------|-------|
-| PE      | PE-GOV-RISK-TIER-01 |
-| Branch  | feature/pe-gov-risk-tier-01-add-risk-tiered-pe-protocol |
+| PE      | PE-OPS-FIXED-WORKSPACES-01 |
+| Branch  | feature/pe-ops-fixed-workspaces-01-adopt-fixed-agent-workspace-and-github-write-boundary-model |
 
-> **Planning mode.** PE-GOV-RISK-TIER-01 — Add Risk-Tiered PE Protocol opened. PE-GOV-01 remains merged; PE-OPS-PO-ADVISOR-01 remains merged.
+> **Planning mode.** PE-GOV-RISK-TIER-01 remains blocked pending fixed-workspace governance. PE-OPS-FIXED-WORKSPACES-01 — Adopt Fixed Agent Workspace and GitHub Write Boundary Model opened.
 
 ---
 
@@ -32,10 +32,10 @@
 
 | Agent       | Role |
 |-------------|------|
-| infra-impl-a | Implementer |
-| infra-val-b  | Validator |
+| infra-impl-b | Implementer |
+| infra-val-a  | Validator |
 
-> Historical PE roles: infra-impl-b = Implementer, infra-val-a = Validator. PE-GOV-RISK-TIER-01 follows governance alternation from PE-GOV-01.
+> Historical PE roles: infra-impl-a = Implementer, infra-val-b = Validator. PE-OPS-FIXED-WORKSPACES-01 follows governance alternation from PE-GOV-RISK-TIER-01.
 
 ---
 
@@ -44,7 +44,8 @@
 | PE-ID       | Domain          | Implementer-agentId  | Validator-agentId  | Branch                                            | Status          | Last-updated |
 |-------------|-----------------|----------------------|--------------------|---------------------------------------------------|-----------------|--------------|
 | PE-GOV-01   | governance      | infra-impl-b         | infra-val-a        | feature/pe-gov-01-operating-protocol-templates    | merged          | 2026-05-03   |
-| PE-GOV-RISK-TIER-01 | governance | infra-impl-a         | infra-val-b        | feature/pe-gov-risk-tier-01-add-risk-tiered-pe-protocol | planning        | 2026-05-06   |
+| PE-GOV-RISK-TIER-01 | governance | infra-impl-a         | infra-val-b        | feature/pe-gov-risk-tier-01-add-risk-tiered-pe-protocol | blocked         | 2026-05-06   |
+| PE-OPS-FIXED-WORKSPACES-01 | fixed-workspaces | infra-impl-b | infra-val-a | feature/pe-ops-fixed-workspaces-01-adopt-fixed-agent-workspace-and-github-write-boundary-model | planning | 2026-05-06 |
 | PE-INFRA-01 | infra           | infra-impl-codex     | infra-val-claude   | feature/pe-infra-01-branch-policy                 | merged          | 2026-02-18   |
 | PE-INFRA-02 | infra           | infra-impl-codex     | prog-val-claude    | feature/pe-infra-02-role-registration             | merged          | 2026-02-19   |
 | PE-INFRA-03 | infra           | infra-impl-codex     | prog-val-claude    | feature/pe-infra-03-release-agnostic              | merged          | 2026-02-19   |
@@ -245,6 +246,7 @@ PM housekeeping entries (prefix `PM-CHORE-XX`):
 | PM-CHORE-86  | Opened PE-OPS-PO-ADVISOR-01 (Deploy ELIS PO Advisor on Hermes) with `infra-impl-b` as Implementer and `infra-val-a` as Validator per alternation rule. Advisory-only scope: task packet and registry update only; no Hermes/OpenClaw config changes, no dispatch, no PR/merge. | 2026-05-06 |
 | PM-CHORE-87  | Closed PE-OPS-PO-ADVISOR-01 as merged (PR #414, PASS verdict — infra-val-a). Plan-complete mode restored: PE and Branch cleared; no active PE; PE-OPS-PO-ADVISOR-01 registry row updated to merged. Merge SHA `a060529ec7919751d5e4a930851b0a58fb225b17`. | 2026-05-06 |
 | PM-CHORE-88  | Opened PE-GOV-RISK-TIER-01 (Add Risk-Tiered PE Protocol) with `infra-impl-a` as Implementer and `infra-val-b` as Validator per alternation rule. Standard-Light PE scope: protocol and template governance only; no Hermes/OpenClaw config changes, no dispatch, no PR/merge. | 2026-05-06 |
+| PM-CHORE-89  | Opened PE-OPS-FIXED-WORKSPACES-01 (Adopt Fixed Agent Workspace and GitHub Write Boundary Model) with `infra-impl-b` as Implementer and `infra-val-a` as Validator per alternation rule. Governance scope: fixed workspace model and strict write-boundary rules only; PE-GOV-RISK-TIER-01 preserved as blocked pending fixed-workspace governance; no Hermes/OpenClaw config changes, no dispatch, no PR/merge. | 2026-05-06 |
 
 
 Alternation rule:
