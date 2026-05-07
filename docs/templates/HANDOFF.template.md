@@ -17,6 +17,21 @@
 - Session: `<PE-ID>-<phase>-YYYYMMDD-HHMMSS`
 - Worktree: `/opt/elis/agent-worktrees/<role>-<slot>` (fixed workspace)
 
+## Fixed Workspace Binding Certificate
+| Field | Value |
+|-------|-------|
+| PE ID | `<PE-ID>` |
+| Agent ID | `<agent-id>` |
+| Fixed workspace path | `<pwd output>` |
+| Git root | `<git rev-parse --show-toplevel output>` |
+| Branch | `<git branch --show-current output>` |
+| HEAD | `<git rev-parse HEAD output>` |
+| Base/expected commit | `<git rev-parse origin/$BASE output>` |
+| Clean status | `<git status --short --untracked-files=all output>` |
+| Allowed file scope | `<list from PE_TASK.md>` |
+| Timestamp | `<ISO 8601 timestamp>` |
+| Result | PASS |
+
 ---
 
 ## §6.1 Working-Tree State

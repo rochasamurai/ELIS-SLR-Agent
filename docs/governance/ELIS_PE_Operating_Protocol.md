@@ -70,12 +70,23 @@ Before any PE execution begins, the agent must verify:
 gitHub write access is gated by role and explicit authorisation. No agent may perform a GitHub write operation unless the action is within its authorised boundary.
 
 **Allowed GitHub writes per role:**
-- **Implementer:** Local branch commits only. No git push, PR creation, or remote writes unless explicitly authorised by PM.
+- **Implementer:** Local branch commits only. No git push, PR creation, or remote writes.
 - **Validator:** Local commits to the shared PE branch (REVIEW file, adversarial tests only). PR comments and formal GitHub reviews when explicitly authorised.
-- **PM:** All GitHub operations including push, PR creation, label/comment, merge (with PO approval for merge).
-- **GitHub Agent (dedicated bot):** Push, PR ops, labels/comments, merge status reporting under PE-scoped activation.
+- **PM:** Remote GitHub operations are **prohibited** for PM. PM coordinates and approves but must not write to GitHub directly. Only the GitHub Agent may execute GitHub write operations after explicit PM/PO approval.
+- **GitHub Agent (dedicated bot):** Push, PR ops, labels/comments, merge status reporting under PE-scoped activation. May act only after receiving explicit PM/PO authorisation for the specific operation.
+- **Supervisor:** Monitors PE workflow integrity and role compliance. Read-only access to repo state. Must not write to GitHub directly.
 
 **All roles:** Merge requires explicit PO approval. No automatic merge.
+
+### 2.10a Wrong-Worktree Quarantine
+If an agent detects it is operating from the wrong worktree (i.e., `pwd` or `git rev-parse --show-toplevel` does not match its assigned fixed workspace path):
+1. The agent must stop all file operations immediately.
+2. No file may be copied, moved, or committed from the wrong worktree.
+3. The agent must report the mismatch to PM with full evidence (`pwd`, `git rev-parse --show-toplevel`, assigned path from CURRENT_PE.md).
+4. PM must reset the correct fixed workspace and re-dispatch.
+5. Any artefacts produced from the wrong worktree are invalid and must not be used.
+
+**No-copy rule:** Agents must never copy or transfer files between worktrees. If a file from one worktree is needed in another, the file must be committed to the canonical repo from the correct worktree and then fetched in the target worktree.
 
 ### 2.11 No Automatic Push, PR, or Merge
 Agents never push, open PRs, or merge without explicit PM direction. These actions are PM-owned.
@@ -172,6 +183,18 @@ PO approval is required for:
 - Treat silent or artefact-free runs as success
 - Merge without approved process
 - Override role boundaries
+- **Write to GitHub directly.** All GitHub write operations (push, PR creation, label/comment, merge) must be executed by the GitHub Agent after explicit PM/PO approval. PM coordinates and approves but never operates GitHub write tools.
+
+### 4.7 Supervisor
+- Monitors PE workflow integrity and role compliance
+- Reads repo state (branches, PRs, CI status, artefact existence)
+- Detects role boundary violations (e.g. implementer pushing, PM writing to GitHub)
+- Detects missing artefacts (HANDOFF, REVIEW, Status Packet)
+- Reports findings to PM
+- Must not write to GitHub (no commits, push, PR, label, or comment)
+- Must not dispatch agents
+- Must not perform implementation or validation
+- Must not approve or merge
 
 ### 4.2 Implementer
 - Works only in the assigned PE worktree
@@ -254,6 +277,35 @@ Each agent role has a persistent, dedicated worktree path that does not change b
 ```
 Examples: `/opt/elis/agent-worktrees/infra-impl-b`, `/opt/elis/agent-worktrees/infra-val-a`
 
+### 5.1a Wrong-Worktree Quarantine
+If an agent detects it is operating from the wrong worktree (i.e., `pwd` or `git rev-parse --show-toplevel` does not match its assigned fixed workspace path):
+1. Stop all file operations immediately.
+2. Do not copy, move, or commit any files from the wrong worktree.
+3. Report the mismatch to PM with full evidence.
+4. PM resets the correct fixed workspace and re-dispatches.
+5. Any artefacts produced from the wrong worktree are invalid and must not be used.
+
+**No-copy rule:** Agents must never copy or transfer files between worktrees. If a file from one worktree is needed in another, the file must be committed to the canonical repo from the correct worktree and then fetched in the target worktree.
+
+### 5.1b Fixed Workspace Binding Certificate
+Before any PE work begins, the agent must produce a **Fixed Workspace Binding Certificate** from within the fixed workspace. This certificate must include:
+
+| Field | Description |
+|-------|-------------|
+| PE ID | The PE identifier from CURRENT_PE.md |
+| Agent ID | The agent's surface name (e.g. `infra-impl-b`) |
+| Fixed workspace path | Output of `pwd` |
+| Git root | Output of `git rev-parse --show-toplevel` |
+| Branch | Output of `git branch --show-current` |
+| HEAD | Output of `git rev-parse HEAD` |
+| Base/Expected commit | Commit SHA of `origin/$BASE` (`$BASE` from CURRENT_PE.md) |
+| Clean status | Output of `git status --short --untracked-files=all` |
+| Allowed file scope | List of allowed files from PE_TASK.md |
+| Timestamp | ISO 8601 timestamp of certificate creation |
+| Result | `PASS` (certificate matches) or `FAIL` (mismatch found) |
+
+The certificate must be included in the opening Status Packet before any implementation or validation work begins. A FAIL result blocks all further work until PM resolves the mismatch.
+
 ### 5.2 Worktree Reset Between PEs
 At the start of each PE assignment, the fixed worktree is:
 1. Cleaned of uncommitted changes (stash or discard disposable state)
@@ -267,18 +319,45 @@ Two active agents must never write to the same working directory. Each fixed wor
 ### 5.4 Canonical Repository
 `/opt/elis/repo` is the canonical ELIS repository. It must remain clean unless a controlled, approved PE is actively modifying it.
 
-### 5.5 No OpenClaw Workspace on Canonical Repo
+### 5.5 Persistent Agent Runtime Files vs Disposable Repo/Task State
+Agent workspaces contain two categories of files that must be clearly distinguished:
+
+**Persistent Agent Runtime/Context Files (must be preserved across PEs):**
+- `AGENTS.md` — agent workflow rules and operating model
+- `SKILLS.md` or equivalent skill manifest
+- `SOUL.md` or equivalent agent identity/character files
+- Tool manifests and capability declarations
+- OpenClaw/Hermes bootstrap and system configuration files
+- Agent context cache and session continuity files
+
+**Disposable Repo/Task State (reset at each PE boundary):**
+- Git working tree (source code, tests, docs)
+- `HANDOFF.md`, `REVIEW_PE<N>.md` (PE-specific artefacts)
+- Branch-specific config and state
+- CI caches and build artefacts
+- All files within the `.elis/` PE workspace tree
+
+**Separation rule:**
+- Persistent files must reside outside the fixed worktree (e.g., in the agent's OpenClaw workspace or dedicated runtime directory).
+- When a fixed worktree is reset at PE start, only disposable repo/task state is cleaned. Persistent runtime files are never deleted or modified during reset.
+- Agents must not write persistent runtime files into the fixed worktree. If a write lands in the worktree by mistake, it must be moved out before the worktree is cleaned for the next PE.
+
+### 5.5a No OpenClaw Workspace on Canonical Repo
 OpenClaw workspace must not be directly bound to `/opt/elis/repo`. OpenClaw may write bootstrap/context files into its workspace.
 
-### 5.6 Path Preflight
-Before any PE work, the agent must run:
+### 5.6 Path Preflight (Fixed Workspace Binding)
+Before any PE work, the agent must produce the **Fixed Workspace Binding Certificate** (§5.1b). This is mandatory evidence in every opening Status Packet.
+
+Minimum preflight commands:
 ```bash
 pwd
 git rev-parse --show-toplevel
 git status --short --branch
 git branch --show-current
+git rev-parse HEAD
+git log -1 --oneline
 ```
-The verified path must match the agent's fixed worktree path. The branch must match the current PE branch from CURRENT_PE.md.
+The verified path must match the agent's fixed worktree path. The branch must match the current PE branch from CURRENT_PE.md. A path mismatch is a `FAIL` result on the certificate and blocks all further work.
 
 ---
 

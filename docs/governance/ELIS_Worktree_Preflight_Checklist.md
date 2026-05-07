@@ -32,6 +32,26 @@ git branch --show-current
 - `git status --short --branch`: clean state or only expected files after reset
 - `git branch --show-current`: must match the PE branch for the current assignment, e.g. `feature/pe-ops-fixed-workspaces-01-adopt-fixed-agent-workspace-and-github-write-boundary-model`
 
+### Fixed Workspace Binding Certificate
+Before any PE work begins, the agent must produce a **Fixed Workspace Binding Certificate** as defined in `docs/governance/ELIS_PE_Operating_Protocol.md §5.1b`. This certificate is mandatory evidence in the opening Status Packet.
+
+Certificate fields:
+| Field | Source |
+|-------|--------|
+| PE ID | CURRENT_PE.md |
+| Agent ID | Agent's surface name (e.g. `infra-impl-b`) |
+| Fixed workspace path | `pwd` |
+| Git root | `git rev-parse --show-toplevel` |
+| Branch | `git branch --show-current` |
+| HEAD | `git rev-parse HEAD` |
+| Base/expected commit | `git rev-parse origin/$BASE` (`$BASE` from CURRENT_PE.md) |
+| Clean status | `git status --short --untracked-files=all` |
+| Allowed file scope | From PE_TASK.md |
+| Timestamp | ISO 8601 timestamp |
+| Result | PASS (matches) or FAIL (mismatch) |
+
+A FAIL result blocks all work until PM resolves the mismatch.
+
 ---
 
 ## 3. Worktree Isolation Checklist
@@ -43,6 +63,8 @@ git branch --show-current
 - [ ] No shared mutable working directory between active agents
 - [ ] OpenClaw workspace is NOT bound to `/opt/elis/repo`
 - [ ] Read `.agentignore` — none of those files may be open or in context
+- [ ] Wrong-worktree quarantine understood: if `pwd` or `git rev-parse --show-toplevel` does not match assigned path, stop all operations immediately
+- [ ] No-copy rule understood: never copy or transfer files between worktrees
 
 ### 3.2 Repository Path Safety
 - [ ] Canonical repo path: `/opt/elis/repo` — do not modify directly unless this PE is authorised
@@ -102,7 +124,13 @@ A command such as `cd /opt/elis/repo && git status` does not change where OpenCl
 - [ ] No lingering files from the prior PE's branch
 - [ ] Rebase if needed: `git rebase origin/$BASE`
 
-### 6.3 When Resuming Work (Same PE, Same Branch)
+### 6.3 Separate Persistent Runtime Files from Disposable Repo State
+- [ ] Persistent agent runtime/context files (AGENTS.md, SKILLS.md, SOUL.md, tool manifests, OpenClaw/Hermes bootstrap files) reside outside the fixed worktree
+- [ ] Disposable repo/task state (source code, HANDOFF, REVIEW, `.elis/` PE workspace) is cleaned during reset
+- [ ] No persistent runtime files are written into the fixed worktree
+- [ ] If any persistent file accidental lands in the worktree, it is moved out before the worktree is reset for the next PE
+
+### 6.4 When Resuming Work (Same PE, Same Branch)
 - [ ] Previous commit is on the correct PE branch
 - [ ] `git log -1 --oneline` shows the expected previous work
 - [ ] No merge conflicts in progress

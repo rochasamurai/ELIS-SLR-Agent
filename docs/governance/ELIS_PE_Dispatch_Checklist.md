@@ -44,11 +44,15 @@ This checklist ensures every PE dispatch follows a consistent, verifiable proces
 
 ### 2.3 Worktree
 
-- [ ] Worktree exists at `/opt/elis/agent-worktrees/<PE-ID>-<agent-id>`
+- [ ] Worktree exists at `/opt/elis/agent-worktrees/<role>-<slot>` (fixed workspace — e.g. `infra-impl-b`, not a PE-ID-based path)
 - [ ] Worktree is isolated (no other active agent writes here)
 - [ ] Worktree branch matches the PE branch in CURRENT_PE.md
 - [ ] Worktree is on the correct base branch commit (`git rebase origin/$BASE` is current)
 - [ ] Worktree is clean or has only approved staged changes
+- [ ] Fixed Workspace Binding Certificate can be produced — agent will include in opening Status Packet
+- [ ] Wrong-worktree quarantine understood: any path mismatch stops all work immediately
+- [ ] No-copy rule understood: agents never copy/transfer files between worktrees
+- [ ] Persistent agent runtime files (AGENTS.md, SKILLS.md, SOUL.md, tool manifests, OpenClaw/Hermes bootstrap) are outside the fixed worktree — only disposable repo/task state lives inside
 - [ ] No OpenClaw workspace binding to `/opt/elis/repo`
 - [ ] No shared mutable working directory between active agents
 

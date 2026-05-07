@@ -43,7 +43,7 @@ Performs independent review. Local git operations only (commit REVIEW file, adve
 **Workspace:** `/opt/elis/agent-worktrees/<role>-<slot>` (e.g. `infra-val-a`)
 
 ### 4.3 PM
-Owns PE coordination, authorisation checkpoints, and fallback escalation. Authorised for remote GitHub operations including push, PR creation, labels, comments.
+Owns PE coordination, authorisation checkpoints, and fallback escalation. PM must **not** write to GitHub directly. All GitHub write operations (push, PR, labels, comments) must be executed by the GitHub Agent after explicit PM approval. PM coordinates and approves but does not operate GitHub write tools.
 
 ### 4.4 GitHub Agent (Dedicated Bot)
 A permanent ELIS role with PE-scoped activation for write-capable GitHub operations: push, PR lifecycle, labels, comments, review requests, check reporting. Does not independently approve scope, validation, or merge.
@@ -51,19 +51,30 @@ A permanent ELIS role with PE-scoped activation for write-capable GitHub operati
 ### 4.5 Carlos / PO
 Final approval authority for merge, scope exceptions, and any escalation that changes repository state.
 
+### 4.6 Supervisor
+- Monitors PE workflow integrity and role compliance
+- Reads repo state (branches, PRs, CI status, artefact existence)
+- Detects role boundary violations (e.g., implementer pushing, PM writing to GitHub)
+- Detects missing artefacts (HANDOFF, REVIEW, Status Packet)
+- Reports findings to PM
+- Must not write to GitHub (no commits, push, PR, label, or comment)
+- Must not dispatch agents
+- Must not perform implementation or validation
+- Must not approve or merge
+
 ## 5. Permission Matrix
 
-| Operation | Implementer | Validator | PM | GitHub Agent | PO/Carlos |
-|-----------|-------------|-----------|----|-------------|-----------|
-| Local commit | ✅ Allowed | ✅ Allowed | ✅ Allowed | N/A | N/A |
-| git push (remote) | ❌ No | ❌ No | ✅ With PM discretion | ✅ When authorised | ❌ (delegates) |
-| PR creation | ❌ No | ❌ No | ✅ With PM discretion | ✅ When authorised | ❌ (delegates) |
-| PR merge | ❌ No | ❌ No | ❌ No | ❌ No | ✅ PO approval |
-| PR comment | ❌ No | ✅ When authorised | ✅ With PM discretion | ✅ When authorised | ✅ |
-| Formal GitHub review | ❌ No | ✅ When authorised | N/A | ❌ No | ✅ |
-| Label management | ❌ No | ❌ No | ✅ With PM discretion | ✅ When authorised | ✅ |
-| Branch protection changes | ❌ No | ❌ No | ❌ No | ❌ No | ✅ PO approval |
-| Read repo state | ✅ Allowed | ✅ Allowed | ✅ Allowed | ✅ Allowed | ✅ Allowed |
+| Operation | Implementer | Validator | PM | GitHub Agent | Supervisor | PO/Carlos |
+|-----------|-------------|-----------|----|-------------|------------|-----------|
+| Local commit | ✅ Allowed | ✅ Allowed | ✅ Allowed | N/A | ❌ No | N/A |
+| git push (remote) | ❌ No | ❌ No | ❌ No | ✅ When authorised | ❌ No | ❌ (delegates) |
+| PR creation | ❌ No | ❌ No | ❌ No | ✅ When authorised | ❌ No | ❌ (delegates) |
+| PR merge | ❌ No | ❌ No | ❌ No | ❌ No | ❌ No | ✅ PO approval |
+| PR comment | ❌ No | ✅ When authorised | ❌ No | ✅ When authorised | ❌ No | ✅ |
+| Formal GitHub review | ❌ No | ✅ When authorised | N/A | ❌ No | ❌ No | ✅ |
+| Label management | ❌ No | ❌ No | ❌ No | ✅ When authorised | ❌ No | ✅ |
+| Branch protection changes | ❌ No | ❌ No | ❌ No | ❌ No | ❌ No | ✅ PO approval |
+| Read repo state | ✅ Allowed | ✅ Allowed | ✅ Allowed | ✅ Allowed | ✅ Allowed | ✅ Allowed |
 
 ### 5.1 Fixed Workspace Constraint
 All agents are bound to their fixed workspace path. Remote GitHub operations must originate from the correct fixed workspace. A push or PR attempt from a wrong or unverified workspace path is a workflow violation regardless of role.
@@ -71,15 +82,17 @@ All agents are bound to their fixed workspace path. Remote GitHub operations mus
 ## 6. Allowed and Forbidden Operations
 ### Allowed
 - local git commits in the fixed workspace (all execution roles)
-- branch push under explicit PM authorisation (PM or GitHub Agent)
-- PR creation under explicit PM authorisation (PM or GitHub Agent)
+- branch push under explicit PM/PO approval (GitHub Agent only)
+- PR creation under explicit PM/PO approval (GitHub Agent only)
 - checks reporting (GitHub Agent)
 - PR comments and review requests when explicitly authorised (Validator, GitHub Agent)
 - formal GitHub review when explicitly authorised (Validator)
 - merge review coordination (PM)
 
 ### Forbidden
-- any git push, PR creation, or merge by implementer or validator unless explicitly authorised
+- any git push, PR creation, or merge by implementer, validator, supervisor, or PM
+- PM writing to GitHub directly (PM coordinates and approves; GitHub Agent executes)
+- Supervisor writing to GitHub (read-only monitoring role)
 - direct merge without Carlos/PO approval (all roles)
 - unauthorised PR mutation (any role)
 - unauthorised label or comment actions (any role)
@@ -137,8 +150,8 @@ When automation fails:
 - no revision of unrelated PE rules
 
 ## 12. Cross-References
-- `docs/governance/ELIS_PE_Operating_Protocol.md` (worktree rules, fixed workspace model)
-- `docs/governance/ELIS_Worktree_Preflight_Checklist.md` (path verification)
+- `docs/governance/ELIS_PE_Operating_Protocol.md` (worktree rules, fixed workspace model, Supervisor role, Fixed Workspace Binding Certificate, wrong-worktree quarantine)
+- `docs/governance/ELIS_Worktree_Preflight_Checklist.md` (path verification, binding certificate)
 - `docs/governance/ELIS_PE_Dispatch_Checklist.md` (dispatch readiness)
 - `docs/decisions/ADR-011-github-actions-authority-for-portable-gates.md`
 - `docs/governance/ELIS_Discord_PO_PM_Checkpoint_Governance.md`
@@ -147,5 +160,6 @@ When automation fails:
 
 | Version | Date       | Author | Changes |
 |---------|------------|--------|---------|
+| 1.2     | 2026-05-07 | PM     | Add Supervisor role to permission matrix. Resolve PM GitHub write conflict: PM must not write to GitHub directly; only GitHub Agent may write after explicit PM/PO approval. Update Allowed/Forbidden sections. |
 | 1.1     | 2026-05-06 | PM     | Adopt fixed workspace model. Replace bot-centric model with role-based permission matrix. Clarify no-default-write principle. Gate 2 no longer auto-merges. |
 | 1.0     | 2026-05-03 | PM     | Initial GitHub Agent operating model. |

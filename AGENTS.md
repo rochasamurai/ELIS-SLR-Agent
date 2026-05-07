@@ -278,6 +278,25 @@ git stash  # or git reset --hard if state is disposable
 git checkout <new-pe-branch>
 ```
 
+### 3.4a Wrong-worktree quarantine and no-copy rules
+If an agent detects it is operating from the wrong worktree:
+1. Stop all file operations immediately.
+2. Do not copy, move, or commit any files from the wrong worktree.
+3. Report the mismatch to PM with full evidence (`pwd`, `git rev-parse --show-toplevel`, assigned path from CURRENT_PE.md).
+4. PM resets the correct fixed workspace and re-dispatches.
+5. Any artefacts produced from the wrong worktree are invalid.
+
+**No-copy rule:** Agents must never copy or transfer files between worktrees. If a file from one worktree is needed in another, commit it to the canonical repo from the correct worktree, then fetch in the target worktree.
+
+### 3.4b Fixed Workspace Binding Certificate
+Before any PE work begins, the agent must produce a **Fixed Workspace Binding Certificate** from within the fixed workspace. This certificate is mandatory evidence in the opening Status Packet (§6). See `docs/governance/ELIS_PE_Operating_Protocol.md §5.1b` for the full specification.
+
+### 3.4c Persistent vs disposable file separation
+Fixed workspaces contain **disposable repo/task state** (source code, HANDOFF, REVIEW, `.elis/` PE workspace). **Persistent agent runtime/context files** (AGENTS.md, SKILLS.md, SOUL.md, tool manifests, OpenClaw/Hermes bootstrap files) must reside outside the fixed worktree.
+- Do not write persistent runtime files into the fixed worktree.
+- If a persistent file accidentally lands in the worktree, move it out before the worktree is reset for the next PE.
+- When resetting a fixed workspace for a new PE, only disposable repo/task state is cleaned. Persistent runtime files are never modified during reset.
+
 ### 3.5 Commands
 ```bash
 # Verify fixed workspace identity
@@ -321,7 +340,21 @@ EOF
 1. **Preflight — before any work begins:**
    - Read all canonical references (Section 1).
    - Confirm your role assignment for this PE with the PM.
-   - Paste the opening Status Packet to the PM. No work starts before the PM acknowledges.
+   - **Produce the Fixed Workspace Binding Certificate** from inside the fixed workspace:
+     ```bash
+     echo "PE ID: $(grep 'PE ID' CURRENT_PE.md | head -1)"
+     echo "Agent ID: <agent-surface-name>"
+     echo "Fixed workspace: $(pwd)"
+     echo "Git root: $(git rev-parse --show-toplevel)"
+     echo "Branch: $(git branch --show-current)"
+     echo "HEAD: $(git rev-parse HEAD)"
+     echo "Base commit: $(git rev-parse origin/$BASE)"
+     echo "Clean status: $(git status --short --untracked-files=all)"
+     echo "Allowed files: <from PE_TASK.md>"
+     echo "Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+     echo "Result: PASS"
+     ```
+   - Paste the opening Status Packet (including the binding certificate) to the PM. No work starts before the PM acknowledges.
 2. Rebase onto current `<base-branch>`:
    ```bash
    # BASE=$(grep "Base branch" CURRENT_PE.md | awk '{print $NF}')
@@ -610,8 +643,11 @@ See `AUDITS.md` for the full audit spec and report templates.
 - Do not open, read, or reference any file listed in `.agentignore`.
 - Do not include secret values in Status Packets, HANDOFF.md, or any PR content.
 - Do not proceed if `check_agent_scope.py` returns exit code 1.
-- **Do NOT push, PR, or merge** as implementer or validator. Remote GitHub writes are PM/GitHub Agent operations.
-- **Do NOT work outside your fixed workspace.** Verify `pwd` matches your role's assigned path before any operation.
+- **Do NOT push, PR, or merge** as implementer, validator, or supervisor. Remote GitHub writes are GitHub Agent operations only, executed after explicit PM/PO approval.
+- **PM must NOT write to GitHub directly.** PM coordinates and approves; only the GitHub Agent executes GitHub write operations.
+- **Do NOT work outside your fixed workspace.** Verify `pwd` matches your role's assigned path before any operation. If the path is wrong, quarantine (stop all operations, do not copy files) and report to PM.
+- **Do NOT copy or transfer files between worktrees.** Use the canonical repo as the intermediary via commit+fetch from the correct worktree.
+- **Do NOT proceed without a PASS result on the Fixed Workspace Binding Certificate.**
 
 ---
 

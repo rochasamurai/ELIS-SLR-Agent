@@ -37,7 +37,11 @@ This template defines the structured approach for implementing a PE within the E
 - Path must match the agent's fixed workspace (`/opt/elis/agent-worktrees/<role>-<slot>`), not a per-PE path
 - All artefacts committed to fixed workspace only; no writes to canonical repo
 - Fixed workspace reset at start of each PE: fetch + clean + checkout correct branch + rebase onto `origin/$BASE`
-- GitHub write boundary: implementer does not push/PR/merge. Validator commits only REVIEW + tests locally. PM/GitHub Agent handles remote writes.
+- **Fixed Workspace Binding Certificate** required in opening Status Packet (see `docs/governance/ELIS_PE_Operating_Protocol.md §5.1b`)
+- **Wrong-worktree quarantine:** if path does not match, stop immediately, do not copy/commit files, report to PM
+- **No-copy rule:** never copy or transfer files between worktrees; use commit+fetch from correct worktree
+- **Persistent vs disposable separation:** runtime/context files (AGENTS.md, SKILLS.md, SOUL.md, tool manifests, OpenClaw/Hermes bootstrap) reside outside worktree; only repo/task state lives inside
+- GitHub write boundary: implementer/validator/supervisor do not push/PR/merge. PM does not write to GitHub directly. Only GitHub Agent executes remote GitHub writes after explicit PM/PO approval.
 
 ## Allowed Files
 - <list files this PE may create or modify>
