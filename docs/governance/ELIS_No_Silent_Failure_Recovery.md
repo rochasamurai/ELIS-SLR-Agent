@@ -39,8 +39,9 @@ A "silent failure" occurs when an agent run produces no verifiable artefacts, om
 ### 2.3 Wrong-Path Success
 | Symptom | Example | Detection Method |
 |---------|---------|-----------------|
-| Output from wrong repo | Agent reports files changed in `/opt/elis/repo` instead of worktree | Check `git rev-parse --show-toplevel` in the Status Packet |
-| Cross-worktree contamination | Agent writes to another PE's worktree | `git status -sb` from correct worktree shows no changes |
+| Output from wrong repo | Agent reports files changed in `/opt/elis/repo` instead of fixed worktree | Check `git rev-parse --show-toplevel` in the Status Packet — must match fixed workspace |
+| Wrong fixed workspace | Agent reports files changed in wrong role's fixed workspace (e.g. `infra-impl-a` instead of `infra-impl-b`) | Check `pwd` in Status Packet against assigned role+slot path |
+| Cross-PE contamination | Agent's branch still has files from a prior PE | Run `git diff --name-status origin/$BASE..HEAD` — prior PE files should not appear |
 
 ---
 
@@ -123,7 +124,7 @@ PM determines the recovery path:
 |-----------|----------|
 | Artefacts missing (A1-A2) | PM directs agent to retry with explicit artefact requirements |
 | Evidence fabricated (A3) | PM directs agent to re-run and paste actual output; may escalate to PO |
-| Wrong path (B1-B2) | PM stops session; re-dispatches with correct worktree; logs to LESSONS_LEARNED.md |
+| Wrong path (B1-B2) | PM stops session; re-dispatches with correct fixed workspace; reset workspace to clean state; logs to LESSONS_LEARNED.md |
 | Stale branch (B3) | PM stops session; agent rebases; re-dispatches |
 | Platform failure (P1) | PM tasks Platform Monitor with diagnosis and repair |
 | Rate-limit (P2) | PM waits for cooldown; may split work into smaller PEs |
@@ -166,4 +167,5 @@ Escalate to PO if:
 
 | Version | Date       | Author | Changes |
 |---------|------------|--------|---------|
+| 1.1     | 2026-05-06 | PM     | Update for fixed workspace model. Add wrong fixed workspace detection. Update recovery for fixed workspace paths. |
 | 1.0     | 2026-05-03 | PM     | Initial canonical consolidation from ELIS_General_Guidance.md §2.3, §6.5, AGENTS.md §2.4, LESSONS_LEARNED.md LL-02, LL-13, LL-16. |

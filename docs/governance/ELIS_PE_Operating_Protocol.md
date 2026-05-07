@@ -1,7 +1,7 @@
 # ELIS PE Operating Protocol
 
-**Status:** Canonical — v1.0  
-**Date:** 2026-05-03  
+**Status:** Canonical — v1.1  
+**Date:** 2026-05-06  
 **Owner:** Carlos Rocha, Product Owner  
 **Applies to:** All ELIS agents (PM, Gatekeeper, Watchdog, Implementers, Validators, Platform Monitor)  
 **Authoritative sources:** AGENTS.md, CLAUDE.md, ELIS_General_Guidance.md, LESSONS_LEARNED.md  
@@ -40,17 +40,58 @@ All implementation commits must precede validation. Validators review committed 
 ### 2.7 No Silent Failure Recovery
 A run that produces no required artefacts (commit, HANDOFF, Status Packet, or REVIEW) is not a success. Valid outcomes are PASS, FAIL, or BLOCKED — each backed by evidence. Recovery from silent failure is a separate, PO-authorised process.
 
-### 2.8 Worktree and Provider Preflight Required
+### 2.8 Fixed Agent Workspace Model
+Every agent role has a persistent, dedicated worktree path that persists across PEs. This replaces the per-PE worktree pattern.
+
+**Fixed worktree paths:**
+- `infra-impl-a` → `/opt/elis/agent-worktrees/infra-impl-a`
+- `infra-impl-b` → `/opt/elis/agent-worktrees/infra-impl-b`
+- `infra-val-a`  → `/opt/elis/agent-worktrees/infra-val-a`
+- `infra-val-b`   → `/opt/elis/agent-worktrees/infra-val-b`
+- (same pattern for programme and SLR roles)
+
+The worktree is reset and rebased at the start of each PE assignment. The branch checked out in the fixed worktree changes per PE. The worktree path itself does not.
+
+**Advantages:**
+- Agent sessions always bind to the same filesystem path
+- Shell and PM know exactly where each agent works
+- No stale worktrees accumulate per PE
+- CI/CD runners, monitoring, and recovery scripts use stable paths
+
+### 2.9 Worktree and Provider Preflight Required
 Before any PE execution begins, the agent must verify:
-- Correct worktree path and branch
+- Correct fixed worktree path (role-specific, not PE-specific)
+- Correct branch checked out for the current PE
 - Provider/model availability and credentials
 - Clean or expected working-tree state
 - Task packet exists and is current
 
-### 2.9 No Automatic Push, PR, or Merge
+### 2.10 GitHub Write Boundary Model
+gitHub write access is gated by role and explicit authorisation. No agent may perform a GitHub write operation unless the action is within its authorised boundary.
+
+**Allowed GitHub writes per role:**
+- **Implementer:** Local branch commits only. No git push, PR creation, or remote writes.
+- **Validator:** Local commits to the shared PE branch (REVIEW file, adversarial tests only). PR comments and formal GitHub reviews when explicitly authorised.
+- **PM:** Remote GitHub operations are **prohibited** for PM. PM coordinates and approves but must not write to GitHub directly. Only the GitHub Agent may execute GitHub write operations after explicit PM/PO approval.
+- **GitHub Agent (dedicated bot):** Push, PR ops, labels/comments, merge status reporting under PE-scoped activation. May act only after receiving explicit PM/PO authorisation for the specific operation.
+- **Supervisor:** Monitors PE workflow integrity and role compliance. Read-only access to repo state. Must not write to GitHub directly.
+
+**All roles:** Merge requires explicit PO approval. No automatic merge.
+
+### 2.10a Wrong-Worktree Quarantine
+If an agent detects it is operating from the wrong worktree (i.e., `pwd` or `git rev-parse --show-toplevel` does not match its assigned fixed workspace path):
+1. The agent must stop all file operations immediately.
+2. No file may be copied, moved, or committed from the wrong worktree.
+3. The agent must report the mismatch to PM with full evidence (`pwd`, `git rev-parse --show-toplevel`, assigned path from CURRENT_PE.md).
+4. PM must reset the correct fixed workspace and re-dispatch.
+5. Any artefacts produced from the wrong worktree are invalid and must not be used.
+
+**No-copy rule:** Agents must never copy or transfer files between worktrees. If a file from one worktree is needed in another, the file must be committed to the canonical repo from the correct worktree and then fetched in the target worktree.
+
+### 2.11 No Automatic Push, PR, or Merge
 Agents never push, open PRs, or merge without explicit PM direction. These actions are PM-owned.
 
-### 2.10 Discord / PO Checkpoint Governance
+### 2.12 Discord / PO Checkpoint Governance
 Discord is for human-visible coordination, but the PE thread is the operational checkpoint trail. Use the main Discord channel for portfolio-level control and escalation, and use the PE thread for compact checkpoint updates, audit notes, and continuation markers. GitHub remains the canonical evidence record; Discord never replaces commits, PRs, CI output, or versioned artefacts.
 
 See `docs/governance/ELIS_Discord_PO_PM_Checkpoint_Governance.md` for thread usage, message-boundary, and checkpoint packet rules.
@@ -67,7 +108,7 @@ See `docs/governance/ELIS_Discord_PO_PM_Checkpoint_Governance.md` for thread usa
 
 ### 3.2 Pre-Dispatch (Gatekeeper)
 1. PM runs Gatekeeper preflight (or requests Gatekeeper readiness check).
-2. Gatekeeper verifies: worktree path, branch, task packet existence, clean state, provider readiness, artefact gates.
+2. Gatekeeper verifies: fixed worktree path for the role, branch matches PE, task packet existence, clean state after reset/rebase, provider readiness, artefact gates.
 3. Gatekeeper returns one of: `READY`, `NOT_READY`, `NEEDS_PLATFORM_FIX`, `NEEDS_PO_DECISION`.
 4. PM dispatches only on `READY` or PO-authorised override.
 
@@ -98,10 +139,13 @@ See `docs/governance/ELIS_Discord_PO_PM_Checkpoint_Governance.md` for thread usa
 Gate 1 is a CI-driven automated check. On a READY verdict from Gatekeeper, PM dispatches the Validator. Gate 1 CI runs on the feature branch and assigns the Validator via PR comment. The Validator may start only after receiving explicit PM or CI-bot assignment.
 
 ### 3.7 Gate 2 (Merge)
-Gate 2 is a CI-driven automated merge. On a PASS verdict from the Validator (PR comment + formal GitHub review), CI checks re-run. If all required checks pass, the PR auto-merges if:
+Gate 2 is a PE-completion gate. On a PASS verdict from the Validator (PR comment + formal GitHub review), CI checks re-run. Merge is PM-owned and requires:
 - Branch protection rules are satisfied
 - No `pm-review-required` label is set
 - Validator is the correct assigned agent
+- Explicit PO approval (per §3.8)
+
+Gate 2 does not auto-merge. The PM merges after confirming all gates are green and PO has approved.
 
 ### 3.8 PO Approval and Override
 PO approval is required for:
@@ -139,6 +183,18 @@ PO approval is required for:
 - Treat silent or artefact-free runs as success
 - Merge without approved process
 - Override role boundaries
+- **Write to GitHub directly.** All GitHub write operations (push, PR creation, label/comment, merge) must be executed by the GitHub Agent after explicit PM/PO approval. PM coordinates and approves but never operates GitHub write tools.
+
+### 4.7 Supervisor
+- Monitors PE workflow integrity and role compliance
+- Reads repo state (branches, PRs, CI status, artefact existence)
+- Detects role boundary violations (e.g. implementer pushing, PM writing to GitHub)
+- Detects missing artefacts (HANDOFF, REVIEW, Status Packet)
+- Reports findings to PM
+- Must not write to GitHub (no commits, push, PR, label, or comment)
+- Must not dispatch agents
+- Must not perform implementation or validation
+- Must not approve or merge
 
 ### 4.2 Implementer
 - Works only in the assigned PE worktree
@@ -214,30 +270,94 @@ PO approval is required for:
 
 ## 5. Worktree and Workspace Rules
 
-### 5.1 Worktree Isolation
-Every active PE uses a dedicated Git worktree:
+### 5.1 Fixed Agent Worktree Model
+Each agent role has a persistent, dedicated worktree path that does not change between PEs:
 ```
-/opt/elis/agent-worktrees/<PE-ID>-<agent-id>
+/opt/elis/agent-worktrees/<role>-<slot>
 ```
+Examples: `/opt/elis/agent-worktrees/infra-impl-b`, `/opt/elis/agent-worktrees/infra-val-a`
 
-### 5.2 No Shared Mutable Working Directory
-Two active agents must never write to the same working directory. Rule: one PE branch + one active writer at a time.
+### 5.1a Wrong-Worktree Quarantine
+If an agent detects it is operating from the wrong worktree (i.e., `pwd` or `git rev-parse --show-toplevel` does not match its assigned fixed workspace path):
+1. Stop all file operations immediately.
+2. Do not copy, move, or commit any files from the wrong worktree.
+3. Report the mismatch to PM with full evidence.
+4. PM resets the correct fixed workspace and re-dispatches.
+5. Any artefacts produced from the wrong worktree are invalid and must not be used.
 
-### 5.3 Canonical Repository
+**No-copy rule:** Agents must never copy or transfer files between worktrees. If a file from one worktree is needed in another, the file must be committed to the canonical repo from the correct worktree and then fetched in the target worktree.
+
+### 5.1b Fixed Workspace Binding Certificate
+Before any PE work begins, the agent must produce a **Fixed Workspace Binding Certificate** from within the fixed workspace. This certificate must include:
+
+| Field | Description |
+|-------|-------------|
+| PE ID | The PE identifier from CURRENT_PE.md |
+| Agent ID | The agent's surface name (e.g. `infra-impl-b`) |
+| Fixed workspace path | Output of `pwd` |
+| Git root | Output of `git rev-parse --show-toplevel` |
+| Branch | Output of `git branch --show-current` |
+| HEAD | Output of `git rev-parse HEAD` |
+| Base/Expected commit | Commit SHA of `origin/$BASE` (`$BASE` from CURRENT_PE.md) |
+| Clean status | Output of `git status --short --untracked-files=all` |
+| Allowed file scope | List of allowed files from PE_TASK.md |
+| Timestamp | ISO 8601 timestamp of certificate creation |
+| Result | `PASS` (certificate matches) or `FAIL` (mismatch found) |
+
+The certificate must be included in the opening Status Packet before any implementation or validation work begins. A FAIL result blocks all further work until PM resolves the mismatch.
+
+### 5.2 Worktree Reset Between PEs
+At the start of each PE assignment, the fixed worktree is:
+1. Cleaned of uncommitted changes (stash or discard disposable state)
+2. Fetched from origin
+3. Rebased onto the current `origin/$BASE`
+4. Switched to the PE branch (created if new)
+
+### 5.3 No Shared Mutable Working Directory
+Two active agents must never write to the same working directory. Each fixed worktree hosts exactly one role. Rule: one PE branch + one active writer at a time.
+
+### 5.4 Canonical Repository
 `/opt/elis/repo` is the canonical ELIS repository. It must remain clean unless a controlled, approved PE is actively modifying it.
 
-### 5.4 No OpenClaw Workspace on Canonical Repo
+### 5.5 Persistent Agent Runtime Files vs Disposable Repo/Task State
+Agent workspaces contain two categories of files that must be clearly distinguished:
+
+**Persistent Agent Runtime/Context Files (must be preserved across PEs):**
+- `AGENTS.md` — agent workflow rules and operating model
+- `SKILLS.md` or equivalent skill manifest
+- `SOUL.md` or equivalent agent identity/character files
+- Tool manifests and capability declarations
+- OpenClaw/Hermes bootstrap and system configuration files
+- Agent context cache and session continuity files
+
+**Disposable Repo/Task State (reset at each PE boundary):**
+- Git working tree (source code, tests, docs)
+- `HANDOFF.md`, `REVIEW_PE<N>.md` (PE-specific artefacts)
+- Branch-specific config and state
+- CI caches and build artefacts
+- All files within the `.elis/` PE workspace tree
+
+**Separation rule:**
+- Persistent files must reside outside the fixed worktree (e.g., in the agent's OpenClaw workspace or dedicated runtime directory).
+- When a fixed worktree is reset at PE start, only disposable repo/task state is cleaned. Persistent runtime files are never deleted or modified during reset.
+- Agents must not write persistent runtime files into the fixed worktree. If a write lands in the worktree by mistake, it must be moved out before the worktree is cleaned for the next PE.
+
+### 5.5a No OpenClaw Workspace on Canonical Repo
 OpenClaw workspace must not be directly bound to `/opt/elis/repo`. OpenClaw may write bootstrap/context files into its workspace.
 
-### 5.5 Path Preflight
-Before any PE work, the agent must run:
+### 5.6 Path Preflight (Fixed Workspace Binding)
+Before any PE work, the agent must produce the **Fixed Workspace Binding Certificate** (§5.1b). This is mandatory evidence in every opening Status Packet.
+
+Minimum preflight commands:
 ```bash
 pwd
 git rev-parse --show-toplevel
 git status --short --branch
 git branch --show-current
+git rev-parse HEAD
+git log -1 --oneline
 ```
-The verified path must match the assigned PE worktree.
+The verified path must match the agent's fixed worktree path. The branch must match the current PE branch from CURRENT_PE.md. A path mismatch is a `FAIL` result on the certificate and blocks all further work.
 
 ---
 
@@ -351,4 +471,5 @@ Agents must not self-initiate recovery from silent failure. All recovery is PM-d
 
 | Version | Date       | Author     | Changes |
 |---------|------------|------------|---------|
+| 1.1     | 2026-05-06 | PM         | Adopt fixed agent worktree model and GitHub write boundary model. Worktree paths are now role+slot based, not PE-ID based. Gate 2 no longer auto-merges. Explicit write boundaries per role. |
 | 1.0     | 2026-05-03 | PM         | Initial canonical consolidation from AGENTS.md, CLAUDE.md, ELIS_General_Guidance.md, LESSONS_LEARNED.md, and accumulated PM directives. |

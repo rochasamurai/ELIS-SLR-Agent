@@ -9,7 +9,9 @@ This template defines the structured approach for implementing a PE within the E
 ## Repository Structure
 - Canonical repository: `/opt/elis/repo`
 - Assigned worktree root: `/opt/elis/agent-worktrees/`
-- Assigned worktree: `/opt/elis/agent-worktrees/<PE-ID>-<agent-id>`
+- Assigned worktree: `/opt/elis/agent-worktrees/<role>-<slot>` (fixed workspace — e.g. `infra-impl-b`)
+  - Implementer: `/opt/elis/agent-worktrees/<implementer-role-slot>`
+  - Validator: `/opt/elis/agent-worktrees/<validator-role-slot>`
 
 ## Branch
 `feature/<pe-id-branch-name>`
@@ -28,12 +30,18 @@ This template defines the structured approach for implementing a PE within the E
 - `docs/governance/ELIS_Provider_Preflight_Checklist.md` — provider readiness
 - `docs/governance/ELIS_No_Silent_Failure_Recovery.md` — artefact and evidence requirements
 
-## Worktree Safety Practices
+## Fixed Workspace Safety Practices
 - No OpenClaw workspace directly bound to `/opt/elis/repo`
 - No shared mutable working directory between active agents
 - Mandatory wrong-path checks before execution: `pwd`, `git rev-parse --show-toplevel`, `git branch --show-current`
-- All artefacts committed to worktree only; no writes to canonical repo
-- Rebase onto `origin/$BASE` before starting if other PEs merged since branch creation
+- Path must match the agent's fixed workspace (`/opt/elis/agent-worktrees/<role>-<slot>`), not a per-PE path
+- All artefacts committed to fixed workspace only; no writes to canonical repo
+- Fixed workspace reset at start of each PE: fetch + clean + checkout correct branch + rebase onto `origin/$BASE`
+- **Fixed Workspace Binding Certificate** required in opening Status Packet (see `docs/governance/ELIS_PE_Operating_Protocol.md §5.1b`)
+- **Wrong-worktree quarantine:** if path does not match, stop immediately, do not copy/commit files, report to PM
+- **No-copy rule:** never copy or transfer files between worktrees; use commit+fetch from correct worktree
+- **Persistent vs disposable separation:** runtime/context files (AGENTS.md, SKILLS.md, SOUL.md, tool manifests, OpenClaw/Hermes bootstrap) reside outside worktree; only repo/task state lives inside
+- GitHub write boundary: implementer/validator/supervisor do not push/PR/merge. PM does not write to GitHub directly. Only GitHub Agent executes remote GitHub writes after explicit PM/PO approval.
 
 ## Allowed Files
 - <list files this PE may create or modify>

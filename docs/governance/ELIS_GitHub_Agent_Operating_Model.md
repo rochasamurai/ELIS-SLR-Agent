@@ -1,17 +1,22 @@
 # ELIS GitHub Agent Operating Model
 
+**Status:** Canonical — v1.1
+**Date:** 2026-05-06
+**Owner:** Carlos Rocha, Product Owner
+**Applies to:** All ELIS agents with GitHub operations capability
+
 ## 1. Purpose
-This document defines the operating model for a dedicated ELIS GitHub Agent that performs write-capable GitHub operations under explicit gates, while preserving ELIS auditability, role separation, and Carlos/PO approval authority.
+This document defines the GitHub Write Boundary Model for ELIS: the operating model that governs which roles may perform which GitHub write operations, under what gates, and with what approval. It supersedes ad-hoc permission patterns and codifies the boundary explicitly for every agent role.
 
 ## 2. Scope
 In scope:
-- GitHub Agent role definition
-- permission boundaries by role
-- allowed and forbidden GitHub operations
+- Role-based permission boundaries for GitHub operations
+- allowed and forbidden GitHub operations per role
 - PR, check, label, comment, review, and merge gates
 - identity verification rules
 - evidence packet requirements
 - manual fallback path when automation fails
+- relationship to the fixed agent workspace model
 
 Out of scope:
 - OpenClaw runtime/config changes
@@ -19,112 +24,98 @@ Out of scope:
 - merge authority without Carlos/PO approval
 - unrelated platform recovery procedures
 
-## 3. Role Model
-### 3.1 GitHub Agent
-A permanent ELIS role with PE-scoped activation. It is the only role intended to perform write-capable GitHub operations by default. The GitHub Agent executes authorised GitHub operations; it does not independently approve scope, validation, or merge.
+## 3. Core Principle: No Default GitHub Write Access
+No agent role has default GitHub write access. Every GitHub write operation requires:
+1. The action is within the role's authorised boundary (see §5)
+2. The agent's fixed workspace identity is verified
+3. The PE is active and the branch is current
+4. PM or PO has authorised the specific operation
 
-### 3.2 PM
-Owns PE coordination, authorization checkpoints, and fallback escalation.
+## 4. Role Model
+### 4.1 Implementer
+Produces branch work and implementation artefacts in the fixed implementer workspace. Local git operations only (commit). No default remote write access.
 
-### 3.3 Implementer
-Produces branch work and implementation artefacts. No broad GitHub write by default.
+**Workspace:** `/opt/elis/agent-worktrees/<role>-<slot>` (e.g. `infra-impl-b`)
 
-### 3.4 Validator
-Performs independent review. Read-only by default unless an explicit review/comment surface is authorised.
+### 4.2 Validator
+Performs independent review. Local git operations only (commit REVIEW file, adversarial tests). PR comments and formal GitHub reviews when explicitly authorised by PM.
 
-### 3.5 Carlos / PO
+**Workspace:** `/opt/elis/agent-worktrees/<role>-<slot>` (e.g. `infra-val-a`)
+
+### 4.3 PM
+Owns PE coordination, authorisation checkpoints, and fallback escalation. PM must **not** write to GitHub directly. All GitHub write operations (push, PR, labels, comments) must be executed by the GitHub Agent after explicit PM approval. PM coordinates and approves but does not operate GitHub write tools.
+
+### 4.4 GitHub Agent (Dedicated Bot)
+A permanent ELIS role with PE-scoped activation for write-capable GitHub operations: push, PR lifecycle, labels, comments, review requests, check reporting. Does not independently approve scope, validation, or merge.
+
+### 4.5 Carlos / PO
 Final approval authority for merge, scope exceptions, and any escalation that changes repository state.
 
-## 4. Identity Model
-- GitHub operations use permanent bot identities.
-- GitHub Agent activation is PE-scoped.
-- Identity must be verified before any write-capable GitHub action.
-- GitHub identity and execution identity are not assumed to be the same thing.
-- The Discord exec approval loop is separate from GitHub protected-branch and bot-identity risk.
+### 4.6 Supervisor
+- Monitors PE workflow integrity and role compliance
+- Reads repo state (branches, PRs, CI status, artefact existence)
+- Detects role boundary violations (e.g., implementer pushing, PM writing to GitHub)
+- Detects missing artefacts (HANDOFF, REVIEW, Status Packet)
+- Reports findings to PM
+- Must not write to GitHub (no commits, push, PR, label, or comment)
+- Must not dispatch agents
+- Must not perform implementation or validation
+- Must not approve or merge
 
 ## 5. Permission Matrix
-### 5.1 GitHub Agent
-Allowed:
-- create/update PRs
-- push branches when authorised
-- read and report checks
-- add labels/comments when authorised
-- request reviews when authorised
-- report mergeability and gate status
 
-Forbidden:
-- merge without explicit Carlos/PO approval
-- act outside the authorised PE scope
-- bypass branch protection
-- fabricate evidence or checks
+| Operation | Implementer | Validator | PM | GitHub Agent | Supervisor | PO/Carlos |
+|-----------|-------------|-----------|----|-------------|------------|-----------|
+| Local commit | ✅ Allowed | ✅ Allowed | ✅ Allowed | N/A | ❌ No | N/A |
+| git push (remote) | ❌ No | ❌ No | ❌ No | ✅ When authorised | ❌ No | ❌ (delegates) |
+| PR creation | ❌ No | ❌ No | ❌ No | ✅ When authorised | ❌ No | ❌ (delegates) |
+| PR merge | ❌ No | ❌ No | ❌ No | ❌ No | ❌ No | ✅ PO approval |
+| PR comment | ❌ No | ✅ When authorised | ❌ No | ✅ When authorised | ❌ No | ✅ |
+| Formal GitHub review | ❌ No | ✅ When authorised | N/A | ❌ No | ❌ No | ✅ |
+| Label management | ❌ No | ❌ No | ❌ No | ✅ When authorised | ❌ No | ✅ |
+| Branch protection changes | ❌ No | ❌ No | ❌ No | ❌ No | ❌ No | ✅ PO approval |
+| Read repo state | ✅ Allowed | ✅ Allowed | ✅ Allowed | ✅ Allowed | ✅ Allowed | ✅ Allowed |
 
-### 5.2 Implementer
-Allowed:
-- local branch work
-- commit implementation changes in the PE worktree
-- produce handoff evidence
-
-Forbidden:
-- broad GitHub write by default
-- PR creation unless explicitly authorised
-- merge
-- branch protection changes
-
-### 5.3 Validator
-Allowed:
-- read repository state
-- review PRs when explicitly authorised
-- comment or review only on an authorised surface
-- limited GitHub write access, if authorised, to review/comment artefacts only
-
-Forbidden:
-- broad GitHub write by default
-- branch push
-- file edits
-- merge
-- self-review
-- altering implementation files unless explicitly authorised
-
-### 5.4 PM
-Allowed:
-- authorize GitHub operations
-- choose fallback path
-- monitor gates and evidence
-
-Forbidden:
-- merging without Carlos/PO approval
-- bypassing identity or gate checks
+### 5.1 Fixed Workspace Constraint
+All agents are bound to their fixed workspace path. Remote GitHub operations must originate from the correct fixed workspace. A push or PR attempt from a wrong or unverified workspace path is a workflow violation regardless of role.
 
 ## 6. Allowed and Forbidden Operations
 ### Allowed
-- branch push under explicit authorisation
-- PR creation under explicit authorisation
-- checks reporting
-- label/comment/review-request actions when authorised
-- merge review coordination
+- local git commits in the fixed workspace (all execution roles)
+- branch push under explicit PM/PO approval (GitHub Agent only)
+- PR creation under explicit PM/PO approval (GitHub Agent only)
+- checks reporting (GitHub Agent)
+- PR comments and review requests when explicitly authorised (Validator, GitHub Agent)
+- formal GitHub review when explicitly authorised (Validator)
+- merge review coordination (PM)
 
 ### Forbidden
-- direct merge without Carlos/PO approval
-- unauthorised PR mutation
-- unauthorised label or comment actions
-- actions from stale, wrong, or unverified identity contexts
-- bypassing protected-branch rules
+- any git push, PR creation, or merge by implementer, validator, supervisor, or PM
+- PM writing to GitHub directly (PM coordinates and approves; GitHub Agent executes)
+- Supervisor writing to GitHub (read-only monitoring role)
+- direct merge without Carlos/PO approval (all roles)
+- unauthorised PR mutation (any role)
+- unauthorised label or comment actions (any role)
+- actions from stale, wrong, or unverified fixed workspace identity (any role)
+- bypassing protected-branch rules (any role)
+- merging from the fixed implementer or validator workspace (implementer, validator)
 
 ## 7. PR / Check / Merge Gates
-A GitHub operation is permitted only when the following are true:
-- PE is active and scoped
-- identity is verified
-- branch and commit context match the PE
-- required evidence packet is present
-- the requested action is within the role boundary
-- merge has explicit Carlos/PO approval
+A GitHub write operation is permitted only when:
+1. PE is active and scoped in CURRENT_PE.md
+2. Agent fixed workspace identity is verified (pwd + git rev-parse --show-toplevel matches assigned path)
+3. Branch and commit context match the PE
+4. Required evidence packet is present (see §8)
+5. The requested action is within the role boundary (see §5)
+6. Merge has explicit Carlos/PO approval
 
-Merge never occurs automatically without explicit Carlos/PO approval.
+Merge never occurs without explicit Carlos/PO approval. Gate 2 does not auto-merge.
 
 ## 8. Evidence Packet
-Every GitHub operation must have a compact evidence packet including:
+Every GitHub write operation must have a compact evidence packet including:
 - PE_ID
-- role and agent identity
+- role and agent identity (surface name, e.g. `infra-impl-b`)
+- fixed workspace path
 - branch name
 - commit SHA or PR number
 - requested GitHub action
@@ -150,22 +141,25 @@ When automation fails:
 - Discord exec approval loops are runtime-envelope issues, not GitHub self-review failures.
 - GitHub protected-branch and bot-identity failures are separate risks and must be reported distinctly.
 - Any identity mismatch, stale branch, or ambiguous authorisation state blocks the operation.
+- Fixed workspace path mismatch blocks all GitHub operations, including local commits, until verified.
 
-## 11. Open PO Decisions
-- exact validator write surface for comments/reviews
-- whether implementers may ever request PR creation
-- whether manual fallback is PM-owned, GitHub-Agent-owned, or human-owned
-
-## 12. Non-goals
+## 11. Non-goals
 - no OpenClaw config changes
 - no automatic merge authority
 - no implementation of GitHub automation outside this governance model
 - no revision of unrelated PE rules
 
-## 13. Cross-References
+## 12. Cross-References
+- `docs/governance/ELIS_PE_Operating_Protocol.md` (worktree rules, fixed workspace model, Supervisor role, Fixed Workspace Binding Certificate, wrong-worktree quarantine)
+- `docs/governance/ELIS_Worktree_Preflight_Checklist.md` (path verification, binding certificate)
+- `docs/governance/ELIS_PE_Dispatch_Checklist.md` (dispatch readiness)
 - `docs/decisions/ADR-011-github-actions-authority-for-portable-gates.md`
-- `docs/openclaw/BOT_ACCOUNTS_SETUP.md`
-- `docs/_active/GITHUB_SINGLE_ACCOUNT_VALIDATION_RUNBOOK.md`
-- `docs/governance/ELIS_PE_Operating_Protocol.md`
-- `docs/governance/ELIS_PE_Dispatch_Checklist.md`
 - `docs/governance/ELIS_Discord_PO_PM_Checkpoint_Governance.md`
+
+## 13. Version History
+
+| Version | Date       | Author | Changes |
+|---------|------------|--------|---------|
+| 1.2     | 2026-05-07 | PM     | Add Supervisor role to permission matrix. Resolve PM GitHub write conflict: PM must not write to GitHub directly; only GitHub Agent may write after explicit PM/PO approval. Update Allowed/Forbidden sections. |
+| 1.1     | 2026-05-06 | PM     | Adopt fixed workspace model. Replace bot-centric model with role-based permission matrix. Clarify no-default-write principle. Gate 2 no longer auto-merges. |
+| 1.0     | 2026-05-03 | PM     | Initial GitHub Agent operating model. |
