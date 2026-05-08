@@ -1,0 +1,142 @@
+#!/usr/bin/env bash
+# ELIS GitHub Agent Container — Constrained Wrapper
+#
+# This wrapper is the canonical interface for the PM agent and OpenClaw
+# to invoke the containerised GitHub Agent.  It accepts only approved verbs;
+# all others are rejected with exit code 2.
+#
+# The wrapper does NOT require PM or gateway credential access —
+# the token lives inside the container via the read-only secret mount.
+#
+# Usage:
+#   elis-github-agent-container status
+#   elis-github-agent-container push-branch
+#   elis-github-agent-container open-pr <PR_BODY_FILE>
+#   elis-github-agent-container pr-checks [<PR_NUMBER>]
+#   elis-github-agent-container pr-comment <PR_NUMBER> <COMMENT_FILE>
+#   elis-github-agent-container merge-pr <PR_NUMBER>          # PO gate required
+#
+# Exit codes:
+#   0 — success
+#   2 — unsupported verb / usage error
+#   1 — container runtime error
+
+set -euo pipefail
+
+readonly REPO_ROOT="${REPO_ROOT:-/opt/elis/repo}"
+readonly COMPOSE_FILE="${REPO_ROOT}/ops/containers/github-agent/docker-compose.github-agent.yml"
+readonly WRAPPER_NAME="$(basename "$0")"
+
+error() { echo -e "\033[0;31mERROR:\033[0m $*" >&2; }
+info()  { echo "$*"; }
+
+usage() {
+    cat >&2 <<EOF
+Usage: $WRAPPER_NAME <verb> [args...]
+
+Verbs:
+  status              Verify identity and workspace state
+  push-branch         Push the current branch to origin
+  open-pr <body>      Create a PR (body file path or title:body)
+  pr-checks [<num>]   List PR checks (default: current branch PR)
+  pr-comment <num> <file>  Add a comment from file content
+  merge-pr <num>      Merge a PR (requires PO approval gate)
+
+Exit codes:
+  0  Success
+  1  Container runtime error
+  2  Unsupported verb or usage error
+EOF
+    exit 2
+}
+
+# ---------------------------------------------------------------------------
+# Verb dispatch
+# ---------------------------------------------------------------------------
+case "${1:-help}" in
+    help)
+        usage
+        ;;
+
+    status)
+        shift
+        docker compose -f "$COMPOSE_FILE" run --rm elis-github-agent --check-only
+        ;;
+
+    push-branch)
+        shift
+        info "Pushing current branch to origin…"
+        docker compose -f "$COMPOSE_FILE" run --rm elis-github-agent \
+            --allow-push -- git push -u origin HEAD
+        ;;
+
+    open-pr)
+        shift
+        body_path="${1:-}"
+        if [[ -z "$body_path" ]]; then
+            error "Usage: $WRAPPER_NAME open-pr <PR_BODY_FILE>"
+            exit 2
+        fi
+        if [[ ! -f "$body_path" ]]; then
+            error "PR body file not found: $body_path"
+            exit 1
+        fi
+        docker compose -f "$COMPOSE_FILE" run --rm \
+            -v "$(realpath "$body_path"):/tmp/pr-body.md:ro" \
+            elis-github-agent \
+            --allow-pr-create -- gh pr create --body-file /tmp/pr-body.md
+        ;;
+
+    pr-checks)
+        shift
+        pr_num="${1:-}"
+        if [[ -n "$pr_num" ]]; then
+            docker compose -f "$COMPOSE_FILE" run --rm elis-github-agent \
+                --allow-pr-review -- gh pr checks "$pr_num" \
+                    --repo rochasamurai/ELIS-Multi-AI-Agent-Platform
+        else
+            docker compose -f "$COMPOSE_FILE" run --rm elis-github-agent \
+                --allow-pr-review -- gh pr checks \
+                    --repo rochasamurai/ELIS-Multi-AI-Agent-Platform
+        fi
+        ;;
+
+    pr-comment)
+        shift
+        pr_num="${1:-}"
+        comment_file="${2:-}"
+        if [[ -z "$pr_num" ]] || [[ -z "$comment_file" ]]; then
+            error "Usage: $WRAPPER_NAME pr-comment <PR_NUMBER> <COMMENT_FILE>"
+            exit 2
+        fi
+        if [[ ! -f "$comment_file" ]]; then
+            error "Comment file not found: $comment_file"
+            exit 1
+        fi
+        docker compose -f "$COMPOSE_FILE" run --rm \
+            -v "$(realpath "$comment_file"):/tmp/pr-comment.md:ro" \
+            elis-github-agent \
+            --allow-pr-comment -- gh pr comment "$pr_num" \
+                --repo rochasamurai/ELIS-Multi-AI-Agent-Platform \
+                --body-file /tmp/pr-comment.md
+        ;;
+
+    merge-pr)
+        shift
+        pr_num="${1:-}"
+        if [[ -z "$pr_num" ]]; then
+            error "Usage: $WRAPPER_NAME merge-pr <PR_NUMBER>"
+            error "NOTE: merge requires explicit PO approval. This verb is gated."
+            exit 2
+        fi
+        docker compose -f "$COMPOSE_FILE" run --rm elis-github-agent \
+            --allow-pr-review -- gh pr merge "$pr_num" \
+                --repo rochasamurai/ELIS-Multi-AI-Agent-Platform \
+                --auto --squash
+        ;;
+
+    *)
+        error "Unsupported verb: '${1:-}'"
+        usage
+        ;;
+esac
