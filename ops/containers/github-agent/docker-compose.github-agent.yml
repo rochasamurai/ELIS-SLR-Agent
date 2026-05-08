@@ -1,0 +1,47 @@
+# ELIS GitHub Agent — Docker Compose
+#
+# Provides a containerised execution boundary for the ELIS GitHub Agent.
+# - Mounts the GitHub Agent workspace as read-write under /workspace
+# - Mounts the GitHub token secret as a read-only file
+# - Container runs as elis-github (UID 995, GID 983)
+# - No Docker socket, no host credentials, no ambient gh auth
+#
+# Usage:
+#   docker compose -f ops/containers/github-agent/docker-compose.github-agent.yml run --rm elis-github-agent --check-only
+#   docker compose -f ops/containers/github-agent/docker-compose.github-agent.yml run --rm elis-github-agent --allow-push -- git push origin HEAD
+#
+# Build:
+#   docker compose -f ops/containers/github-agent/docker-compose.github-agent.yml build
+
+services:
+  elis-github-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        UID: "995"
+        GID: "983"
+        SECRETS_GID: "982"
+    image: elis-github-agent:latest
+    container_name: elis-github-agent
+    working_dir: /workspace
+    volumes:
+      # Persistent workspace — the agent's writable state
+      - /opt/elis/agent-worktrees/github-agent:/workspace:rw
+      # Secret file mounted read-only — never mount the parent crate
+      - /opt/elis/secrets/github-agent.env:/run/secrets/github-agent.env:ro
+    environment:
+      SECRETS_FILE: /run/secrets/github-agent.env
+      GH_CONFIG_DIR: /workspace/.config/gh
+    user: "995:983"
+    group_add:
+      - "982"
+    init: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    # Interactive session by default; override with `run --rm` for one-shots
+    stdin_open: true
+    tty: true
+    command: ["bash"]
