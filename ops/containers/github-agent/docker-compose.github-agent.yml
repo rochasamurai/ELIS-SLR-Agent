@@ -22,7 +22,7 @@ services:
         UID: "995"
         GID: "983"
         SECRETS_GID: "982"
-    image: elis-github-agent:latest
+    image: elis-github-agent:pe-ops-container-github-01
     container_name: elis-github-agent
     working_dir: /workspace
     volumes:

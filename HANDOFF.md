@@ -78,7 +78,7 @@ Only the PM-prepared opening files and my deliverable files in scope.
 
 ```
 $ docker compose -f ops/containers/github-agent/docker-compose.github-agent.yml build --no-cache
- Image elis-github-agent:latest Built
+ Image elis-github-agent:pe-ops-container-github-01 Built
 ```
 
 ### Identity check — returns `elis-git-bot`
@@ -176,7 +176,7 @@ CURRENT_PE.md OK — registry, roles, and alternation valid.
 
 ## Callouts for Validator
 
-1. **Pre-existing image:** The host already had an `elis-github-agent:latest` image built approximately 2 hours before this PE session. That image had the same functional characteristics but used a different UID setup (no supplementary group for secret access). The rebuilt image from this PE's Dockerfile replaces it correctly.
+1. **Pre-existing image:** The host already had an `elis-github-agent` image built approximately 2 hours before this PE session. That image had the same functional characteristics but used a different UID setup (no supplementary group for secret access). The rebuilt image from this PE's Dockerfile replaces it correctly and is now tagged `elis-github-agent:pe-ops-container-github-01`.
 
 2. **Token presence:** The identity check confirms `elis-git-bot` — but the actual token validity and permission level should be verified with `gh repo view --json viewerPermission` by the Validator.
 

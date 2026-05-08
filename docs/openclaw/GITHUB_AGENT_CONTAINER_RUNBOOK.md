@@ -25,7 +25,7 @@ cd /opt/elis/repo
 docker compose -f ops/containers/github-agent/docker-compose.github-agent.yml build
 ```
 
-Expected output: build completes without errors; image tagged `elis-github-agent:latest`.
+Expected output: build completes without errors; image tagged `elis-github-agent:pe-ops-container-github-01`.
 
 ### Verify identity
 
