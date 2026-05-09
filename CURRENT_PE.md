@@ -21,10 +21,10 @@
 
 | Field   | Value |
 |---------|-------|
-| PE      | — |
-| Branch  | — |
+| PE      | PE-OPS-ADVISOR-01 |
+| Branch  | feature/pe-ops-advisor-01-implement-elis-advisor-on-hermes |
 
-> **Plan-complete mode.** No active PE. PE-GOV-RISK-TIER-01 remains blocked pending fixed-workspace governance. PE-OPS-GITHUB-02 closed. PE-OPS-CONTAINER-GITHUB-01 closed; host cleanup remains gated behind successful pilot evidence.
+> **Gate 2 pending.** Active PE: PE-OPS-ADVISOR-01 — Implement ELIS Advisor on Hermes. Validation passed with caveats; PR preparation in progress. PE-GOV-RISK-TIER-01 remains blocked pending fixed-workspace governance. PE-OPS-GITHUB-02 closed. PE-OPS-CONTAINER-GITHUB-01 closed; host cleanup remains gated behind successful pilot evidence.
 
 ---
 
@@ -32,9 +32,10 @@
 
 | Agent       | Role |
 |-------------|------|
-| — | — |
+| infra-impl-a | Implementer |
+| infra-val-b | Validator |
 
-> No active PE roles.
+> Active PE roles for PE-OPS-ADVISOR-01.
 
 ---
 
@@ -145,6 +146,7 @@
 | PE-OPS-CONFIG-01 | config          | infra-impl-b         | infra-val-a        | feature/pe-ops-config-01-pe-specific-agent-profile-binding-procedure | merged          | 2026-05-04   |
 | PE-OPS-GITHUB-01 | github          | infra-impl-a         | infra-val-b        | feature/pe-ops-github-01-elis-github-agent-role-and-permission-model | merged          | 2026-05-06   |
 | PE-OPS-PO-ADVISOR-01 | ops        | infra-impl-b         | infra-val-a        | feature/pe-ops-po-advisor-01-deploy-elis-po-advisor-on-hermes        | merged          | 2026-05-06   |
+| PE-OPS-ADVISOR-01 | ops         | infra-impl-a         | infra-val-b        | feature/pe-ops-advisor-01-implement-elis-advisor-on-hermes           | planning        | 2026-05-09   |
 | PE-AGT-01       | infra          | infra-impl-a         | infra-val-b        | feature/pe-agt-01-pm-agent-review                                       | blocked         | 2026-05-02   |
 
 Valid status values:
@@ -252,6 +254,7 @@ PM housekeeping entries (prefix `PM-CHORE-XX`):
 | PM-CHORE-91  | Closed PE-OPS-GITHUB-02 as merged (PR #420, merge SHA `629d4e629b409235f2bba5aa6b97bfa371e298b7`). GitHub Agent credential isolation verified; Linux-level GitHub Agent pilot verified; PM read-only ACL verified; secrets access remediated. | 2026-05-08 |
 | PM-CHORE-92  | Opened PE-OPS-CONTAINER-GITHUB-01 (Containerise ELIS GitHub Agent Runtime) with `infra-impl-b` as Implementer and `infra-val-a` as Validator per alternation rule. Scope: containerised GitHub Agent pilot, host cleanup checklist gated behind successful pilot, no Docker/OpenClaw/Hermes config changes during opening, no secrets/token changes, no dispatch/PR/merge. | 2026-05-08 |
 | PM-CHORE-93  | Closed PE-OPS-CONTAINER-GITHUB-01 as merged (PR #422, PASS verdict — infra-val-a). Plan-complete mode restored: PE and Branch cleared; no active PE; PE-OPS-CONTAINER-GITHUB-01 registry row updated to merged. Merge SHA `6edddda730da1f945ca1fc7f693cbf6eaf7ea8a9`. Host cleanup remains gated behind successful pilot evidence. | 2026-05-08 |
+| PM-CHORE-94  | Opened PE-OPS-ADVISOR-01 (Implement ELIS Advisor on Hermes) with `infra-impl-a` as Implementer and `infra-val-b` as Validator per alternation rule. Advisory-only opening: CURRENT_PE.md and PE task packet only; no Hermes/OpenClaw config changes, no dispatch, no PR/merge. | 2026-05-09 |
 
 
 Alternation rule:
