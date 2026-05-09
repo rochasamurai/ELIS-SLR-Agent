@@ -6,13 +6,13 @@
 
 ## Status
 
-gate-1-pending
+gate-2-pending
 
 ---
 
 ## Scope
 
-Implemented the approved live Hermes Discord binding patch for ELIS Supervisor and ELIS Advisor, restarted the Hermes gateway, and verified the supervisor route in Discord. The advisor channel exists in the guild directory, but this PM account cannot post to it directly, so the advisor-channel check is documented as an access-boundary caveat rather than a false pass.
+Implemented the approved live Hermes Discord binding patch for ELIS Supervisor and ELIS Advisor, restarted the Hermes gateway, and verified the supervisor route in Discord. The advisor channel exists in the guild directory, and the PO has now reported a separate `elis-advisor` profile / bot validation with `ADVISOR_SERVICE_OK — ELIS Advisor`. That result is recorded here as a PO-reported external validation note pending independent validator confirmation.
 
 ---
 
@@ -197,6 +197,16 @@ $ message channel-list -> guildId=1485030291813830898 query=advisor
 {"ok": true, "channels": [{"id": "1502602267931578378", "name": "elis-advisor", "parent_id": "1485030292690309130", "nsfw": false}]}
 ```
 
+```text
+PO-reported follow-up validation:
+- `elis-advisor` profile exists
+- ELIS Advisor Discord app/bot installed
+- `<#1502602267931578378>` private channel access configured
+- `elis-advisor-gateway.service` enabled and running
+- `<#1502602267931578378>` response test passed: `ADVISOR_SERVICE_OK — ELIS Advisor`
+- non-blocking slash-command sync warning observed: `Command exceeds maximum size (8000)`
+```
+
 ---
 
 ## §6.5 Current facts / deliverable status
@@ -231,7 +241,7 @@ M CURRENT_PE.md
 ---
 
 ## Next step
-Validator review / PM follow-up for the advisor-channel access caveat.
+Open PR and wait for PO approval after checks are green.
 
 ---
 
