@@ -24,7 +24,7 @@
 | PE      | PE-OPS-ADVISOR-01 |
 | Branch  | feature/pe-ops-advisor-01-implement-elis-advisor-on-hermes |
 
-> **Planning mode.** Active PE: PE-OPS-ADVISOR-01 — Implement ELIS Advisor on Hermes. PE-GOV-RISK-TIER-01 remains blocked pending fixed-workspace governance. PE-OPS-GITHUB-02 closed. PE-OPS-CONTAINER-GITHUB-01 closed; host cleanup remains gated behind successful pilot evidence.
+> **Gate 1 pending.** Active PE: PE-OPS-ADVISOR-01 — Implement ELIS Advisor on Hermes. Live Hermes config has been patched and restarted; awaiting validator review. PE-GOV-RISK-TIER-01 remains blocked pending fixed-workspace governance. PE-OPS-GITHUB-02 closed. PE-OPS-CONTAINER-GITHUB-01 closed; host cleanup remains gated behind successful pilot evidence.
 
 ---
 
