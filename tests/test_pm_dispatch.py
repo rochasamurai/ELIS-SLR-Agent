@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import importlib.util
-import tempfile
 import subprocess
 from pathlib import Path
 
@@ -24,6 +23,7 @@ MODULE = _load()
 def test_handoff_check_missing_handoff(tmp_path):
     """Missing HANDOFF.md should produce failures."""
     import os as _os
+
     orig_cwd = _os.getcwd()
     try:
         _os.chdir(str(tmp_path))
@@ -74,8 +74,14 @@ def test_handoff_check_pass(tmp_path):
 def test_script_with_unknown_agent():
     """Calling with unknown agent should exit 1."""
     result = subprocess.run(
-        [str(SCRIPT), "--pe-id", "PE-TEST", "--agent", "nonexistent-agent",
-         "--dry-run"],
+        [
+            str(SCRIPT),
+            "--pe-id",
+            "PE-TEST",
+            "--agent",
+            "nonexistent-agent",
+            "--dry-run",
+        ],
         capture_output=True,
         text=True,
         timeout=30,
@@ -88,8 +94,14 @@ def test_script_with_unknown_agent():
 def test_script_dry_run_no_crash():
     """Dry run should not crash."""
     result = subprocess.run(
-        [str(SCRIPT), "--pe-id", "PE-OPS-WORKTREE-BINDING-02",
-         "--agent", "infra-impl-b", "--dry-run"],
+        [
+            str(SCRIPT),
+            "--pe-id",
+            "PE-OPS-WORKTREE-BINDING-02",
+            "--agent",
+            "infra-impl-b",
+            "--dry-run",
+        ],
         capture_output=True,
         text=True,
         timeout=60,
@@ -102,8 +114,15 @@ def test_script_dry_run_no_crash():
 def test_skip_worktree_check():
     """--skip-worktree-check should still run other gates."""
     result = subprocess.run(
-        [str(SCRIPT), "--pe-id", "PE-TEST-SKIP", "--agent", "infra-impl-b",
-         "--dry-run", "--skip-worktree-check"],
+        [
+            str(SCRIPT),
+            "--pe-id",
+            "PE-TEST-SKIP",
+            "--agent",
+            "infra-impl-b",
+            "--dry-run",
+            "--skip-worktree-check",
+        ],
         capture_output=True,
         text=True,
         timeout=60,
@@ -115,9 +134,18 @@ def test_skip_worktree_check():
 def test_validator_role_checks_handoff():
     """Validator role should trigger HANDOFF/evidence check."""
     result = subprocess.run(
-        [str(SCRIPT), "--pe-id", "PE-TEST-VAL", "--agent", "infra-val-a",
-         "--role", "validator", "--dry-run", "--skip-worktree-check",
-         "--skip-handoff-check"],
+        [
+            str(SCRIPT),
+            "--pe-id",
+            "PE-TEST-VAL",
+            "--agent",
+            "infra-val-a",
+            "--role",
+            "validator",
+            "--dry-run",
+            "--skip-worktree-check",
+            "--skip-handoff-check",
+        ],
         capture_output=True,
         text=True,
         timeout=60,

@@ -55,13 +55,21 @@ def test_script_with_json_evidence(tmp_path):
     ev_file.write_text(json.dumps(SAMPLE_VALID_EVIDENCE))
 
     result = subprocess.run(
-        [str(SCRIPT), "--pe-id", "PE-OPS-WORKTREE-BINDING-02", "--agent", "infra-impl-b"],
+        [
+            str(SCRIPT),
+            "--pe-id",
+            "PE-OPS-WORKTREE-BINDING-02",
+            "--agent",
+            "infra-impl-b",
+        ],
         capture_output=True,
         text=True,
         cwd=str(cwd),
         timeout=30,
     )
-    assert result.returncode == 0, f"Expected 0, got {result.returncode}\n{result.stdout}"
+    assert (
+        result.returncode == 0
+    ), f"Expected 0, got {result.returncode}\n{result.stdout}"
     assert "Active run evidence VALID" in result.stdout
 
 
@@ -71,13 +79,22 @@ def test_script_with_explicit_evidence_path(tmp_path):
     ev_file.write_text(json.dumps(SAMPLE_VALID_EVIDENCE))
 
     result = subprocess.run(
-        [str(SCRIPT), "--pe-id", "PE-OPS-WORKTREE-BINDING-02", "--agent", "infra-impl-b",
-         "--evidence-path", str(ev_file)],
+        [
+            str(SCRIPT),
+            "--pe-id",
+            "PE-OPS-WORKTREE-BINDING-02",
+            "--agent",
+            "infra-impl-b",
+            "--evidence-path",
+            str(ev_file),
+        ],
         capture_output=True,
         text=True,
         timeout=30,
     )
-    assert result.returncode == 0, f"Expected 0, got {result.returncode}\n{result.stdout}"
+    assert (
+        result.returncode == 0
+    ), f"Expected 0, got {result.returncode}\n{result.stdout}"
     assert "Active run evidence VALID" in result.stdout
 
 
@@ -88,8 +105,15 @@ def test_script_with_wrong_agent(tmp_path):
     ev_file.write_text(json.dumps(data))
 
     result = subprocess.run(
-        [str(SCRIPT), "--pe-id", "PE-ACTIVE-TEST", "--agent", "infra-impl-b",
-         "--evidence-path", str(ev_file)],
+        [
+            str(SCRIPT),
+            "--pe-id",
+            "PE-ACTIVE-TEST",
+            "--agent",
+            "infra-impl-b",
+            "--evidence-path",
+            str(ev_file),
+        ],
         capture_output=True,
         text=True,
         timeout=30,
@@ -105,8 +129,15 @@ def test_script_with_wrong_pe(tmp_path):
     ev_file.write_text(json.dumps(data))
 
     result = subprocess.run(
-        [str(SCRIPT), "--pe-id", "PE-ACTIVE-TEST", "--agent", "infra-impl-b",
-         "--evidence-path", str(ev_file)],
+        [
+            str(SCRIPT),
+            "--pe-id",
+            "PE-ACTIVE-TEST",
+            "--agent",
+            "infra-impl-b",
+            "--evidence-path",
+            str(ev_file),
+        ],
         capture_output=True,
         text=True,
         timeout=30,
@@ -137,7 +168,9 @@ def test_handoff_evidence_detection(tmp_path):
         cwd=str(cwd),
         timeout=30,
     )
-    assert result.returncode == 0, f"Expected 0, got {result.returncode}\n{result.stdout}"
+    assert (
+        result.returncode == 0
+    ), f"Expected 0, got {result.returncode}\n{result.stdout}"
     assert "Active run evidence VALID" in result.stdout
     assert "Source: HANDOFF.md" in result.stdout
 
@@ -150,8 +183,15 @@ def test_missing_session_id():
     try:
         ev_file.write_text(json.dumps(data))
         result = subprocess.run(
-            [str(SCRIPT), "--pe-id", "PE-TEST", "--agent", "infra-impl-b",
-             "--evidence-path", str(ev_file)],
+            [
+                str(SCRIPT),
+                "--pe-id",
+                "PE-TEST",
+                "--agent",
+                "infra-impl-b",
+                "--evidence-path",
+                str(ev_file),
+            ],
             capture_output=True,
             text=True,
             timeout=30,
@@ -168,8 +208,15 @@ def test_missing_timestamp():
     try:
         ev_file.write_text(json.dumps(data))
         result = subprocess.run(
-            [str(SCRIPT), "--pe-id", "PE-TEST", "--agent", "infra-impl-b",
-             "--evidence-path", str(ev_file)],
+            [
+                str(SCRIPT),
+                "--pe-id",
+                "PE-TEST",
+                "--agent",
+                "infra-impl-b",
+                "--evidence-path",
+                str(ev_file),
+            ],
             capture_output=True,
             text=True,
             timeout=30,

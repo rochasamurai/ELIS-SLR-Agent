@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import importlib.util
-import os
 import tempfile
 import subprocess
 from pathlib import Path
@@ -37,25 +36,19 @@ def test_is_pe_specific_runtime_matches_pattern():
 
 def test_is_pe_specific_runtime_rejects_fixed():
     """Fixed canonical worktrees should not be flagged as PE-specific."""
-    assert not MODULE._is_pe_specific_runtime(
-        "/opt/elis/agent-worktrees/infra-impl-b"
-    )
-    assert not MODULE._is_pe_specific_runtime(
-        "/opt/elis/agent-worktrees/infra-val-a"
-    )
-    assert not MODULE._is_pe_specific_runtime(
-        "/opt/elis/agent-worktrees/pm"
-    )
-    assert not MODULE._is_pe_specific_runtime(
-        "/opt/elis/agent-worktrees/github-agent"
-    )
+    assert not MODULE._is_pe_specific_runtime("/opt/elis/agent-worktrees/infra-impl-b")
+    assert not MODULE._is_pe_specific_runtime("/opt/elis/agent-worktrees/infra-val-a")
+    assert not MODULE._is_pe_specific_runtime("/opt/elis/agent-worktrees/pm")
+    assert not MODULE._is_pe_specific_runtime("/opt/elis/agent-worktrees/github-agent")
 
 
 def test_is_pe_specific_runtime_rejects_other_paths():
     """Unrelated paths should not be flagged."""
     assert not MODULE._is_pe_specific_runtime("/opt/elis/repo")
     assert not MODULE._is_pe_specific_runtime("/tmp/some-other-path")
-    assert not MODULE._is_pe_specific_runtime("/opt/elis/agent-worktrees/something-else")
+    assert not MODULE._is_pe_specific_runtime(
+        "/opt/elis/agent-worktrees/something-else"
+    )
 
 
 def test_preserved_files_set():
@@ -76,12 +69,22 @@ def test_script_runs_without_crash():
         # Create a minimal git repo so the script doesn't crash immediately
         subprocess.run(["git", "init"], cwd=tmpdir, capture_output=True, timeout=30)
         result = subprocess.run(
-            [str(SCRIPT), "--worktrees", tmpdir, "--canonical-repo", tmpdir,
-             "--expected-origin", "https://example.com/test.git"],
+            [
+                str(SCRIPT),
+                "--worktrees",
+                tmpdir,
+                "--canonical-repo",
+                tmpdir,
+                "--expected-origin",
+                "https://example.com/test.git",
+            ],
             capture_output=True,
             text=True,
             timeout=30,
         )
         # Should run without uncaught exceptions and produce some output
-        assert result.returncode in (0, 1), f"Unexpected return code: {result.returncode}"
+        assert result.returncode in (
+            0,
+            1,
+        ), f"Unexpected return code: {result.returncode}"
         assert result.stdout.strip(), "Script produced no output"

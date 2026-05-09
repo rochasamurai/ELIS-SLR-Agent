@@ -32,7 +32,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import re
 import sys
 from pathlib import Path
@@ -58,7 +57,7 @@ def _check_handoff_for_ack(pe_id: str, agent_id: str) -> dict | None:
 
     # Search for acknowledgement sections. Accept flexible header patterns.
     patterns = [
-        rf"##\s+Reset Acknowledgement.*?(?=##|\Z)",
+        r"##\s+Reset Acknowledgement.*?(?=##|\Z)",
         rf"##\s+{re.escape(agent_id)}\s+Reset Acknowledgement.*?(?=##|\Z)",
     ]
 
@@ -81,7 +80,9 @@ def _parse_ack_section(section_text: str, agent_id: str) -> dict | None:
         data[key.strip().lower()] = value.strip()
 
     # Match key: value pairs (inline, not in a table)
-    kv_matches = re.findall(r"^\s*[-*]?\s*(.+?)\s*:\s*(.+)$", section_text, re.MULTILINE)
+    kv_matches = re.findall(
+        r"^\s*[-*]?\s*(.+?)\s*:\s*(.+)$", section_text, re.MULTILINE
+    )
     for key, value in kv_matches:
         data[key.strip().lower()] = value.strip()
 
@@ -118,9 +119,7 @@ def _validate_ack_data(data: dict, agent_id: str) -> tuple[bool, list[str]]:
             missing_fields.append(field_label)
 
     if missing_fields:
-        issues.append(
-            f"Missing required fields: {', '.join(missing_fields)}"
-        )
+        issues.append(f"Missing required fields: {', '.join(missing_fields)}")
 
     # Verify agent identity
     actual_agent = str(data.get("agent", ""))
@@ -132,16 +131,16 @@ def _validate_ack_data(data: dict, agent_id: str) -> tuple[bool, list[str]]:
     # Verify discard confirmation
     discard_confirmed = data.get("prior_context_discarded", data.get("discard", ""))
     if str(discard_confirmed).strip().lower() not in ("yes", "true", "confirmed"):
-        issues.append(
-            "Prior runtime context discard not confirmed."
-        )
+        issues.append("Prior runtime context discard not confirmed.")
 
     # Verify write scope
     write_scope = data.get("write_scope", data.get("write_scope_confirmed", ""))
-    if not write_scope or str(write_scope).strip().lower() not in ("yes", "true", "confirmed"):
-        issues.append(
-            "Write scope within authorised worktree not confirmed."
-        )
+    if not write_scope or str(write_scope).strip().lower() not in (
+        "yes",
+        "true",
+        "confirmed",
+    ):
+        issues.append("Write scope within authorised worktree not confirmed.")
 
     return len(issues) == 0, issues
 

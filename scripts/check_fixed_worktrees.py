@@ -148,9 +148,7 @@ def _check_worktree(
         head = head_result.stdout.strip()
         branch = branch_result.stdout.strip() if branch_result.returncode == 0 else ""
         status = f"branch={branch or '(detached)'}" if branch else "branch=(detached)"
-        failures.append(
-            f"STATUS OK: {resolved} — HEAD={head[:12]}(...) {status}"
-        )
+        failures.append(f"STATUS OK: {resolved} — HEAD={head[:12]}(...) {status}")
 
     # Check 5: tracked file cleanliness (ignoring preserved runtime files)
     status_result = _git_cmd("status", "--porcelain", cwd=resolved)
@@ -245,10 +243,10 @@ def main() -> int:
                     print(f"  FAIL: {f}")
                     all_failures.append(f"  {f}")
             else:
-                print(f"  PASS")
+                print("  PASS")
                 all_pass.append(wt_path)
         else:
-            print(f"  PASS")
+            print("  PASS")
             all_pass.append(wt_path)
         print()
 

@@ -19,7 +19,6 @@ Exit codes:
 from __future__ import annotations
 
 import argparse
-import os
 import re
 import subprocess
 import sys
@@ -110,9 +109,7 @@ def _check_worktree_cleanliness(worktree_path: str) -> list[str]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(
-        description="Check dispatch binding validity."
-    )
+    parser = argparse.ArgumentParser(description="Check dispatch binding validity.")
     parser.add_argument(
         "--agent",
         required=True,
@@ -135,8 +132,10 @@ def main() -> int:
     # Resolve expected worktree path
     worktree_path = args.worktree or AGENT_WORKTREE_MAP.get(agent_id)
     if not worktree_path:
-        print(f"FAIL: Unknown agent ID '{agent_id}'. "
-              f"Known: {', '.join(sorted(AGENT_WORKTREE_MAP.keys()))}")
+        print(
+            f"FAIL: Unknown agent ID '{agent_id}'. "
+            f"Known: {', '.join(sorted(AGENT_WORKTREE_MAP.keys()))}"
+        )
         return 1
 
     resolved_path = Path(worktree_path).resolve().as_posix()
@@ -155,9 +154,7 @@ def main() -> int:
 
     # Gate 2: Must exist
     if not Path(resolved_path).is_dir():
-        failures.append(
-            f"WORKTREE NOT FOUND: {resolved_path} does not exist."
-        )
+        failures.append(f"WORKTREE NOT FOUND: {resolved_path} does not exist.")
         print("FAIL: ", "\n".join(failures))
         return 1
 
@@ -174,9 +171,7 @@ def main() -> int:
     # Gate 4: Branch check
     branch_result = _git_cmd("branch", "--show-current", cwd=resolved_path)
     current_branch = (
-        branch_result.stdout.strip()
-        if branch_result.returncode == 0
-        else ""
+        branch_result.stdout.strip() if branch_result.returncode == 0 else ""
     )
 
     # Resolve expected branch from CURRENT_PE.md if not provided
@@ -194,8 +189,10 @@ def main() -> int:
                 expected_branch = m.group(1).strip()
                 print(f"Expected branch (from CURRENT_PE.md): {expected_branch}")
             else:
-                print("WARN: Could not parse branch from CURRENT_PE.md — "
-                      "branch check skipped.")
+                print(
+                    "WARN: Could not parse branch from CURRENT_PE.md — "
+                    "branch check skipped."
+                )
         else:
             print("WARN: CURRENT_PE.md not found — branch check skipped.")
     else:
@@ -210,7 +207,7 @@ def main() -> int:
         else:
             print(f"Branch match: {current_branch}")
     elif expected_branch and not current_branch:
-        print(f"WARN: Worktree is detached — no active branch.")
+        print("WARN: Worktree is detached — no active branch.")
 
     # Gate 5: HEAD
     head_result = _git_cmd("rev-parse", "HEAD", cwd=resolved_path)
@@ -225,8 +222,10 @@ def main() -> int:
             if rev_parse_result.returncode == 0:
                 branch_tip = rev_parse_result.stdout.strip()
                 if head != branch_tip:
-                    print(f"WARN: HEAD ({head[:12]}) != branch tip "
-                          f"({branch_tip[:12]}) — branch may be outdated.")
+                    print(
+                        f"WARN: HEAD ({head[:12]}) != branch tip "
+                        f"({branch_tip[:12]}) — branch may be outdated."
+                    )
 
     # Gate 6: Cleanliness
     cleanliness = _check_worktree_cleanliness(resolved_path)

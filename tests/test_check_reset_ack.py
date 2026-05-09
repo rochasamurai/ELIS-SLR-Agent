@@ -93,7 +93,7 @@ def test_validate_missing_discard_confirmation():
     data = {**SAMPLE_VALID_ACK_DATA, "prior_context_discarded": ""}
     valid, issues = MODULE._validate_ack_data(data, "infra-impl-b")
     assert not valid
-    assert any("discard not confirmed" in i for i in issues or "not confirmed" in i for i in issues)
+    assert any("discard not confirmed" in i or "not confirmed" in i for i in issues)
 
 
 def test_validate_missing_timestamp():
@@ -139,6 +139,7 @@ def test_json_evidence_file_invalid_json(tmp_path):
 def test_find_evidence_path(tmp_path):
     """Evidence file should be found by name pattern."""
     import os as _os
+
     with tempfile.TemporaryDirectory() as tmpdir:
         ev_dir = Path(tmpdir) / ".elis" / "pe" / "PE-TEST-01" / "evidence"
         ev_dir.mkdir(parents=True)
@@ -197,5 +198,7 @@ def test_script_with_inline_handoff_ack(tmp_path):
         cwd=str(cwd),
         timeout=30,
     )
-    assert result.returncode == 0, f"Expected 0, got {result.returncode}\n{result.stdout}\n{result.stderr}"
+    assert (
+        result.returncode == 0
+    ), f"Expected 0, got {result.returncode}\n{result.stdout}\n{result.stderr}"
     assert "Reset acknowledgement VALID" in result.stdout

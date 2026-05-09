@@ -28,8 +28,6 @@ Exit codes:
 from __future__ import annotations
 
 import argparse
-import os
-import re
 import subprocess
 import sys
 from pathlib import Path
@@ -61,9 +59,7 @@ def _check_handoff_for_validator(pe_id: str) -> list[str]:
 
     handoff_path = Path("HANDOFF.md")
     if not handoff_path.exists():
-        failures.append(
-            "HANDOFF.md not found — required before validator dispatch."
-        )
+        failures.append("HANDOFF.md not found — required before validator dispatch.")
         return failures
 
     content = handoff_path.read_text(encoding="utf-8")
@@ -92,9 +88,7 @@ def _check_handoff_for_validator(pe_id: str) -> list[str]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(
-        description="PM dispatch gate orchestration."
-    )
+    parser = argparse.ArgumentParser(description="PM dispatch gate orchestration.")
     parser.add_argument(
         "--pe-id",
         required=True,
@@ -147,25 +141,29 @@ def main() -> int:
         print("  SKIPPED (--skip-worktree-check)")
         all_passes.append("Gate 1 (worktree audit, skipped)")
     else:
-        result = _run_script("check_fixed_worktrees.py", ["--worktrees"] +
-                              [f"/opt/elis/agent-worktrees/{agent_id}"])
+        result = _run_script(
+            "check_fixed_worktrees.py",
+            ["--worktrees"] + [f"/opt/elis/agent-worktrees/{agent_id}"],
+        )
         if result.returncode == 0:
-            print(f"  PASS")
+            print("  PASS")
             all_passes.append("Gate 1 (fixed worktree audit)")
         else:
-            lines = [l for l in result.stdout.split("\n") if "FAIL" in l or "PASS" in l]
+            lines = [
+                line
+                for line in result.stdout.split("\n")
+                if "FAIL" in line or "PASS" in line
+            ]
             for line in lines:
                 print(f"  {line}")
-            all_failures.append(
-                f"Gate 1 (fixed worktree audit) — see above"
-            )
+            all_failures.append("Gate 1 (fixed worktree audit) — see above")
     print()
 
     # === Gate 2: Dispatch Binding Check ===
     print("--- [Gate 2] Dispatch Binding Check ---")
     result = _run_script("check_dispatch_binding.py", ["--agent", agent_id])
     if result.returncode == 0:
-        print(f"  PASS")
+        print("  PASS")
         all_passes.append("Gate 2 (dispatch binding)")
     else:
         for line in result.stdout.split("\n"):
@@ -180,7 +178,7 @@ def main() -> int:
     print("--- [Gate 3] Reset Acknowledgement (NO_RESET_ACK_NO_DISPATCH) ---")
     result = _run_script("check_reset_ack.py", ["--pe-id", pe_id, "--agent", agent_id])
     if result.returncode == 0:
-        print(f"  PASS")
+        print("  PASS")
         all_passes.append("Gate 3 (reset acknowledgement)")
     else:
         for line in result.stdout.split("\n"):
@@ -194,16 +192,18 @@ def main() -> int:
     print("  (NO_ACTIVE_RUN_EVIDENCE_NO_IN_PROGRESS_STATUS)")
     result = _run_script("check_active_run.py", ["--pe-id", pe_id, "--agent", agent_id])
     if result.returncode == 0:
-        print(f"  PASS")
+        print("  PASS")
         all_passes.append("Gate 4 (active run evidence)")
     elif result.returncode == 2:
-        print(f"  INFO: Evidence found but invalid")
+        print("  INFO: Evidence found but invalid")
         for line in result.stdout.split("\n"):
             if "FAIL" in line:
                 print(f"  {line}")
         all_passes.append("Gate 4 (active run evidence, invalid but noted)")
     else:
-        print(f"  INFO: No active run evidence — status must be NOT_STARTED/STALLED/FAILED")
+        print(
+            "  INFO: No active run evidence — status must be NOT_STARTED/STALLED/FAILED"
+        )
         all_passes.append("Gate 4 (active run, no evidence)")
     print()
 
@@ -216,7 +216,7 @@ def main() -> int:
                 print(f"  FAIL: {issue}")
             all_failures.append("Gate 5 (HANDOFF/evidence check) — see above")
         else:
-            print(f"  PASS — HANDOFF.md and PE evidence present")
+            print("  PASS — HANDOFF.md and PE evidence present")
             all_passes.append("Gate 5 (HANDOFF/evidence check)")
         print()
 

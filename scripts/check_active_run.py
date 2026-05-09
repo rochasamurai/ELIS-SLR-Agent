@@ -35,7 +35,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import re
 import sys
 from pathlib import Path
@@ -190,7 +189,9 @@ def main() -> int:
     valid_statuses = {"running", "completed", "in_progress"}
     if status and str(status).strip().lower() not in valid_statuses:
         if str(status).strip().lower() == "failed":
-            print("INFO: Last known status is FAILED — review required before re-dispatch.")
+            print(
+                "INFO: Last known status is FAILED — review required before re-dispatch."
+            )
         elif str(status).strip().lower() == "stalled":
             print("INFO: Last known status is STALLED — may need restart.")
 
@@ -199,12 +200,12 @@ def main() -> int:
         issues.append("Missing activity timestamp.")
 
     if issues:
-        print(f"Active run evidence INVALID:")
+        print("Active run evidence INVALID:")
         for issue in issues:
             print(f"  FAIL: {issue}")
         return 2
 
-    print(f"Active run evidence VALID.")
+    print("Active run evidence VALID.")
     print(f"  Session: {session_id}")
     print(f"  Agent: {actual_agent}")
     print(f"  PE: {actual_pe}")

@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import importlib.util
-import tempfile
 import subprocess
 from pathlib import Path
 
@@ -26,26 +25,45 @@ def test_is_pe_specific_runtime():
     assert MODULE._is_pe_specific_runtime(
         "/opt/elis/agent-worktrees/PE-OPS-A2A-01-infra-impl-a"
     )
-    assert not MODULE._is_pe_specific_runtime(
-        "/opt/elis/agent-worktrees/infra-impl-b"
-    )
+    assert not MODULE._is_pe_specific_runtime("/opt/elis/agent-worktrees/infra-impl-b")
     assert not MODULE._is_pe_specific_runtime("/opt/elis/repo")
 
 
 def test_agent_worktree_map():
     """All canonical agents should map to fixed worktrees."""
     assert MODULE.AGENT_WORKTREE_MAP["pm"] == "/opt/elis/agent-worktrees/pm"
-    assert MODULE.AGENT_WORKTREE_MAP["infra-impl-b"] == "/opt/elis/agent-worktrees/infra-impl-b"
-    assert MODULE.AGENT_WORKTREE_MAP["infra-val-a"] == "/opt/elis/agent-worktrees/infra-val-a"
-    assert MODULE.AGENT_WORKTREE_MAP["github-agent"] == "/opt/elis/agent-worktrees/github-agent"
+    assert (
+        MODULE.AGENT_WORKTREE_MAP["infra-impl-b"]
+        == "/opt/elis/agent-worktrees/infra-impl-b"
+    )
+    assert (
+        MODULE.AGENT_WORKTREE_MAP["infra-val-a"]
+        == "/opt/elis/agent-worktrees/infra-val-a"
+    )
+    assert (
+        MODULE.AGENT_WORKTREE_MAP["github-agent"]
+        == "/opt/elis/agent-worktrees/github-agent"
+    )
 
 
 def test_agent_worktree_map_legacy_aliases():
     """Legacy engine-based agent IDs should resolve to the correct worktree."""
-    assert MODULE.AGENT_WORKTREE_MAP["infra-impl-claude"] == "/opt/elis/agent-worktrees/infra-impl-b"
-    assert MODULE.AGENT_WORKTREE_MAP["infra-val-claude"] == "/opt/elis/agent-worktrees/infra-val-a"
-    assert MODULE.AGENT_WORKTREE_MAP["infra-impl-codex"] == "/opt/elis/agent-worktrees/infra-impl-a"
-    assert MODULE.AGENT_WORKTREE_MAP["infra-val-codex"] == "/opt/elis/agent-worktrees/infra-val-b"
+    assert (
+        MODULE.AGENT_WORKTREE_MAP["infra-impl-claude"]
+        == "/opt/elis/agent-worktrees/infra-impl-b"
+    )
+    assert (
+        MODULE.AGENT_WORKTREE_MAP["infra-val-claude"]
+        == "/opt/elis/agent-worktrees/infra-val-a"
+    )
+    assert (
+        MODULE.AGENT_WORKTREE_MAP["infra-impl-codex"]
+        == "/opt/elis/agent-worktrees/infra-impl-a"
+    )
+    assert (
+        MODULE.AGENT_WORKTREE_MAP["infra-val-codex"]
+        == "/opt/elis/agent-worktrees/infra-val-b"
+    )
 
 
 def test_preserved_files():
