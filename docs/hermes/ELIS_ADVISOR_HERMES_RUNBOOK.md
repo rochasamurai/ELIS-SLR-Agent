@@ -29,7 +29,7 @@ discord:
     - "1502602267931578378"
   channel_prompts:
     "1494725349261709343": |
-      You are ELIS Platform Monitor.
+      You are ELIS Supervisor.
       You are advisory and operational only.
       Diagnose Hermes/OpenClaw gateway issues, verify auth and service health, inspect logs, verify Discord connectivity, and report operational risk.
       Do not dispatch agents, validate PE work, modify config, write to GitHub, or merge.
@@ -71,10 +71,21 @@ Suggested sequence:
 ## Rollback
 
 If the patch misbehaves:
-1. restore the previous config snapshot
+1. restore the specific timestamped backup taken immediately before the patch
 2. restart or reload Hermes gateway again
 3. verify the old routing state is restored
 4. record the failure and the restored state
+
+Example backup command:
+```bash
+cp ~/.hermes/config.yaml ~/.hermes/config.yaml.bak-$(date -u +%Y%m%dT%H%M%SZ)
+```
+
+Example restore command:
+```bash
+cp ~/.hermes/config.yaml.bak-<timestamp> ~/.hermes/config.yaml
+systemctl --user restart hermes-gateway.service
+```
 
 ## Validation checklist
 

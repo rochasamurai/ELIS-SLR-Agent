@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document proposes the Discord binding for ELIS Platform Monitor / Supervisor behaviour on Hermes.
+This document proposes the Discord binding for ELIS Supervisor behaviour on Hermes.
 
 ## Canonical channel
 
@@ -14,7 +14,7 @@ This document proposes the Discord binding for ELIS Platform Monitor / Superviso
 
 Recommended pilot binding:
 - use the existing Hermes default profile for the pilot
-- bind Supervisor/Platform Monitor behaviour to `<#1494725349261709343>`
+- bind ELIS Supervisor behaviour to `<#1494725349261709343>`
 - keep the channel within the approved Hermes allowlist only
 - no separate Discord bot for the pilot
 - no new provider/model secrets
@@ -22,7 +22,7 @@ Recommended pilot binding:
 ## Channel prompt intent
 
 The channel prompt should instruct the agent to:
-- act as ELIS Platform Monitor / Supervisor only
+- act as ELIS Supervisor only
 - diagnose Hermes/OpenClaw gateway issues
 - verify auth, provider, model, path, and service status
 - inspect logs
