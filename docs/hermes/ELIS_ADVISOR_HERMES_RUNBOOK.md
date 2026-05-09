@@ -8,7 +8,7 @@ Read-only preparation and later live configuration guidance for the ELIS Advisor
 
 - Canonical name: ELIS Advisor
 - Hermes profile: existing default profile for the pilot
-- Discord target: dedicated channel `#elis-advisor`
+- Discord target: dedicated channel `<#1502602267931578378>`
 - No separate Discord bot for the pilot
 - No new provider/model secrets for the pilot
 - No OpenClaw config changes
@@ -22,11 +22,11 @@ Do not apply until PO approves the exact patch.
 ```yaml
 discord:
   allowed_channels:
-    - "<ELIS_ADVISOR_CHANNEL_ID>"
+    - "1502602267931578378"
   no_thread_channels:
-    - "<ELIS_ADVISOR_CHANNEL_ID>"
+    - "1502602267931578378"
   channel_prompts:
-    "<ELIS_ADVISOR_CHANNEL_ID>": |
+    "1502602267931578378": |
       You are ELIS Advisor.
       You are advisory-only.
       Return:
@@ -42,8 +42,7 @@ discord:
 
 ## Required checks before applying any live patch
 
-- confirm `#elis-advisor` exists
-- confirm the channel ID
+- confirm `1502602267931578378` is the live channel ID
 - confirm the patch syntax matches the live Hermes config format
 - confirm the channel prompt is correct
 - confirm whether mention gating is still desired

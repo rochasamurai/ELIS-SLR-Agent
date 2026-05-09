@@ -12,9 +12,9 @@ Implement a governed ELIS Advisor on Hermes as an advisory-only agent for PE ope
 ## Approved architecture
 - Canonical name: **ELIS Advisor**
 - Runtime: **Hermes**
-- Pilot binding: **dedicated Discord channel `#elis-advisor`**
+- Pilot binding: **dedicated Discord channel `<#1502602267931578378>`**
 - Hermes profile: **existing default profile for the pilot**
-- Discord threading: **disable auto-threading for `#elis-advisor` if supported via `no_thread_channels`**
+- Discord threading: **disable auto-threading for `<#1502602267931578378>` if supported via `no_thread_channels`**
 - Bot model: **do not create a separate Discord bot for the pilot**
 - Secrets/tokens: **do not add new provider/model secrets**
 - OpenClaw config: **do not modify OpenClaw config**
@@ -104,7 +104,7 @@ The ELIS Advisor is advisory-only:
 - confirmation that the ELIS Advisor remains advisory-only
 - confirmation that no dispatch/config/merge authority is introduced
 - confirmation that read-only Hermes inspection happens before any deployment change
-- confirmation that the `#elis-advisor` binding is either already present or manually provisioned before live routing
+- confirmation that the `<#1502602267931578378>` binding is present before live routing
 
 ## Acceptance criteria
 - advisor role is clearly defined
@@ -112,7 +112,7 @@ The ELIS Advisor is advisory-only:
 - Hermes binding questions are identified before dispatch
 - no dispatch, implementation, validation, config, GitHub write, or merge authority is granted
 - opening scope remains limited to the approved files only
-- the pilot architecture matches the approved Hermes/default-profile + dedicated Discord channel model
+- the pilot architecture matches the approved Hermes/default-profile + dedicated Discord channel `<#1502602267931578378>` model
 
 ## Opening-step restrictions
 - opening edits are limited to `CURRENT_PE.md` and `.elis/pe/PE-OPS-ADVISOR-01/PE_TASK.md`
