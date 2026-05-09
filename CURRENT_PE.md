@@ -21,10 +21,10 @@
 
 | Field   | Value |
 |---------|-------|
-| PE      | PE-OPS-WORKTREE-BINDING-02 |
-| Branch  | feature/pe-ops-worktree-binding-02-enforce-fixed-worktree-dispatch-gates |
+| PE      | — |
+| Branch  | — |
 
-> **Planning mode.** Active PE: PE-OPS-WORKTREE-BINDING-02 — Enforce Fixed Worktree Dispatch Gates.
+> **Plan-complete mode.** No active PE.
 
 ---
 
@@ -32,10 +32,10 @@
 
 | Agent       | Role |
 |-------------|------|
-| infra-impl-b | Implementer |
-| infra-val-a | Validator |
+| infra-impl-b | — |
+| infra-val-a | — |
 
-> Active PE roles for fixed worktree dispatch gates.
+> No active PE roles.
 
 ---
 
@@ -49,7 +49,7 @@
 | PE-OPS-A2A-01 | ops | infra-impl-b | infra-val-a | feature/pe-ops-a2a-01-phase-1-communication-matrix | merged | 2026-05-09 |
 | PE-OPS-GITHUB-02 | github | infra-impl-b | infra-val-a | feature/pe-ops-github-02-deploy-elis-github-agent | merged | 2026-05-08 |
 | PE-OPS-CONTAINER-GITHUB-01 | github | infra-impl-b | infra-val-a | feature/pe-ops-container-github-01-containerise-elis-github-agent-runtime | merged | 2026-05-08 |
-| PE-OPS-WORKTREE-BINDING-02 | ops | infra-impl-b | infra-val-a | feature/pe-ops-worktree-binding-02-enforce-fixed-worktree-dispatch-gates | planning | 2026-05-09 |
+| PE-OPS-WORKTREE-BINDING-02 | ops | infra-impl-b | infra-val-a | feature/pe-ops-worktree-binding-02-enforce-fixed-worktree-dispatch-gates | merged | 2026-05-09 |
 | PE-INFRA-01 | infra           | infra-impl-codex     | infra-val-claude   | feature/pe-infra-01-branch-policy                 | merged          | 2026-02-18   |
 | PE-INFRA-02 | infra           | infra-impl-codex     | prog-val-claude    | feature/pe-infra-02-role-registration             | merged          | 2026-02-19   |
 | PE-INFRA-03 | infra           | infra-impl-codex     | prog-val-claude    | feature/pe-infra-03-release-agnostic              | merged          | 2026-02-19   |
@@ -261,6 +261,7 @@ PM housekeeping entries (prefix `PM-CHORE-XX`):
 | PM-CHORE-95  | Closed PE-OPS-ADVISOR-01 as merged (PR #424, merge SHA `8e7d20548f5213fef6fbc53542616280c58b1f58`). Plan-complete mode restored: PE and Branch cleared; no active PE; PE-OPS-ADVISOR-01 registry row updated to merged. Follow-up caveats preserved for future cleanup: free_response_channels normalisation, duplicate advisor profile discord block cleanup, and slash-command sync warning > 8000 chars. | 2026-05-09 |
 | PM-CHORE-96  | Opened PE-OPS-A2A-01 (Phase-1 A2A Communication Matrix) with `infra-impl-b` as Implementer and `infra-val-a` as Validator per alternation rule. Scope: local-only A2A communication among ELIS Advisor, ELIS PM, and ELIS Supervisor; no implementers, validators, GitHub Agent, full inventory exposure, GitHub writes, service restarts, config edits, secret/token changes, PR creation, merges, or PO approvals through A2A. | 2026-05-09 |
 | PM-CHORE-97  | Closed PE-OPS-A2A-01 as merged (PR #426, merge SHA `552111560de70a30d4ee5deb946f962ed962b776`). Plan-complete mode restored: PE and Branch cleared; no active PE; PE-OPS-A2A-01 registry row updated to merged. Follow-up item preserved for future cleanup only: PE-OPS-WORKTREE-BINDING-02 — Enforce Fixed Worktree Dispatch Gates. | 2026-05-09 |
+| PM-CHORE-98  | Closed PE-OPS-WORKTREE-BINDING-02 as merged (PR #428, merge SHA `958fcf791331d8ddb35b77cc351963e35aceea63`). Plan-complete mode restored: PE and Branch cleared; no active PE; PE-OPS-WORKTREE-BINDING-02 registry row updated to merged. Follow-up items preserved: apply the new dispatch gates operationally before future agent dispatch; prepare PE-OPS-TOKEN-01 for token/context budget hardening; keep GitHub check re-run/write operations routed through ELIS GitHub Agent unless PO approves exception. | 2026-05-09 |
 
 
 Alternation rule:
