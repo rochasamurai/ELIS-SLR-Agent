@@ -32,8 +32,8 @@
 
 | Agent       | Role |
 |-------------|------|
-| infra-impl-a | Implementer |
-| infra-val-b | Validator |
+| infra-impl-b | Implementer |
+| infra-val-a | Validator |
 
 > Active PE roles for fixed worktree dispatch gates.
 
@@ -49,7 +49,7 @@
 | PE-OPS-A2A-01 | ops | infra-impl-b | infra-val-a | feature/pe-ops-a2a-01-phase-1-communication-matrix | merged | 2026-05-09 |
 | PE-OPS-GITHUB-02 | github | infra-impl-b | infra-val-a | feature/pe-ops-github-02-deploy-elis-github-agent | merged | 2026-05-08 |
 | PE-OPS-CONTAINER-GITHUB-01 | github | infra-impl-b | infra-val-a | feature/pe-ops-container-github-01-containerise-elis-github-agent-runtime | merged | 2026-05-08 |
-| PE-OPS-WORKTREE-BINDING-02 | ops | infra-impl-a | infra-val-b | feature/pe-ops-worktree-binding-02-enforce-fixed-worktree-dispatch-gates | planning | 2026-05-09 |
+| PE-OPS-WORKTREE-BINDING-02 | ops | infra-impl-b | infra-val-a | feature/pe-ops-worktree-binding-02-enforce-fixed-worktree-dispatch-gates | planning | 2026-05-09 |
 | PE-INFRA-01 | infra           | infra-impl-codex     | infra-val-claude   | feature/pe-infra-01-branch-policy                 | merged          | 2026-02-18   |
 | PE-INFRA-02 | infra           | infra-impl-codex     | prog-val-claude    | feature/pe-infra-02-role-registration             | merged          | 2026-02-19   |
 | PE-INFRA-03 | infra           | infra-impl-codex     | prog-val-claude    | feature/pe-infra-03-release-agnostic              | merged          | 2026-02-19   |
