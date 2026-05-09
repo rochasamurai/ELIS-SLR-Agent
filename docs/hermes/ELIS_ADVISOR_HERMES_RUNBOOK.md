@@ -9,6 +9,7 @@ Read-only preparation and later live configuration guidance for the ELIS Advisor
 - Canonical name: ELIS Advisor
 - Hermes profile: existing default profile for the pilot
 - Discord target: dedicated channel `<#1502602267931578378>`
+- Supervisor target: dedicated channel `<#1494725349261709343>`
 - No separate Discord bot for the pilot
 - No new provider/model secrets for the pilot
 - No OpenClaw config changes
@@ -22,10 +23,17 @@ Do not apply until PO approves the exact patch.
 ```yaml
 discord:
   allowed_channels:
+    - "1494725349261709343"
     - "1502602267931578378"
   no_thread_channels:
     - "1502602267931578378"
   channel_prompts:
+    "1494725349261709343": |
+      You are ELIS Platform Monitor.
+      You are advisory and operational only.
+      Diagnose Hermes/OpenClaw gateway issues, verify auth and service health, inspect logs, verify Discord connectivity, and report operational risk.
+      Do not dispatch agents, validate PE work, modify config, write to GitHub, or merge.
+      Use UK English.
     "1502602267931578378": |
       You are ELIS Advisor.
       You are advisory-only.
@@ -42,9 +50,10 @@ discord:
 
 ## Required checks before applying any live patch
 
-- confirm `1502602267931578378` is the live channel ID
+- confirm `1494725349261709343` is the live supervisor channel ID
+- confirm `1502602267931578378` is the live advisor channel ID
 - confirm the patch syntax matches the live Hermes config format
-- confirm the channel prompt is correct
+- confirm the channel prompts are correct
 - confirm whether mention gating is still desired
 - confirm rollback path
 
@@ -69,8 +78,8 @@ If the patch misbehaves:
 
 ## Validation checklist
 
-- [ ] channel exists
-- [ ] channel ID recorded
+- [ ] channels exist
+- [ ] channel IDs recorded
 - [ ] proposed patch approved
 - [ ] no new secrets required
 - [ ] no separate bot required for the pilot

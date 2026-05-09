@@ -39,7 +39,6 @@ The channel prompt should instruct the agent to:
 
 ## Open questions
 
-- channel ID is known: `1502602267931578378`
 - whether the live host should use `allowed_channels` or `free_response_channels` for final behaviour
 - whether the channel should remain mention-gated or respond to every message in-channel
 

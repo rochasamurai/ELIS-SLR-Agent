@@ -13,6 +13,7 @@ Implement a governed ELIS Advisor on Hermes as an advisory-only agent for PE ope
 - Canonical name: **ELIS Advisor**
 - Runtime: **Hermes**
 - Pilot binding: **dedicated Discord channel `<#1502602267931578378>`**
+- Supervisor binding: **dedicated Discord channel `<#1494725349261709343>`**
 - Hermes profile: **existing default profile for the pilot**
 - Discord threading: **disable auto-threading for `<#1502602267931578378>` if supported via `no_thread_channels`**
 - Bot model: **do not create a separate Discord bot for the pilot**
@@ -26,11 +27,12 @@ ELIS needs a Hermes-hosted advisory agent that can support PM and Supervisor wit
 ## Allowed file scope
 - `CURRENT_PE.md`
 - `.elis/pe/PE-OPS-ADVISOR-01/PE_TASK.md`
-
-## Implementation file scope to be proposed and pinned before dispatch
 - `docs/governance/ELIS_Advisor_Operating_Model.md`
 - `docs/hermes/ELIS_ADVISOR_HERMES_RUNBOOK.md`
 - `docs/hermes/ELIS_ADVISOR_CHANNEL_BINDING.md`
+- `docs/hermes/ELIS_SUPERVISOR_CHANNEL_BINDING.md`
+
+## Implementation file scope to be proposed and pinned before dispatch
 - Hermes config patch proposal for `~/.hermes/config.yaml` (proposal only)
 - rollback instructions
 - validation checklist

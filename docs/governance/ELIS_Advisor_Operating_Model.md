@@ -42,11 +42,12 @@ Approved pilot shape:
 - identity: ELIS Advisor
 - profile: existing default Hermes profile for the pilot
 - Discord target: dedicated channel `<#1502602267931578378>`
-- threading: disable auto-threading for that channel if supported
+- Supervisor target: dedicated channel `<#1494725349261709343>`
+- threading: disable auto-threading for the advisor channel if supported
 - secrets/tokens: no new provider/model secrets for the pilot
 - OpenClaw config: no OpenClaw config changes
 
-The dedicated Discord channel must be provisioned manually if it does not already exist.
+The dedicated Discord channels must be present before live routing.
 
 ## 4. Discord behaviour
 
@@ -67,7 +68,7 @@ Substantive advice must cite at least one high-weight source:
 ## 6. Deployment prerequisites
 
 Before live Hermes routing:
-- confirm channel ID for `<#1502602267931578378>`
+- confirm channel IDs for `<#1494725349261709343>` and `<#1502602267931578378>`
 - confirm the proposed Hermes config patch exactly
 - confirm whether `allowed_channels` or `free_response_channels` is the right binding choice
 - confirm whether `no_thread_channels` is supported on the live host
