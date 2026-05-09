@@ -21,10 +21,10 @@
 
 | Field   | Value |
 |---------|-------|
-| PE      | — |
-| Branch  | — |
+| PE      | PE-OPS-A2A-01 |
+| Branch  | feature/pe-ops-a2a-01-phase-1-communication-matrix |
 
-> **Plan-complete mode restored.** No active PE. PE-OPS-ADVISOR-01 is merged. Follow-up caveats are preserved for future cleanup only: free_response_channels normalisation, duplicate advisor profile discord block cleanup, and the slash-command sync warning > 8000 chars. PE-GOV-RISK-TIER-01 remains blocked pending fixed-workspace governance. PE-OPS-GITHUB-02 closed. PE-OPS-CONTAINER-GITHUB-01 closed; host cleanup remains gated behind successful pilot evidence.
+> **Planning mode.** Active PE: PE-OPS-A2A-01 — Phase-1 A2A Communication Matrix.
 
 ---
 
@@ -32,9 +32,10 @@
 
 | Agent       | Role |
 |-------------|------|
-| — | — |
+| infra-impl-b | Implementer |
+| infra-val-a | Validator |
 
-> No active PE roles.
+> Active PE roles assigned for PE-OPS-A2A-01.
 
 ---
 
@@ -45,6 +46,7 @@
 | PE-GOV-01   | governance      | infra-impl-b         | infra-val-a        | feature/pe-gov-01-operating-protocol-templates    | merged          | 2026-05-03   |
 | PE-GOV-RISK-TIER-01 | governance | infra-impl-a         | infra-val-b        | feature/pe-gov-risk-tier-01-add-risk-tiered-pe-protocol | blocked         | 2026-05-06   |
 | PE-OPS-FIXED-WORKSPACES-01 | fixed-workspaces | infra-impl-b | infra-val-a | feature/pe-ops-fixed-workspaces-01-adopt-fixed-agent-workspace-and-github-write-boundary-model | merged | 2026-05-07 |
+| PE-OPS-A2A-01 | ops | infra-impl-b | infra-val-a | feature/pe-ops-a2a-01-phase-1-communication-matrix | planning | 2026-05-09 |
 | PE-OPS-GITHUB-02 | github | infra-impl-b | infra-val-a | feature/pe-ops-github-02-deploy-elis-github-agent | merged | 2026-05-08 |
 | PE-OPS-CONTAINER-GITHUB-01 | github | infra-impl-b | infra-val-a | feature/pe-ops-container-github-01-containerise-elis-github-agent-runtime | merged | 2026-05-08 |
 | PE-INFRA-01 | infra           | infra-impl-codex     | infra-val-claude   | feature/pe-infra-01-branch-policy                 | merged          | 2026-02-18   |
@@ -255,6 +257,7 @@ PM housekeeping entries (prefix `PM-CHORE-XX`):
 | PM-CHORE-93  | Closed PE-OPS-CONTAINER-GITHUB-01 as merged (PR #422, PASS verdict — infra-val-a). Plan-complete mode restored: PE and Branch cleared; no active PE; PE-OPS-CONTAINER-GITHUB-01 registry row updated to merged. Merge SHA `6edddda730da1f945ca1fc7f693cbf6eaf7ea8a9`. Host cleanup remains gated behind successful pilot evidence. | 2026-05-08 |
 | PM-CHORE-94  | Opened PE-OPS-ADVISOR-01 (Implement ELIS Advisor on Hermes) with `infra-impl-a` as Implementer and `infra-val-b` as Validator per alternation rule. Advisory-only opening: CURRENT_PE.md and PE task packet only; no Hermes/OpenClaw config changes, no dispatch, no PR/merge. | 2026-05-09 |
 | PM-CHORE-95  | Closed PE-OPS-ADVISOR-01 as merged (PR #424, merge SHA `8e7d20548f5213fef6fbc53542616280c58b1f58`). Plan-complete mode restored: PE and Branch cleared; no active PE; PE-OPS-ADVISOR-01 registry row updated to merged. Follow-up caveats preserved for future cleanup: free_response_channels normalisation, duplicate advisor profile discord block cleanup, and slash-command sync warning > 8000 chars. | 2026-05-09 |
+| PM-CHORE-96  | Opened PE-OPS-A2A-01 (Phase-1 A2A Communication Matrix) with `infra-impl-b` as Implementer and `infra-val-a` as Validator per alternation rule. Scope: local-only A2A communication among ELIS Advisor, ELIS PM, and ELIS Supervisor; no implementers, validators, GitHub Agent, full inventory exposure, GitHub writes, service restarts, config edits, secret/token changes, PR creation, merges, or PO approvals through A2A. | 2026-05-09 |
 
 
 Alternation rule:
