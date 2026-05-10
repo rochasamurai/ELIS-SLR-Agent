@@ -21,10 +21,10 @@
 
 | Field   | Value |
 |---------|-------|
-| PE      | PE-OPS-A2A-01 |
-| Branch  | feature/pe-ops-a2a-01-phase-1-communication-matrix |
+| PE      | PE-OPS-GITHUB-AGENT-ENFORCEMENT-01 |
+| Branch  | feature/pe-ops-github-agent-enforcement-01-deterministic-github-agent-source-path |
 
-> **Planning mode.** Active PE: PE-OPS-A2A-01 — Phase-1 A2A Communication Matrix.
+> **Planning mode.** Active PE: PE-OPS-GITHUB-AGENT-ENFORCEMENT-01 — Enforce GitHub Agent Path for GitHub Operations.
 
 ---
 
@@ -35,7 +35,7 @@
 | infra-impl-a | Implementer |
 | infra-val-b | Validator |
 
-> Historical PE roles: infra-impl-b = Implementer, infra-val-a = Validator. PE-OPS-FIXED-WORKSPACES-01 follows governance alternation from PE-GOV-RISK-TIER-01.
+> Active PE roles assigned for PE-OPS-GITHUB-AGENT-ENFORCEMENT-01.
 
 ---
 
@@ -47,7 +47,10 @@
 | PE-GOV-RISK-TIER-01 | governance | infra-impl-a         | infra-val-b        | feature/pe-gov-risk-tier-01-add-risk-tiered-pe-protocol | blocked         | 2026-05-06   |
 | PE-OPS-FIXED-WORKSPACES-01 | fixed-workspaces | infra-impl-b | infra-val-a | feature/pe-ops-fixed-workspaces-01-adopt-fixed-agent-workspace-and-github-write-boundary-model | merged | 2026-05-07 |
 | PE-OPS-A2A-01 | ops | infra-impl-a | infra-val-b | feature/pe-ops-a2a-01-phase-1-communication-matrix | planning | 2026-05-09 |
-| PE-OPS-GITHUB-02 | github | infra-impl-b | infra-val-a | feature/pe-ops-github-02-deploy-elis-github-agent | planning | 2026-05-07 |
+| PE-OPS-ADVISOR-HANDOFF-01 | advisor | infra-impl-b | infra-val-a | feature/pe-ops-advisor-handoff-01-finalise-elis-advisor-handoff-operating-mode | merged | 2026-05-10 |
+| PE-OPS-GITHUB-01 | github | infra-impl-a | infra-val-b | feature/pe-ops-github-01-elis-github-agent-role-and-permission-model | merged | 2026-05-06 |
+| PE-OPS-GITHUB-02 | github | infra-impl-b | infra-val-a | feature/pe-ops-github-02-deploy-elis-github-agent | merged | 2026-05-08 |
+| PE-OPS-GITHUB-AGENT-ENFORCEMENT-01 | github | infra-impl-a | infra-val-b | feature/pe-ops-github-agent-enforcement-01-deterministic-github-agent-source-path | planning | 2026-05-10 |
 | PE-INFRA-01 | infra           | infra-impl-codex     | infra-val-claude   | feature/pe-infra-01-branch-policy                 | merged          | 2026-02-18   |
 | PE-INFRA-02 | infra           | infra-impl-codex     | prog-val-claude    | feature/pe-infra-02-role-registration             | merged          | 2026-02-19   |
 | PE-INFRA-03 | infra           | infra-impl-codex     | prog-val-claude    | feature/pe-infra-03-release-agnostic              | merged          | 2026-02-19   |
@@ -144,7 +147,6 @@
 | PE-ARCH-10      | architecture   | infra-impl-a         | infra-val-b        | feature/pe-arch-10-taskflow-controller-placement-api-imports          | merged          | 2026-05-03   |
 | PE-ARCH-11      | architecture   | infra-impl-b         | infra-val-a        | feature/pe-arch-11-inert-task-flow-controller-prototype                | merged          | 2026-05-03   |
 | PE-OPS-CONFIG-01 | config          | infra-impl-b         | infra-val-a        | feature/pe-ops-config-01-pe-specific-agent-profile-binding-procedure | merged          | 2026-05-04   |
-| PE-OPS-GITHUB-01 | github          | infra-impl-a         | infra-val-b        | feature/pe-ops-github-01-elis-github-agent-role-and-permission-model | merged          | 2026-05-06   |
 | PE-OPS-PO-ADVISOR-01 | ops        | infra-impl-b         | infra-val-a        | feature/pe-ops-po-advisor-01-deploy-elis-po-advisor-on-hermes        | merged          | 2026-05-06   |
 | PE-AGT-01       | infra          | infra-impl-a         | infra-val-b        | feature/pe-agt-01-pm-agent-review                                       | blocked         | 2026-05-02   |
 
@@ -250,6 +252,7 @@ PM housekeeping entries (prefix `PM-CHORE-XX`):
 | PM-CHORE-88  | Opened PE-GOV-RISK-TIER-01 (Add Risk-Tiered PE Protocol) with `infra-impl-a` as Implementer and `infra-val-b` as Validator per alternation rule. Standard-Light PE scope: protocol and template governance only; no Hermes/OpenClaw config changes, no dispatch, no PR/merge. | 2026-05-06 |
 | PM-CHORE-89  | Opened PE-OPS-FIXED-WORKSPACES-01 (Adopt Fixed Agent Workspace and GitHub Write Boundary Model) with `infra-impl-b` as Implementer and `infra-val-a` as Validator per alternation rule. Governance scope: fixed workspace model and strict write-boundary rules only; PE-GOV-RISK-TIER-01 preserved as blocked pending fixed-workspace governance; no Hermes/OpenClaw config changes, no dispatch, no PR/merge. | 2026-05-06 |
 | PM-CHORE-90  | Closed PE-OPS-FIXED-WORKSPACES-01 as merged (PR #418, PASS verdict — infra-val-a). Plan-complete mode restored: PE and Branch cleared; no active PE; PE-OPS-FIXED-WORKSPACES-01 registry row updated to merged. Merge SHA `c13f889bb69b4b2ccbbfd6be5b9e0be0b3625689`. | 2026-05-07 |
+| PM-CHORE-91  | Opened PE-OPS-GITHUB-AGENT-ENFORCEMENT-01 (Enforce GitHub Agent Path for GitHub Operations) with `infra-impl-a` as Implementer and `infra-val-b` as Validator per alternation rule. Opening packet only: CURRENT_PE.md and PE task packet updated; no secret/token/permission/config changes, no PM direct GitHub writes, no PE-specific runtime worktrees. | 2026-05-10 |
 
 
 Alternation rule:
