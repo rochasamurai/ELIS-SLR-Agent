@@ -5,16 +5,12 @@ These tests verify that the GitHub Agent correctly selects exactly one
 authorized PR source path or fails closed when multiple or no valid paths exist.
 """
 
-import unittest
-from unittest.mock import patch
 import tempfile
+import unittest
 from pathlib import Path
+from unittest.mock import patch
 
-# Import our source resolver
-import sys
-
-sys.path.append("/opt/elis/agent-worktrees/infra-impl-a/elis/agentic")
-from github_source_resolver import GithubSourceResolver
+from elis.agentic.github_source_resolver import GithubSourceResolver
 
 
 class TestGithubSourceResolution(unittest.TestCase):
