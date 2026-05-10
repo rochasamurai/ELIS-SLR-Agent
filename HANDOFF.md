@@ -1,159 +1,112 @@
-# HANDOFF.md — PE-OPS-ADVISOR-HANDOFF-01
+# HANDOFF.md — PE-OPS-GITHUB-AGENT-ENFORCEMENT-01
 
-> **Implementation Packet** — PE-OPS-ADVISOR-HANDOFF-01 finalisation of ELIS Advisor handoff and operating mode.
-
----
+> Implementation packet for GitHub Agent source-path enforcement.
 
 ## Status
 
-gate-1-pending
-
----
+ready-for-validation
 
 ## Session Identity
 
 | Field | Value |
-|-------|-------|
-| PE | `PE-OPS-ADVISOR-HANDOFF-01` |
-| Agent | `infra-impl-b` |
-| Subagent session | `agent:infra-impl-b:subagent:06f8b2de-eafb-4bd6-adb9-5f463342b270` |
-| Worktree | `/opt/elis/agent-worktrees/infra-impl-b` |
-| Git root | `/opt/elis/agent-worktrees/infra-impl-b` |
-| Branch | `feature/pe-ops-advisor-handoff-01-finalise-elis-advisor-handoff-operating-mode` |
-| Starting HEAD | `1677517d66ffc72a17c6d427cc11ee6d9feeeab3` |
-| Implementation HEAD | `[TO BE SET AT COMMIT]` |
-| Timestamp | `2026-05-10T17:40:00+01:00` |
-
----
+|---|---|
+| PE | `PE-OPS-GITHUB-AGENT-ENFORCEMENT-01` |
+| Agent | `infra-impl-a` |
+| Child session | `agent:infra-impl-a:subagent:c62e0739-d711-4a1d-bc40-739767d111bb` |
+| Worktree | `/opt/elis/agent-worktrees/infra-impl-a` |
+| Git root | `/opt/elis/agent-worktrees/infra-impl-a` |
+| Branch | `feature/pe-ops-github-agent-enforcement-01-deterministic-github-agent-source-path` |
+| Starting HEAD | `6b6742d672cbfb896f1330eaff502a17a678d21b` |
+| Implementation HEAD | `ed377a0431c1d0a53f5e34db7c2d5cedc33bf955` |
+| Timestamp | `2026-05-10T21:52:00+01:00` |
 
 ## Fixed Workspace Binding Certificate
 
 | Field | Value |
-|-------|-------|
-| PE ID | `PE-OPS-ADVISOR-HANDOFF-01` |
-| Agent ID | `infra-impl-b` |
-| Fixed workspace path | `/opt/elis/agent-worktrees/infra-impl-b` |
-| Git root | `/opt/elis/agent-worktrees/infra-impl-b` |
-| Branch | `feature/pe-ops-advisor-handoff-01-finalise-elis-advisor-handoff-operating-mode` |
-| HEAD | `[TO BE SET AT COMMIT]` |
+|---|---|
+| PE ID | `PE-OPS-GITHUB-AGENT-ENFORCEMENT-01` |
+| Agent ID | `infra-impl-a` |
+| Fixed workspace path | `/opt/elis/agent-worktrees/infra-impl-a` |
+| Git root | `/opt/elis/agent-worktrees/infra-impl-a` |
+| Branch | `feature/pe-ops-github-agent-enforcement-01-deterministic-github-agent-source-path` |
+| HEAD | `ed377a0431c1d0a53f5e34db7c2d5cedc33bf955` |
 | Base | `origin/main` |
-| Clean status | clean (preserved runtime/bootstrap files only) |
-| Allowed file scope | `docs/ops/elis-advisor/*.md`, `.elis/pe/PE-OPS-ADVISOR-HANDOFF-01/evidence/*`, `HANDOFF.md`, `.elis/pe/PE-OPS-ADVISOR-HANDOFF-01/PE_TASK.md` (already tracked) |
-| Timestamp | `2026-05-10T17:40:00+01:00` |
-| Result | **PASS** — worktree is a registered fixed canonical worktree under `/opt/elis/repo`. Origin points to the ELIS GitHub repository. Branch matches the active PE. No PE-specific runtime worktree was created or used. |
-
----
+| Clean status | clean after commit; runtime/bootstrap files preserved locally |
+| Allowed file scope | `docs/ops/github-agent/*`, `elis/agentic/github_source_resolver.py`, `tests/test_github_source_resolution.py`, `.elis/pe/PE-OPS-GITHUB-AGENT-ENFORCEMENT-01/evidence/*`, `HANDOFF.md` |
+| Result | PASS — fixed worktree bound to the PE branch and runtime path exists at `/opt/elis/agent-worktrees/infra-impl-a/.openclaw` |
 
 ## Evidence Reference
 
 | Evidence | Path |
-|----------|------|
-| Canonical Advisor handoff | `.elis/pe/PE-OPS-WORKTREE-BINDING-02/evidence/ELIS_ADVISOR_HANDOFF_elis-server_2026-05-09.md` |
-| Advisor handoff copy (placement) | `.elis/pe/PE-OPS-ADVISOR-HANDOFF-01/evidence/ELIS_ADVISOR_HANDOFF_elis-server_2026-05-09.md` |
-| Bootstrap & operating mode | `docs/ops/elis-advisor/ELIS_Advisor_Bootstrap_Operating_Mode.md` |
-| Role boundaries | `docs/ops/elis-advisor/ELIS_Advisor_Role_Boundaries.md` |
-| Request/response templates | `docs/ops/elis-advisor/ELIS_Advisor_Request_Response_Templates.md` |
-| Test: PM validation/status packet response | `docs/ops/elis-advisor/ELIS_Advisor_Test_Validation_Packet_Response.md` |
-
----
+|---|---|
+| GitHub Agent rules | `docs/ops/github-agent/GITHUB_AGENT_RULES.md` |
+| Request/response templates | `docs/ops/github-agent/GITHUB_AGENT_REQUEST_RESPONSE_TEMPLATES.md` |
+| Source path resolver | `elis/agentic/github_source_resolver.py` |
+| Acceptance tests | `tests/test_github_source_resolution.py` |
+| Wrong-path evidence | `.elis/pe/PE-OPS-GITHUB-AGENT-ENFORCEMENT-01/evidence/PR_429_Wrong_Path_Evidence.md` |
+| One-time fallback evidence | `.elis/pe/PE-OPS-GITHUB-AGENT-ENFORCEMENT-01/evidence/PR_430_One_Time_Exception.md` |
 
 ## Implementation Summary
 
-Implemented all approved scope items for PE-OPS-ADVISOR-HANDOFF-01:
-
-### 1. Evidence placement — Advisor handoff
-
-The canonical Advisor handoff from PE-OPS-WORKTREE-BINDING-02 has been referenced from:
-- `docs/ops/elis-advisor/ELIS_Advisor_Bootstrap_Operating_Mode.md` (§11 File references)
-- A copy placed at `.elis/pe/PE-OPS-ADVISOR-HANDOFF-01/evidence/ELIS_ADVISOR_HANDOFF_elis-server_2026-05-09.md`
-
-### 2. Bootstrap / operating-mode docs
-
-Created under `docs/ops/elis-advisor/`:
-- **ELIS_Advisor_Bootstrap_Operating_Mode.md** — Identity, channel info, startup procedure, operating modes, role boundaries table, evidence rules, risk classification, A2A guidance
-
-### 3. Advisor role boundaries
-
-- **ELIS_Advisor_Role_Boundaries.md** — Allowed functions table, prohibited functions table with rationale, communication boundaries, escalation rules, evidence requirements, visibility rules, Supervisor relationship
-
-### 4. Advisor request/response templates
-
-- **ELIS_Advisor_Request_Response_Templates.md** — Templates for: PASS packet response, FAIL packet response, incomplete packet response, governance questions, PE state summary, boundary warnings, boot confirmation, A2A envelope
-
-### 5. Test of Advisor response to PM validation/status packet
-
-- **ELIS_Advisor_Test_Validation_Packet_Response.md** — Simulated PM PASS packet, full Advisor response using default format, test result checklist showing all checks PASS
-
-### 6. HANDOFF.md
-
-This implementation packet.
-
----
+Implemented source-path enforcement for GitHub Agent PR operations:
+- defined the required GitHub Agent rules
+- added request/response templates
+- implemented source-path resolution with fail-closed behavior
+- added readiness checks including `.openclaw`
+- added E2E acceptance tests
+- documented PR #429 wrong-path evidence and PR #430 fallback exception
 
 ## Hard Limits Compliance
 
 | Limit | Status |
-|-------|--------|
-| No OpenClaw/Hermes config changes | ✅ Confirmed |
-| No service changes/restarts | ✅ Confirmed |
-| No secret/token changes | ✅ Confirmed |
-| No Discord permission changes | ✅ Confirmed |
-| No GitHub write actions without explicit PO approval | ✅ Confirmed |
-| No PE-specific runtime worktrees | ✅ Confirmed |
-| No untracked runtime/bootstrap files committed | ✅ Confirmed |
-
----
+|---|---|
+| No secret/token rotation | ✅ |
+| No GitHub permission changes | ✅ |
+| No OpenClaw/Hermes service/config changes | ✅ |
+| No PM direct GitHub writes | ✅ |
+| No PE-specific runtime worktrees | ✅ |
+| No runtime/bootstrap files committed | ✅ |
 
 ## Files Changed
 
-| File | Status | Description |
-|------|--------|-------------|
-| `.elis/pe/PE-OPS-ADVISOR-HANDOFF-01/evidence/ELIS_ADVISOR_HANDOFF_elis-server_2026-05-09.md` | Added | Evidence copy of canonical Advisor handoff |
-| `docs/ops/elis-advisor/ELIS_Advisor_Bootstrap_Operating_Mode.md` | Added | Bootstrap and operating mode document |
-| `docs/ops/elis-advisor/ELIS_Advisor_Role_Boundaries.md` | Added | Role boundaries document |
-| `docs/ops/elis-advisor/ELIS_Advisor_Request_Response_Templates.md` | Added | Request/response templates |
-| `docs/ops/elis-advisor/ELIS_Advisor_Test_Validation_Packet_Response.md` | Added | Test of Advisor response to PM validation/status packet |
-| `HANDOFF.md` | Modified | This implementation packet |
-
----
+| File | Status |
+|---|---|
+| `docs/ops/github-agent/GITHUB_AGENT_RULES.md` | Added |
+| `docs/ops/github-agent/GITHUB_AGENT_REQUEST_RESPONSE_TEMPLATES.md` | Added |
+| `elis/agentic/github_source_resolver.py` | Added |
+| `tests/test_github_source_resolution.py` | Added |
+| `.elis/pe/PE-OPS-GITHUB-AGENT-ENFORCEMENT-01/evidence/PR_429_Wrong_Path_Evidence.md` | Added |
+| `.elis/pe/PE-OPS-GITHUB-AGENT-ENFORCEMENT-01/evidence/PR_430_One_Time_Exception.md` | Added |
+| `HANDOFF.md` | Added |
 
 ## Acceptance Criteria
 
-| AC | Description | Status |
-|----|-------------|--------|
-| AC-1 | Advisor handoff is governed and referenced as an evidence artefact | ✅ Implemented |
-| AC-2 | Concise Advisor operating mode / bootstrap document exists | ✅ Implemented |
-| AC-3 | Advisor role boundaries are explicit | ✅ Implemented |
-| AC-4 | Advisor request/response templates are explicit | ✅ Implemented |
-| AC-5 | PM can access the handoff path or GitHub link | ✅ Implemented |
-| AC-6 | Advisor can respond to a PM validation/status packet | ✅ Implemented (tested) |
+| AC | Status |
+|---|---|
+| RULE_DEFINED_PR_SOURCE_PATH defined | ✅ |
+| GITHUB_AGENT_READS_SOURCE_WRITES_REMOTE defined | ✅ |
+| runtime workspace not used as default PR source | ✅ |
+| open_pr_for_validated_pe_branch defined | ✅ |
+| exactly one authorised source path required | ✅ |
+| readiness check includes `.openclaw` | ✅ |
+| request/report templates added | ✅ |
+| PR #429 documented | ✅ |
+| PR #430 documented | ✅ |
+| E2E tests added | ✅ |
 
----
+## Checks Run
+
+- `python -m black --check elis/agentic/github_source_resolver.py tests/test_github_source_resolution.py` → pass
+- `python -m ruff check elis/agentic/github_source_resolver.py tests/test_github_source_resolution.py` → pass
+- `python -m pytest -q tests/test_github_source_resolution.py` → pass (6/6)
+- `python scripts/check_current_pe.py` → pass
+- `python scripts/check_agent_scope.py` → pass
 
 ## Reset Acknowledgement
 
 | Field | Value |
-|-------|-------|
-| agent | infra-impl-b |
-| pe | PE-OPS-ADVISOR-HANDOFF-01 |
-| worktree | /opt/elis/agent-worktrees/infra-impl-b |
-| branch | feature/pe-ops-advisor-handoff-01-finalise-elis-advisor-handoff-operating-mode |
-| head | 1677517d66ffc72a17c6d427cc11ee6d9feeeab3 |
-| timestamp | 2026-05-10T17:40:00+01:00 |
+|---|---|
 | prior_context_discarded | yes |
-| write_scope | yes — only within the authorised fixed worktree |
-
----
-
-## Active Run Evidence
-
-| Field | Value |
-|-------|-------|
-| session_id | agent:infra-impl-b:subagent:06f8b2de-eafb-4bd6-adb9-5f463342b270 |
-| agent | infra-impl-b |
-| pe | PE-OPS-ADVISOR-HANDOFF-01 |
-| worktree | /opt/elis/agent-worktrees/infra-impl-b |
-| branch | feature/pe-ops-advisor-handoff-01-finalise-elis-advisor-handoff-operating-mode |
-| run_id | agent:infra-impl-b:subagent:06f8b2de-eafb-4bd6-adb9-5f463342b270 |
-| status | running |
-| timestamp | 2026-05-10T17:40:00+01:00 |
+| write_scope | authorised fixed worktree only |
+| tracked_status_clean | yes |
+| untracked_runtime_bootstrap_files_preserved | yes |
