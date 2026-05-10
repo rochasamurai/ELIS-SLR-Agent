@@ -21,10 +21,10 @@
 
 | Field   | Value |
 |---------|-------|
-| PE      | — |
-| Branch  | — |
+| PE      | PE-OPS-ADVISOR-HANDOFF-01 |
+| Branch  | feature/pe-ops-advisor-handoff-01-finalise-elis-advisor-handoff-operating-mode |
 
-> **Plan-complete mode.** No active PE.
+> **Planning mode.** Active PE: PE-OPS-ADVISOR-HANDOFF-01 — Finalise ELIS Advisor Handoff and Operating Mode.
 
 ---
 
@@ -32,10 +32,10 @@
 
 | Agent       | Role |
 |-------------|------|
-| infra-impl-b | — |
-| infra-val-a | — |
+| infra-impl-b | Implementer |
+| infra-val-a | Validator |
 
-> No active PE roles.
+> Historical PE roles: infra-impl-a = Implementer, infra-val-b = Validator.
 
 ---
 
@@ -48,6 +48,7 @@
 | PE-OPS-FIXED-WORKSPACES-01 | fixed-workspaces | infra-impl-b | infra-val-a | feature/pe-ops-fixed-workspaces-01-adopt-fixed-agent-workspace-and-github-write-boundary-model | merged | 2026-05-07 |
 | PE-OPS-A2A-01 | ops | infra-impl-b | infra-val-a | feature/pe-ops-a2a-01-phase-1-communication-matrix | merged | 2026-05-09 |
 | PE-OPS-GITHUB-02 | github | infra-impl-b | infra-val-a | feature/pe-ops-github-02-deploy-elis-github-agent | merged | 2026-05-08 |
+| PE-OPS-ADVISOR-HANDOFF-01 | advisor | infra-impl-b | infra-val-a | feature/pe-ops-advisor-handoff-01-finalise-elis-advisor-handoff-operating-mode | planning | 2026-05-10 |
 | PE-OPS-CONTAINER-GITHUB-01 | github | infra-impl-b | infra-val-a | feature/pe-ops-container-github-01-containerise-elis-github-agent-runtime | merged | 2026-05-08 |
 | PE-OPS-WORKTREE-BINDING-02 | ops | infra-impl-b | infra-val-a | feature/pe-ops-worktree-binding-02-enforce-fixed-worktree-dispatch-gates | merged | 2026-05-09 |
 | PE-INFRA-01 | infra           | infra-impl-codex     | infra-val-claude   | feature/pe-infra-01-branch-policy                 | merged          | 2026-02-18   |
