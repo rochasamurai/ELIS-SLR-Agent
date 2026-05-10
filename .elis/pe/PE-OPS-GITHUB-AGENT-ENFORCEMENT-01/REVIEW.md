@@ -6,7 +6,7 @@
 
 ## Reviewed Commit
 
-`3c53406540cd95e18f7d6184c5cc2effc4cdc1d0`
+`35a5721929c4a1a48dea1fa4350dc273e68e7c02`
 
 ## REVIEW.md Path
 
@@ -64,8 +64,8 @@ None.
 
 ### Advisory
 
-1. **Test import path hardcoded**: `tests/test_github_source_resolution.py` uses `sys.path.append("/opt/elis/agent-worktrees/infra-impl-a/elis/agentic")` which references the implementation agent's worktree rather than a relative import. This will break if the test is run outside that specific path. Consider using a relative import or package installation.
-2. **Resolver `authorized_source_paths` initialised empty**: The `GithubSourceResolver.__init__` sets `authorized_source_paths` to an empty list with a comment about future configuration. In production, this needs a concrete configuration source to be useful.
+1. **Test import path hardcoded**: fixed in the test-only follow-up by switching to `from elis.agentic.github_source_resolver import GithubSourceResolver`; remains non-blocking.
+2. **Resolver `authorized_source_paths` initialised empty**: The `GithubSourceResolver.__init__` sets `authorized_source_paths` to an empty list with a comment about future configuration. In production, this needs a concrete configuration source to be useful, but it is non-blocking for this PE.
 
 ## Scope / Security Confirmation
 
