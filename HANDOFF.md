@@ -17,7 +17,7 @@ ready-for-validation
 | Git root | `/opt/elis/agent-worktrees/infra-impl-a` |
 | Branch | `feature/pe-ops-github-agent-enforcement-01-deterministic-github-agent-source-path` |
 | Starting HEAD | `6b6742d672cbfb896f1330eaff502a17a678d21b` |
-| Implementation HEAD | `48e40bb7f6a9d2e5a3b8f5d9d4ed72f5ad7e6a1d` |
+| Implementation HEAD | `547bf30ebb9ac3714352e9f82c281e1325d076d0` |
 | Timestamp | `2026-05-10T21:52:00+01:00` |
 
 ## Fixed Workspace Binding Certificate
@@ -29,7 +29,7 @@ ready-for-validation
 | Fixed workspace path | `/opt/elis/agent-worktrees/infra-impl-a` |
 | Git root | `/opt/elis/agent-worktrees/infra-impl-a` |
 | Branch | `feature/pe-ops-github-agent-enforcement-01-deterministic-github-agent-source-path` |
-| HEAD | `48e40bb7f6a9d2e5a3b8f5d9d4ed72f5ad7e6a1d` |
+| HEAD | `547bf30ebb9ac3714352e9f82c281e1325d076d0` |
 | Base | `origin/main` |
 | Clean status | clean after commit; runtime/bootstrap files preserved locally |
 | Allowed file scope | `docs/ops/github-agent/*`, `elis/agentic/github_source_resolver.py`, `tests/test_github_source_resolution.py`, `.elis/pe/PE-OPS-GITHUB-AGENT-ENFORCEMENT-01/evidence/*`, `HANDOFF.md` |
