@@ -10,7 +10,7 @@
 
 ## REVIEW.md Path
 
-`/opt/elis/agent-worktrees/infra-val-b/REVIEW.md`
+`.elis/pe/PE-OPS-GITHUB-AGENT-ENFORCEMENT-01/REVIEW.md`
 
 ## Changed Files Reviewed
 
