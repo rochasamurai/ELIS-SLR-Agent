@@ -21,10 +21,10 @@
 
 | Field   | Value |
 |---------|-------|
-| PE      | PE-OPS-GITHUB-AGENT-ENFORCEMENT-01 |
-| Branch  | feature/pe-ops-github-agent-enforcement-01-deterministic-github-agent-source-path |
+| PE      | — |
+| Branch  | — |
 
-> **Planning mode.** Active PE: PE-OPS-GITHUB-AGENT-ENFORCEMENT-01 — Enforce GitHub Agent Path for GitHub Operations.
+> **Plan-complete mode.** No active PE.
 
 ---
 
@@ -32,10 +32,10 @@
 
 | Agent       | Role |
 |-------------|------|
-| infra-impl-a | Implementer |
-| infra-val-b | Validator |
+| infra-impl-b | — |
+| infra-val-a | — |
 
-> Active PE roles assigned for PE-OPS-GITHUB-AGENT-ENFORCEMENT-01.
+> No active PE roles.
 
 ---
 
@@ -53,6 +53,7 @@
 | PE-OPS-CONTAINER-GITHUB-01 | github | infra-impl-b | infra-val-a | feature/pe-ops-container-github-01-containerise-elis-github-agent-runtime | merged | 2026-05-08 |
 | PE-OPS-WORKTREE-BINDING-02 | ops | infra-impl-b | infra-val-a | feature/pe-ops-worktree-binding-02-enforce-fixed-worktree-dispatch-gates | merged | 2026-05-09 |
 | PE-OPS-ADVISOR-HANDOFF-01 | advisor | infra-impl-b | infra-val-a | feature/pe-ops-advisor-handoff-01-finalise-elis-advisor-handoff-operating-mode | merged | 2026-05-10 |
+| PE-OPS-GITHUB-AGENT-ENFORCEMENT-01 | github | infra-impl-a | infra-val-b | feature/pe-ops-github-agent-enforcement-01-deterministic-github-agent-source-path | merged | 2026-05-10 |
 | PE-INFRA-01 | infra           | infra-impl-codex     | infra-val-claude   | feature/pe-infra-01-branch-policy                 | merged          | 2026-02-18   |
 | PE-INFRA-02 | infra           | infra-impl-codex     | prog-val-claude    | feature/pe-infra-02-role-registration             | merged          | 2026-02-19   |
 | PE-INFRA-03 | infra           | infra-impl-codex     | prog-val-claude    | feature/pe-infra-03-release-agnostic              | merged          | 2026-02-19   |
@@ -265,6 +266,7 @@ PM housekeeping entries (prefix `PM-CHORE-XX`):
 | PM-CHORE-97  | Closed PE-OPS-A2A-01 as merged (PR #426, merge SHA `552111560de70a30d4ee5deb946f962ed962b776`). Plan-complete mode restored: PE and Branch cleared; no active PE; PE-OPS-A2A-01 registry row updated to merged. Follow-up item preserved for future cleanup only: PE-OPS-WORKTREE-BINDING-02 — Enforce Fixed Worktree Dispatch Gates. | 2026-05-09 |
 | PM-CHORE-98  | Closed PE-OPS-WORKTREE-BINDING-02 as merged (PR #428, merge SHA `958fcf791331d8ddb35b77cc351963e35aceea63`). Plan-complete mode restored: PE and Branch cleared; no active PE; PE-OPS-WORKTREE-BINDING-02 registry row updated to merged. Follow-up items preserved: apply the new dispatch gates operationally before future agent dispatch; prepare PE-OPS-TOKEN-01 for token/context budget hardening; keep GitHub check re-run/write operations routed through ELIS GitHub Agent unless PO approves exception. | 2026-05-09 |
 | PM-CHORE-99  | Closed PE-OPS-ADVISOR-HANDOFF-01 as merged (PR #430, merge SHA `21e348d87c8e8874a5b3201307c3c7a2e1e0d190`). Plan-complete mode restored: PE and Branch cleared; no active PE; PE-OPS-ADVISOR-HANDOFF-01 registry row updated to merged. One-time PO-approved fallback used after closing wrong-path PR #429; wrong source-path evidence preserved. Follow-up defects preserved: PE-OPS-GITHUB-AGENT-ENFORCEMENT-01 must implement RULE_DEFINED_PR_SOURCE_PATH; GitHub Agent must not default to its runtime workspace as PR source; GitHub Agent must use GITHUB_AGENT_READS_SOURCE_WRITES_REMOTE; GitHub Agent identity must be corrected away from rochasamurai in a future credentials/security PE; OpenClaw agent workspace readiness must include .openclaw creation checks. | 2026-05-10 |
+| PM-CHORE-100 | Closed PE-OPS-GITHUB-AGENT-ENFORCEMENT-01 as merged (PR #431, final PR head `01cb8d6fdad7ec83f46811bb1b9972d3cd3f5ebd`, merge SHA `b9126c4f3f9361ddc549b2733789599be383caf3`). Plan-complete mode restored: PE and Branch cleared; no active PE; PE-OPS-GITHUB-AGENT-ENFORCEMENT-01 registry row updated to merged. TEMPORARY_HUMAN_GITHUB_AUTH_RISK was recorded for this PR; follow-up credentials/security PE remains required to replace `rochasamurai` with the proper GitHub Agent service identity. | 2026-05-10 |
 | PM-CHORE-100 | Opened PE-OPS-GITHUB-AGENT-ENFORCEMENT-01 (Enforce GitHub Agent Path for GitHub Operations) with `infra-impl-a` as Implementer and `infra-val-b` as Validator per alternation rule. Opening packet only: CURRENT_PE.md and PE task packet updated; no registry/status corrections beyond the opening row; no secret/token/permission/config changes, no PM direct GitHub writes, no PE-specific runtime worktrees. | 2026-05-10 |
 
 
