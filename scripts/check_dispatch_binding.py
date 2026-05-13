@@ -15,18 +15,28 @@ def main() -> int:
     p = argparse.ArgumentParser(description="Check PE dispatch binding")
     p.add_argument("--repo", default=".")
     p.add_argument("--pe-id", required=True)
-    p.add_argument("--branch", required=True)
+    p.add_argument("--branch")
     p.add_argument("--head", required=True)
     p.add_argument("--worktree", required=True)
+    p.add_argument("--mode", choices=["implementer", "validator"], default="implementer")
     args = p.parse_args()
     repo = Path(args.repo).resolve()
     worktree = Path(args.worktree).resolve()
     if git(["rev-parse", "--show-toplevel"], repo) != str(repo):
         print("WORKTREE_MISMATCH: repo root mismatch", file=sys.stderr)
         return 2
-    if git(["branch", "--show-current"], worktree) != args.branch:
-        print("WRONG_BRANCH", file=sys.stderr)
-        return 3
+    current_branch = git(["branch", "--show-current"], worktree)
+    if args.mode == "implementer":
+        if not args.branch:
+            print("MISSING_BRANCH", file=sys.stderr)
+            return 3
+        if current_branch != args.branch:
+            print("WRONG_BRANCH", file=sys.stderr)
+            return 3
+    else:
+        if current_branch:
+            print("EXPECTED_DETACHED_HEAD", file=sys.stderr)
+            return 3
     if git(["rev-parse", "HEAD"], worktree) != args.head:
         print("WRONG_HEAD", file=sys.stderr)
         return 4

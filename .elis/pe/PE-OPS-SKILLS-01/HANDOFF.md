@@ -4,9 +4,9 @@
 ```json
 {
   "taskId": "PE-OPS-SKILLS-01",
-  "status": "implementing",
+  "status": "gate-1-pending",
   "branch": "feature/pe-ops-skills-01-harden-agent-skills-and-dispatch-validation-gates",
-  "commitHash": "SEE_FINAL_CHAT_REPORT",
+  "commitHash": "bdcce57a50339874aeb8cf34aa26746daffa8bf0",
   "filesChanged": 14,
   "artifacts": {
     "governance_docs": [
@@ -34,3 +34,4 @@
 - [x] persistent context preserved
 - [x] live workspace-local `SKILLS.md` untouched
 - [x] review evidence captured
+- [x] validator detached-workflow support added

@@ -63,6 +63,19 @@ def test_dispatch_binding_wrong_branch(tmp_path):
     assert "WRONG_BRANCH" in proc.stderr
 
 
+def test_dispatch_binding_validator_mode_accepts_detached_head(tmp_path):
+    repo = init_repo(tmp_path)
+    run(["git", "checkout", "-b", "feature/pe-ops-skills-01-harden-agent-skills-and-dispatch-validation-gates"], repo)
+    (repo / ".elis/pe/PE-OPS-SKILLS-01/PE_TASK.md").write_text("x")
+    run(["git", "add", ".elis/pe/PE-OPS-SKILLS-01/PE_TASK.md"], repo)
+    run(["git", "commit", "-m", "task"], repo)
+    head = run(["git", "rev-parse", "HEAD"], repo).stdout.strip()
+    run(["git", "checkout", "--detach", "HEAD"], repo)
+    proc = run([sys.executable, str(script("check_dispatch_binding.py")), "--pe-id", "PE-OPS-SKILLS-01", "--branch", "feature/pe-ops-skills-01-harden-agent-skills-and-dispatch-validation-gates", "--head", head, "--worktree", str(repo), "--mode", "validator"], repo)
+    assert proc.returncode == 0, proc.stderr
+    assert "OK PE-OPS-SKILLS-01" in proc.stdout
+
+
 def test_implementation_readiness_dirty_worktree(tmp_path):
     repo = init_repo(tmp_path)
     run(["git", "checkout", "-b", "feature/pe-ops-skills-01-harden-agent-skills-and-dispatch-validation-gates"], repo)
@@ -73,6 +86,32 @@ def test_implementation_readiness_dirty_worktree(tmp_path):
     proc = run([sys.executable, str(script("check_implementation_readiness.py")), "--repo", str(repo), "--pe-id", "PE-OPS-SKILLS-01", "--branch", "feature/pe-ops-skills-01-harden-agent-skills-and-dispatch-validation-gates", "--head", run(["git", "rev-parse", "HEAD"], repo).stdout.strip(), "--worktree", str(repo)], repo)
     assert proc.returncode != 0
     assert "DIRTY_WORKTREE" in proc.stderr
+
+
+def test_implementation_readiness_validator_mode_accepts_detached_head_and_optional_context(tmp_path):
+    repo = init_repo(tmp_path)
+    run(["git", "checkout", "-b", "feature/pe-ops-skills-01-harden-agent-skills-and-dispatch-validation-gates"], repo)
+    pe_dir = repo / ".elis/pe/PE-OPS-SKILLS-01"
+    pe_dir.mkdir(parents=True, exist_ok=True)
+    for name in ["GOVERNANCE.md", "SKILLS_PM.md", "SKILLS_IMPLEMENTERS.md", "SKILLS_VALIDATORS.md"]:
+        (pe_dir / name).write_text(name)
+    run(["git", "add", ".elis/pe/PE-OPS-SKILLS-01"], repo)
+    run(["git", "commit", "-m", "scope"], repo)
+    head = run(["git", "rev-parse", "HEAD"], repo).stdout.strip()
+    run(["git", "checkout", "--detach", "HEAD"], repo)
+    proc = run([sys.executable, str(script("check_implementation_readiness.py")), "--repo", str(repo), "--pe-id", "PE-OPS-SKILLS-01", "--mode", "validator", "--head", head, "--worktree", str(repo)], repo)
+    assert proc.returncode == 0, proc.stderr
+    assert "READY PE-OPS-SKILLS-01" in proc.stdout
+    for name in [".openclaw", "HEARTBEAT.md", "IDENTITY.md", "SOUL.md", "TOOLS.md", "USER.md"]:
+        target = repo / name
+        if target.is_dir():
+            import shutil
+            shutil.rmtree(target)
+        else:
+            target.unlink()
+    proc2 = run([sys.executable, str(script("check_persistent_context_files.py")), "--repo", str(repo)], repo)
+    assert proc2.returncode == 0
+    assert "PERSISTENT_CONTEXT_OPTIONAL" in proc2.stdout
 
 
 def test_validation_readiness_wrong_scope_and_stale_artifact(tmp_path):
@@ -95,6 +134,6 @@ def test_validation_readiness_wrong_scope_and_stale_artifact(tmp_path):
 
 def test_persistent_context_files_check(tmp_path):
     repo = init_repo(tmp_path)
-    proc = run([sys.executable, str(script("check_persistent_context_files.py")), "--repo", str(repo)], repo)
+    proc = run([sys.executable, str(script("check_persistent_context_files.py")), "--repo", str(repo), "--required"], repo)
     assert proc.returncode == 0
     assert "PERSISTENT_CONTEXT_OK" in proc.stdout

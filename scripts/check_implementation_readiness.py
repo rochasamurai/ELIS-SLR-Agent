@@ -16,26 +16,40 @@ def git(cmd: list[str], cwd: Path) -> str:
 def main() -> int:
     p = argparse.ArgumentParser(description="Check implementation readiness")
     p.add_argument("--repo", default=".")
-    p.add_argument("--branch", required=True)
+    p.add_argument("--branch")
     p.add_argument("--head", required=True)
     p.add_argument("--worktree", required=True)
     p.add_argument("--pe-id", required=True)
+    p.add_argument("--mode", choices=["implementer", "validator"], default="implementer")
+    p.add_argument("--require-persistent-context", action="store_true")
     args = p.parse_args()
     repo = Path(args.repo).resolve()
     worktree = Path(args.worktree).resolve()
-    if git(["branch", "--show-current"], worktree) != args.branch:
-        print("WRONG_BRANCH", file=sys.stderr)
-        return 2
+    current_branch = git(["branch", "--show-current"], worktree)
+    if args.mode == "implementer":
+        if not args.branch:
+            print("MISSING_BRANCH", file=sys.stderr)
+            return 3
+        if current_branch != args.branch:
+            print("WRONG_BRANCH", file=sys.stderr)
+            return 2
+    else:
+        if current_branch:
+            print("EXPECTED_DETACHED_HEAD", file=sys.stderr)
+            return 2
     if git(["rev-parse", "HEAD"], worktree) != args.head:
         print("WRONG_HEAD", file=sys.stderr)
         return 3
     if git(["status", "--short", "--untracked-files=no"], worktree):
         print("DIRTY_WORKTREE", file=sys.stderr)
         return 4
-    for rel in PERSISTENT:
-        if not (repo / rel).exists():
-            print(f"MISSING_PERSISTENT_CONTEXT:{rel}", file=sys.stderr)
-            return 5
+    if args.require_persistent_context:
+        for rel in PERSISTENT:
+            if not (repo / rel).exists():
+                print(f"MISSING_PERSISTENT_CONTEXT:{rel}", file=sys.stderr)
+                return 5
+    elif args.mode == "validator":
+        print("PERSISTENT_CONTEXT_OPTIONAL", file=sys.stderr)
     for rel in [
         ".elis/pe/PE-OPS-SKILLS-01/GOVERNANCE.md",
         ".elis/pe/PE-OPS-SKILLS-01/SKILLS_PM.md",

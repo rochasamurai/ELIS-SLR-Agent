@@ -6,3 +6,4 @@
 - Work from committed artefacts only.
 - Treat missing expected files as a workspace mismatch, not as content to invent.
 - Do not edit live workspace-local `SKILLS.md` files in this PE.
+- If a validator snapshot is detached, do not treat detached HEAD as a failure by itself.

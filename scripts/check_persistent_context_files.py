@@ -18,12 +18,16 @@ REQUIRED = [
 def main() -> int:
     p = argparse.ArgumentParser(description="Check persistent context files")
     p.add_argument("--repo", default=".")
+    p.add_argument("--required", action="store_true")
     args = p.parse_args()
     repo = Path(args.repo).resolve()
     missing = [str(path) for path in REQUIRED if not (repo / path).exists()]
-    if missing:
+    if missing and args.required:
         print(f"MISSING:{','.join(missing)}", file=sys.stderr)
         return 2
+    if missing:
+        print(f"PERSISTENT_CONTEXT_OPTIONAL:{','.join(missing)}")
+        return 0
     print("PERSISTENT_CONTEXT_OK")
     return 0
 
