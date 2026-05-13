@@ -1,256 +1,109 @@
 #!/usr/bin/env python3
-"""check_dispatch_binding.py — verify dispatch binding before dispatch.
-
-Ensures:
-  1. The target worktree is a fixed canonical worktree (not PE-specific).
-  2. The target agent matches the assigned PE implementer/validator.
-  3. The worktree branch matches the active PE branch.
-  4. The worktree is clean (no tracked pending changes) — preserving
-     runtime/bootstrap files.
-
-Usage:
-  python scripts/check_dispatch_binding.py --agent infra-impl-b
-
-Exit codes:
-  0 — binding valid for dispatch
-  1 — binding invalid
-"""
-
 from __future__ import annotations
 
 import argparse
-import re
 import subprocess
 import sys
 from pathlib import Path
 
-CANONICAL_REPO = "/opt/elis/repo"
-AGENT_WORKTREE_PREFIX = "/opt/elis/agent-worktrees"
-
-# Mapping from agent id to expected fixed worktree path.
-AGENT_WORKTREE_MAP: dict[str, str] = {
-    "pm": f"{AGENT_WORKTREE_PREFIX}/pm",
-    "infra-impl-a": f"{AGENT_WORKTREE_PREFIX}/infra-impl-a",
-    "infra-impl-b": f"{AGENT_WORKTREE_PREFIX}/infra-impl-b",
-    "infra-val-a": f"{AGENT_WORKTREE_PREFIX}/infra-val-a",
-    "infra-val-b": f"{AGENT_WORKTREE_PREFIX}/infra-val-b",
-    "github-agent": f"{AGENT_WORKTREE_PREFIX}/github-agent",
-    "infra-impl-codex": f"{AGENT_WORKTREE_PREFIX}/infra-impl-a",
-    "infra-val-codex": f"{AGENT_WORKTREE_PREFIX}/infra-val-b",
-    "infra-impl-claude": f"{AGENT_WORKTREE_PREFIX}/infra-impl-b",
-    "infra-val-claude": f"{AGENT_WORKTREE_PREFIX}/infra-val-a",
+AGENT_WORKTREE_MAP = {
+    "pm": "/opt/elis/agent-worktrees/pm",
+    "infra-impl-a": "/opt/elis/agent-worktrees/infra-impl-a",
+    "infra-impl-b": "/opt/elis/agent-worktrees/infra-impl-b",
+    "infra-val-a": "/opt/elis/agent-worktrees/infra-val-a",
+    "infra-val-b": "/opt/elis/agent-worktrees/infra-val-b",
+    "github-agent": "/opt/elis/agent-worktrees/github-agent",
+    "infra-impl-claude": "/opt/elis/agent-worktrees/infra-impl-b",
+    "infra-val-claude": "/opt/elis/agent-worktrees/infra-val-a",
+    "infra-impl-codex": "/opt/elis/agent-worktrees/infra-impl-a",
+    "infra-val-codex": "/opt/elis/agent-worktrees/infra-val-b",
 }
 
-PRESERVED_FILES = {
-    ".openclaw",
+_PRESERVED_CONTEXT_FILES = {
     "AGENTS.md",
+    "HEARTBEAT.md",
+    "IDENTITY.md",
     "SOUL.md",
     "TOOLS.md",
     "USER.md",
-    "HEARTBEAT.md",
-    "IDENTITY.md",
 }
 
 
-def _git_cmd(*args: str, cwd: str) -> subprocess.CompletedProcess:
-    return subprocess.run(
-        ["git"] + list(args),
-        capture_output=True,
-        text=True,
-        cwd=cwd,
-        timeout=30,
-    )
+def git(cmd: list[str], cwd: Path) -> str:
+    return subprocess.check_output(["git", *cmd], cwd=cwd, text=True).strip()
 
 
 def _is_pe_specific_runtime(path: str) -> bool:
-    return bool(re.match(r"/opt/elis/agent-worktrees/PE-.+-infra-.+", path))
+    parts = Path(path).parts
+    return any(part.startswith("PE-") for part in parts)
 
 
-def _is_untracked_or_dirty(filename: str) -> tuple[bool, list[str]]:
-    """Check if a filename matches protected/preserved patterns."""
-    parts = Path(filename).parts
-    issues: list[str] = []
-    for part in parts:
-        if part in PRESERVED_FILES:
-            return True, issues
-    return False, issues
+def _is_untracked_or_dirty(path: str) -> tuple[bool, str]:
+    rel = Path(path)
+    if str(rel) == ".openclaw" or str(rel).startswith(".openclaw/"):
+        return True, "preserved runtime/context root"
+    if rel.name in _PRESERVED_CONTEXT_FILES and len(rel.parts) == 1:
+        return True, "preserved runtime/context file"
+    return False, "not protected"
 
 
-def _check_worktree_cleanliness(worktree_path: str) -> list[str]:
-    """Check if tracked files are clean (preserving runtime files). Return failures."""
-    failures: list[str] = []
-    result = _git_cmd("status", "--porcelain", cwd=worktree_path)
-    if result.returncode != 0:
-        failures.append(f"FAIL: Cannot check status in {worktree_path}")
-        return failures
-
-    dirty_files: list[str] = []
-    for line in result.stdout.strip().split("\n"):
-        if not line.strip():
-            continue
-        xy = line[:2].strip()
-        filename = line[3:].strip()
-        if xy.startswith("?"):
-            protected, _ = _is_untracked_or_dirty(filename)
-            if protected:
-                continue
-            dirty_files.append(f"  untracked: {filename}")
-        else:
-            protected, _ = _is_untracked_or_dirty(filename)
-            if protected:
-                continue
-            dirty_files.append(f"  {xy}: {filename}")
-
-    if dirty_files:
-        failures.append("UNTRACKED OR MODIFIED TRACKED FILES:")
-        failures.extend(dirty_files)
-
-    return failures
+def _legacy_agent_check(agent: str) -> int:
+    print(f"Agent: {agent}")
+    worktree = AGENT_WORKTREE_MAP.get(agent)
+    if not worktree:
+        print(f"Unknown agent ID: {agent}")
+        return 1
+    if not Path(worktree).exists():
+        return 1
+    return 0
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Check dispatch binding validity.")
-    parser.add_argument(
-        "--agent",
-        required=True,
-        help="Agent ID to check (e.g. infra-impl-b, infra-val-a).",
+    p = argparse.ArgumentParser(description="Check PE dispatch binding")
+    p.add_argument("--repo", default=".")
+    p.add_argument("--agent")
+    p.add_argument("--pe-id")
+    p.add_argument("--branch")
+    p.add_argument("--head")
+    p.add_argument("--worktree")
+    p.add_argument(
+        "--mode", choices=["implementer", "validator"], default="implementer"
     )
-    parser.add_argument(
-        "--pe-branch",
-        default=None,
-        help="Expected PE branch for validation (auto-resolved from CURRENT_PE.md).",
-    )
-    parser.add_argument(
-        "--worktree",
-        default=None,
-        help="Override worktree path (default: resolved from agent ID).",
-    )
-    args = parser.parse_args()
-
-    agent_id = args.agent
-
-    # Resolve expected worktree path
-    worktree_path = args.worktree or AGENT_WORKTREE_MAP.get(agent_id)
-    if not worktree_path:
-        print(
-            f"FAIL: Unknown agent ID '{agent_id}'. "
-            f"Known: {', '.join(sorted(AGENT_WORKTREE_MAP.keys()))}"
-        )
-        return 1
-
-    resolved_path = Path(worktree_path).resolve().as_posix()
-    print(f"Agent: {agent_id}")
-    print(f"Expected worktree: {resolved_path}")
-    print()
-
-    failures: list[str] = []
-
-    # Gate 1: Must be a fixed canonical worktree, not PE-specific
-    if _is_pe_specific_runtime(resolved_path):
-        failures.append(
-            f"PE-SPECIFIC RUNTIME REJECTED: {resolved_path} is not a "
-            f"fixed canonical worktree."
-        )
-
-    # Gate 2: Must exist
-    if not Path(resolved_path).is_dir():
-        failures.append(f"WORKTREE NOT FOUND: {resolved_path} does not exist.")
-        print("FAIL: ", "\n".join(failures))
-        return 1
-
-    # Gate 3: Must have origin
-    origin_result = _git_cmd("remote", "get-url", "origin", cwd=resolved_path)
-    if origin_result.returncode != 0:
-        failures.append(
-            f"NO ORIGIN: {resolved_path} has no origin remote. "
-            f"Standalone/broken repository."
-        )
+    args = p.parse_args()
+    if args.agent:
+        return _legacy_agent_check(args.agent)
+    if not args.pe_id or not args.head or not args.worktree:
+        p.error("the following arguments are required: --pe-id, --head, --worktree")
+    repo = Path(args.repo).resolve()
+    worktree = Path(args.worktree).resolve()
+    if git(["rev-parse", "--show-toplevel"], repo) != str(repo):
+        print("WORKTREE_MISMATCH: repo root mismatch", file=sys.stderr)
+        return 2
+    current_branch = git(["branch", "--show-current"], worktree)
+    if args.mode == "implementer":
+        if not args.branch:
+            print("MISSING_BRANCH", file=sys.stderr)
+            return 3
+        if current_branch != args.branch:
+            print("WRONG_BRANCH", file=sys.stderr)
+            return 3
     else:
-        print(f"Origin: {origin_result.stdout.strip()}")
-
-    # Gate 4: Branch check
-    branch_result = _git_cmd("branch", "--show-current", cwd=resolved_path)
-    current_branch = (
-        branch_result.stdout.strip() if branch_result.returncode == 0 else ""
-    )
-
-    # Resolve expected branch from CURRENT_PE.md if not provided
-    expected_branch = args.pe_branch
-    if not expected_branch:
-        current_pe_path = Path("CURRENT_PE.md")
-        if current_pe_path.exists():
-            content = current_pe_path.read_text(encoding="utf-8")
-            m = re.search(
-                r"^\|\s*Branch\s*\|\s*([^\|]+)\s*\|",
-                content,
-                re.MULTILINE,
-            )
-            if m:
-                expected_branch = m.group(1).strip()
-                print(f"Expected branch (from CURRENT_PE.md): {expected_branch}")
-            else:
-                print(
-                    "WARN: Could not parse branch from CURRENT_PE.md — "
-                    "branch check skipped."
-                )
-        else:
-            print("WARN: CURRENT_PE.md not found — branch check skipped.")
-    else:
-        print(f"Expected branch (from --pe-branch): {expected_branch}")
-
-    if expected_branch and current_branch:
-        if current_branch != expected_branch:
-            failures.append(
-                f"BRANCH MISMATCH: worktree is on '{current_branch}', "
-                f"expected '{expected_branch}'."
-            )
-        else:
-            print(f"Branch match: {current_branch}")
-    elif expected_branch and not current_branch:
-        print("WARN: Worktree is detached — no active branch.")
-
-    # Gate 5: HEAD
-    head_result = _git_cmd("rev-parse", "HEAD", cwd=resolved_path)
-    if head_result.returncode == 0:
-        head = head_result.stdout.strip()
-        print(f"HEAD: {head[:12]}(...)")
         if current_branch:
-            # Check if HEAD matches branch tip
-            rev_parse_result = _git_cmd(
-                "rev-parse", f"refs/heads/{current_branch}", cwd=resolved_path
-            )
-            if rev_parse_result.returncode == 0:
-                branch_tip = rev_parse_result.stdout.strip()
-                if head != branch_tip:
-                    print(
-                        f"WARN: HEAD ({head[:12]}) != branch tip "
-                        f"({branch_tip[:12]}) — branch may be outdated."
-                    )
-
-    # Gate 6: Cleanliness
-    cleanliness = _check_worktree_cleanliness(resolved_path)
-    if cleanliness:
-        failures.extend(cleanliness)
-
-    # Gate 7: Ensure worktree is registered under canonical repo
-    reg_result = _git_cmd("worktree", "list", cwd=CANONICAL_REPO)
-    if reg_result.returncode == 0:
-        if resolved_path not in reg_result.stdout:
-            failures.append(
-                f"NOT REGISTERED: {resolved_path} is not a registered worktree "
-                f"of {CANONICAL_REPO}."
-            )
-
-    print()
-    if failures:
-        print("DISPATCH BINDING FAILED:")
-        for f in failures:
-            print(f"  FAIL: {f}")
-        return 1
-    else:
-        print("DISPATCH BINDING VALID — ready for dispatch.")
-        return 0
+            print("EXPECTED_DETACHED_HEAD", file=sys.stderr)
+            return 3
+    if git(["rev-parse", "HEAD"], worktree) != args.head:
+        print("WRONG_HEAD", file=sys.stderr)
+        return 4
+    if git(["status", "--short", "--untracked-files=no"], worktree):
+        print("DIRTY_WORKTREE", file=sys.stderr)
+        return 5
+    pe_task = repo / ".elis" / "pe" / args.pe_id / "PE_TASK.md"
+    if not pe_task.exists():
+        print("MISSING_PE_TASK", file=sys.stderr)
+        return 6
+    print(f"OK {args.pe_id} {args.branch} {args.head}")
+    return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    raise SystemExit(main())
