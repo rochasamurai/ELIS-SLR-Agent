@@ -6,7 +6,14 @@ import subprocess
 import sys
 from pathlib import Path
 
-PERSISTENT = [Path('.openclaw'), Path('HEARTBEAT.md'), Path('IDENTITY.md'), Path('SOUL.md'), Path('TOOLS.md'), Path('USER.md')]
+PERSISTENT = [
+    Path(".openclaw"),
+    Path("HEARTBEAT.md"),
+    Path("IDENTITY.md"),
+    Path("SOUL.md"),
+    Path("TOOLS.md"),
+    Path("USER.md"),
+]
 
 
 def git(cmd: list[str], cwd: Path) -> str:
@@ -20,7 +27,9 @@ def main() -> int:
     p.add_argument("--head", required=True)
     p.add_argument("--worktree", required=True)
     p.add_argument("--pe-id", required=True)
-    p.add_argument("--mode", choices=["implementer", "validator"], default="implementer")
+    p.add_argument(
+        "--mode", choices=["implementer", "validator"], default="implementer"
+    )
     p.add_argument("--require-persistent-context", action="store_true")
     args = p.parse_args()
     repo = Path(args.repo).resolve()

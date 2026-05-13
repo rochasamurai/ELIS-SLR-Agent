@@ -6,12 +6,12 @@ import sys
 from pathlib import Path
 
 REQUIRED = [
-    Path('.openclaw'),
-    Path('HEARTBEAT.md'),
-    Path('IDENTITY.md'),
-    Path('SOUL.md'),
-    Path('TOOLS.md'),
-    Path('USER.md'),
+    Path(".openclaw"),
+    Path("HEARTBEAT.md"),
+    Path("IDENTITY.md"),
+    Path("SOUL.md"),
+    Path("TOOLS.md"),
+    Path("USER.md"),
 ]
 
 
