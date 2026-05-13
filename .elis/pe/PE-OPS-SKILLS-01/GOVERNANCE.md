@@ -18,5 +18,10 @@
 - validation readiness check
 - persistent context preservation check
 
+## Validator workflow support
+- Validator-mode checks may run from a detached HEAD at the committed implementation SHA.
+- Detached validator snapshots must not fail solely because there is no current branch name.
+- Persistent context files are required only when explicitly configured for that check.
+
 ## Stale artefacts
 Validator evidence must reject stale PE artefacts when they come from the wrong PE, wrong filesystem scope, or contradict the expected snapshot.
