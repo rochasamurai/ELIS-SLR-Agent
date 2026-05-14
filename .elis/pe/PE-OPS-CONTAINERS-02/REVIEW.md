@@ -346,3 +346,16 @@ None.
 
 None.
 
+---
+
+## Addendum — Authorship Separation Correction
+
+**Date:** 2026-05-14T16:15Z  
+**Validator:** infra-val-b
+
+1. **REVIEW.md is validator-owned.** This file is authored and maintained by the validator (infra-val-b). Any prior commits by other agents on this file are corrected by this commit.
+
+2. **Smoke-test evidence recorded in `validation-evidence.md`.** Smoke-test execution evidence from commit `36aa1da` is preserved in `.elis/pe/PE-OPS-CONTAINERS-02/validation-evidence.md` and is not modified by this correction.
+
+3. **COMMIT_IDENTITY_HYGIENE_FINDING (non-blocking):** Commit `36aa1da1820399b7d81a7fd2b993cfb999009be3` was authored by an implementer identity rather than the validator identity. This is classified as a commit identity hygiene finding — **not a blocker**. The commit is retained as smoke-test evidence. No history rewrite is performed. Phase verdicts are unchanged.
+
