@@ -235,3 +235,114 @@ Confirmed that a container run with a missing secret file exits cleanly (set -eu
 ## Required Fixes
 
 None (blocking findings: 0)
+
+---
+
+## Phase B Packet Addendum — PHASE_B_PACKET.md Review
+
+**Validator:** infra-val-b  
+**Date:** 2026-05-14T14:49Z  
+**File reviewed:** `.elis/pe/PE-OPS-CONTAINERS-02/PHASE_B_PACKET.md`  
+**Commit:** 5d2671fc18d19a91e188ce6b068a2248fff638d0  
+
+### Verdict: PASS
+
+All nine validation criteria are met. PHASE_B_PACKET.md is approved for smoke-test documentation only. Smoke-test **execution** and **cutover** remain unapproved.
+
+---
+
+### Validation evidence
+
+#### 1. Smoke-test and cutover clearly separated ✅
+
+PHASE_B_PACKET.md has distinct top-level sections:
+
+> `## Smoke-test mode` …  
+> `## Cutover mode` …
+
+Status block explicitly separates approvals:
+
+> `- Smoke-test documentation: approved`  
+> `- Smoke-test execution: not yet approved`  
+> `- Cutover: not approved`
+
+#### 2. Smoke-test uses --network none ✅
+
+> `### Network access`  
+> `- Smoke-test should run with \`--network none\`.`
+
+Recommended command includes `--network none`:
+
+> `docker compose ... run --rm --no-deps --network none ...`
+
+#### 3. Smoke-test does not use .env ✅
+
+> `### Secrets / .env`  
+> `- The smoke-test command does **not** use the real host .env file.`  
+> `- No secrets are injected for smoke-test.`
+
+The recommended command does not pass `--env-file` or reference `.env`.
+
+#### 4. Smoke-test overrides the entrypoint ✅
+
+Recommended command includes `--entrypoint /bin/bash`:
+
+> `docker compose ... run --rm --no-deps --network none --entrypoint /bin/bash elis-advisor -lc '...'`
+
+#### 5. Smoke-test cannot start the Hermes/Discord gateway ✅
+
+> `### Entry-point safety`  
+> `- It must not trigger the normal gateway/Advisor entrypoint path.`  
+> `- It must not start Hermes gateway or any Discord session.`
+
+Entrypoint override + `--network none` + `--no-deps` ensures the gateway cannot start.
+
+#### 6. No secrets can be exposed through smoke-test logs ✅
+
+> `- No .env contents may appear in logs, evidence, build output, entrypoint output, or Discord messages.`
+
+The smoke-test command runs only: `echo smoke-test-only; id; pwd; test -x /bin/bash` — none of which access or print secrets. `--network none` prevents any outbound transmission.
+
+#### 7. Cleanup/evidence steps defined ✅
+
+Evidence section:
+
+> `- exact command output`  
+> `- docker ps -a showing no long-running container`  
+> `- confirmation that no secret values were printed`  
+> `- confirmation that host elis-advisor-gateway.service remained running unchanged`
+
+Cleanup section:
+
+> `docker compose ... rm -fsv || true`  
+> `docker ps -a --filter name=elis-advisor-container`  
+> `systemctl --user status elis-advisor-gateway.service --no-pager --full`
+
+#### 8. Cutover remains PO-gated ✅
+
+> `## Cutover mode`  
+> `Future PO-gated section only.`  
+> `### Not approved yet`
+
+> `- Cutover: not approved`
+
+#### 9. No docker compose up -d, service start/enable, host gateway stop, or runtime cutover approved ✅
+
+Status block explicitly marks all as `not approved`:
+
+> `- docker compose up -d: not approved`  
+> `- elis-advisor-gateway.service stop/restart: not approved`  
+> `- elis-advisor-container.service enable/start: not approved`
+
+None of these commands appear in the smoke-test section.
+
+---
+
+### Blocking findings
+
+None.
+
+### Conditional notes
+
+None.
+
