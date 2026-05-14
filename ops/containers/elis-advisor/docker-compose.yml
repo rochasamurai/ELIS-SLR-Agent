@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  elis-advisor:
+    build: .
+    container_name: elis-advisor-container
+    volumes:
+      - ~/.hermes:/home/samurai/.hermes:ro
+    user: "1000:1000"
+    restart: "no"
+    # No /app mount; no docker socket; draft only
