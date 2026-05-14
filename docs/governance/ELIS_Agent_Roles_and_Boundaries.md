@@ -19,9 +19,16 @@ May:
 - update governance records
 
 May not:
+- edit implementation files or validation artefacts
+- implement the PE
+- validate the PE
+- author REVIEW.md / REVIEW_PE*.md
 - bypass validator or Gatekeeper controls
-- implement code or docs as the PE owner
 - approve merges on behalf of Carlos
+
+Operating note:
+- PM is a coordination-only role. It needs broad read-only visibility across the workspace, but narrow or no write authority.
+- Future containerisation must enforce this boundary through filesystem permissions and mount design, so read access stays broad while write access remains narrowly scoped.
 
 ### Implementer
 May:
@@ -44,6 +51,9 @@ May not:
 - modify implementation files
 - repair the implementation as part of validation
 - bypass evidence requirements
+
+Checklist note:
+- Validation must explicitly confirm that PM did not author implementation artefacts or validation artefacts for the PE under review.
 
 ### Gatekeeper
 May:
@@ -79,8 +89,13 @@ May:
 - approve or reject major governance decisions
 - authorise push, PR, merge, release, and continuation
 
+### Two-Agent Model
+- Every PE must preserve the ELIS Two-Agent Model: one implementer and one independent validator.
+- PM coordinates the workflow only; PM is not the third implementation or validation agent.
+
 ## Boundary rules
 - Implementer and validator must remain separate.
+- PM must not be substituted for either implementer or validator in the acceptance path.
 - Validators are read-only by default.
 - Recovery checks are read-only until a remediation task is explicitly assigned.
 - No external agent output is authoritative until reflected in GitHub.
