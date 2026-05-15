@@ -77,8 +77,10 @@ def _check_worktree_bound(worktree: Path, expected_branch: str) -> int:
         print("CLASSIFY: DETACHED_HEAD", file=sys.stderr)
         return 1
     if branch != expected_branch:
-        print(f"CLASSIFY: WRONG_BRANCH expected={expected_branch} actual={branch}",
-              file=sys.stderr)
+        print(
+            f"CLASSIFY: WRONG_BRANCH expected={expected_branch} actual={branch}",
+            file=sys.stderr,
+        )
         return 1
     return 0
 
@@ -110,8 +112,10 @@ def _check_head_matches_baseline(worktree: Path, expected_head: str) -> int:
         print("CLASSIFY: WORKTREE_MISSING", file=sys.stderr)
         return 1
     if head != expected_head:
-        print(f"CLASSIFY: HEAD_MISMATCH expected={expected_head[:12]} actual={head[:12]}",
-              file=sys.stderr)
+        print(
+            f"CLASSIFY: HEAD_MISMATCH expected={expected_head[:12]} actual={head[:12]}",
+            file=sys.stderr,
+        )
         return 1
     return 0
 

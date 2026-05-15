@@ -27,9 +27,9 @@ def _git_blame(path: Path, repo: Path) -> tuple[str | None, str | None]:
     author = email = None
     for line in out.splitlines():
         if line.startswith("author "):
-            author = line[len("author "):]
+            author = line[len("author ") :]
         elif line.startswith("author-mail "):
-            email = line[len("author-mail "):].strip("<>")
+            email = line[len("author-mail ") :].strip("<>")
         if author and email:
             break
     return author, email

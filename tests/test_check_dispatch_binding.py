@@ -97,14 +97,16 @@ def test_classify_failure_cli():
     """--classify flag should produce the correct output."""
     result = subprocess.run(
         ["python3", str(SCRIPT), "--classify", "DISPATCH_PATH_BLOCKED"],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
     )
     assert "DISPATCH_PATH_BLOCKED" in result.stdout
     assert result.returncode == 1
 
     result = subprocess.run(
         ["python3", str(SCRIPT), "--classify", "WRONG_BRANCH"],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
     )
     assert "WRONG_BRANCH" in result.stdout
     assert result.returncode == 1
@@ -115,15 +117,23 @@ def test_nonexistent_worktree_does_not_crash():
     repo = str(Path(__file__).resolve().parents[1])
     result = subprocess.run(
         [
-            "python3", str(SCRIPT),
-            "--repo", repo,
-            "--pe-id", "PE-OPS-PM-GUARDRAILS-02",
-            "--branch", "feature/test",
-            "--head", "deadbeef0123456789",
-            "--worktree", "/tmp/nonexistent_dispatch_test",
-            "--mode", "implementer",
+            "python3",
+            str(SCRIPT),
+            "--repo",
+            repo,
+            "--pe-id",
+            "PE-OPS-PM-GUARDRAILS-02",
+            "--branch",
+            "feature/test",
+            "--head",
+            "deadbeef0123456789",
+            "--worktree",
+            "/tmp/nonexistent_dispatch_test",
+            "--mode",
+            "implementer",
         ],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
     )
     # Should exit non-zero (failure), not crash with traceback
     assert result.returncode != 0
@@ -136,13 +146,20 @@ def test_nonexistent_worktree_validator():
     repo = str(Path(__file__).resolve().parents[1])
     result = subprocess.run(
         [
-            "python3", str(SCRIPT),
-            "--repo", repo,
-            "--pe-id", "PE-OPS-PM-GUARDRAILS-02",
-            "--head", "deadbeef0123456789",
-            "--worktree", "/tmp/nonexistent_dispatch_test_val",
-            "--mode", "validator",
+            "python3",
+            str(SCRIPT),
+            "--repo",
+            repo,
+            "--pe-id",
+            "PE-OPS-PM-GUARDRAILS-02",
+            "--head",
+            "deadbeef0123456789",
+            "--worktree",
+            "/tmp/nonexistent_dispatch_test_val",
+            "--mode",
+            "validator",
         ],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
     )
     assert result.returncode != 0

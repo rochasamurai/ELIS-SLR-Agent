@@ -54,20 +54,23 @@ def main() -> int:
             print("MISSING_BRANCH", file=sys.stderr)
             return 2
         if current_branch != args.branch:
-            print(f"WRONG_BRANCH expected={args.branch} actual={current_branch}",
-                  file=sys.stderr)
+            print(
+                f"WRONG_BRANCH expected={args.branch} actual={current_branch}",
+                file=sys.stderr,
+            )
             return 2
     else:
         if current_branch:
-            print(f"EXPECTED_DETACHED_HEAD actual={current_branch}",
-                  file=sys.stderr)
+            print(f"EXPECTED_DETACHED_HEAD actual={current_branch}", file=sys.stderr)
             return 2
 
     # Check HEAD matches
     current_head = git(["rev-parse", "HEAD"], worktree)
     if current_head != args.head:
-        print(f"WRONG_HEAD expected={args.head[:12]} actual={current_head[:12]}",
-              file=sys.stderr)
+        print(
+            f"WRONG_HEAD expected={args.head[:12]} actual={current_head[:12]}",
+            file=sys.stderr,
+        )
         return 3
 
     # Check no dirty tracked files

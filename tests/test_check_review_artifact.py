@@ -24,7 +24,8 @@ def test_script_help():
     """Script should print help without error."""
     result = subprocess.run(
         ["python3", str(SCRIPT), "--help"],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
     )
     assert result.returncode == 0
     assert "--pe-id" in result.stdout
@@ -34,7 +35,8 @@ def test_script_requires_pe_id():
     """Script should fail without required arguments."""
     result = subprocess.run(
         ["python3", str(SCRIPT)],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
     )
     assert result.returncode != 0
     # Should require --pe-id
@@ -45,7 +47,8 @@ def test_missing_review_returns_1(tmp_path):
     """Script should return 1 when REVIEW.md does not exist."""
     result = subprocess.run(
         ["python3", str(SCRIPT), "--repo", str(tmp_path), "--pe-id", "PE-NONEXISTENT"],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
     )
     assert result.returncode == 1
     assert "MISSING_REVIEW" in result.stderr

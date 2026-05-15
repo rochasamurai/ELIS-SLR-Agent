@@ -34,6 +34,7 @@ def test_required_checks_list():
 def test_failure_classification_patterns():
     """Check that common failure classifications are present in the module logic."""
     import inspect
+
     source = inspect.getsource(MODULE)
 
     assert "MISSING_ORIGIN_REMOTE" in source
@@ -75,6 +76,7 @@ def test_check_head_matches_baseline_nonexistent():
 def test_check_worktree_bound_existing():
     """_check_worktree_bound with an existing (non-git) directory should return 1."""
     import tempfile
+
     with tempfile.TemporaryDirectory() as tmpdir:
         rc = MODULE._check_worktree_bound(
             Path(tmpdir),
@@ -87,13 +89,19 @@ def test_cli_nonexistent_worktree_does_not_crash():
     """Running check_pe_opening_context.py with a nonexistent worktree should not crash."""
     result = subprocess.run(
         [
-            "python3", str(SCRIPT),
-            "--repo", str(Path(__file__).resolve().parents[1]),
-            "--worktree", "/tmp/nonexistent_pe_opening_cli_test",
-            "--branch", "feature/test",
-            "--head", "deadbeef0123456789",
+            "python3",
+            str(SCRIPT),
+            "--repo",
+            str(Path(__file__).resolve().parents[1]),
+            "--worktree",
+            "/tmp/nonexistent_pe_opening_cli_test",
+            "--branch",
+            "feature/test",
+            "--head",
+            "deadbeef0123456789",
         ],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
     )
     # Should exit 1 (failure), not crash with traceback
     assert result.returncode == 1

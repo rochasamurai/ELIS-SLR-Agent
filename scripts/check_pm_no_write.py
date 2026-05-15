@@ -54,6 +54,7 @@ NON_PM_AUTHORS = {
 
 class PMWriteViolation(Exception):
     """Raised when a PM-authored write to a disallowed path is detected."""
+
     def __init__(self, file_path: str, commit_sha: str = "", author: str = ""):
         self.file_path = file_path
         self.commit_sha = commit_sha
@@ -87,7 +88,12 @@ def _pm_authored_file(file_path: str, repo: Path, pe_range: str) -> bool:
         return False
     author_lower = author.strip().lower()
     # Check if author is PM-like (pm, elis-pm, elis pm agent)
-    if "pm" in author_lower and "infra" not in author_lower and "impl" not in author_lower and "val" not in author_lower:
+    if (
+        "pm" in author_lower
+        and "infra" not in author_lower
+        and "impl" not in author_lower
+        and "val" not in author_lower
+    ):
         return True
     return False
 
@@ -117,12 +123,18 @@ def check_violations(repo: Path, pe_range: str, pe_id: str) -> list[PMWriteViola
             author_lower = author_info.lower()
             # PM commit detection: contains "pm" but not impl/val/infra/gha/e2e/prog/slr/arch
             non_pm_prefixes = [
-                "infra-impl", "infra-val",
-                "prog-impl", "prog-val",
-                "slr-impl", "slr-val",
-                "gha-impl", "gha-val",
-                "e2e-impl", "e2e-val",
-                "arch-impl", "arch-val",
+                "infra-impl",
+                "infra-val",
+                "prog-impl",
+                "prog-val",
+                "slr-impl",
+                "slr-val",
+                "gha-impl",
+                "gha-val",
+                "e2e-impl",
+                "e2e-val",
+                "arch-impl",
+                "arch-val",
             ]
             is_non_pm = any(p in author_lower for p in non_pm_prefixes)
             if "pm" in author_lower and not is_non_pm:
@@ -142,9 +154,7 @@ def check_violations(repo: Path, pe_range: str, pe_id: str) -> list[PMWriteViola
                     if fpath.endswith("PE_TASK.md"):
                         continue
                     # Everything else is a violation
-                    violations.append(
-                        PMWriteViolation(fpath, sha, author_info)
-                    )
+                    violations.append(PMWriteViolation(fpath, sha, author_info))
 
     # 2. Check files per PE evidence directory
     pe_dir = repo / ".elis" / "pe" / pe_id
@@ -156,9 +166,7 @@ def check_violations(repo: Path, pe_range: str, pe_id: str) -> list[PMWriteViola
                 continue
             if f.name == "HANDOFF.md":
                 if _pm_authored_file(str(f.relative_to(repo)), repo, pe_range):
-                    violations.append(
-                        PMWriteViolation(str(f.relative_to(repo)))
-                    )
+                    violations.append(PMWriteViolation(str(f.relative_to(repo))))
 
     return violations
 
@@ -179,8 +187,10 @@ def main() -> int:
         print(str(v), file=sys.stderr)
 
     if violations:
-        print(f"PM_WRITE_VIOLATIONS_FOUND: {len(violations)} violation(s) detected",
-              file=sys.stderr)
+        print(
+            f"PM_WRITE_VIOLATIONS_FOUND: {len(violations)} violation(s) detected",
+            file=sys.stderr,
+        )
         return 1
 
     return 0

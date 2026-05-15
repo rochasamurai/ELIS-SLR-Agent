@@ -7,11 +7,17 @@ import importlib.util
 import subprocess
 from pathlib import Path
 
-SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "check_implementation_readiness.py"
+SCRIPT = (
+    Path(__file__).resolve().parents[1]
+    / "scripts"
+    / "check_implementation_readiness.py"
+)
 
 
 def _load():
-    spec = importlib.util.spec_from_file_location("check_implementation_readiness", SCRIPT)
+    spec = importlib.util.spec_from_file_location(
+        "check_implementation_readiness", SCRIPT
+    )
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -35,7 +41,8 @@ def test_script_help():
     """Script should print help without error."""
     result = subprocess.run(
         ["python3", str(SCRIPT), "--help"],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
     )
     assert result.returncode == 0
     assert "--pe-id" in result.stdout
@@ -47,6 +54,7 @@ def test_script_requires_pe_id():
     """Script should fail without required arguments."""
     result = subprocess.run(
         ["python3", str(SCRIPT), "--repo", "."],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
     )
     assert result.returncode != 0

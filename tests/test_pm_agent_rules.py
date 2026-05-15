@@ -30,9 +30,7 @@ def test_pm_rules_source_defines_status_transition_guard() -> None:
 
 
 def test_pm_skills_live_in_workspace_pm() -> None:
-    assert (
-        PM_SKILLS_PATH.exists()
-    ), f"Missing PM skills file: {PM_SKILLS_PATH}"
+    assert PM_SKILLS_PATH.exists(), f"Missing PM skills file: {PM_SKILLS_PATH}"
 
 
 def test_pm_skills_defines_opening_context_guard() -> None:

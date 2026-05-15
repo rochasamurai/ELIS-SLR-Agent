@@ -39,7 +39,6 @@ def test_non_pm_authors():
 
 def test_git_helper():
     """The git helper should exist."""
-    import inspect
     assert hasattr(MODULE, "git")
     assert callable(MODULE.git)
 
@@ -65,11 +64,22 @@ def test_pm_write_violation_class_minimal():
 def test_main_returns_non_zero_on_violations():
     """main() should return 1 when PM write violations exist."""
     import subprocess
+
     # Run against a known commit range; if no PM violations found, it returns 0
     result = subprocess.run(
-        ["python3", str(SCRIPT), "--repo", ".", "--pe-id", "PE-OPS-PM-GUARDRAILS-02",
-         "--pe-range", "HEAD~1..HEAD"],
-        capture_output=True, text=True, cwd=str(Path(__file__).resolve().parents[1]),
+        [
+            "python3",
+            str(SCRIPT),
+            "--repo",
+            ".",
+            "--pe-id",
+            "PE-OPS-PM-GUARDRAILS-02",
+            "--pe-range",
+            "HEAD~1..HEAD",
+        ],
+        capture_output=True,
+        text=True,
+        cwd=str(Path(__file__).resolve().parents[1]),
     )
     # On non-violating ranges, it should return 0
     assert result.returncode == 0
@@ -78,10 +88,20 @@ def test_main_returns_non_zero_on_violations():
 def test_main_exit_code_on_invalid_range():
     """main() should handle gracefully with a missing range."""
     import subprocess
+
     result = subprocess.run(
-        ["python3", str(SCRIPT), "--repo", ".", "--pe-id", "PE-OPS-PM-GUARDRAILS-02",
-         "--pe-range", "INVALID..RANGE"],
-        capture_output=True, text=True,
+        [
+            "python3",
+            str(SCRIPT),
+            "--repo",
+            ".",
+            "--pe-id",
+            "PE-OPS-PM-GUARDRAILS-02",
+            "--pe-range",
+            "INVALID..RANGE",
+        ],
+        capture_output=True,
+        text=True,
         cwd=str(Path(__file__).resolve().parents[1]),
     )
     # Should return 0 because no violations can be detected from invalid range
@@ -99,19 +119,32 @@ def test_check_violations_returns_list():
     """check_violations() should return a list (possibly empty)."""
     # Empty list for a non-violating range
     repo = Path(__file__).resolve().parents[1]
-    violations = MODULE.check_violations(repo, "HEAD~1..HEAD", "PE-OPS-PM-GUARDRAILS-02")
+    violations = MODULE.check_violations(
+        repo, "HEAD~1..HEAD", "PE-OPS-PM-GUARDRAILS-02"
+    )
     assert isinstance(violations, list)
 
 
 def test_check_violations_with_pm_author_detection():
     """check_violations() with a PM-authored commit should find violations."""
     import subprocess
+
     repo = Path(__file__).resolve().parents[1]
     # First, let's see if there are any PM commits in the full history
     results = subprocess.run(
-        ["python3", str(SCRIPT), "--repo", str(repo), "--pe-id", "PE-OPS-PM-GUARDRAILS-02",
-         "--pe-range", "HEAD~10..HEAD"],
-        capture_output=True, text=True, cwd=str(repo),
+        [
+            "python3",
+            str(SCRIPT),
+            "--repo",
+            str(repo),
+            "--pe-id",
+            "PE-OPS-PM-GUARDRAILS-02",
+            "--pe-range",
+            "HEAD~10..HEAD",
+        ],
+        capture_output=True,
+        text=True,
+        cwd=str(repo),
     )
     # We just check it doesn't crash and returns an integer exit code
     assert isinstance(results.returncode, int)

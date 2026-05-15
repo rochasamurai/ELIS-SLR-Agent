@@ -105,8 +105,11 @@ def main() -> int:
     p.add_argument(
         "--mode", choices=["implementer", "validator"], default="implementer"
     )
-    p.add_argument("--classify", metavar="CODE",
-                   help="Return the failure-class label for a blocking code")
+    p.add_argument(
+        "--classify",
+        metavar="CODE",
+        help="Return the failure-class label for a blocking code",
+    )
     args = p.parse_args()
 
     if args.classify:

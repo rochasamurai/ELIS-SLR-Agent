@@ -43,8 +43,7 @@ def _find_review_file(search_dir: Path) -> Path | None:
         candidates.extend(search_dir.rglob(pattern))
     # Filter to only actual REVIEW files (not README etc)
     candidates = [
-        c for c in candidates
-        if c.name == "REVIEW.md" or c.name.startswith("REVIEW_PE")
+        c for c in candidates if c.name == "REVIEW.md" or c.name.startswith("REVIEW_PE")
     ]
     if not candidates:
         return None
