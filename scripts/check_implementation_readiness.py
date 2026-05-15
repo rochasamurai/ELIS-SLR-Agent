@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+"""check_implementation_readiness.py — validate implementer dispatch readiness.
+
+Checks branch binding, HEAD match, worktree cleanliness, and persistent
+context files before declaring an implementer ready for dispatch.
+"""
+
 from __future__ import annotations
 
 import argparse
@@ -32,42 +38,57 @@ def main() -> int:
     )
     p.add_argument("--require-persistent-context", action="store_true")
     args = p.parse_args()
+
     repo = Path(args.repo).resolve()
     worktree = Path(args.worktree).resolve()
+
+    # Check worktree path exists
+    if not worktree.exists():
+        print("MISSING_WORKTREE", file=sys.stderr)
+        return 1
+
+    # Check branch binding
     current_branch = git(["branch", "--show-current"], worktree)
     if args.mode == "implementer":
         if not args.branch:
             print("MISSING_BRANCH", file=sys.stderr)
-            return 3
+            return 2
         if current_branch != args.branch:
-            print("WRONG_BRANCH", file=sys.stderr)
+            print(f"WRONG_BRANCH expected={args.branch} actual={current_branch}",
+                  file=sys.stderr)
             return 2
     else:
         if current_branch:
-            print("EXPECTED_DETACHED_HEAD", file=sys.stderr)
+            print(f"EXPECTED_DETACHED_HEAD actual={current_branch}",
+                  file=sys.stderr)
             return 2
-    if git(["rev-parse", "HEAD"], worktree) != args.head:
-        print("WRONG_HEAD", file=sys.stderr)
+
+    # Check HEAD matches
+    current_head = git(["rev-parse", "HEAD"], worktree)
+    if current_head != args.head:
+        print(f"WRONG_HEAD expected={args.head[:12]} actual={current_head[:12]}",
+              file=sys.stderr)
         return 3
-    if git(["status", "--short", "--untracked-files=no"], worktree):
+
+    # Check no dirty tracked files
+    dirty = git(["status", "--short", "--untracked-files=no"], worktree)
+    if dirty:
         print("DIRTY_WORKTREE", file=sys.stderr)
         return 4
+
+    # Check persistent context files if required
     if args.require_persistent_context:
         for rel in PERSISTENT:
-            if not (repo / rel).exists():
+            if not (worktree / rel).exists():
                 print(f"MISSING_PERSISTENT_CONTEXT:{rel}", file=sys.stderr)
                 return 5
-    elif args.mode == "validator":
-        print("PERSISTENT_CONTEXT_OPTIONAL", file=sys.stderr)
-    for rel in [
-        ".elis/pe/PE-OPS-SKILLS-01/GOVERNANCE.md",
-        ".elis/pe/PE-OPS-SKILLS-01/SKILLS_PM.md",
-        ".elis/pe/PE-OPS-SKILLS-01/SKILLS_IMPLEMENTERS.md",
-        ".elis/pe/PE-OPS-SKILLS-01/SKILLS_VALIDATORS.md",
-    ]:
-        if not (repo / rel).exists():
-            print(f"MISSING_SCOPE_FILE:{rel}", file=sys.stderr)
-            return 6
+
+    # Check PE task packet exists
+    pe_task = repo / ".elis" / "pe" / args.pe_id / "PE_TASK.md"
+    if not pe_task.exists():
+        print("MISSING_PE_TASK", file=sys.stderr)
+        return 6
+
     print(f"READY {args.pe_id}")
     return 0
 

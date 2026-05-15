@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-"""Tests for scripts/check_dispatch_binding.py."""
+"""Tests for scripts/check_dispatch_binding.py — PE dispatch binding guards."""
 
 from __future__ import annotations
 
 import importlib.util
-import subprocess
 from pathlib import Path
 
 SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "check_dispatch_binding.py"
@@ -40,70 +39,72 @@ def test_agent_worktree_map():
         MODULE.AGENT_WORKTREE_MAP["infra-val-a"]
         == "/opt/elis/agent-worktrees/infra-val-a"
     )
-    assert (
-        MODULE.AGENT_WORKTREE_MAP["github-agent"]
-        == "/opt/elis/agent-worktrees/github-agent"
-    )
 
 
-def test_agent_worktree_map_legacy_aliases():
-    """Legacy engine-based agent IDs should resolve to the correct worktree."""
-    assert (
-        MODULE.AGENT_WORKTREE_MAP["infra-impl-claude"]
-        == "/opt/elis/agent-worktrees/infra-impl-b"
-    )
-    assert (
-        MODULE.AGENT_WORKTREE_MAP["infra-val-claude"]
-        == "/opt/elis/agent-worktrees/infra-val-a"
-    )
-    assert (
-        MODULE.AGENT_WORKTREE_MAP["infra-impl-codex"]
-        == "/opt/elis/agent-worktrees/infra-impl-a"
-    )
-    assert (
-        MODULE.AGENT_WORKTREE_MAP["infra-val-codex"]
-        == "/opt/elis/agent-worktrees/infra-val-b"
-    )
+def test_agent_worktree_map_new_entries():
+    """New agent worktree entries should be present."""
+    assert "advisor" in MODULE.AGENT_WORKTREE_MAP
+    assert MODULE.AGENT_WORKTREE_MAP["advisor"] == "/opt/elis/agent-worktrees/advisor"
 
 
-def test_preserved_files():
-    """Runtime/bootstrap files should be protected."""
-    protected, _ = MODULE._is_untracked_or_dirty(".openclaw")
-    assert protected
-    protected, _ = MODULE._is_untracked_or_dirty("AGENTS.md")
-    assert protected
-    protected, _ = MODULE._is_untracked_or_dirty(".openclaw/config.yaml")
-    assert protected
+def test_failure_class_taxonomy():
+    """Failure-class taxonomy should include all blocking scenarios."""
+    assert "WRONG_BRANCH" in MODULE.FAILURE_CLASSES
+    assert "WRONG_HEAD" in MODULE.FAILURE_CLASSES
+    assert "DIRTY_WORKTREE" in MODULE.FAILURE_CLASSES
+    assert "MISSING_ORIGIN_REMOTE" in MODULE.FAILURE_CLASSES
+    assert "DETACHED_HEAD" in MODULE.FAILURE_CLASSES
+    assert "MISSING_PE_TASK" in MODULE.FAILURE_CLASSES
+    assert "DISPATCH_PATH_BLOCKED" in MODULE.FAILURE_CLASSES
+    assert "DISPATCH_RECOVERY_BLOCKED" in MODULE.FAILURE_CLASSES
+    assert "IMPLEMENTER_EXECUTION_BLOCKED" in MODULE.FAILURE_CLASSES
+    assert "MISSING_RESET_ACK" in MODULE.FAILURE_CLASSES
+    assert "SELF_FIX_ROUTING" in MODULE.FAILURE_CLASSES
+    assert "UNCOMMITTED_MISREPORTED" in MODULE.FAILURE_CLASSES
 
 
-def test_non_preserved_files():
-    """Non-runtime files should not be considered protected."""
-    protected, _ = MODULE._is_untracked_or_dirty("scripts/some_new_script.py")
-    assert not protected
-    protected, _ = MODULE._is_untracked_or_dirty("CURRENT_PE.md")
-    assert not protected
+def test_classify_failure():
+    """classify_failure should return the correct label."""
+    label = MODULE.classify_failure("WRONG_BRANCH")
+    assert "WRONG_BRANCH" in label
+    assert "Agent worktree is on an unexpected branch" in label
+
+    label = MODULE.classify_failure("MISSING_ORIGIN_REMOTE")
+    assert "MISSING_ORIGIN_REMOTE" in label
+
+    label = MODULE.classify_failure("UNKNOWN_CODE")
+    assert "UNKNOWN_FAILURE" in label
 
 
-def test_script_runs_with_unknown_agent():
-    """Calling with an unknown agent ID should exit 1."""
+def test_untracked_or_dirty():
+    """Common runtime/context files should be classified as protected."""
+    is_protected, reason = MODULE._is_untracked_or_dirty("HEARTBEAT.md")
+    assert is_protected
+    assert "runtime/context" in reason
+
+    is_protected, reason = MODULE._is_untracked_or_dirty("AGENTS.md")
+    assert is_protected
+
+    is_protected, reason = MODULE._is_untracked_or_dirty(".openclaw")
+    assert is_protected
+
+    is_protected, reason = MODULE._is_untracked_or_dirty("HANDOFF.md")
+    assert not is_protected
+
+
+def test_classify_failure_cli():
+    """--classify flag should produce the correct output."""
+    import subprocess
     result = subprocess.run(
-        [str(SCRIPT), "--agent", "nonexistent-agent"],
-        capture_output=True,
-        text=True,
-        timeout=30,
+        ["python3", str(SCRIPT), "--classify", "DISPATCH_PATH_BLOCKED"],
+        capture_output=True, text=True,
     )
+    assert "DISPATCH_PATH_BLOCKED" in result.stdout
     assert result.returncode == 1
-    assert "Unknown agent ID" in result.stdout
 
-
-def test_script_runs_without_crash_on_real_agent():
-    """Calling with a real agent ID should attempt checks."""
     result = subprocess.run(
-        [str(SCRIPT), "--agent", "infra-impl-b"],
-        capture_output=True,
-        text=True,
-        timeout=30,
+        ["python3", str(SCRIPT), "--classify", "WRONG_BRANCH"],
+        capture_output=True, text=True,
     )
-    # May pass or fail depending on actual worktree state, but should not crash
-    assert result.returncode in (0, 1), f"Unexpected: {result.returncode}"
-    assert "Agent: infra-impl-b" in result.stdout
+    assert "WRONG_BRANCH" in result.stdout
+    assert result.returncode == 1

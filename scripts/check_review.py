@@ -4,9 +4,11 @@ Used by auto-merge-on-pass.yml (Gate 2b) and ci.yml (review-evidence-check).
 Exits 1 if required sections are missing or Evidence section has no code block.
 Exits 0 on a valid REVIEW file.
 
-File selection: same priority as parse_verdict.py:
+File selection (same priority as parse_verdict.py):
   1. REVIEW_FILE env var — exact path.
   2. REVIEW_PATH env var — recursive scan by mtime. Default ".".
+
+Supports both REVIEW_PE*.md and .elis/pe/*/REVIEW.md naming conventions.
 """
 
 from __future__ import annotations
@@ -27,15 +29,27 @@ REQUIRED_SECTIONS = [
 
 _VERDICT_RE = re.compile(r"^(PASS|FAIL|IN PROGRESS)\b")
 
+# Patterns to find review files
+_REVIEW_PATTERNS = [
+    "REVIEW_PE*.md",
+    "**/*/REVIEW.md",
+]
+
 
 def _find_review_file(search_dir: Path) -> Path | None:
-    """Return most-recent REVIEW_PE*.md by mtime, or None if none found."""
-    files = sorted(
-        search_dir.rglob("REVIEW_PE*.md"),
-        key=lambda p: p.stat().st_mtime,
-        reverse=True,
-    )
-    return files[0] if files else None
+    """Return most-recent REVIEW file by mtime, or None if none found."""
+    candidates: list[Path] = []
+    for pattern in _REVIEW_PATTERNS:
+        candidates.extend(search_dir.rglob(pattern))
+    # Filter to only actual REVIEW files (not README etc)
+    candidates = [
+        c for c in candidates
+        if c.name == "REVIEW.md" or c.name.startswith("REVIEW_PE")
+    ]
+    if not candidates:
+        return None
+    candidates.sort(key=lambda p: p.stat().st_mtime, reverse=True)
+    return candidates[0]
 
 
 def _last_header_index(lines: list[str], header: str) -> int | None:

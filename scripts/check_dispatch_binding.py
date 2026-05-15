@@ -1,4 +1,11 @@
 #!/usr/bin/env python3
+"""check_dispatch_binding.py — validate PE dispatch binding preconditions.
+
+Verifies the agent worktree is on the correct branch, at the expected HEAD,
+and has no tracked dirty files. Supports failure-class classification for
+blocked dispatch scenarios.
+"""
+
 from __future__ import annotations
 
 import argparse
@@ -17,6 +24,7 @@ AGENT_WORKTREE_MAP = {
     "infra-val-claude": "/opt/elis/agent-worktrees/infra-val-a",
     "infra-impl-codex": "/opt/elis/agent-worktrees/infra-impl-a",
     "infra-val-codex": "/opt/elis/agent-worktrees/infra-val-b",
+    "advisor": "/opt/elis/agent-worktrees/advisor",
 }
 
 _PRESERVED_CONTEXT_FILES = {
@@ -27,6 +35,32 @@ _PRESERVED_CONTEXT_FILES = {
     "TOOLS.md",
     "USER.md",
 }
+
+# Failure-class taxonomy for dispatch blocking scenarios
+FAILURE_CLASSES = {
+    "DISPATCH_BLOCKED": "General dispatch blocking condition",
+    "WRONG_BRANCH": "Agent worktree is on an unexpected branch",
+    "WRONG_HEAD": "Agent worktree HEAD does not match expected baseline",
+    "DIRTY_WORKTREE": "Agent worktree has tracked dirty files",
+    "MISSING_ORIGIN_REMOTE": "Repo checkout has no origin remote",
+    "STALE_FETCH": "origin/main is not reachable; fetch required",
+    "DETACHED_HEAD": "Agent worktree is in detached HEAD state (implementer)",
+    "EXPECTED_DETACHED_HEAD": "Validator worktree is on a branch instead of detached",
+    "WORKTREE_MISSING": "Agent worktree path does not exist",
+    "MISSING_PE_TASK": "PE_TASK.md not found at .elis/pe/<PE-ID>/",
+    "DISPATCH_PATH_BLOCKED": "All dispatch routes are blocked",
+    "DISPATCH_RECOVERY_BLOCKED": "Dispatch recovery also blocked; no fallback available",
+    "IMPLEMENTER_EXECUTION_BLOCKED": "Implementer execution failed before clean commit",
+    "MISSING_RESET_ACK": "Reset/binding acknowledgement missing before dispatch",
+    "SELF_FIX_ROUTING": "Agent attempted to route work to itself",
+    "UNCOMMITTED_MISREPORTED": "Uncommitted artefacts misreported as complete",
+}
+
+
+def classify_failure(code: str) -> str:
+    """Return the failure-class classification label for a blocking scenario."""
+    label = FAILURE_CLASSES.get(code, "UNKNOWN_FAILURE")
+    return f"{code} / {label}"
 
 
 def git(cmd: list[str], cwd: Path) -> str:
@@ -59,7 +93,9 @@ def _legacy_agent_check(agent: str) -> int:
 
 
 def main() -> int:
-    p = argparse.ArgumentParser(description="Check PE dispatch binding")
+    p = argparse.ArgumentParser(
+        description="Check PE dispatch binding and classify failures"
+    )
     p.add_argument("--repo", default=".")
     p.add_argument("--agent")
     p.add_argument("--pe-id")
@@ -69,16 +105,29 @@ def main() -> int:
     p.add_argument(
         "--mode", choices=["implementer", "validator"], default="implementer"
     )
+    p.add_argument("--classify", metavar="CODE",
+                   help="Return the failure-class label for a blocking code")
     args = p.parse_args()
+
+    if args.classify:
+        label = classify_failure(args.classify)
+        print(label)
+        # All failure-class codes are blocking scenarios
+        return 1
+
     if args.agent:
         return _legacy_agent_check(args.agent)
+
     if not args.pe_id or not args.head or not args.worktree:
         p.error("the following arguments are required: --pe-id, --head, --worktree")
+
     repo = Path(args.repo).resolve()
     worktree = Path(args.worktree).resolve()
+
     if git(["rev-parse", "--show-toplevel"], repo) != str(repo):
         print("WORKTREE_MISMATCH: repo root mismatch", file=sys.stderr)
         return 2
+
     current_branch = git(["branch", "--show-current"], worktree)
     if args.mode == "implementer":
         if not args.branch:
@@ -91,16 +140,20 @@ def main() -> int:
         if current_branch:
             print("EXPECTED_DETACHED_HEAD", file=sys.stderr)
             return 3
+
     if git(["rev-parse", "HEAD"], worktree) != args.head:
         print("WRONG_HEAD", file=sys.stderr)
         return 4
+
     if git(["status", "--short", "--untracked-files=no"], worktree):
         print("DIRTY_WORKTREE", file=sys.stderr)
         return 5
+
     pe_task = repo / ".elis" / "pe" / args.pe_id / "PE_TASK.md"
     if not pe_task.exists():
         print("MISSING_PE_TASK", file=sys.stderr)
         return 6
+
     print(f"OK {args.pe_id} {args.branch} {args.head}")
     return 0
 

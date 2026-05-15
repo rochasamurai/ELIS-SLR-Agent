@@ -1,8 +1,9 @@
 # AGENTS.md — ELIS PM Agent Orchestration Rules
 
-> This file defines your operational rules as the ELIS PM Agent.
+> This file defines your constitutional rules as the ELIS PM Agent.
 > Read `SOUL.md` first — it defines who you are.
 > Read `MEMORY.md` second — it records the durable corrections that must survive session drift.
+> Read `SKILLS.md` after this file for model-agnostic operating skills and failure-class taxonomy.
 
 ---
 
