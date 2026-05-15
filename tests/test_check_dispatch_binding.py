@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import importlib.util
+import subprocess
 from pathlib import Path
 
 SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "check_dispatch_binding.py"
@@ -94,7 +95,6 @@ def test_untracked_or_dirty():
 
 def test_classify_failure_cli():
     """--classify flag should produce the correct output."""
-    import subprocess
     result = subprocess.run(
         ["python3", str(SCRIPT), "--classify", "DISPATCH_PATH_BLOCKED"],
         capture_output=True, text=True,
@@ -108,3 +108,41 @@ def test_classify_failure_cli():
     )
     assert "WRONG_BRANCH" in result.stdout
     assert result.returncode == 1
+
+
+def test_nonexistent_worktree_does_not_crash():
+    """Running check_dispatch_binding.py with a nonexistent worktree should not crash."""
+    repo = str(Path(__file__).resolve().parents[1])
+    result = subprocess.run(
+        [
+            "python3", str(SCRIPT),
+            "--repo", repo,
+            "--pe-id", "PE-OPS-PM-GUARDRAILS-02",
+            "--branch", "feature/test",
+            "--head", "deadbeef0123456789",
+            "--worktree", "/tmp/nonexistent_dispatch_test",
+            "--mode", "implementer",
+        ],
+        capture_output=True, text=True,
+    )
+    # Should exit non-zero (failure), not crash with traceback
+    assert result.returncode != 0
+    # Should mention WORKTREE_MISSING
+    assert "WORKTREE_MISSING" in result.stderr or "WORKTREE_MISSING" in result.stdout
+
+
+def test_nonexistent_worktree_validator():
+    """Running check_dispatch_binding.py validator mode with nonexistent worktree."""
+    repo = str(Path(__file__).resolve().parents[1])
+    result = subprocess.run(
+        [
+            "python3", str(SCRIPT),
+            "--repo", repo,
+            "--pe-id", "PE-OPS-PM-GUARDRAILS-02",
+            "--head", "deadbeef0123456789",
+            "--worktree", "/tmp/nonexistent_dispatch_test_val",
+            "--mode", "validator",
+        ],
+        capture_output=True, text=True,
+    )
+    assert result.returncode != 0

@@ -124,11 +124,28 @@ def main() -> int:
     repo = Path(args.repo).resolve()
     worktree = Path(args.worktree).resolve()
 
-    if git(["rev-parse", "--show-toplevel"], repo) != str(repo):
-        print("WORKTREE_MISMATCH: repo root mismatch", file=sys.stderr)
+    if not repo.exists():
+        print("WORKTREE_MISSING: repo path does not exist", file=sys.stderr)
+        return 1
+    if not worktree.exists():
+        print("WORKTREE_MISSING: worktree path does not exist", file=sys.stderr)
+        return 1
+
+    try:
+        if git(["rev-parse", "--show-toplevel"], repo) != str(repo):
+            print("WORKTREE_MISMATCH: repo root mismatch", file=sys.stderr)
+            return 2
+    except subprocess.CalledProcessError:
+        print("WORKTREE_MISMATCH: repo is not a git repository", file=sys.stderr)
         return 2
 
-    current_branch = git(["branch", "--show-current"], worktree)
+    try:
+        current_branch = git(["branch", "--show-current"], worktree)
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        current_branch = ""
+        if args.mode == "implementer":
+            print("WORKTREE_MISSING: cannot read worktree branch", file=sys.stderr)
+            return 1
     if args.mode == "implementer":
         if not args.branch:
             print("MISSING_BRANCH", file=sys.stderr)
@@ -141,11 +158,19 @@ def main() -> int:
             print("EXPECTED_DETACHED_HEAD", file=sys.stderr)
             return 3
 
-    if git(["rev-parse", "HEAD"], worktree) != args.head:
+    try:
+        current_head = git(["rev-parse", "HEAD"], worktree)
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        current_head = ""
+    if current_head != args.head:
         print("WRONG_HEAD", file=sys.stderr)
         return 4
 
-    if git(["status", "--short", "--untracked-files=no"], worktree):
+    try:
+        dirty = git(["status", "--short", "--untracked-files=no"], worktree)
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        dirty = ""
+    if dirty:
         print("DIRTY_WORKTREE", file=sys.stderr)
         return 5
 

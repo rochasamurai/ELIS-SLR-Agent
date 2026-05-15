@@ -65,9 +65,12 @@ def _check_current_pe_reconciled(repo: Path) -> int:
 
 def _check_worktree_bound(worktree: Path, expected_branch: str) -> int:
     """Verify the worktree is on the expected branch."""
+    if not worktree.exists():
+        print("CLASSIFY: WORKTREE_MISSING", file=sys.stderr)
+        return 1
     try:
         branch = git(["branch", "--show-current"], cwd=worktree)
-    except subprocess.CalledProcessError:
+    except (subprocess.CalledProcessError, FileNotFoundError):
         print("CLASSIFY: WORKTREE_MISSING", file=sys.stderr)
         return 1
     if not branch:
@@ -82,9 +85,12 @@ def _check_worktree_bound(worktree: Path, expected_branch: str) -> int:
 
 def _check_worktree_clean(worktree: Path) -> int:
     """Verify the worktree has no dirty tracked files."""
+    if not worktree.exists():
+        print("CLASSIFY: WORKTREE_MISSING", file=sys.stderr)
+        return 1
     try:
         dirty = git(["status", "--short", "--untracked-files=no"], cwd=worktree)
-    except subprocess.CalledProcessError:
+    except (subprocess.CalledProcessError, FileNotFoundError):
         print("CLASSIFY: WORKTREE_MISSING", file=sys.stderr)
         return 1
     if dirty:
@@ -95,9 +101,12 @@ def _check_worktree_clean(worktree: Path) -> int:
 
 def _check_head_matches_baseline(worktree: Path, expected_head: str) -> int:
     """Verify the worktree HEAD matches the expected baseline."""
+    if not worktree.exists():
+        print("CLASSIFY: WORKTREE_MISSING", file=sys.stderr)
+        return 1
     try:
         head = git(["rev-parse", "HEAD"], cwd=worktree)
-    except subprocess.CalledProcessError:
+    except (subprocess.CalledProcessError, FileNotFoundError):
         print("CLASSIFY: WORKTREE_MISSING", file=sys.stderr)
         return 1
     if head != expected_head:

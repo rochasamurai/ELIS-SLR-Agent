@@ -52,6 +52,24 @@ NON_PM_AUTHORS = {
 }
 
 
+class PMWriteViolation(Exception):
+    """Raised when a PM-authored write to a disallowed path is detected."""
+    def __init__(self, file_path: str, commit_sha: str = "", author: str = ""):
+        self.file_path = file_path
+        self.commit_sha = commit_sha
+        self.author = author
+        msg_parts = [f"PM_WROTE_FILE: {file_path}"]
+        if commit_sha:
+            msg_parts.append(f"in commit {commit_sha[:12]}")
+        if author:
+            msg_parts.append(f"by {author}")
+        super().__init__(" ".join(msg_parts))
+
+
+class PMWriteCheckError(Exception):
+    """Raised when the check itself encounters an error (e.g. git failure)."""
+
+
 def git(cmd: list[str], cwd: Path) -> str:
     return subprocess.check_output(["git", *cmd], cwd=cwd, text=True).strip()
 
@@ -74,18 +92,12 @@ def _pm_authored_file(file_path: str, repo: Path, pe_range: str) -> bool:
     return False
 
 
-def main() -> int:
-    p = argparse.ArgumentParser(description="Check PM has not written disallowed files")
-    p.add_argument("--repo", default=".")
-    p.add_argument("--pe-range", help="Git range (e.g. base..HEAD) to check")
-    p.add_argument("--pe-id", required=True)
-    args = p.parse_args()
-
-    repo = Path(args.repo).resolve()
-    pe_range = args.pe_range or "HEAD~1..HEAD"
+def check_violations(repo: Path, pe_range: str, pe_id: str) -> list[PMWriteViolation]:
+    """Check for PM write violations and return a list of violations found."""
+    violations: list[PMWriteViolation] = []
 
     # 1. If pe_range given, check commit authors in that range
-    if args.pe_range:
+    if pe_range:
         # Get all commits in range
         try:
             commits = git(
@@ -98,9 +110,12 @@ def main() -> int:
         for line in commits.splitlines():
             if not line.strip():
                 continue
-            sha, author_info = line.strip().split(" ", 1)
+            parts = line.strip().split(" ", 1)
+            if len(parts) < 2:
+                continue
+            sha, author_info = parts
             author_lower = author_info.lower()
-            # PM commit detection: contains "pm" but not impl/vale/infra/gha/e2e/prog/slr/arch
+            # PM commit detection: contains "pm" but not impl/val/infra/gha/e2e/prog/slr/arch
             non_pm_prefixes = [
                 "infra-impl", "infra-val",
                 "prog-impl", "prog-val",
@@ -108,7 +123,6 @@ def main() -> int:
                 "gha-impl", "gha-val",
                 "e2e-impl", "e2e-val",
                 "arch-impl", "arch-val",
-                "infra-impl", "infra-val",
             ]
             is_non_pm = any(p in author_lower for p in non_pm_prefixes)
             if "pm" in author_lower and not is_non_pm:
@@ -128,11 +142,12 @@ def main() -> int:
                     if fpath.endswith("PE_TASK.md"):
                         continue
                     # Everything else is a violation
-                    print(f"PM_WROTE_FILE: {fpath} in commit {sha[:12]} by {author_info}",
-                          file=sys.stderr)
+                    violations.append(
+                        PMWriteViolation(fpath, sha, author_info)
+                    )
 
     # 2. Check files per PE evidence directory
-    pe_dir = repo / ".elis" / "pe" / args.pe_id
+    pe_dir = repo / ".elis" / "pe" / pe_id
     if pe_dir.exists():
         for f in pe_dir.rglob("*"):
             if not f.is_file():
@@ -141,11 +156,32 @@ def main() -> int:
                 continue
             if f.name == "HANDOFF.md":
                 if _pm_authored_file(str(f.relative_to(repo)), repo, pe_range):
-                    print(f"PM_WROTE_FILE: {f.relative_to(repo)}", file=sys.stderr)
+                    violations.append(
+                        PMWriteViolation(str(f.relative_to(repo)))
+                    )
 
-    # Aggregate violations
-    # Since we can't easily aggregate from stderr in this simple check,
-    # return 0 if no errors printed
+    return violations
+
+
+def main() -> int:
+    p = argparse.ArgumentParser(description="Check PM has not written disallowed files")
+    p.add_argument("--repo", default=".")
+    p.add_argument("--pe-range", help="Git range (e.g. base..HEAD) to check")
+    p.add_argument("--pe-id", required=True)
+    args = p.parse_args()
+
+    repo = Path(args.repo).resolve()
+    pe_range = args.pe_range or "HEAD~1..HEAD"
+
+    violations = check_violations(repo, pe_range, args.pe_id)
+
+    for v in violations:
+        print(str(v), file=sys.stderr)
+
+    if violations:
+        print(f"PM_WRITE_VIOLATIONS_FOUND: {len(violations)} violation(s) detected",
+              file=sys.stderr)
+        return 1
 
     return 0
 
