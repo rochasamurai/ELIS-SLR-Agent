@@ -153,3 +153,16 @@ def test_review_path_fallback_uses_most_recent_review(monkeypatch, tmp_path):
     monkeypatch.setenv("REVIEW_PATH", str(tmp_path))
 
     assert check_review.main() == 0
+
+
+def test_review_path_finds_standard_review_md(monkeypatch, tmp_path):
+    """The REVIEW path fallback should also find .elis/pe/*/REVIEW.md files."""
+    pe_dir = tmp_path / ".elis" / "pe" / "PE-TEST-01"
+    pe_dir.mkdir(parents=True, exist_ok=True)
+    review = pe_dir / "REVIEW.md"
+    _write_review(review, REVIEW_BASE)
+
+    monkeypatch.delenv("REVIEW_FILE", raising=False)
+    monkeypatch.setenv("REVIEW_PATH", str(tmp_path))
+
+    assert check_review.main() == 0
