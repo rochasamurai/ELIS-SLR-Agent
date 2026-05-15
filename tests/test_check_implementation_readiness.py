@@ -37,6 +37,18 @@ def test_persistent_files_list():
     assert "USER.md" in names
 
 
+def test_required_scope_files_are_pe_specific():
+    """Required scope files should be derived from the PE id."""
+    paths = MODULE.required_scope_files("PE-OPS-SKILLS-01")
+    assert [p.name for p in paths] == [
+        "GOVERNANCE.md",
+        "SKILLS_PM.md",
+        "SKILLS_IMPLEMENTERS.md",
+        "SKILLS_VALIDATORS.md",
+    ]
+    assert all("PE-OPS-SKILLS-01" in str(p) for p in paths)
+
+
 def test_script_help():
     """Script should print help without error."""
     result = subprocess.run(

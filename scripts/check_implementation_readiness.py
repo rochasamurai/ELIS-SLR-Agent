@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""check_implementation_readiness.py — validate implementer dispatch readiness.
+"""check_implementation_readiness.py — validate dispatch readiness.
 
 Checks branch binding, HEAD match, worktree cleanliness, and persistent
-context files before declaring an implementer ready for dispatch.
+context files before declaring a worktree ready for dispatch.
 """
 
 from __future__ import annotations
@@ -24,6 +24,15 @@ PERSISTENT = [
 
 def git(cmd: list[str], cwd: Path) -> str:
     return subprocess.check_output(["git", *cmd], cwd=cwd, text=True).strip()
+
+
+def required_scope_files(pe_id: str) -> list[Path]:
+    return [
+        Path(".elis") / "pe" / pe_id / "GOVERNANCE.md",
+        Path(".elis") / "pe" / pe_id / "SKILLS_PM.md",
+        Path(".elis") / "pe" / pe_id / "SKILLS_IMPLEMENTERS.md",
+        Path(".elis") / "pe" / pe_id / "SKILLS_VALIDATORS.md",
+    ]
 
 
 def main() -> int:
@@ -86,11 +95,17 @@ def main() -> int:
                 print(f"MISSING_PERSISTENT_CONTEXT:{rel}", file=sys.stderr)
                 return 5
 
-    # Check PE task packet exists
-    pe_task = repo / ".elis" / "pe" / args.pe_id / "PE_TASK.md"
-    if not pe_task.exists():
-        print("MISSING_PE_TASK", file=sys.stderr)
-        return 6
+    # Check PE task packet exists only for implementer mode.
+    if args.mode == "implementer":
+        pe_task = repo / ".elis" / "pe" / args.pe_id / "PE_TASK.md"
+        if not pe_task.exists():
+            print("MISSING_PE_TASK", file=sys.stderr)
+            return 6
+
+    for rel in required_scope_files(args.pe_id):
+        if not (repo / rel).exists():
+            print(f"MISSING_SCOPE_FILE:{rel}", file=sys.stderr)
+            return 7
 
     print(f"READY {args.pe_id}")
     return 0
