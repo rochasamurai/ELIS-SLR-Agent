@@ -1,10 +1,10 @@
 # ELIS Worktree Preflight Checklist
 
-**Status:** Canonical — v1.1  
-**Date:** 2026-05-06  
+**Status:** Canonical — v1.2  
+**Date:** 2026-05-16  
 **Owner:** Carlos Rocha, Product Owner  
 **Applies to:** All ELIS agents before starting any PE work  
-**Authoritative sources:** ELIS_General_Guidance.md §5, AGENTS.md §2.2, LESSONS_LEARNED.md, ELIS_PE_Operating_Protocol.md §5 (Fixed Workspace Model)  
+**Authoritative sources:** ELIS_General_Guidance.md §5, AGENTS.md §2.2, LESSONS_LEARNED.md, ELIS_PE_Operating_Protocol.md §5 (Fixed Workspace Model), ELIS_Agent_Dispatch_Binding_and_Validation_Rules.md  
 **Canonical record:** GitHub (this document)
 
 ---
@@ -32,6 +32,16 @@ git branch --show-current
 - `git status --short --branch`: clean state or only expected files after reset
 - `git branch --show-current`: must match the PE branch for the current assignment, e.g. `feature/pe-ops-fixed-workspaces-01-adopt-fixed-agent-workspace-and-github-write-boundary-model`
 
+### Runtime Workspace Verification
+Before any PE work begins, the agent must also verify its OpenClaw runtime workspace:
+- The runtime workspace is distinct from the authorised Git worktree (different paths)
+- The runtime workspace path matches the agent's role:
+  - `infra-impl-b` → `/home/samurai/openclaw/workspace-infra-impl-b`
+  - `infra-val-a` → `/home/samurai/openclaw/workspace-infra-val`
+  - `pm` → `/home/samurai/openclaw/workspace-pm`
+- Persistent identity files (AGENTS.md, SOUL.md, MEMORY.md, etc.) reside in the runtime workspace
+- No persistent runtime/bootstrap files live inside the Git worktree
+
 ### Fixed Workspace Binding Certificate
 Before any PE work begins, the agent must produce a **Fixed Workspace Binding Certificate** as defined in `docs/governance/ELIS_PE_Operating_Protocol.md §5.1b`. This certificate is mandatory evidence in the opening Status Packet.
 
@@ -40,13 +50,16 @@ Certificate fields:
 |-------|--------|
 | PE ID | CURRENT_PE.md |
 | Agent ID | Agent's surface name (e.g. `infra-impl-b`) |
-| Fixed workspace path | `pwd` |
+| Role | The agent's role (e.g. `infra-impl-b`, `infra-val-a`) |
+| Runtime workspace | OpenClaw workspace path (e.g. `/home/samurai/openclaw/workspace-infra-impl-b`) |
+| Authorised Git worktree | Fixed worktree path (e.g. `/opt/elis/agent-worktrees/infra-impl-b`) |
 | Git root | `git rev-parse --show-toplevel` |
 | Branch | `git branch --show-current` |
 | HEAD | `git rev-parse HEAD` |
 | Base/expected commit | `git rev-parse origin/$BASE` (`$BASE` from CURRENT_PE.md) |
 | Clean status | `git status --short --untracked-files=all` |
 | Allowed file scope | From PE_TASK.md |
+| Write scope | Authorised Git worktree only |
 | Timestamp | ISO 8601 timestamp |
 | Result | PASS (matches) or FAIL (mismatch) |
 
@@ -65,6 +78,8 @@ A FAIL result blocks all work until PM resolves the mismatch.
 - [ ] Read `.agentignore` — none of those files may be open or in context
 - [ ] Wrong-worktree quarantine understood: if `pwd` or `git rev-parse --show-toplevel` does not match assigned path, stop all operations immediately
 - [ ] No-copy rule understood: never copy or transfer files between worktrees
+- [ ] **Fixed worktree exclusion:** No persistent runtime/bootstrap files (`.openclaw/`, `HEARTBEAT.md`, `IDENTITY.md`, `SOUL.md`, `TOOLS.md`, `USER.md`) exist inside the Git worktree
+- [ ] **Runtime workspace distinct:** OpenClaw runtime workspace (e.g. `/home/samurai/openclaw/workspace-infra-impl-b`) is a different path from the authorised Git worktree (e.g. `/opt/elis/agent-worktrees/infra-impl-b`)
 
 ### 3.2 Repository Path Safety
 - [ ] Canonical repo path: `/opt/elis/repo` — do not modify directly unless this PE is authorised
@@ -125,10 +140,11 @@ A command such as `cd /opt/elis/repo && git status` does not change where OpenCl
 - [ ] Rebase if needed: `git rebase origin/$BASE`
 
 ### 6.3 Separate Persistent Runtime Files from Disposable Repo State
-- [ ] Persistent agent runtime/context files (AGENTS.md, SKILLS.md, SOUL.md, tool manifests, OpenClaw/Hermes bootstrap files) reside outside the fixed worktree
+- [ ] Persistent agent runtime/context files (AGENTS.md, SKILLS.md, SOUL.md, tool manifests, OpenClaw/Hermes bootstrap files) reside outside the fixed worktree — in the OpenClaw runtime workspace
 - [ ] Disposable repo/task state (source code, HANDOFF, REVIEW, `.elis/` PE workspace) is cleaned during reset
 - [ ] No persistent runtime files are written into the fixed worktree
 - [ ] If any persistent file accidental lands in the worktree, it is moved out before the worktree is reset for the next PE
+- [ ] The following files are **explicitly forbidden** inside the Git worktree: `.openclaw/`, `HEARTBEAT.md`, `IDENTITY.md`, `SOUL.md`, `TOOLS.md`, `USER.md`
 
 ### 6.4 When Resuming Work (Same PE, Same Branch)
 - [ ] Previous commit is on the correct PE branch
@@ -187,5 +203,6 @@ echo "Task packet: $(ls .elis/pe/*/PE_TASK.md 2>/dev/null || echo NOT FOUND)"
 
 | Version | Date       | Author | Changes |
 |---------|------------|--------|---------|
+| 1.2     | 2026-05-16 | PE-closeout | Add runtime workspace verification section. Update Fixed Workspace Binding Certificate with runtime workspace, role, and write scope fields. |
 | 1.1     | 2026-05-06 | PM     | Adopt fixed workspace paths (role+slot, not PE-ID). Add fixed workspace reset checklist. Update expected path patterns and branch instructions. |
 | 1.0     | 2026-05-03 | PM     | Initial canonical consolidation from ELIS_General_Guidance.md §5, AGENTS.md, LESSONS_LEARNED.md. |

@@ -85,6 +85,42 @@ python scripts/check_implementation_readiness.py \
 
 This checks branch binding, HEAD match, worktree cleanliness, PE task packet existence, and optional persistent context files.
 
+## Governed closeout readiness gates (PE-OPS-PE-CLOSEOUT-01)
+
+Before closing out a PE, verify these governed readiness gates:
+
+### Workspace binding gate
+- [ ] Agent runtime workspace is correctly bound (e.g. `infra-impl-b` → `/home/samurai/openclaw/workspace-infra-impl-b`)
+- [ ] Authorised Git worktree is correctly bound (e.g. `infra-impl-b` → `/opt/elis/agent-worktrees/infra-impl-b`)
+- [ ] Runtime workspace and Git worktree are distinct paths
+- [ ] No persistent runtime files (`.openclaw/`, `HEARTBEAT.md`, `IDENTITY.md`, `SOUL.md`, `TOOLS.md`, `USER.md`) exist inside the Git worktree
+
+### Dispatch packet gate
+- [ ] Fixed Workspace Binding Certificate includes: agent identity, role, runtime workspace, authorised Git worktree, git root, branch, HEAD, worktree status, write scope
+- [ ] Validator readiness uses the same feature branch (not detached HEAD)
+- [ ] Write scope is limited to the authorised Git worktree only
+
+### Pre-close verification
+Run before declaring a PE complete:
+```bash
+python scripts/check_fixed_worktrees.py
+python scripts/check_dispatch_binding.py \
+  --pe-id <PE-ID> \
+  --branch <BRANCH> \
+  --head <HEAD> \
+  --worktree <AGENT_WORKTREE_PATH> \
+  --mode implementer
+python scripts/check_implementation_readiness.py \
+  --repo /opt/elis/repo \
+  --worktree <AGENT_WORKTREE_PATH> \
+  --branch <BRANCH> \
+  --head <HEAD> \
+  --pe-id <PE-ID>
+```
+
+### Version history note
+- PE-OPS-PE-CLOSEOUT-01 (2026-05-16): Added governed closeout readiness gates for workspace binding, dispatch packets, and pre-close verification.
+
 ## Evidence
 - Record exact file paths, before/after hashes, backups, and readback evidence for live context updates.
 

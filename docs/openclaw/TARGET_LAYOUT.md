@@ -421,8 +421,23 @@ The preferred end state on `elis-server` is:
 Architecture summary:
 
 - one platform repo
-- many least-privilege workspaces
+- many least-privilege workspaces (OpenClaw runtime workspaces)
+- many least-privilege Git worktrees (authorised Git worktrees)
 - separate SLR project stores
 - PM read-all, write-narrow
+
+### 8.1 Runtime Workspace vs Git Worktree Distinction
+
+Every agent has two distinct environments. These are the canonical pairs for active agents:
+
+| Agent | OpenClaw Runtime Workspace | Authorised Git Worktree |
+|-------|---------------------------|------------------------|
+| infra-impl-b | `/home/samurai/openclaw/workspace-infra-impl-b` | `/opt/elis/agent-worktrees/infra-impl-b` |
+| infra-val-a | `/home/samurai/openclaw/workspace-infra-val` | `/opt/elis/agent-worktrees/infra-val-a` |
+| pm | `/home/samurai/openclaw/workspace-pm` | `/opt/elis/agent-worktrees/pm` |
+
+**Separation rule:** The runtime workspace holds persistent agent identity, skills, and context (AGENTS.md, SKILLS.md, SOUL.md, MEMORY.md, IDENTITY.md, USER.md, .openclaw/). The Git worktree holds disposable repo/task state only and must never contain runtime/bootstrap files.
+
+**Fixed worktree exclusion rule:** The following files must never appear inside the Git worktree: `.openclaw/`, `HEARTBEAT.md`, `IDENTITY.md`, `SOUL.md`, `TOOLS.md`, `USER.md`. If any of these are detected, the worktree is considered contaminated and must be cleaned.
 
 That is the architecture recommended for ELIS.

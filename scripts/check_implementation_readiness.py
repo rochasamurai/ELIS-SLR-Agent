@@ -21,6 +21,16 @@ PERSISTENT = [
     Path("USER.md"),
 ]
 
+# These files must never appear inside the fixed Git worktree.
+WORKTREE_FORBIDDEN = {
+    ".openclaw",
+    "HEARTBEAT.md",
+    "IDENTITY.md",
+    "SOUL.md",
+    "TOOLS.md",
+    "USER.md",
+}
+
 
 def git(cmd: list[str], cwd: Path) -> str:
     return subprocess.check_output(["git", *cmd], cwd=cwd, text=True).strip()
@@ -95,17 +105,30 @@ def main() -> int:
                 print(f"MISSING_PERSISTENT_CONTEXT:{rel}", file=sys.stderr)
                 return 5
 
+    # Check for forbidden runtime/bootstrap files inside the Git worktree
+    forbidden_found = []
+    for f in WORKTREE_FORBIDDEN:
+        candidate = worktree / f
+        if candidate.exists():
+            forbidden_found.append(f)
+    if forbidden_found:
+        print(
+            f"FORBIDDEN_IN_WORKTREE:{','.join(forbidden_found)}",
+            file=sys.stderr,
+        )
+        return 6
+
     # Check PE task packet exists only for implementer mode.
     if args.mode == "implementer":
         pe_task = repo / ".elis" / "pe" / args.pe_id / "PE_TASK.md"
         if not pe_task.exists():
             print("MISSING_PE_TASK", file=sys.stderr)
-            return 6
+            return 7
 
     for rel in required_scope_files(args.pe_id):
         if not (repo / rel).exists():
             print(f"MISSING_SCOPE_FILE:{rel}", file=sys.stderr)
-            return 7
+            return 8
 
     print(f"READY {args.pe_id}")
     return 0

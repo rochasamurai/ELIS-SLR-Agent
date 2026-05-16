@@ -70,3 +70,79 @@ def test_script_requires_pe_id():
         text=True,
     )
     assert result.returncode != 0
+
+
+def test_worktree_forbidden_set():
+    """WORKTREE_FORBIDDEN should include runtime/bootstrap files that must not be in worktree."""
+    assert MODULE.WORKTREE_FORBIDDEN is not None
+    assert "HEARTBEAT.md" in MODULE.WORKTREE_FORBIDDEN
+    assert "IDENTITY.md" in MODULE.WORKTREE_FORBIDDEN
+    assert "SOUL.md" in MODULE.WORKTREE_FORBIDDEN
+    assert "TOOLS.md" in MODULE.WORKTREE_FORBIDDEN
+    assert "USER.md" in MODULE.WORKTREE_FORBIDDEN
+
+
+def test_implementation_readiness_rejects_forbidden_in_worktree(tmp_path):
+    """Implementation readiness should fail if forbidden runtime files are in worktree."""
+    subprocess.run(
+        ["git", "init"],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+    )
+    (tmp_path / "README.md").write_text("root")
+    subprocess.run(
+        ["git", "add", "README.md"],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+    )
+    subprocess.run(
+        ["git", "commit", "-m", "init"],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+        env={
+            "GIT_AUTHOR_NAME": "Test",
+            "GIT_AUTHOR_EMAIL": "test@test.com",
+            "GIT_COMMITTER_NAME": "Test",
+            "GIT_COMMITTER_EMAIL": "test@test.com",
+        },
+    )
+    branch = "feature/test"
+    subprocess.run(
+        ["git", "checkout", "-b", branch],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+    )
+    # Create a forbidden SOUL.md in the worktree
+    (tmp_path / "SOUL.md").write_text("test soul")
+    head_result = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+    )
+    head = head_result.stdout.strip()
+    proc = subprocess.run(
+        [
+            "python3",
+            str(SCRIPT),
+            "--repo",
+            str(tmp_path),
+            "--pe-id",
+            "PE-OPS-SKILLS-01",
+            "--branch",
+            branch,
+            "--head",
+            head,
+            "--worktree",
+            str(tmp_path),
+        ],
+        capture_output=True,
+        text=True,
+    )
+    assert proc.returncode != 0
+    assert "FORBIDDEN_IN_WORKTREE" in proc.stderr
+    assert "SOUL.md" in proc.stderr

@@ -45,7 +45,14 @@ def test_dispatch_binding_ok(tmp_path):
     run(["git", "checkout", "-b", branch], repo)
     (repo / ".elis/pe/PE-OPS-SKILLS-01/PE_TASK.md").write_text("x")
     run(["git", "add", ".elis/pe/PE-OPS-SKILLS-01/PE_TASK.md"], repo)
-    run(["git", "commit", "-m", "task"], repo)
+    # Remove runtime bootstrap files that belong in the runtime workspace, not the Git worktree
+    for name in ["HEARTBEAT.md", "IDENTITY.md", "SOUL.md", "TOOLS.md", "USER.md"]:
+        (repo / name).unlink(missing_ok=True)
+    import shutil
+
+    shutil.rmtree(repo / ".openclaw", ignore_errors=True)
+    run(["git", "add", "-A"], repo)
+    run(["git", "commit", "-m", "remove-runtime-files"], repo)
     head = run(["git", "rev-parse", "HEAD"], repo).stdout.strip()
     proc = run(
         [
@@ -104,7 +111,14 @@ def test_dispatch_binding_validator_mode_accepts_detached_head(tmp_path):
     )
     (repo / ".elis/pe/PE-OPS-SKILLS-01/PE_TASK.md").write_text("x")
     run(["git", "add", ".elis/pe/PE-OPS-SKILLS-01/PE_TASK.md"], repo)
-    run(["git", "commit", "-m", "task"], repo)
+    # Remove runtime bootstrap files that belong in the runtime workspace, not the Git worktree
+    for name in ["HEARTBEAT.md", "IDENTITY.md", "SOUL.md", "TOOLS.md", "USER.md"]:
+        (repo / name).unlink(missing_ok=True)
+    import shutil
+
+    shutil.rmtree(repo / ".openclaw", ignore_errors=True)
+    run(["git", "add", "-A"], repo)
+    run(["git", "commit", "-m", "remove-runtime-files"], repo)
     head = run(["git", "rev-parse", "HEAD"], repo).stdout.strip()
     run(["git", "checkout", "--detach", "HEAD"], repo)
     proc = run(
@@ -168,6 +182,14 @@ def test_implementation_readiness_validator_mode_accepts_detached_head_and_optio
     tmp_path,
 ):
     repo = init_repo(tmp_path)
+    # Remove runtime bootstrap files that belong in the runtime workspace, not the Git worktree
+    for name in ["HEARTBEAT.md", "IDENTITY.md", "SOUL.md", "TOOLS.md", "USER.md"]:
+        (repo / name).unlink(missing_ok=True)
+    import shutil
+
+    shutil.rmtree(repo / ".openclaw", ignore_errors=True)
+    run(["git", "add", "-A"], repo)
+    run(["git", "commit", "-m", "remove-runtime-files"], repo)
     run(
         [
             "git",
@@ -209,21 +231,8 @@ def test_implementation_readiness_validator_mode_accepts_detached_head_and_optio
     )
     assert proc.returncode == 0, proc.stderr
     assert "READY PE-OPS-SKILLS-01" in proc.stdout
-    for name in [
-        ".openclaw",
-        "HEARTBEAT.md",
-        "IDENTITY.md",
-        "SOUL.md",
-        "TOOLS.md",
-        "USER.md",
-    ]:
-        target = repo / name
-        if target.is_dir():
-            import shutil
-
-            shutil.rmtree(target)
-        else:
-            target.unlink()
+    # Persistent context files were already removed (part of the test setup).
+    # Verify the optional check reports them as missing.
     proc2 = run(
         [
             sys.executable,
@@ -239,6 +248,12 @@ def test_implementation_readiness_validator_mode_accepts_detached_head_and_optio
 
 def test_validation_readiness_wrong_scope_and_stale_artifact(tmp_path):
     repo = init_repo(tmp_path)
+    # Remove runtime bootstrap files that belong in the runtime workspace, not the Git worktree
+    for name in ["HEARTBEAT.md", "IDENTITY.md", "SOUL.md", "TOOLS.md", "USER.md"]:
+        (repo / name).unlink(missing_ok=True)
+    import shutil
+
+    shutil.rmtree(repo / ".openclaw", ignore_errors=True)
     run(
         [
             "git",
@@ -252,7 +267,7 @@ def test_validation_readiness_wrong_scope_and_stale_artifact(tmp_path):
     (repo / ".elis/pe/PE-OPS-SKILLS-01/HANDOFF.md").write_text("x")
     (repo / ".elis/pe/PE-OPS-SKILLS-01/REVIEW.md").write_text("x")
     (repo / ".elis/pe/PE-OPS-SKILLS-01/old.txt").write_text("stale")
-    run(["git", "add", "."], repo)
+    run(["git", "add", "-A"], repo)
     run(["git", "commit", "-m", "scope"], repo)
     head = run(["git", "rev-parse", "HEAD"], repo).stdout.strip()
     proc = run(

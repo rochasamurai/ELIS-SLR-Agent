@@ -77,6 +77,14 @@ def test_classify_failure():
     assert "UNKNOWN_FAILURE" in label
 
 
+def test_check_forbidden_not_in_clean_worktree(tmp_path):
+    """_check_forbidden_files_in_worktree should return empty for clean worktree."""
+    (tmp_path / "README.md").write_text("clean")
+    (tmp_path / ".elis/pe/PE-TEST").mkdir(parents=True)
+    result = MODULE._check_forbidden_files_in_worktree(tmp_path)
+    assert result == []
+
+
 def test_untracked_or_dirty():
     """Common runtime/context files should be classified as protected."""
     is_protected, reason = MODULE._is_untracked_or_dirty("HEARTBEAT.md")
@@ -163,3 +171,29 @@ def test_nonexistent_worktree_validator():
         text=True,
     )
     assert result.returncode != 0
+
+
+def test_forbidden_files_in_worktree_detection():
+    """check_dispatch_binding should detect forbidden runtime files in worktree."""
+    assert hasattr(MODULE, "_check_forbidden_files_in_worktree")
+    assert hasattr(MODULE, "FIXED_WORKTREE_FORBIDDEN")
+    assert "HEARTBEAT.md" in MODULE.FIXED_WORKTREE_FORBIDDEN
+    assert "SOUL.md" in MODULE.FIXED_WORKTREE_FORBIDDEN
+    assert "TOOLS.md" in MODULE.FIXED_WORKTREE_FORBIDDEN
+    assert "USER.md" in MODULE.FIXED_WORKTREE_FORBIDDEN
+    assert "IDENTITY.md" in MODULE.FIXED_WORKTREE_FORBIDDEN
+    assert (
+        "AGENTS.md" not in MODULE.FIXED_WORKTREE_FORBIDDEN
+    )  # AGENTS.md is allowed in worktree
+
+
+def test_check_forbidden_files_in_worktree(tmp_path):
+    """_check_forbidden_files_in_worktree should find runtime files in worktree."""
+    (tmp_path / "HEARTBEAT.md").write_text("test")
+    result = MODULE._check_forbidden_files_in_worktree(tmp_path)
+    assert "HEARTBEAT.md" in result
+
+    (tmp_path / ".openclaw").mkdir()
+    result = MODULE._check_forbidden_files_in_worktree(tmp_path)
+    assert "HEARTBEAT.md" in result
+    assert ".openclaw" in result

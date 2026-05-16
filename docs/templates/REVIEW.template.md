@@ -13,9 +13,12 @@
 - PE: `<PE-ID>`
 - Validator: `<validator-agent-id>`
 - Session: `<PE-ID>-val-YYYYMMDD-HHMMSS`
-- Worktree: `/opt/elis/agent-worktrees/<PE-ID>-<validator-agent-id>`
-- Branch: `<branch-name>`
+- Runtime workspace: `<OpenClaw workspace path, e.g. /home/samurai/openclaw/workspace-infra-val>`
+- Authorised Git worktree: `/opt/elis/agent-worktrees/<validator-role-slot>` (e.g. `infra-val-a`)
+- Branch: `<branch-name>` (same feature branch as implementer — not detached HEAD)
 - Commit reviewed: `<full commit SHA>`
+- Final validated branch HEAD: `<full commit SHA of final validated branch HEAD>`
+- REVIEW.md committed on this branch: `<YES | NO>` (`git log --oneline <branch> -- <REVIEW.md-path>` confirms)
 
 ---
 

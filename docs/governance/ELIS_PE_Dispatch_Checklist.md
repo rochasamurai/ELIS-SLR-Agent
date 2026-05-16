@@ -1,10 +1,10 @@
 # ELIS PE Dispatch Checklist
 
-**Status:** Canonical — v1.0  
-**Date:** 2026-05-03  
+**Status:** Canonical — v1.2  
+**Date:** 2026-05-16  
 **Owner:** Carlos Rocha, Product Owner  
 **Applies to:** ELIS PM (primary), Gatekeeper (advisory)  
-**Authoritative sources:** AGENTS.md §2.4, ELIS_PE_Gatekeeper_Checklist.md, ELIS_General_Guidance.md, LESSONS_LEARNED.md  
+**Authoritative sources:** AGENTS.md §2.4, ELIS_PE_Gatekeeper_Checklist.md, ELIS_Agent_Dispatch_Binding_and_Validation_Rules.md, ELIS_General_Guidance.md, LESSONS_LEARNED.md  
 **Canonical record:** GitHub (this document and PE artefacts)
 
 ---
@@ -42,13 +42,23 @@ This checklist ensures every PE dispatch follows a consistent, verifiable proces
 - [ ] Required commands are listed (including `check_current_pe.py`)
 - [ ] Blocker reporting format is included
 
-### 2.3 Worktree
+### 2.3 Workspace and Worktree Binding
 
+#### 2.3.1 Runtime Workspace
+- [ ] Agent OpenClaw runtime workspace is correctly bound:
+  - `infra-impl-b` → `/home/samurai/openclaw/workspace-infra-impl-b`
+  - `infra-val-a` → `/home/samurai/openclaw/workspace-infra-val`
+  - `pm` → `/home/samurai/openclaw/workspace-pm`
+- [ ] Runtime workspace is distinct from the authorised Git worktree (different paths)
+- [ ] Persistent identity/context files reside in the runtime workspace, not in the Git worktree
+
+#### 2.3.2 Git Worktree
 - [ ] Worktree exists at `/opt/elis/agent-worktrees/<role>-<slot>` (fixed workspace — e.g. `infra-impl-b`, not a PE-ID-based path)
 - [ ] Worktree is isolated (no other active agent writes here)
 - [ ] Worktree branch matches the PE branch in CURRENT_PE.md
 - [ ] Worktree is on the correct base branch commit (`git rebase origin/$BASE` is current)
 - [ ] Worktree is clean or has only approved staged changes
+- [ ] No persistent runtime/bootstrap files (`.openclaw/`, `HEARTBEAT.md`, `IDENTITY.md`, `SOUL.md`, `TOOLS.md`, `USER.md`) exist inside the Git worktree
 - [ ] Fixed Workspace Binding Certificate can be produced — agent will include in opening Status Packet
 - [ ] Wrong-worktree quarantine understood: any path mismatch stops all work immediately
 - [ ] No-copy rule understood: agents never copy/transfer files between worktrees
@@ -80,6 +90,17 @@ This checklist ensures every PE dispatch follows a consistent, verifiable proces
   - [ ] Tests/checks run independently
   - [ ] Evidence section with fenced code block(s)
   - [ ] PR comment + formal GitHub PR review
+  - [ ] REVIEW.md is committed on the final implementation/PR branch, not on a separate validation branch
+  - [ ] REVIEW.md references the final validated branch HEAD or final validation target commit
+  - [ ] REVIEW.md records final checks/verdict for the merged branch state
+
+### 2.5a Branch Integration Gates
+
+- [ ] PM coordinates only — PM must not push, merge, create PRs, or rewrite history
+- [ ] Authorised execution owner is identified (GitHub Agent, implementer, or validator)
+- [ ] Branch integration will be executed from the authorised Git worktree (not runtime workspace or canonical repo)
+- [ ] All PM PE_TASK and CURRENT_PE.md updates are committed before requesting branch integration
+- [ ] GitHub Agent has received explicit PM/PO approval for the specific operation
 
 ### 2.6 Implementer Start
 
@@ -97,6 +118,8 @@ This checklist ensures every PE dispatch follows a consistent, verifiable proces
 - [ ] Validator session uses a fixed validation workspace (`/opt/elis/agent-worktrees/<role>-<slot>`, distinct from implementer workspace)
 - [ ] Validator fixed workspace has been reset: clean state, correct branch checked out
 - [ ] Validator knows the implementer's commit SHA
+- [ ] Validator runtime workspace is correctly bound (e.g. `infra-val-a` → `/home/samurai/openclaw/workspace-infra-val`)
+- [ ] Validator authorised Git worktree is checked out to the feature branch (not detached HEAD) — the validator reviews from the approved branch
 
 ---
 
@@ -131,5 +154,7 @@ After completing the checklist, PM decides:
 
 | Version | Date       | Author | Changes |
 |---------|------------|--------|---------|
+| 1.3     | 2026-05-16 | PE-closeout | Add §2.5a branch integration gates. Add REVIEW-on-branch and REVIEW-commit-ref gates to validator artefact checklist. |
+| 1.2     | 2026-05-16 | PE-closeout | Add runtime workspace binding checks for all agents. Split worktree into workspace and worktree subsections. Add fixed worktree exclusion rule (no persistent files). Remove detached-head requirement for validators — they use the same feature branch. Add validator workspace binding items. |
 | 1.1     | 2026-05-06 | PM     | Adopt fixed workspace paths. Add GitHub write boundary gates to artefact checklist. Update worktree, implementer start, validator start sections for fixed workspaces. |
 | 1.0     | 2026-05-03 | PM     | Initial canonical consolidation. |
