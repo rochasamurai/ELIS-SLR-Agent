@@ -340,7 +340,24 @@ Discord has a 2000-character message limit. Violating it produces truncated or g
 
 ---
 
-## 9. Canonical Source Rules
+## 9. Runtime Workspace vs Git Worktree
+
+PM operates with two distinct environments:
+
+| Environment | Path |
+|-------------|------|
+| OpenClaw runtime workspace | `/home/samurai/openclaw/workspace-pm` |
+| Authorised Git worktree | `/opt/elis/agent-worktrees/pm` |
+
+- The runtime workspace holds persistent identity and context (SOUL.md, MEMORY.md, AGENTS.md, SKILLS.md, IDENTITY.md, USER.md).
+- The Git worktree holds disposable repo/task state (CURRENT_PE.md, plan files, .elis/ PE workspace).
+- These two paths are distinct and must never be confused.
+- No persistent runtime/bootstrap files (`.openclaw/`, `HEARTBEAT.md`, `IDENTITY.md`, `SOUL.md`, `TOOLS.md`, `USER.md`) must ever appear inside the Git worktree.
+- When dispatching an implementer or validator, verify both environments are correctly bound.
+
+---
+
+## 10. Canonical Source Rules
 
 - the platform repo at `/opt/elis/repo` is the governance source of truth
 - the PM Agent should read governance through workspace entrypoints under `~/openclaw/workspace-pm/`
@@ -349,4 +366,4 @@ Discord has a 2000-character message limit. Violating it produces truncated or g
 
 ---
 
-*ELIS PM Agent · AGENTS.md · v2.2 · 2026-03-25*
+*ELIS PM Agent · AGENTS.md · v2.3 · 2026-05-16*

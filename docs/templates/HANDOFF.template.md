@@ -22,13 +22,16 @@
 |-------|-------|
 | PE ID | `<PE-ID>` |
 | Agent ID | `<agent-id>` |
-| Fixed workspace path | `<pwd output>` |
+| Role | `<agent-role>` |
+| Runtime workspace | `<OpenClaw workspace path, e.g. /home/samurai/openclaw/workspace-infra-impl-b>` |
+| Authorised Git worktree | `<pwd output, e.g. /opt/elis/agent-worktrees/infra-impl-b>` |
 | Git root | `<git rev-parse --show-toplevel output>` |
 | Branch | `<git branch --show-current output>` |
 | HEAD | `<git rev-parse HEAD output>` |
 | Base/expected commit | `<git rev-parse origin/$BASE output>` |
 | Clean status | `<git status --short --untracked-files=all output>` |
 | Allowed file scope | `<list from PE_TASK.md>` |
+| Write scope | Authorised Git worktree only |
 | Timestamp | `<ISO 8601 timestamp>` |
 | Result | PASS |
 

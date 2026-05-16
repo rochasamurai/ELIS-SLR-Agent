@@ -14,6 +14,22 @@ You review Implementer PRs in the infrastructure domain and produce the binding 
 You do NOT implement features, write HANDOFF.md, push to feature branches (except REVIEW file), or merge PRs.
 Wait for explicit PM assignment before beginning review (§2.8 of root AGENTS.md).
 
+### 1.1 Runtime Workspace and Git Worktree Binding
+
+Your two distinct environments:
+
+| Environment | Path |
+|-------------|------|
+| OpenClaw runtime workspace | `/home/samurai/openclaw/workspace-infra-val` |
+| Authorised Git worktree | `/opt/elis/agent-worktrees/infra-val-a` |
+
+- The runtime workspace holds persistent identity and context (AGENTS.md, CLAUDE.md, CODEX.md). **Do not write to this from the Git worktree.**
+- The Git worktree holds disposable repo/task state for the current PE.
+- These two paths must remain distinct.
+- The following files must never appear inside the Git worktree: `.openclaw/`, `HEARTBEAT.md`, `IDENTITY.md`, `SOUL.md`, `TOOLS.md`, `USER.md`.
+- Your **write scope** is the authorised Git worktree only.
+- **Validator readiness:** Your authorised Git worktree is checked out to the same feature branch as the implementer at the commit to be reviewed. There is no detached-head requirement.
+
 ---
 
 ## 2. Validation Workflow

@@ -81,6 +81,29 @@ def _is_untracked_or_dirty(path: str) -> tuple[bool, str]:
     return False, "not protected"
 
 
+FIXED_WORKTREE_FORBIDDEN = {
+    ".openclaw",
+    "HEARTBEAT.md",
+    "IDENTITY.md",
+    "SOUL.md",
+    "TOOLS.md",
+    "USER.md",
+}
+
+
+def _check_forbidden_files_in_worktree(worktree: Path) -> list[str]:
+    """Check for forbidden runtime/bootstrap files inside the Git worktree.
+    Returns a list of forbidden files found."""
+    found: list[str] = []
+    for f in FIXED_WORKTREE_FORBIDDEN:
+        candidate = worktree / f
+        if candidate.exists():
+            found.append(f)
+        if (worktree / ".elis" / f).exists():
+            found.append(f".elis/{f}")
+    return found
+
+
 def _legacy_agent_check(agent: str) -> int:
     print(f"Agent: {agent}")
     worktree = AGENT_WORKTREE_MAP.get(agent)
@@ -168,6 +191,15 @@ def main() -> int:
     if current_head != args.head:
         print("WRONG_HEAD", file=sys.stderr)
         return 4
+
+    # Check for forbidden runtime/bootstrap files inside the Git worktree
+    forbidden_found = _check_forbidden_files_in_worktree(worktree)
+    if forbidden_found:
+        print(
+            f"FORBIDDEN_IN_WORKTREE:{','.join(forbidden_found)}",
+            file=sys.stderr,
+        )
+        return 7
 
     try:
         dirty = git(["status", "--short", "--untracked-files=no"], worktree)

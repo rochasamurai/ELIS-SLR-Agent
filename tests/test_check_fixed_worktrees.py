@@ -88,3 +88,74 @@ def test_script_runs_without_crash():
             1,
         ), f"Unexpected return code: {result.returncode}"
         assert result.stdout.strip(), "Script produced no output"
+
+def test_check_worktree_rejects_forbidden_files(tmp_path):
+    """check_fixed_worktrees should reject forbidden runtime files in worktree."""
+    import subprocess
+    import tempfile
+    # Create a minimal git repo with a forbidden HEARTBEAT.md
+    subprocess.run(["git", "init"], cwd=tmp_path, capture_output=True, timeout=30)
+    (tmp_path / "README.md").write_text("root")
+    subprocess.run(
+        ["git", "add", "README.md"],
+        cwd=tmp_path,
+        capture_output=True,
+        timeout=30,
+    )
+    subprocess.run(
+        ["git", "commit", "-m", "init"],
+        cwd=tmp_path,
+        capture_output=True,
+        timeout=30,
+        env={"GIT_AUTHOR_NAME": "Test", "GIT_AUTHOR_EMAIL": "test@test.com",
+             "GIT_COMMITTER_NAME": "Test", "GIT_COMMITTER_EMAIL": "test@test.com"},
+    )
+    (tmp_path / "HEARTBEAT.md").write_text("test heartbeat")
+    result = subprocess.run(
+        [
+            str(SCRIPT),
+            "--worktrees", str(tmp_path),
+            "--canonical-repo", str(tmp_path),
+            "--expected-origin", "https://example.com/test.git",
+        ],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    output = result.stdout + result.stderr
+    assert "FORBIDDEN_IN_WORKTREE" in output
+    assert "HEARTBEAT.md" in output
+
+
+def test_check_worktree_passes_clean(tmp_path):
+    """check_fixed_worktrees should pass on a clean worktree with no forbidden files."""
+    import subprocess
+    subprocess.run(["git", "init"], cwd=tmp_path, capture_output=True, timeout=30)
+    (tmp_path / "README.md").write_text("root")
+    subprocess.run(
+        ["git", "add", "README.md"],
+        cwd=tmp_path,
+        capture_output=True,
+        timeout=30,
+    )
+    subprocess.run(
+        ["git", "commit", "-m", "init"],
+        cwd=tmp_path,
+        capture_output=True,
+        timeout=30,
+        env={"GIT_AUTHOR_NAME": "Test", "GIT_AUTHOR_EMAIL": "test@test.com",
+             "GIT_COMMITTER_NAME": "Test", "GIT_COMMITTER_EMAIL": "test@test.com"},
+    )
+    result = subprocess.run(
+        [
+            str(SCRIPT),
+            "--worktrees", str(tmp_path),
+            "--canonical-repo", str(tmp_path),
+            "--expected-origin", "https://example.com/test.git",
+        ],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    # Should not have FORBIDDEN_IN_WORKTREE failures
+    assert "FORBIDDEN_IN_WORKTREE" not in result.stdout

@@ -150,7 +150,17 @@ def _check_worktree(
         status = f"branch={branch or '(detached)'}" if branch else "branch=(detached)"
         failures.append(f"STATUS OK: {resolved} — HEAD={head[:12]}(...) {status}")
 
-    # Check 5: tracked file cleanliness (ignoring preserved runtime files)
+    # Check 5: verify no forbidden runtime/bootstrap files exist in worktree
+    for forbidden in PRESERVED_FILES:
+        candidate = p / forbidden
+        if candidate.exists():
+            failures.append(
+                f"FORBIDDEN_IN_WORKTREE: {forbidden} must not exist in the Git "
+                f"worktree at {resolved}. These files belong in the OpenClaw "
+                f"runtime workspace (e.g. /home/samurai/openclaw/workspace-infra-impl-b)."
+            )
+
+    # Check 6: tracked file cleanliness (ignoring preserved runtime files)
     status_result = _git_cmd("status", "--porcelain", cwd=resolved)
     if status_result.returncode == 0:
         dirty_tracked = []

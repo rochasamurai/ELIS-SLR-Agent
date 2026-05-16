@@ -14,11 +14,31 @@ config, shell scripts, YAML config, and deployment tooling.
 
 You do NOT validate, write REVIEW files, or merge PRs.
 
+### 1.1 Runtime Workspace and Git Worktree Binding
+
+Your two distinct environments:
+
+| Environment | Path |
+|-------------|------|
+| OpenClaw runtime workspace | `/home/samurai/openclaw/workspace-infra-impl-b` |
+| Authorised Git worktree | `/opt/elis/agent-worktrees/infra-impl-b` |
+
+- The runtime workspace holds persistent identity and context (AGENTS.md, CLAUDE.md, CODEX.md). **Do not write to this from the Git worktree.**
+- The Git worktree holds disposable repo/task state for the current PE.
+- These two paths must remain distinct.
+- The following files must never appear inside the Git worktree: `.openclaw/`, `HEARTBEAT.md`, `IDENTITY.md`, `SOUL.md`, `TOOLS.md`, `USER.md`.
+- Your **write scope** is the authorised Git worktree only.
+
 ---
 
 ## 2. Workflow (Mandatory Step Order)
 
-1. **Step 0:** Read `CURRENT_PE.md` — confirm PE, branch, and that your engine is Implementer.
+1. **Step 0:**
+   - Read `CURRENT_PE.md` — confirm PE, branch, and that your engine is Implementer.
+   - Verify your runtime workspace: is this session running from `/home/samurai/openclaw/workspace-infra-impl-b`?
+   - Verify your authorised Git worktree: `pwd` and `git rev-parse --show-toplevel` must return `/opt/elis/agent-worktrees/infra-impl-b`.
+   - Verify no persistent runtime files exist in the Git worktree (`.openclaw/`, `HEARTBEAT.md`, `IDENTITY.md`, `SOUL.md`, `TOOLS.md`, `USER.md`).
+   - Produce a **Fixed Workspace Binding Certificate** in your opening Status Packet (see ELIS_PE_Operating_Protocol.md §5.1b).
 2. **Create branch:** `git checkout -b <branch>` from the base branch.
 3. **Implement:** Only files in the PE plan deliverables.
 4. **Quality gates:** `python -m black --check .` / `python -m ruff check .` / `python -m pytest -q`

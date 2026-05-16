@@ -1,10 +1,10 @@
 # ELIS PE Operating Protocol
 
-**Status:** Canonical — v1.1  
-**Date:** 2026-05-06  
+**Status:** Canonical — v1.2  
+**Date:** 2026-05-16  
 **Owner:** Carlos Rocha, Product Owner  
 **Applies to:** All ELIS agents (PM, Gatekeeper, Watchdog, Implementers, Validators, Platform Monitor)  
-**Authoritative sources:** AGENTS.md, CLAUDE.md, ELIS_General_Guidance.md, LESSONS_LEARNED.md  
+**Authoritative sources:** AGENTS.md, CLAUDE.md, ELIS_General_Guidance.md, ELIS_Agent_Dispatch_Binding_and_Validation_Rules.md, LESSONS_LEARNED.md  
 **Canonical record:** GitHub (repo artefacts, commits, PRs, CI logs — not chat history)
 
 ---
@@ -40,7 +40,33 @@ All implementation commits must precede validation. Validators review committed 
 ### 2.7 No Silent Failure Recovery
 A run that produces no required artefacts (commit, HANDOFF, Status Packet, or REVIEW) is not a success. Valid outcomes are PASS, FAIL, or BLOCKED — each backed by evidence. Recovery from silent failure is a separate, PO-authorised process.
 
-### 2.8 Fixed Agent Workspace Model
+### 2.8 OpenClaw Runtime Workspace vs Authorised Git Worktree
+
+Every agent operates from two distinct directories:
+
+**OpenClaw runtime workspace:**
+- Agent identity, skills, memory, and runtime context
+- Persistent across PEs — never deleted, reset, or cleaned
+- Examples: `/home/samurai/openclaw/workspace-infra-impl-b`, `/home/samurai/openclaw/workspace-infra-val`
+- Contains: `AGENTS.md`, `SKILLS.md`, `SOUL.md`, `MEMORY.md`, `IDENTITY.md`, `USER.md`, `.openclaw/`
+
+**Authorised Git worktree (fixed worktree):**
+- Disposable repo/task state for the current PE
+- Reset and rebased at each PE boundary
+- Examples: `/opt/elis/agent-worktrees/infra-impl-b`, `/opt/elis/agent-worktrees/infra-val-a`
+- Contains: source code, tests, docs, `HANDOFF.md`, `REVIEW_PE<N>.md`, `.elis/` PE workspace
+
+**Binding table:**
+
+| Agent | Runtime Workspace | Git Worktree |
+|-------|------------------|-------------|
+| infra-impl-b | `/home/samurai/openclaw/workspace-infra-impl-b` | `/opt/elis/agent-worktrees/infra-impl-b` |
+| infra-val-a | `/home/samurai/openclaw/workspace-infra-val` | `/opt/elis/agent-worktrees/infra-val-a` |
+| pm | `/home/samurai/openclaw/workspace-pm` | `/opt/elis/agent-worktrees/pm` |
+
+**Fixed worktree exclusion rule:** Persistent runtime bootstrap files (`.openclaw/`, `HEARTBEAT.md`, `IDENTITY.md`, `SOUL.md`, `TOOLS.md`, `USER.md`) must never appear inside the Git worktree. Their presence indicates a contamination that must be reported and cleaned before proceeding.
+
+### 2.9 Fixed Agent Workspace Model
 Every agent role has a persistent, dedicated worktree path that persists across PEs. This replaces the per-PE worktree pattern.
 
 **Fixed worktree paths:**
@@ -91,7 +117,7 @@ If an agent detects it is operating from the wrong worktree (i.e., `pwd` or `git
 ### 2.11 No Automatic Push, PR, or Merge
 Agents never push, open PRs, or merge without explicit PM direction. These actions are PM-owned.
 
-### 2.12 Discord / PO Checkpoint Governance
+### 2.14 Discord / PO Checkpoint Governance
 Discord is for human-visible coordination, but the PE thread is the operational checkpoint trail. Use the main Discord channel for portfolio-level control and escalation, and use the PE thread for compact checkpoint updates, audit notes, and continuation markers. GitHub remains the canonical evidence record; Discord never replaces commits, PRs, CI output, or versioned artefacts.
 
 See `docs/governance/ELIS_Discord_PO_PM_Checkpoint_Governance.md` for thread usage, message-boundary, and checkpoint packet rules.
@@ -128,12 +154,14 @@ See `docs/governance/ELIS_Discord_PO_PM_Checkpoint_Governance.md` for thread usa
 
 ### 3.5 Validation
 1. PM dispatches Validator with fresh session and separate validation worktree.
-2. Validator verifies worktree, branch, commit SHA, and artefact completeness.
+2. Validator verifies runtime workspace, authorised Git worktree, branch (same feature branch as implementer), commit SHA, and artefact completeness.
 3. Validator reviews all changed files.
 4. Validator runs required checks independently.
 5. Validator writes REVIEW file with explicit PASS, FAIL, or BLOCKED verdict.
 6. Validator delivers verdict as PR comment + formal GitHub PR review.
 7. Validator never modifies implementation files without PM authorisation.
+
+**Note:** The validator authorised Git worktree is checked out to the same feature branch as the implementer at the commit to be reviewed. There is no detached-head requirement for validators — they work from the approved branch like the implementer.
 
 ### 3.6 Gate 1 (Validator Assignment)
 Gate 1 is a CI-driven automated check. On a READY verdict from Gatekeeper, PM dispatches the Validator. Gate 1 CI runs on the feature branch and assigns the Validator via PR comment. The Validator may start only after receiving explicit PM or CI-bot assignment.
@@ -270,12 +298,18 @@ PO approval is required for:
 
 ## 5. Worktree and Workspace Rules
 
-### 5.1 Fixed Agent Worktree Model
-Each agent role has a persistent, dedicated worktree path that does not change between PEs:
-```
-/opt/elis/agent-worktrees/<role>-<slot>
-```
-Examples: `/opt/elis/agent-worktrees/infra-impl-b`, `/opt/elis/agent-worktrees/infra-val-a`
+### 5.1 OpenClaw Runtime Workspace and Authorised Git Worktree
+
+Each agent role has two persistent, dedicated directories that do not change between PEs:
+
+**Runtime workspace:** `/home/samurai/openclaw/workspace-<role>-<slot>` (e.g. `workspace-infra-impl-b`)
+**Git worktree:** `/opt/elis/agent-worktrees/<role>-<slot>` (e.g. `infra-impl-b`)
+
+These two paths are distinct and must never be confused. The runtime workspace holds persistent agent identity and context. The Git worktree holds disposable repo/task state.
+
+Examples:
+- `infra-impl-b`: runtime workspace = `/home/samurai/openclaw/workspace-infra-impl-b`, Git worktree = `/opt/elis/agent-worktrees/infra-impl-b`
+- `infra-val-a`: runtime workspace = `/home/samurai/openclaw/workspace-infra-val`, Git worktree = `/opt/elis/agent-worktrees/infra-val-a`
 
 ### 5.1a Wrong-Worktree Quarantine
 If an agent detects it is operating from the wrong worktree (i.e., `pwd` or `git rev-parse --show-toplevel` does not match its assigned fixed workspace path):
@@ -294,13 +328,16 @@ Before any PE work begins, the agent must produce a **Fixed Workspace Binding Ce
 |-------|-------------|
 | PE ID | The PE identifier from CURRENT_PE.md |
 | Agent ID | The agent's surface name (e.g. `infra-impl-b`) |
-| Fixed workspace path | Output of `pwd` |
+| Role | The agent's role (e.g. `infra-impl-b`, `infra-val-a`, `pm`) |
+| Runtime workspace | OpenClaw workspace path (e.g. `/home/samurai/openclaw/workspace-infra-impl-b`) |
+| Authorised Git worktree | Fixed worktree path (e.g. `/opt/elis/agent-worktrees/infra-impl-b`) |
 | Git root | Output of `git rev-parse --show-toplevel` |
 | Branch | Output of `git branch --show-current` |
 | HEAD | Output of `git rev-parse HEAD` |
 | Base/Expected commit | Commit SHA of `origin/$BASE` (`$BASE` from CURRENT_PE.md) |
 | Clean status | Output of `git status --short --untracked-files=all` |
 | Allowed file scope | List of allowed files from PE_TASK.md |
+| Write scope | Authorised Git worktree only (no writes to runtime workspace) |
 | Timestamp | ISO 8601 timestamp of certificate creation |
 | Result | `PASS` (certificate matches) or `FAIL` (mismatch found) |
 
@@ -345,7 +382,7 @@ Agent workspaces contain two categories of files that must be clearly distinguis
 ### 5.5a No OpenClaw Workspace on Canonical Repo
 OpenClaw workspace must not be directly bound to `/opt/elis/repo`. OpenClaw may write bootstrap/context files into its workspace.
 
-### 5.6 Path Preflight (Fixed Workspace Binding)
+### 5.9 Path Preflight (Fixed Workspace Binding)
 Before any PE work, the agent must produce the **Fixed Workspace Binding Certificate** (§5.1b). This is mandatory evidence in every opening Status Packet.
 
 Minimum preflight commands:
@@ -471,5 +508,6 @@ Agents must not self-initiate recovery from silent failure. All recovery is PM-d
 
 | Version | Date       | Author     | Changes |
 |---------|------------|------------|---------|
+| 1.2     | 2026-05-16 | PE-closeout | Add §2.8 (runtime workspace vs Git worktree) and §5.1 (dual-path binding). Add binding table for infra-impl-b, infra-val-a, and pm. Add fixed worktree exclusion rule. Renumber sections to accommodate new §2.8. Update Fixed Workspace Binding Certificate to include runtime workspace and write scope. |
 | 1.1     | 2026-05-06 | PM         | Adopt fixed agent worktree model and GitHub write boundary model. Worktree paths are now role+slot based, not PE-ID based. Gate 2 no longer auto-merges. Explicit write boundaries per role. |
 | 1.0     | 2026-05-03 | PM         | Initial canonical consolidation from AGENTS.md, CLAUDE.md, ELIS_General_Guidance.md, LESSONS_LEARNED.md, and accumulated PM directives. |
