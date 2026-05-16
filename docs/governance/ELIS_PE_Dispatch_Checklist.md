@@ -90,6 +90,17 @@ This checklist ensures every PE dispatch follows a consistent, verifiable proces
   - [ ] Tests/checks run independently
   - [ ] Evidence section with fenced code block(s)
   - [ ] PR comment + formal GitHub PR review
+  - [ ] REVIEW.md is committed on the final implementation/PR branch, not on a separate validation branch
+  - [ ] REVIEW.md references the final validated branch HEAD or final validation target commit
+  - [ ] REVIEW.md records final checks/verdict for the merged branch state
+
+### 2.5a Branch Integration Gates
+
+- [ ] PM coordinates only — PM must not push, merge, create PRs, or rewrite history
+- [ ] Authorised execution owner is identified (GitHub Agent, implementer, or validator)
+- [ ] Branch integration will be executed from the authorised Git worktree (not runtime workspace or canonical repo)
+- [ ] All PM PE_TASK and CURRENT_PE.md updates are committed before requesting branch integration
+- [ ] GitHub Agent has received explicit PM/PO approval for the specific operation
 
 ### 2.6 Implementer Start
 
@@ -143,6 +154,7 @@ After completing the checklist, PM decides:
 
 | Version | Date       | Author | Changes |
 |---------|------------|--------|---------|
+| 1.3     | 2026-05-16 | PE-closeout | Add §2.5a branch integration gates. Add REVIEW-on-branch and REVIEW-commit-ref gates to validator artefact checklist. |
 | 1.2     | 2026-05-16 | PE-closeout | Add runtime workspace binding checks for all agents. Split worktree into workspace and worktree subsections. Add fixed worktree exclusion rule (no persistent files). Remove detached-head requirement for validators — they use the same feature branch. Add validator workspace binding items. |
 | 1.1     | 2026-05-06 | PM     | Adopt fixed workspace paths. Add GitHub write boundary gates to artefact checklist. Update worktree, implementer start, validator start sections for fixed workspaces. |
 | 1.0     | 2026-05-03 | PM     | Initial canonical consolidation. |

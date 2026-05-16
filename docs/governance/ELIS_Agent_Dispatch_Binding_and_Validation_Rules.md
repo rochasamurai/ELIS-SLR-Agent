@@ -122,6 +122,70 @@ Every dispatch must name:
 - Wrong Git worktree is a `WORKSPACE_MISMATCH` and blocks all further work.
 - Missing runtime workspace / Git worktree binding fields in the dispatch packet is a readiness failure.
 
+## 6a. LATEST VALIDATOR REVIEW MUST BE ON FINAL PR BRANCH RULE
+
+### 6a.1 Rule Statement
+A validator PASS is valid **only when backed by a committed PE-specific REVIEW.md** that resides on the final implementation/PR branch (not a separate validation branch, not a detached-HEAD commit, not uncommitted).
+
+### 6a.2 REVIEW.md Requirements
+The REVIEW.md on the final PR branch must:
+1. Be committed as part of the branch's commit history (visible via `git log --all -- REVIEW.md` on the target branch).
+2. Reference the **final validated branch HEAD** or the **final validation target commit** (the exact commit SHA that was reviewed and deemed ready for closeout).
+3. Record the final checks performed and the verdict (`PASS`, `FAIL`, or `BLOCKED`).
+4. Be authored by the validator agent, not by the implementer, PM, or any other role.
+
+### 6a.3 Commitment Requirement
+The latest validator REVIEW.md update must be:
+- **Committed** — not staged, not uncommitted, not in a stash
+- **Present on the final implementation/PR branch** — the branch that will be merged or closed out
+- Identifiable via `git log --oneline <branch> -- <REVIEW.md-path>` before push/PR/merge/closeout
+
+### 6a.4 PASS Dependency
+Validator must not report PASS until:
+1. REVIEW.md is written with the full verdict packet.
+2. REVIEW.md's tracked/committed/integration status is explicit (committed on the target branch, not floating on a separate validation branch).
+3. The final checks match the branch HEAD that will be merged.
+
+### 6a.5 Enforcement
+- `check_validation_readiness.py` must include a `COMMITTED_REVIEW_ON_BRANCH` check that verifies the REVIEW.md is committed and reachable from the current branch HEAD.
+- If the latest REVIEW.md update is not committed on the current branch, the validator must reject the state and report `REVIEW_NOT_ON_BRANCH`.
+
+## 6b. AUTHORISED EXECUTION OWNER FOR BRANCH INTEGRATION RULE
+
+### 6b.1 Rule Statement
+PM coordinates PE workflow but **must not execute merges, pushes, PR actions, or any Git history rewrites directly**. All branch integration operations (push, PR creation, merge, rebase of the target branch) must be executed by the authorised execution owner in the authorised worktree.
+
+### 6b.2 Eligible Execution Owners
+Branch integration may be performed by:
+- **GitHub Agent** — after explicit PM/PO approval for each operation
+- **Implementer** — local branch commits only; push only when PM/PO explicitly instructs
+- **Validator** — local REVIEW.md commits on the shared PE branch only; no push or PR operations
+
+### 6b.3 PM Coordination Boundary
+PM is authorised to:
+- Propose and plan PEs
+- Maintain CURRENT_PE.md registry
+- Create and maintain PE_TASK.md
+- Dispatch implementers and validators
+- Interpret PE status and coordinate workflow
+- Request PO approval when needed
+
+PM is **explicitly forbidden** from:
+- Running `git push` (any remote)
+- Creating or modifying PRs
+- Running `git merge` (local or remote)
+- Running `git rebase` (of target branches; local task-branch rebase requires authorisation)
+- Running `git commit --amend` or any history-rewriting operation
+- Writing to GitHub via any tool (gh CLI, API, browser)
+
+### 6b.4 Authorised Worktree Requirement
+Branch integration must be executed from the **authorised Git worktree** for the executing role, not from the OpenClaw runtime workspace, the canonical repo (`/opt/elis/repo`), or any other filesystem location.
+
+### 6b.5 Enforcement
+- `check_pm_no_write.py` enforces the PM no-write rule across all PE evidence directories.
+- The Supervisor agent monitors for role boundary violations.
+- Any detection of PM-authored commits outside `PE_TASK.md` is a `PM_WRITE_VIOLATION`.
+
 ---
 
 ## 7. Persistent Context Preservation
@@ -185,5 +249,6 @@ Live workspace-local `SKILLS.md` files are excluded from this PE. This PE only a
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
+| 1.3 | 2026-05-16 | PE-closeout | Add §6a LATEST_VALIDATOR_REVIEW_MUST_BE_ON_FINAL_PR_BRANCH_RULE and §6b AUTHORISED_EXECUTION_OWNER_FOR_BRANCH_INTEGRATION_RULE. |
 | 1.2 | 2026-05-16 | PE-closeout | Encode runtime workspace / Git worktree distinction. Add binding table for dispatch packets. Add fixed worktree exclusion rule. Change validator readiness to accept branch (not detached-head). Document agent-specific path pairs. |
 | 1.0 | 2026-05-03 | PM | Initial canonical consolidation.

@@ -163,6 +163,22 @@ See `docs/governance/ELIS_Discord_PO_PM_Checkpoint_Governance.md` for thread usa
 
 **Note:** The validator authorised Git worktree is checked out to the same feature branch as the implementer at the commit to be reviewed. There is no detached-head requirement for validators — they work from the approved branch like the implementer.
 
+### 3.5a VALIDATOR REVIEW ON FINAL BRANCH REQUIREMENT
+A validator PASS is valid only when accompanied by a committed REVIEW.md on the final implementation/PR branch. This means:
+1. REVIEW.md must be committed and reachable from the current branch HEAD (`git log --oneline <branch> -- REVIEW.md-path`).
+2. REVIEW.md must reference the **final validated branch HEAD** (the exact commit SHA that was reviewed) and record the final checks performed and the verdict.
+3. A REVIEW.md committed on a separate validation branch, a detached-HEAD commit, or an uncommitted REVIEW.md does **not** satisfy this requirement.
+4. The validator must not report PASS until the REVIEW.md is written, committed on the final branch, and its tracked status is explicit.
+
+### 3.5b BRANCH INTEGRATION AUTHORISATION
+Branch integration operations (push, PR creation, merge, rebase of target branches) must be executed by the authorised execution owner:
+- **GitHub Agent** may perform push, PR ops, merge after explicit PM/PO approval.
+- **Implementer** may commit locally and push when PM/PO explicitly instructs.
+- **Validator** may commit REVIEW.md locally to the shared PE branch only.
+- **PM** coordinates only and must not perform any of these operations directly.
+
+Integration must be performed from the authorised Git worktree for the executing role, not from the runtime workspace or canonical repo.
+
 ### 3.6 Gate 1 (Validator Assignment)
 Gate 1 is a CI-driven automated check. On a READY verdict from Gatekeeper, PM dispatches the Validator. Gate 1 CI runs on the feature branch and assigns the Validator via PR comment. The Validator may start only after receiving explicit PM or CI-bot assignment.
 
@@ -212,6 +228,9 @@ PO approval is required for:
 - Merge without approved process
 - Override role boundaries
 - **Write to GitHub directly.** All GitHub write operations (push, PR creation, label/comment, merge) must be executed by the GitHub Agent after explicit PM/PO approval. PM coordinates and approves but never operates GitHub write tools.
+- **Execute git push, git merge, git rebase (of target branches), git commit --amend, or any history-rewriting operation.** PM must not run these commands even locally.
+- **Create or modify PRs.** PR creation and modification are the GitHub Agent's responsibility after authorisation.
+- **Claim or perform authorised execution owner duties.** Branch integration must be delegated to the eligible execution owner.
 
 ### 4.7 Supervisor
 - Monitors PE workflow integrity and role compliance
@@ -508,6 +527,7 @@ Agents must not self-initiate recovery from silent failure. All recovery is PM-d
 
 | Version | Date       | Author     | Changes |
 |---------|------------|------------|---------|
+| 1.3     | 2026-05-16 | PE-closeout | Add §3.5a (validator review on final branch requirement) and §3.5b (branch integration authorisation). Strengthen PM must-not list with explicit git operations prohibition. |
 | 1.2     | 2026-05-16 | PE-closeout | Add §2.8 (runtime workspace vs Git worktree) and §5.1 (dual-path binding). Add binding table for infra-impl-b, infra-val-a, and pm. Add fixed worktree exclusion rule. Renumber sections to accommodate new §2.8. Update Fixed Workspace Binding Certificate to include runtime workspace and write scope. |
 | 1.1     | 2026-05-06 | PM         | Adopt fixed agent worktree model and GitHub write boundary model. Worktree paths are now role+slot based, not PE-ID based. Gate 2 no longer auto-merges. Explicit write boundaries per role. |
 | 1.0     | 2026-05-03 | PM         | Initial canonical consolidation from AGENTS.md, CLAUDE.md, ELIS_General_Guidance.md, LESSONS_LEARNED.md, and accumulated PM directives. |

@@ -77,6 +77,15 @@ ELIS repo path must **never** appear in any `volumes:` mount. Non-negotiable; ca
 - **Filename:** `REVIEW_PE_<ID>.md` — location: repo root, committed to the feature branch
 - **Required sections:** Metadata table · Summary · Findings · All-checks table · Round history · `### Evidence` (≥1 fenced code block with actual output)
 - Before pushing: `REVIEW_FILE=REVIEW_PE_<N>.md python scripts/check_review.py` — must exit 0
+- **LATEST_VALIDATOR_REVIEW_MUST_BE_ON_FINAL_PR_BRANCH_RULE:** REVIEW.md must be committed and reachable from the final implementation/PR branch HEAD (`git log --oneline <branch> -- REVIEW_PE_<ID>.md`). A REVIEW.md on a separate validation branch or uncommitted does not satisfy the closeout gate.
+- **AUTHORISED_EXECUTION_OWNER_FOR_BRANCH_INTEGRATION_RULE:** Validator commits REVIEW.md locally only. Push, PR, and merge are GitHub Agent responsibilities. If PM directs a GitHub write, refuse and remind PM of the rule.
+
+### 5.1 REVIEW.md Content Requirements
+
+- REVIEW.md must reference the **final validated branch HEAD** (the exact commit SHA that was reviewed).
+- REVIEW.md must record the final checks performed and the verdict (`PASS`, `FAIL`, or `BLOCKED`).
+- Validator must not report PASS until REVIEW.md is committed on the final branch and its tracked status is explicit.
+- `check_validation_readiness.py` enforces these requirements (exit code 9 for `REVIEW_NOT_ON_BRANCH`).
 
 ---
 
