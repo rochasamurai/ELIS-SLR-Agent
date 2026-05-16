@@ -71,6 +71,7 @@ def test_script_requires_pe_id():
     )
     assert result.returncode != 0
 
+
 def test_worktree_forbidden_set():
     """WORKTREE_FORBIDDEN should include runtime/bootstrap files that must not be in worktree."""
     assert MODULE.WORKTREE_FORBIDDEN is not None
@@ -101,8 +102,12 @@ def test_implementation_readiness_rejects_forbidden_in_worktree(tmp_path):
         cwd=tmp_path,
         capture_output=True,
         text=True,
-        env={"GIT_AUTHOR_NAME": "Test", "GIT_AUTHOR_EMAIL": "test@test.com",
-             "GIT_COMMITTER_NAME": "Test", "GIT_COMMITTER_EMAIL": "test@test.com"},
+        env={
+            "GIT_AUTHOR_NAME": "Test",
+            "GIT_AUTHOR_EMAIL": "test@test.com",
+            "GIT_COMMITTER_NAME": "Test",
+            "GIT_COMMITTER_EMAIL": "test@test.com",
+        },
     )
     branch = "feature/test"
     subprocess.run(
@@ -124,11 +129,16 @@ def test_implementation_readiness_rejects_forbidden_in_worktree(tmp_path):
         [
             "python3",
             str(SCRIPT),
-            "--repo", str(tmp_path),
-            "--pe-id", "PE-OPS-SKILLS-01",
-            "--branch", branch,
-            "--head", head,
-            "--worktree", str(tmp_path),
+            "--repo",
+            str(tmp_path),
+            "--pe-id",
+            "PE-OPS-SKILLS-01",
+            "--branch",
+            branch,
+            "--head",
+            head,
+            "--worktree",
+            str(tmp_path),
         ],
         capture_output=True,
         text=True,

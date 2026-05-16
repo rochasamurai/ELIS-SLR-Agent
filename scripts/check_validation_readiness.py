@@ -44,7 +44,7 @@ def _report_bindings(worktree: Path) -> list[str]:
         lines.append(f"Git root: {cwd}")
         lines.append(f"Branch: {branch}")
         lines.append(f"HEAD: {head[:12]}")
-        lines.append(f"Runtime workspace: /home/samurai/openclaw/workspace-infra-val")
+        lines.append("Runtime workspace: /home/samurai/openclaw/workspace-infra-val")
     except (subprocess.CalledProcessError, FileNotFoundError) as e:
         lines.append(f"WARNING: Cannot read bindings: {e}")
     return lines

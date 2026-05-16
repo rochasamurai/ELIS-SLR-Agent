@@ -182,7 +182,9 @@ def test_forbidden_files_in_worktree_detection():
     assert "TOOLS.md" in MODULE.FIXED_WORKTREE_FORBIDDEN
     assert "USER.md" in MODULE.FIXED_WORKTREE_FORBIDDEN
     assert "IDENTITY.md" in MODULE.FIXED_WORKTREE_FORBIDDEN
-    assert "AGENTS.md" not in MODULE.FIXED_WORKTREE_FORBIDDEN  # AGENTS.md is allowed in worktree
+    assert (
+        "AGENTS.md" not in MODULE.FIXED_WORKTREE_FORBIDDEN
+    )  # AGENTS.md is allowed in worktree
 
 
 def test_check_forbidden_files_in_worktree(tmp_path):

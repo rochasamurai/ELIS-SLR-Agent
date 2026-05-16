@@ -8,9 +8,7 @@ import sys
 from pathlib import Path
 
 SCRIPT = (
-    Path(__file__).resolve().parents[1]
-    / "scripts"
-    / "check_validation_readiness.py"
+    Path(__file__).resolve().parents[1] / "scripts" / "check_validation_readiness.py"
 )
 
 
@@ -42,12 +40,18 @@ def test_validation_readiness_accepts_branch(tmp_path):
         [
             sys.executable,
             str(SCRIPT),
-            "--repo", str(repo),
-            "--pe-id", "PE-OPS-SKILLS-01",
-            "--worktree", str(repo),
-            "--expected-commit", head,
-            "--allowed-root", str(repo),
-            "--artifact-dir", str(repo / ".elis/pe/PE-OPS-SKILLS-01"),
+            "--repo",
+            str(repo),
+            "--pe-id",
+            "PE-OPS-SKILLS-01",
+            "--worktree",
+            str(repo),
+            "--expected-commit",
+            head,
+            "--allowed-root",
+            str(repo),
+            "--artifact-dir",
+            str(repo / ".elis/pe/PE-OPS-SKILLS-01"),
         ],
         repo,
     )
@@ -67,12 +71,18 @@ def test_validation_readiness_reports_bindings(tmp_path):
         [
             sys.executable,
             str(SCRIPT),
-            "--repo", str(repo),
-            "--pe-id", "PE-OPS-SKILLS-01",
-            "--worktree", str(repo),
-            "--expected-commit", head,
-            "--allowed-root", str(repo),
-            "--artifact-dir", str(repo / ".elis/pe/PE-OPS-SKILLS-01"),
+            "--repo",
+            str(repo),
+            "--pe-id",
+            "PE-OPS-SKILLS-01",
+            "--worktree",
+            str(repo),
+            "--expected-commit",
+            head,
+            "--allowed-root",
+            str(repo),
+            "--artifact-dir",
+            str(repo / ".elis/pe/PE-OPS-SKILLS-01"),
         ],
         repo,
     )
@@ -92,12 +102,18 @@ def test_validation_readiness_rejects_forbidden_in_worktree(tmp_path):
         [
             sys.executable,
             str(SCRIPT),
-            "--repo", str(repo),
-            "--pe-id", "PE-OPS-SKILLS-01",
-            "--worktree", str(repo),
-            "--expected-commit", head,
-            "--allowed-root", str(repo),
-            "--artifact-dir", str(repo / ".elis/pe/PE-OPS-SKILLS-01"),
+            "--repo",
+            str(repo),
+            "--pe-id",
+            "PE-OPS-SKILLS-01",
+            "--worktree",
+            str(repo),
+            "--expected-commit",
+            head,
+            "--allowed-root",
+            str(repo),
+            "--artifact-dir",
+            str(repo / ".elis/pe/PE-OPS-SKILLS-01"),
         ],
         repo,
     )
@@ -116,12 +132,18 @@ def test_validation_readiness_missing_artifact_dir(tmp_path):
         [
             sys.executable,
             str(SCRIPT),
-            "--repo", str(repo),
-            "--pe-id", "PE-OPS-SKILLS-01",
-            "--worktree", str(repo),
-            "--expected-commit", head,
-            "--allowed-root", str(repo),
-            "--artifact-dir", str(repo / ".elis/pe/PE-OPS-SKILLS-01"),
+            "--repo",
+            str(repo),
+            "--pe-id",
+            "PE-OPS-SKILLS-01",
+            "--worktree",
+            str(repo),
+            "--expected-commit",
+            head,
+            "--allowed-root",
+            str(repo),
+            "--artifact-dir",
+            str(repo / ".elis/pe/PE-OPS-SKILLS-01"),
         ],
         repo,
     )

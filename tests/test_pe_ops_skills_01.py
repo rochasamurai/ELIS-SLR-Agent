@@ -49,6 +49,7 @@ def test_dispatch_binding_ok(tmp_path):
     for name in ["HEARTBEAT.md", "IDENTITY.md", "SOUL.md", "TOOLS.md", "USER.md"]:
         (repo / name).unlink(missing_ok=True)
     import shutil
+
     shutil.rmtree(repo / ".openclaw", ignore_errors=True)
     run(["git", "add", "-A"], repo)
     run(["git", "commit", "-m", "remove-runtime-files"], repo)
@@ -114,6 +115,7 @@ def test_dispatch_binding_validator_mode_accepts_detached_head(tmp_path):
     for name in ["HEARTBEAT.md", "IDENTITY.md", "SOUL.md", "TOOLS.md", "USER.md"]:
         (repo / name).unlink(missing_ok=True)
     import shutil
+
     shutil.rmtree(repo / ".openclaw", ignore_errors=True)
     run(["git", "add", "-A"], repo)
     run(["git", "commit", "-m", "remove-runtime-files"], repo)
@@ -184,6 +186,7 @@ def test_implementation_readiness_validator_mode_accepts_detached_head_and_optio
     for name in ["HEARTBEAT.md", "IDENTITY.md", "SOUL.md", "TOOLS.md", "USER.md"]:
         (repo / name).unlink(missing_ok=True)
     import shutil
+
     shutil.rmtree(repo / ".openclaw", ignore_errors=True)
     run(["git", "add", "-A"], repo)
     run(["git", "commit", "-m", "remove-runtime-files"], repo)
@@ -249,6 +252,7 @@ def test_validation_readiness_wrong_scope_and_stale_artifact(tmp_path):
     for name in ["HEARTBEAT.md", "IDENTITY.md", "SOUL.md", "TOOLS.md", "USER.md"]:
         (repo / name).unlink(missing_ok=True)
     import shutil
+
     shutil.rmtree(repo / ".openclaw", ignore_errors=True)
     run(
         [
