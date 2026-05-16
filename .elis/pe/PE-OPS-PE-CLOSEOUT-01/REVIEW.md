@@ -241,3 +241,70 @@ The `pytest` run produces `DeprecationWarning` for `datetime.datetime.utcnow()` 
 - **No implementation files were modified:** The validator touched no source code, governance documents, scripts, or tests.
 - **No HANDOFF.md modification:** The implementer's HANDOFF.md was read but not altered.
 - **No CURRENT_PE.md modification:** CURRENT_PE.md was not updated.
+
+---
+
+## Final Revalidation (final branch HEAD e4079fd)
+
+**Revalidation session:** 2026-05-16T20:21+01:00
+**Final branch HEAD:** `e4079fd785038d304e62587ef225d75e1fd1ab0f`
+**Final branch:** `feature/pe-ops-pe-closeout-01-governed-closeout-readiness-gates`
+
+### Final Branch Commit Chain
+
+The final branch `feature/pe-ops-pe-closeout-01-governed-closeout-readiness-gates` includes all four commits:
+
+| # | Commit SHA | Description |
+|---|-----------|-------------|
+| 1 | `dedfb2939835a5959cb51df6e697756e1921fdb5` | feat(governance): implement PE-OPS-PE-CLOSEOUT-01 closeout readiness gates |
+| 2 | `adf096fbab93879325483033cdc0ba8aba16fc83` | validation: PE-OPS-PE-CLOSEOUT-01 governed closeout readiness gates — REVIEW.md artefact staged |
+| 3 | `e37f9e0832fab012110e810778109a71fe5f1cc1` | Merge validation branch into implementation branch |
+| 4 | `e4079fd785038d304e62587ef225d75e1fd1ab0f` | fix: black formatting and ruff issues for PE-OPS-PE-CLOSEOUT-01 |
+
+### Fix Summary (commit e4079fd)
+
+The implementer pushed a formatting/linting fix after the original validation:
+- **black reformat:** `tests/test_check_dispatch_binding.py`, `tests/test_check_fixed_worktrees.py`, `tests/test_check_implementation_readiness.py`, `tests/test_check_validation_readiness.py`, `tests/test_pe_ops_skills_01.py`
+- **ruff F541** (f-string without placeholders): `scripts/check_validation_readiness.py`
+- **ruff F401** (unused import): `tests/test_check_fixed_worktrees.py` (removed `import tempfile`)
+
+6 files changed, 101 insertions(+), 47 deletions(-). No functional logic or governance changes.
+
+### Final Quality Gate Checks (at HEAD e4079fd)
+
+```text
+$ python3 -m black --check .
+All done! ✨ 🍰 ✨
+235 files would be left unchanged.
+```
+
+```text
+$ python3 -m ruff check .
+All checks passed!
+```
+
+```text
+$ python3 -m pytest -q
+100% tests pass (all 47 test modules)
+```
+
+### Forbidden File Check (bootstrap/runtime files)
+
+```text
+.openclaw/     — absent
+HEARTBEAT.md   — absent
+IDENTITY.md    — absent
+SOUL.md        — absent
+TOOLS.md       — absent
+USER.md        — absent
+```
+
+All persistent runtime bootstrap files are absent from the authorised Git worktree.
+
+### Live OpenClaw Config/Runtime Files
+
+Confirmed no live OpenClaw config/runtime files were changed. No `.openclaw/` workspace configuration, no Hermes bootstrap files, no runtime service files.
+
+### Final Revalidation Verdict
+
+**PASS** — All final quality gates pass at branch HEAD `e4079fd`: `black --check` pass, `ruff check` pass, `pytest` pass (47/47). No live OpenClaw config/runtime files changed. No bootstrap/runtime files present in the worktree. The four-commit chain on the final branch is complete and internally consistent. The original PASS verdict from the initial validation session stands confirmed.
