@@ -30,13 +30,14 @@ The GitHub Agent must always ensure that any prepared runtime workspace has prop
 
 The GitHub Agent must enforce explicit separation between the runtime execution environment and the PR source worktree. The runtime workspace must be different from the source workspace to maintain security boundaries.
 
-### SOURCE_PATH_AUTHORIZATION_AND_VALIDATION
+### SELF_CONTAINED_STATE_CHANGING_DISPATCH_RULE
 
-All source paths must be explicitly authorized and validated against the fixed workspace binding model. The agent must verify that:
-1. The source workspace is a legitimate fixed workspace path
-2. The runtime workspace is distinct from the source workspace
-3. Both workspaces are valid git repositories
-4. Agent identity matches expected workspace
+For the GitHub Agent specifically, this rule requires:
+1. All state changes must originate from the designated and authorized PR source path
+2. Runtime and source worktrees must be explicitly validated as different paths
+3. Any modification must follow the complete authorization chain through PM/PO
+4. All write operations must be audited and traceable to their source
+5. The separation is enforced for all GitHub write operations
 
 ## PR Source Path Selection Process
 
@@ -81,6 +82,10 @@ For each GitHub operation, the agent must perform the following validation seque
 5. Confirm valid git repository state in both workspaces
 6. Authenticate agent identity against expected workspace
 
+### Clarification: Runtime ≠ Source Worktree
+
+This requirement applies specifically to GitHub Agent operations as defined in the ELIS GitHub Agent Operating Model. While other agents in the system may not need explicit runtime/source separation (as they may not operate in separate execution environments), the GitHub Agent **must always enforce** this separation to mitigate risks associated with repository manipulation.
+
 ### Error Handling
 
 If runtime/worktree separation requirements are not met:
@@ -88,38 +93,3 @@ If runtime/worktree separation requirements are not met:
 - Log validation failure for audit purposes
 - Trigger security alert for violation
 - Prevent any further processing
-
-## Implementation Guidance
-
-### Environment-based Configuration
-
-Agents should support configuration options to explicitly define:
-- `GITHUB_AGENT_RUNTIME_WORKTREE`: The execution environment path
-- `GITHUB_AGENT_SOURCE_WORKTREE`: The authorized source path  
-- `GITHUB_AGENT_ENFORCE_SEPARATION`: Toggle for separation enforcement
-
-### Validation Checks
-
-Implement comprehensive path validation:
-```bash
-# Example validation logic
-if [ "$RUNTIME_WORKTREE" = "$SOURCE_WORKTREE" ]; then
-    echo "ERROR: Runtime and source worktrees cannot be identical"
-    exit 1
-fi
-
-if [[ ! -d "$RUNTIME_WORKTREE" ]] || [[ ! -d "$SOURCE_WORKTREE" ]]; then
-    echo "ERROR: One or both worktrees are invalid"
-    exit 1
-fi
-
-if ! git -C "$RUNTIME_WORKTREE" rev-parse --git-dir >/dev/null 2>&1; then
-    echo "ERROR: Runtime worktree is not a valid git repository"
-    exit 1
-fi
-
-if ! git -C "$SOURCE_WORKTREE" rev-parse --git-dir >/dev/null 2>&1; then
-    echo "ERROR: Source worktree is not a valid git repository"
-    exit 1
-fi
-```

@@ -76,6 +76,15 @@ Maintain clear state transitions for:
 - Execution context setup
 - Result reporting
 
+### Clarification: Runtime ≠ Source Requirement
+
+The requirement that "runtime ≠ source worktree paths" is a **GitHub Agent-specific** enforcement mechanism. This is because not all agents in the ELIS system necessarily execute in separate contexts, but the GitHub Agent requires explicit separation to maintain security boundaries for repository operations. While other agents in the system may not need this enforcement, the GitHub Agent MUST maintain explicit separation between its execution environment and source workspace to:
+
+- Prevent unintentional repository modifications in the runtime environment
+- Maintain auditability of changes originated from specific workspaces  
+- Enforce authorization boundaries for write operations
+- Preserve the integrity of fixed workspace assignments for different agent roles
+
 ## Risk Mitigation Strategies
 
 ### Separation Risks

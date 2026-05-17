@@ -100,6 +100,15 @@ Agents must validate that:
 3. **Access Restrictions**: Runtime workspace cannot be used as source workspace
 4. **Authorization Dependencies**: All operations require proper PM/PO authorization for GitHub writes
 
+## SELF_CONTAINED_STATE_CHANGING_DISPATCH_RULE
+
+Agents that perform state-changing operations (e.g., GitHub write operations) must operate within a self-contained dispatch model that:
+1. Ensures all inputs and outputs are explicitly defined
+2. Requires validation of all external state dependencies 
+3. Maintains deterministic and reproducible behavior
+4. Provides clear auditing of all operations
+5. Enforces authorization chain through PM/PO before any write operation
+
 ## Enforcement Mechanisms
 
 ### Automated Enforcement
@@ -160,6 +169,7 @@ When binding failures occur:
 
 | Version | Date       | Author | Changes |
 |---------|------------|--------|---------|
+| 1.3     | 2026-05-17 | PM     | Restored core dispatch rules and expanded state change validation |
 | 1.0     | 2026-05-17 | PM     | Initial draft incorporating runtime/worktree separation requirements |
 
 ## References
