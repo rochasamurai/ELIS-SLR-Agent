@@ -21,10 +21,10 @@
 
 | Field   | Value |
 |---------|-------|
-| PE      | PE-OPS-ADVISOR-CUTOVER-01 |
-| Branch  | feature/pe-ops-advisor-cutover-01 |
+| PE      | — |
+| Branch  | — |
 
-> **Planning mode.** Active PE: PE-OPS-ADVISOR-CUTOVER-01 — Finalise ELIS Advisor production handoff/cutover on Hermes.
+> **Plan-complete mode.** No active PE.
 
 ---
 
@@ -32,10 +32,10 @@
 
 | Agent       | Role |
 |-------------|------|
-| infra-impl-a | Implementer |
-| infra-val-b | Validator |
+| infra-impl-b | — |
+| infra-val-a | — |
 
-> Active PE roles assigned for PE-OPS-ADVISOR-CUTOVER-01.
+> No active PE roles.
 
 ---
 
@@ -53,7 +53,7 @@
 | PE-OPS-CONTAINER-GITHUB-01 | github | infra-impl-b | infra-val-a | feature/pe-ops-container-github-01-containerise-elis-github-agent-runtime | merged | 2026-05-08 |
 | PE-OPS-WORKTREE-BINDING-02 | ops | infra-impl-b | infra-val-a | feature/pe-ops-worktree-binding-02-enforce-fixed-worktree-dispatch-gates | merged | 2026-05-09 |
 | PE-OPS-ADVISOR-HANDOFF-01 | advisor | infra-impl-b | infra-val-a | feature/pe-ops-advisor-handoff-01-finalise-elis-advisor-handoff-operating-mode | merged | 2026-05-10 |
-| PE-OPS-ADVISOR-CUTOVER-01 | advisor | infra-impl-a | infra-val-b | feature/pe-ops-advisor-cutover-01 | planning | 2026-05-17 |
+| PE-OPS-ADVISOR-CUTOVER-01 | advisor | infra-impl-a | infra-val-b | feature/pe-ops-advisor-cutover-01 | merged | 2026-05-17 |
 | PE-OPS-GITHUB-AGENT-ENFORCEMENT-01 | github | infra-impl-a | infra-val-b | feature/pe-ops-github-agent-enforcement-01-deterministic-github-agent-source-path | merged | 2026-05-10 |
 | PE-INFRA-01 | infra           | infra-impl-codex     | infra-val-claude   | feature/pe-infra-01-branch-policy                 | merged          | 2026-02-18   |
 | PE-INFRA-02 | infra           | infra-impl-codex     | prog-val-claude    | feature/pe-infra-02-role-registration             | merged          | 2026-02-19   |
