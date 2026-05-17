@@ -299,3 +299,19 @@ kill -TERM <PID>
 - Message encryption
 - Authentication/authorisation beyond identity validation
 - Full A2A agent discovery
+
+---
+
+## 12. Future Runtime Gates
+
+Before any live A2A implementation is allowed, the following gates must be approved and evidenced separately:
+
+1. schema artefact exists and validates;
+2. runtime code is reviewed and committed;
+3. launch mechanism / service unit is reviewed;
+4. OpenClaw/Hermes config impact is reviewed (if any);
+5. no credentials/secrets/auth changes are required;
+6. live routing change is explicitly approved;
+7. rollback/verification evidence is captured.
+
+Phase 1 does not include these gates; it only defines the specification for later controlled implementation.

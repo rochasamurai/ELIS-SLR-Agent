@@ -275,3 +275,35 @@ The following actions are **strictly prohibited** through the A2A channel:
 - **ELIS Supervisor** is also deployed on Hermes
   (`docs/hermes/ELIS_SUPERVISOR_CHANNEL_BINDING.md`). Its A2A identity is `elis-supervisor`.
 - The A2A gateway runs independently of both Hermes and OpenClaw, on `127.0.0.1:24001`.
+
+---
+
+## 13. Phase 1 Blocker Classifications
+
+When Phase 1 evidence is incomplete or a boundary is violated, classify the blocker explicitly:
+
+- `A2A_IDENTITY_UNAUTHORISED`
+- `A2A_PAIR_DISALLOWED`
+- `A2A_LOOPBACK_VIOLATION`
+- `A2A_READ_ONLY_BOUNDARY_BROKEN`
+- `A2A_SCHEMA_OR_ENVELOPE_MISMATCH`
+- `A2A_FUTURE_RUNTIME_GATED`
+- `A2A_DISPATCH_BLOCKED`
+
+These classifications are advisory/governance labels only. They do not authorise runtime execution, implementation dispatch, or live routing.
+
+---
+
+## 14. Future Runtime Gates (Not in Phase 1)
+
+Any live A2A implementation requires separate approval and must satisfy all of the following before deployment:
+
+1. approved schema artefact and validation tests;
+2. runtime code review and commit evidence;
+3. service-unit or launch-wrapper review;
+4. OpenClaw/Hermes config review if any runtime binding is introduced;
+5. explicit no-secrets/no-auth-change check;
+6. live routing change approval;
+7. rollback plan and verification evidence.
+
+Phase 1 does not satisfy these gates; it only defines the governed protocol/spec boundary.
