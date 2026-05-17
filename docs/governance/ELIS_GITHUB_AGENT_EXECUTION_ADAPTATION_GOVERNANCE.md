@@ -85,6 +85,14 @@ The requirement that "runtime ≠ source worktree paths" is a **GitHub Agent-spe
 - Enforce authorization boundaries for write operations
 - Preserve the integrity of fixed workspace assignments for different agent roles
 
+### ALIGNMENT_WITH_OPENCLAW_SEMANTICS
+
+The GitHub Agent operates under the following OpenClaw semantics:
+- Git-working agent workspace = authorised fixed Git worktree;
+- runtime/config/auth/session material remains outside repo;
+- root-level OpenClaw native files are ignored or explicitly governed;
+- state-changing child dispatches require fresh reset, self-contained contract, and durable evidence.
+
 ## Risk Mitigation Strategies
 
 ### Separation Risks

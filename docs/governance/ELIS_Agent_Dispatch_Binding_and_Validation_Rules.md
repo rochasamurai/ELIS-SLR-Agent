@@ -109,6 +109,53 @@ Agents that perform state-changing operations (e.g., GitHub write operations) mu
 4. Provides clear auditing of all operations
 5. Enforces authorization chain through PM/PO before any write operation
 
+## STATE_CHANGING_DISPATCH_PRE_RESET_RULE
+
+State-changing dispatch operations must be preceded by a complete reset of the agent's working state to ensure clean, deterministic execution and prevent contamination from previous operations.
+
+## TWO_INSPECTION_ONLY_FAILURE_ESCALATION_RULE
+
+Any failure during operation validation must trigger a two-inspection escalation process:
+1. Initial failure inspection to identify root cause
+2. Second validation attempt with enhanced diagnostics
+3. Escalation to supervisor role if failure persists after second inspection
+
+## VALIDATOR_BRANCH_OWNERSHIP_RULE
+
+Validator agents must only operate on branches they exclusively own, preventing cross-contamination of validation results and ensuring clear ownership of validation artifacts.
+
+## IMPLEMENTER_BRANCH_RELEASE_AFTER_IMPLEMENTATION_RULE
+
+Implementer agents must release their working branches and clean up any temporary artifacts after successful implementation, ensuring no lingering state affects future operations.
+
+## GITIGNORE_POLICY_CHANGE_INTEGRATION_RULE
+
+When gitignore policy changes are introduced, they must be integrated systematically with existing workspace governance to maintain consistent exclusion patterns across all agent workspaces.
+
+## VALIDATION_AFTER_PASS_WITH_NOTES_RULE
+
+Operations that pass validation but include notes or warnings must be documented and reviewed by the appropriate oversight role for potential action items.
+
+## CHILD_SESSION_NO_IMPLIED_CONTEXT_RULE
+
+Child sessions spawned from parent dispatches must not carry implied context from their parents. Each child session must establish its own explicit context and validate all assumptions independently.
+
+## PM_STATE_CHANGING_DISPATCH_SKILL
+
+The PM (Product Manager) role must possess the skill to issue state-changing dispatch commands that can only be executed after proper authorization chain validation from PM/PO for any write operations on GitHub.
+
+## DISPATCH_CONTRACT_MACHINE_CHECK_RULE
+
+All dispatch contracts must include machine-checkable validation routines to verify the compatibility of dispatch parameters with agent capabilities and workspace expectations before operation initiation.
+
+## DOCS_ONLY_CORRECTION_DISPATCH_RULE
+
+Documentation-only corrections must be submitted within the correct documentation governance framework, following the same validation processes as operational changes, including proper branch tagging and review cycles.
+
+## OPENCLAW_CONFIG_EMERGENCY_CORRECTION_RECORD_RULE
+
+All emergency configuration corrections applied to OpenClaw runtime must be recorded in a dedicated correction log that includes timestamp, operator identity, change impact assessment, and rollback procedure documentation.
+
 ## Enforcement Mechanisms
 
 ### Automated Enforcement
