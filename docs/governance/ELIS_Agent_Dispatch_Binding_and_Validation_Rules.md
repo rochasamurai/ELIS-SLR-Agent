@@ -113,6 +113,14 @@ Agents that perform state-changing operations (e.g., GitHub write operations) mu
 
 State-changing dispatch operations must be preceded by a complete reset of the agent's working state to ensure clean, deterministic execution and prevent contamination from previous operations.
 
+## COMPLETE_COMMIT_EVIDENCE_BEFORE_REVALIDATION_RULE
+
+All revalidation activities require complete commit evidence before proceeding. This ensures that validation is performed against committed code and not on temporary or uncommitted changes. The commit evidence includes:
+1. Fully committed and integrated changes
+2. Explicit commit SHA of the validated state
+3. Verification that the commit is reachable from the target branch
+4. Evidence that the validation was performed on committed code state
+
 ## TWO_INSPECTION_ONLY_FAILURE_ESCALATION_RULE
 
 Any failure during operation validation must trigger a two-inspection escalation process:
