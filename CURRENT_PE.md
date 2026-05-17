@@ -21,10 +21,10 @@
 
 | Field   | Value |
 |---------|-------|
-| PE      | PE-OPS-A2A-01 |
-| Branch  | feature/pe-ops-a2a-01-phase-1-communication-matrix-clean-opening |
+| PE      | — |
+| Branch  | — |
 
-> **Strict mode.** Active PE: PE-OPS-A2A-01 — Phase-1 A2A Communication Matrix.
+> **Plan-complete mode restored.** No active PE. PE-OPS-A2A-01 is merged. Follow-up item preserved for future cleanup only: PE-OPS-WORKTREE-BINDING-02 — Enforce Fixed Worktree Dispatch Gates.
 
 ---
 
@@ -32,10 +32,10 @@
 
 | Agent       | Role |
 |-------------|------|
-| infra-impl-b | Implementer |
-| infra-val-a | Validator |
+| — | — |
+| — | — |
 
-> Active PE roles assigned for PE-OPS-A2A-01.
+> No active PE roles.
 
 ---
 
@@ -46,7 +46,7 @@
 | PE-GOV-01   | governance      | infra-impl-b         | infra-val-a        | feature/pe-gov-01-operating-protocol-templates    | merged          | 2026-05-03   |
 | PE-GOV-RISK-TIER-01 | governance | infra-impl-a         | infra-val-b        | feature/pe-gov-risk-tier-01-add-risk-tiered-pe-protocol | blocked         | 2026-05-06   |
 | PE-OPS-FIXED-WORKSPACES-01 | fixed-workspaces | infra-impl-b | infra-val-a | feature/pe-ops-fixed-workspaces-01-adopt-fixed-agent-workspace-and-github-write-boundary-model | merged | 2026-05-07 |
-| PE-OPS-A2A-01 | ops | infra-impl-b | infra-val-a | feature/pe-ops-a2a-01-phase-1-communication-matrix-clean-opening | planning | 2026-05-17 |
+| PE-OPS-A2A-01 | ops | infra-impl-b | infra-val-a | feature/pe-ops-a2a-01-phase-1-communication-matrix-clean-opening | merged | 2026-05-17 |
 | PE-OPS-GITHUB-01 | github          | infra-impl-a         | infra-val-b        | feature/pe-ops-github-01-elis-github-agent-role-and-permission-model | merged          | 2026-05-06   |
 | PE-OPS-GITHUB-02 | github | infra-impl-b | infra-val-a | feature/pe-ops-github-02-deploy-elis-github-agent | merged | 2026-05-08 |
 | PE-OPS-GITHUB-AGENT-ENFORCEMENT-01 | github | infra-impl-a | infra-val-b | feature/pe-ops-github-agent-enforcement-01-deterministic-github-agent-source-path | planning | 2026-05-10 |
@@ -270,6 +270,7 @@ PM housekeeping entries (prefix `PM-CHORE-XX`):
 | PM-CHORE-100 | Closed PE-OPS-GITHUB-AGENT-ENFORCEMENT-01 as merged (PR #431, final PR head `01cb8d6fdad7ec83f46811bb1b9972d3cd3f5ebd`, merge SHA `b9126c4f3f9361ddc549b2733789599be383caf3`). Plan-complete mode restored: PE and Branch cleared; no active PE; PE-OPS-GITHUB-AGENT-ENFORCEMENT-01 registry row updated to merged. TEMPORARY_HUMAN_GITHUB_AUTH_RISK was recorded for this PR; follow-up credentials/security PE remains required to replace `rochasamurai` with the proper GitHub Agent service identity. | 2026-05-10 |
 | PM-CHORE-100 | Opened PE-OPS-GITHUB-AGENT-ENFORCEMENT-01 (Enforce GitHub Agent Path for GitHub Operations) with `infra-impl-a` as Implementer and `infra-val-b` as Validator per alternation rule. Opening packet only: CURRENT_PE.md and PE task packet updated; no registry/status corrections beyond the opening row; no secret/token/permission/config changes, no PM direct GitHub writes, no PE-specific runtime worktrees. | 2026-05-10 |
 | PM-CHORE-101 | Opened PE-OPS-A2A-01 (Phase-1 A2A Communication Matrix) on clean baseline branch `feature/pe-ops-a2a-01-phase-1-communication-matrix-clean-opening` from `origin/main` at `20070320566b9c587eb6842598da74d74836e744`. Scope: Strict lane, Phase 1 protocol/spec metadata only, local-only A2A communication boundaries, and read-only governance/evidence rules; no runtime deployment, no config/auth/service changes, and no live routing changes. | 2026-05-17 |
+| PM-CHORE-102 | Closed PE-OPS-A2A-01 as merged (PR #442, merge SHA `da8abcfb373ebdf65a2bf4d1a71953612ee83091`). Plan-complete mode restored: PE and Branch cleared; no active PE; PE-OPS-A2A-01 registry row updated to merged. Follow-up item preserved for future cleanup only: PE-OPS-WORKTREE-BINDING-02 — Enforce Fixed Worktree Dispatch Gates. | 2026-05-17 |
 
 
 Alternation rule:
