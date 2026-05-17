@@ -79,6 +79,21 @@ runs/
 # Git worktrees
 .worktrees/
 
+# OpenClaw native/runtime files at repo root only
+/AGENTS.md
+/SOUL.md
+/USER.md
+/IDENTITY.md
+/TOOLS.md
+/HEARTBEAT.md
+/BOOT.md
+/BOOTSTRAP.md
+/MEMORY.md
+/memory/
+/skills/
+/canvas/
+/.openclaw/
+
 # Local elis run output artifacts (not for commit)
 dedup/
 *_manifest.json
