@@ -21,10 +21,10 @@
 
 | Field   | Value |
 |---------|-------|
-| PE      | PE-OPS-A2A-PRODUCTION-01 |
-| Branch  | feature/pe-ops-a2a-production-01 |
+| PE      | — |
+| Branch  | — |
 
-> **Strict mode.** Active PE: PE-OPS-A2A-PRODUCTION-01 — Implement Production A2A Agent Communication Backbone.
+> **Plan-complete mode restored.** No active PE. PE-OPS-A2A-PRODUCTION-01 is merged. Follow-up item preserved for future cleanup only: PE-OPS-WORKTREE-BINDING-02 — Enforce Fixed Worktree Dispatch Gates.
 
 ---
 
@@ -32,10 +32,10 @@
 
 | Agent       | Role |
 |-------------|------|
-| infra-impl-b | Implementer |
-| infra-val-a | Validator |
+| — | — |
+| — | — |
 
-> Active PE roles assigned for PE-OPS-A2A-PRODUCTION-01.
+> No active PE roles.
 
 ---
 
