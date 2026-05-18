@@ -10,8 +10,8 @@ Implement a production-safe internal A2A communication path on elis-server so EL
 - Lane: Strict
 - Baseline HEAD: `da7f9d505cfd6b3181e0720ea9a2f9678115147e`
 - Branch: `feature/pe-ops-a2a-production-01`
-- Implementer: `infra-impl-a`
-- Validator: `infra-val-b`
+- Implementer: `infra-impl-b`
+- Validator: `infra-val-a`
 - Supervisor verification role: read-only only
 
 ## First-pass files
