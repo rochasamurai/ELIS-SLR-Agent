@@ -1,20 +1,26 @@
-# PE-OPS-A2A-PRODUCTION-01 — Validator Review
+# PE-OPS-A2A-PRODUCTION-01 — Validator Review (infra-val-a, corrected baseline)
 
 ## Binding acknowledgement
 
 ```
-Validator identity:       infra-val-b
+Validator identity:       infra-val-a
 PE ID:                    PE-OPS-A2A-PRODUCTION-01
-Runtime/session id:       agent:infra-val-b:subagent:9ecd8bc9-81da-4772-8a60-ce77adcbc15a
-Timestamp:                2026-05-18T14:36:49Z
+Runtime/session id:       agent:infra-val-a:subagent:74612d43-67cf-4bce-ba0a-0cb87b057497
+Timestamp:                2026-05-18T16:02:14Z
 Prior context:            DISCARDED
-Authorised worktree:      /opt/elis/agent-worktrees/infra-val-b
+Authorised worktree:      /opt/elis/agent-worktrees/infra-val-a
 Branch:                   feature/pe-ops-a2a-production-01
-Full HEAD:                8e2bda67e39cfdc47e5cebaf70b8b61d1f37f5fb
+Full HEAD:                be680aa7e3e2db0f4d6803b37d6727518e3a5757
 Git status:               clean
 REVIEW path:              .elis/pe/PE-OPS-A2A-PRODUCTION-01/REVIEW.md
 Scope:                    Phase 1 docs/spec/design validation only
 ```
+
+---
+
+## Context: staffing metadata correction
+
+This review is conducted **after** the staffing metadata correction commit `be680aa7` (`pm: correct A2A production staffing metadata`). The prior REVIEW.md (at HEAD `8e2bda67`, authored by infra-val-b) validated a baseline where all files were consistent under the old staffing assignment `infra-impl-a` / `infra-val-b`. That review is **superseded** by this one because the staffing metadata has changed.
 
 ---
 
@@ -39,10 +45,10 @@ Hard stops respected:
 
 | Claim | Evidence | Result |
 |-------|----------|--------|
-| Worktree HEAD = `8e2bda67e39cfdc47e5cebaf70b8b61d1f37f5fb` | `git rev-parse HEAD` → `8e2bda67e39cfdc47e5cebaf70b8b61d1f37f5fb` | ✅ PASS |
+| Worktree HEAD = `be680aa7e3e2db0f4d6803b37d6727518e3a5757` | `git rev-parse HEAD` → `be680aa7e3e2db0f4d6803b37d6727518e3a5757` | ✅ PASS |
 | Branch = `feature/pe-ops-a2a-production-01` | `git branch --show-current` → `feature/pe-ops-a2a-production-01` | ✅ PASS |
 | Git status clean | `git status --porcelain` → empty | ✅ PASS |
-| Baseline HEAD `da7f9d505cfd6b3181e0720ea9a2f9678115147e` is ancestor of current HEAD | `git merge-base --is-ancestor` → exit 0 | ✅ PASS |
+| Baseline HEAD `da7f9d505cfd6b3181e0720ea9a2f9678115147e` is ancestor of current HEAD | Confirmed by git ancestry: `da7f9d50` → `8e2bda67` → `af485b3c` → `be680aa7` | ✅ PASS |
 | origin/main HEAD = `da7f9d50` | `git log --oneline -1 origin/main` → `da7f9d50 Merge pull request #443` | ✅ PASS |
 
 ---
@@ -53,29 +59,31 @@ Hard stops respected:
 
 | Check | Evidence | Result |
 |-------|----------|--------|
-| Current PE = `PE-OPS-A2A-PRODUCTION-01` | Line: `PE \| PE-OPS-A2A-PRODUCTION-01` | ✅ PASS |
-| Branch = `feature/pe-ops-a2a-production-01` | Line: `Branch \| feature/pe-ops-a2a-production-01` | ✅ PASS |
-| Implementer = `infra-impl-a` | Agent roles table: `infra-impl-a \| Implementer` | ✅ PASS |
-| Validator = `infra-val-b` | Agent roles table: `infra-val-b \| Validator` | ✅ PASS |
-| Registry row exists with status `planning` | Row: `PE-OPS-A2A-PRODUCTION-01 \| ops \| infra-impl-a \| infra-val-b \| feature/pe-ops-a2a-production-01 \| planning \| 2026-05-18` | ✅ PASS |
-| Release context references v2.0.1 | Line: `ELIS SLR Agent — Multi-Agent Implementation Plan · v2.0.1` | ✅ PASS |
-| Base branch = `main` | Line: `main` | ✅ PASS |
+| Current PE = `PE-OPS-A2A-PRODUCTION-01` | `PE \| PE-OPS-A2A-PRODUCTION-01` | ✅ PASS |
+| Branch = `feature/pe-ops-a2a-production-01` | `Branch \| feature/pe-ops-a2a-production-01` | ✅ PASS |
+| Implementer = `infra-impl-b` | Agent roles table: `infra-impl-b \| Implementer` | ✅ PASS |
+| Validator = `infra-val-a` | Agent roles table: `infra-val-a \| Validator` | ✅ PASS |
+| Registry row exists with status `planning` | Row: `PE-OPS-A2A-PRODUCTION-01 \| ops \| infra-impl-b \| infra-val-a \| feature/pe-ops-a2a-production-01 \| planning \| 2026-05-18` | ✅ PASS |
+| Release context references v2.0.1 | `ELIS SLR Agent — Multi-Agent Implementation Plan · v2.0.1` | ✅ PASS |
+| Base branch = `main` | `main` | ✅ PASS |
+| Staffing correction applied | Implementer and Validator roles now show `infra-impl-b` / `infra-val-a` | ✅ PASS |
 
 ### 2. PE_TASK.md
 
 | Check | Evidence | Result |
 |-------|----------|--------|
 | PE_ID matches | `PE-OPS-A2A-PRODUCTION-01` | ✅ PASS |
-| Objective is present and coherent | Defines production-safe A2A communication backbone | ✅ PASS |
+| Objective is present and coherent | Production-safe A2A internal communication backbone on elis-server | ✅ PASS |
 | Lane = Strict | `Lane: Strict` | ✅ PASS |
-| Baseline HEAD matches declared origin/main | `da7f9d505cfd6b3181e0720ea9a2f9678115147e` — matches git verification | ✅ PASS |
-| Implementer = `infra-impl-a`, Validator = `infra-val-b` | Consistent with CURRENT_PE.md | ✅ PASS |
+| Baseline HEAD matches declared origin/main | `da7f9d505cfd6b3181e0720ea9a2f9678115147e` — confirmed ancestor of current HEAD | ✅ PASS |
+| Implementer = `infra-impl-b`, Validator = `infra-val-a` | Consistent with corrected CURRENT_PE.md | ✅ PASS |
 | Phase 1 scope = docs/spec/design only | Explicitly stated | ✅ PASS |
 | Exclusions cover all hard-stop items | Runtime code, service units, config mutation, auth/secret, deployment, restart, live routing, dispatch automation, production cutover all listed | ✅ PASS |
 | Security model section present | Authenticated identities, append-only log, least-privilege, explicit ACKs, classified failures, no arbitrary injection | ✅ PASS |
 | Rollback plan present | Discord fallback, disable switch, no destructive migration, revert by branch only | ✅ PASS |
 | Evidence requirements defined | Baseline HEAD, clean worktree, command output, log evidence, inline verdict evidence | ✅ PASS |
 | Phase gates defined | 5 gates from PO approval through to runtime consideration | ✅ PASS |
+| Staffing correction applied | Implementer = `infra-impl-b`, Validator = `infra-val-a` — matches CURRENT_PE.md | ✅ PASS |
 
 ### 3. DISPATCH_STATUS.md
 
@@ -99,9 +107,10 @@ Hard stops respected:
 | scope matches | `docs/spec/design only` | ✅ PASS |
 | currentState = `queued` | Consistent with DISPATCH_STATUS.md | ✅ PASS |
 | lifecycleStates array matches DISPATCH_STATUS.md | Same 6 states | ✅ PASS |
-| roles consistent | implementer: `infra-impl-a`, validator: `infra-val-b` | ✅ PASS |
 | a2a.compatible = true, a2a.dependent = false | Correct: compatible but not dependent | ✅ PASS |
 | Valid JSON | Parsed without error | ✅ PASS |
+| roles.validator = `infra-val-b` | ⚠️ **DISCREPANCY** — CURRENT_PE.md and PE_TASK.md say `infra-val-a` | ⚠️ FINDING |
+| roles.implementer = `infra-impl-a` | ⚠️ **DISCREPANCY** — CURRENT_PE.md and PE_TASK.md say `infra-impl-b` | ⚠️ FINDING |
 
 ### 5. ELIS_A2A_Production_Backbone.md
 
@@ -143,12 +152,13 @@ Hard stops respected:
 | PE_ID consistent across all 7 files | ✅ PASS |
 | Branch name consistent across all 7 files | ✅ PASS |
 | Baseline HEAD consistent (PE_TASK.md, DISPATCH_STATUS.md, dispatch-status.json) | ✅ PASS |
-| Implementer = `infra-impl-a` in all files that specify it | ✅ PASS |
-| Validator = `infra-val-b` in all files that specify it | ✅ PASS |
+| Implementer = `infra-impl-b` in CURRENT_PE.md and PE_TASK.md | ✅ PASS |
+| Validator = `infra-val-a` in CURRENT_PE.md and PE_TASK.md | ✅ PASS |
 | Phase 1 scope = docs/spec/design only, consistent everywhere | ✅ PASS |
 | Exclusions/hard-stops consistent across PE_TASK.md, Backbone doc, Security Model, Rollback doc | ✅ PASS |
 | DISPATCH_STATUS.md and dispatch-status.json state = `queued`, matching | ✅ PASS |
-| No contradictions between any files | ✅ PASS |
+| No contradictions between governance docs | ✅ PASS |
+| **dispatch-status.json roles do NOT match CURRENT_PE.md / PE_TASK.md** | ⚠️ **FINDING** — roles.validator = `infra-val-b` (should be `infra-val-a`), roles.implementer = `infra-impl-a` (should be `infra-impl-b`) | ⚠️ **DISCREPANCY** |
 
 ---
 
@@ -168,20 +178,48 @@ Hard stops respected:
 
 ---
 
-## Observations (non-blocking)
+## Findings
 
-1. **dispatch-status.json baselineHead** uses the PE_TASK.md declared value `da7f9d505cfd6b3181e0720ea9a2f9678115147e`, which matches `origin/main` HEAD at time of branch creation. The current worktree HEAD (`8e2bda67`) is ahead of this baseline, consistent with commits added to the feature branch after creation.
-2. **PE_TASK.md supervisor role** is defined as "read-only only" — this is appropriate for Phase 1.
-3. **Rollback doc** references "the paused Observability PE branch" — this is a forward reference that should be verified if a future PE depends on it, but it is not a blocker for this Phase 1 validation.
+### FINDING-1: dispatch-status.json staffing metadata is stale (non-blocking)
+
+**Severity**: Low (documentation consistency)
+
+**Description**: The staffing metadata correction in commit `be680aa7` updated `CURRENT_PE.md` and `PE_TASK.md` to reflect `infra-impl-b` as Implementer and `infra-val-a` as Validator, but `dispatch-status.json` still contains the old assignment:
+```json
+"roles": {
+    "implementer": "infra-impl-a",
+    "validator": "infra-val-b",
+    ...
+}
+```
+
+**Impact**: Cross-file inconsistency. The `dispatch-status.json` roles field does not match the authoritative sources (`CURRENT_PE.md` and `PE_TASK.md`).
+
+**Recommendation**: Update `dispatch-status.json` roles to:
+```json
+"roles": {
+    "implementer": "infra-impl-b",
+    "validator": "infra-val-a",
+    ...
+}
+```
+
+**Blocking?**: No. This is a Phase 1 docs-only PE with scope limited to docs/spec/design. The dispatch-status.json is supplementary status metadata; its role mismatch does not affect the validity of the governance specs or the Phase 1 design baseline. The authoritative files (CURRENT_PE.md and PE_TASK.md) are correct.
 
 ---
 
 ## Verdict
 
-**PASS**
+**PASS** — with one non-blocking finding (FINDING-1: dispatch-status.json staffing metadata stale).
 
-All 7 Phase 1 docs/spec/design files are internally consistent, mutually consistent, respect all hard-stop boundaries, and provide a coherent baseline for PE-OPS-A2A-PRODUCTION-01. No blocking defects found. Three non-blocking observations noted for future awareness.
+All 7 Phase 1 docs/spec/design files are structurally sound, internally coherent, mutually consistent (with one noted exception in dispatch-status.json), and respect all nine hard-stop boundaries. The three governance specs (Backbone, Security Model, Rollback) define a coherent, production-safe baseline for A2A communication. No blocking defects found.
 
 ---
 
-*Reviewed by: infra-val-b | Session: agent:infra-val-b:subagent:9ecd8bc9-81da-4772-8a60-ce77adcbc15a | Timestamp: 2026-05-18T14:36:49Z*
+## Supersession statement
+
+This REVIEW.md **supersedes** the prior REVIEW.md authored by infra-val-b (at HEAD `8e2bda67`, session `agent:infra-val-b:subagent:9ecd8bc9-81da-4772-8a60-ce77adcbc15a`) because the staffing metadata has been corrected by commit `be680aa7`. The prior review was conducted against a baseline where all files were consistent under `infra-impl-a` / `infra-val-b`. This review validates the corrected baseline where `CURRENT_PE.md` and `PE_TASK.md` now correctly assign `infra-impl-b` as Implementer and `infra-val-a` as Validator, and identifies one residual discrepancy in `dispatch-status.json`.
+
+---
+
+*Reviewed by: infra-val-a | Session: agent:infra-val-a:subagent:74612d43-67cf-4bce-ba0a-0cb87b057497 | Timestamp: 2026-05-18T16:02:14Z*
