@@ -1,0 +1,28 @@
+{
+  "pe": "PE-OPS-A2A-PRODUCTION-01",
+  "branch": "feature/pe-ops-a2a-production-01",
+  "baselineHead": "da7f9d505cfd6b3181e0720ea9a2f9678115147e",
+  "scope": "docs/spec/design only",
+  "currentState": "queued",
+  "lifecycleStates": [
+    "queued",
+    "claimed",
+    "running",
+    "blocked",
+    "waiting-on-input",
+    "complete"
+  ],
+  "formats": {
+    "standardStatus": "PE / Branch / State / Owner / Updated / Blocker / Next step",
+    "standardEvidence": "Evidence type / Source / Result"
+  },
+  "roles": {
+    "implementer": "infra-impl-a",
+    "validator": "infra-val-b",
+    "supervisorVerification": "read-only"
+  },
+  "a2a": {
+    "compatible": true,
+    "dependent": false
+  }
+}
