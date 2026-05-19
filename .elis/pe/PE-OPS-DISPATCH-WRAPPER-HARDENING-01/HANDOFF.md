@@ -6,6 +6,13 @@
 
 validation-ready-for-infra-val-a
 
+## Summary
+
+- Validator: `infra-val-a`
+- Phase: `Phase 1 dry-run / check / generate only`
+- Baseline: `origin/main @ a486f05e8376afd227595b9f1ccad3f88369cf74`
+- Branch: `feature/pe-ops-dispatch-wrapper-hardening-01`
+
 ## Session Identity
 
 | Field | Value |
@@ -44,7 +51,7 @@ Please validate the Phase 1 implementation for PE-OPS-DISPATCH-WRAPPER-HARDENING
 - no files outside the approved scope changed
 - no live automation, config, auth, or service mutation was introduced
 
-## Files changed by implementer
+## Files Changed
 
 | File | Status |
 |---|---|
@@ -58,7 +65,7 @@ Please validate the Phase 1 implementation for PE-OPS-DISPATCH-WRAPPER-HARDENING
 | `tests/test_pm_dispatch_contract.py` | Updated |
 | `tests/test_po_dispatch.py` | Added |
 
-## Status Packet
+## Acceptance Criteria
 
 | Field | Value |
 |---|---|
