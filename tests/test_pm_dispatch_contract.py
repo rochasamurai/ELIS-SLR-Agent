@@ -22,8 +22,8 @@ def test_current_pe_marks_the_active_pe_and_roles() -> None:
     closeout_state = all(
         marker in text
         for marker in (
-            "PE: —",
-            "Branch: —",
+            "| PE      | — |",
+            "| Branch  | — |",
             "plan-complete / no active PE",
             "no active PE roles",
             "PE-OPS-DISPATCH-WRAPPER-HARDENING-01",
