@@ -21,10 +21,10 @@
 
 | Field   | Value |
 |---------|-------|
-| PE      | PE-OPS-DISPATCH-WRAPPER-HARDENING-01 |
-| Branch  | feature/pe-ops-dispatch-wrapper-hardening-01 |
+| PE      | — |
+| Branch  | — |
 
-> **Phase 1 dry-run/check/generate only.** PE opened for dispatch wrapper hardening and PO safe-start helper work.
+> **plan-complete / no active PE.**
 
 ---
 
@@ -32,10 +32,10 @@
 
 | Agent | Role |
 |-------|------|
-| infra-impl-b | Implementer |
-| infra-val-a | Validator |
+| — | — |
+| — | — |
 
-> Phase 1 dry-run/check/generate only; no live automation.
+> no active PE roles.
 
 ---
 
@@ -44,7 +44,7 @@
 | PE-ID       | Domain          | Implementer-agentId  | Validator-agentId  | Branch                                            | Status          | Last-updated |
 |-------------|-----------------|----------------------|--------------------|---------------------------------------------------|-----------------|--------------|
 | PE-OPS-PM-DISPATCH-01 | ops | infra-impl-b | infra-val-a | feature/pe-ops-pm-dispatch-01-deterministic-pm-dispatch-wrapper | merged | 2026-05-19 |
-| PE-OPS-DISPATCH-WRAPPER-HARDENING-01 | ops | infra-impl-b | infra-val-a | feature/pe-ops-dispatch-wrapper-hardening-01 | implementing | 2026-05-19 |
+| PE-OPS-DISPATCH-WRAPPER-HARDENING-01 | ops | infra-impl-b | infra-val-a | feature/pe-ops-dispatch-wrapper-hardening-01 | merged | 2026-05-19 |
 | PE-GOV-01   | governance      | infra-impl-b         | infra-val-a        | feature/pe-gov-01-operating-protocol-templates    | merged          | 2026-05-03   |
 | PE-GOV-RISK-TIER-01 | governance | infra-impl-a         | infra-val-b        | feature/pe-gov-risk-tier-01-add-risk-tiered-pe-protocol | blocked         | 2026-05-06   |
 | PE-OPS-FIXED-WORKSPACES-01 | fixed-workspaces | infra-impl-b | infra-val-a | feature/pe-ops-fixed-workspaces-01-adopt-fixed-agent-workspace-and-github-write-boundary-model | merged | 2026-05-07 |
