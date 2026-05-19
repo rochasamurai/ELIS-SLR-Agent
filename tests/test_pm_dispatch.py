@@ -74,7 +74,9 @@ def test_validate_packet_rejects_wrong_lane() -> None:
         validator="infra-val-a",
     )
 
-    assert any("Lane must be 'Strict'" in item for item in MODULE.validate_packet(packet))
+    assert any(
+        "Lane must be 'Strict'" in item for item in MODULE.validate_packet(packet)
+    )
 
 
 def test_render_contract_json_is_deterministic() -> None:
@@ -123,7 +125,10 @@ def test_check_mode_passes_when_approved_files_exist(tmp_path: Path) -> None:
     )
 
     assert result.returncode == 0, result.stdout + result.stderr
-    assert "PASS: Phase 1 packet is well-formed and does not call live dispatch APIs." in result.stdout
+    assert (
+        "PASS: Phase 1 packet is well-formed and does not call live dispatch APIs."
+        in result.stdout
+    )
 
 
 def test_dry_run_emits_phase_one_statement() -> None:

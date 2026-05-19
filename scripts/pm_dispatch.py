@@ -34,9 +34,7 @@ HARD_STOPS: tuple[str, ...] = (
     "do not push/open PR/merge",
     "do not alter files outside approved scope",
 )
-LIVE_DISPATCH_STATEMENT = (
-    "Phase 1 only generates and checks dispatch contracts and does not call live dispatch APIs."
-)
+LIVE_DISPATCH_STATEMENT = "Phase 1 only generates and checks dispatch contracts and does not call live dispatch APIs."
 
 
 @dataclass(frozen=True)
@@ -52,7 +50,10 @@ class DispatchPacket:
     mode: str = "dry-run"
     file_scope: tuple[str, ...] = APPROVED_FILE_SCOPE
     phase_1_gates: tuple[str, ...] = PHASE_1_GATES
-    tests: tuple[str, ...] = ("tests/test_pm_dispatch.py", "tests/test_pm_dispatch_contract.py")
+    tests: tuple[str, ...] = (
+        "tests/test_pm_dispatch.py",
+        "tests/test_pm_dispatch_contract.py",
+    )
     rollback: str = (
         "Revert only the approved scoped files to the accepted origin/main baseline."
     )
@@ -151,7 +152,9 @@ def validate_packet(packet: DispatchPacket) -> list[str]:
     if not packet.validator:
         failures.append("Validator is required")
     if packet.file_scope != APPROVED_FILE_SCOPE:
-        failures.append("Approved file scope does not match the controlled PE opening packet")
+        failures.append(
+            "Approved file scope does not match the controlled PE opening packet"
+        )
     if packet.phase_1_gates != PHASE_1_GATES:
         failures.append("Phase 1 gates do not match the controlled wrapper contract")
     if packet.live_dispatch_statement != LIVE_DISPATCH_STATEMENT:
@@ -179,7 +182,9 @@ def _check_current_pe_metadata(repo_root: Path, packet: DispatchPacket) -> list[
     if packet.branch not in content:
         failures.append("CURRENT_PE.md does not reference the approved branch")
     if "infra-impl-b" not in content or "infra-val-a" not in content:
-        failures.append("CURRENT_PE.md does not assign the approved implementer/validator roles")
+        failures.append(
+            "CURRENT_PE.md does not assign the approved implementer/validator roles"
+        )
     return failures
 
 
@@ -193,10 +198,18 @@ def _parse_args(argv: Iterable[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Deterministic PM dispatch wrapper.")
     parser.add_argument("--pe-id", required=True, help="Approved PE identifier.")
     parser.add_argument("--branch", required=True, help="Approved feature branch.")
-    parser.add_argument("--baseline", required=True, help="Approved baseline ref and commit.")
-    parser.add_argument("--lane", required=True, choices=["Strict"], help="Approved execution lane.")
-    parser.add_argument("--implementer", required=True, help="Approved implementer agent ID.")
-    parser.add_argument("--validator", required=True, help="Approved validator agent ID.")
+    parser.add_argument(
+        "--baseline", required=True, help="Approved baseline ref and commit."
+    )
+    parser.add_argument(
+        "--lane", required=True, choices=["Strict"], help="Approved execution lane."
+    )
+    parser.add_argument(
+        "--implementer", required=True, help="Approved implementer agent ID."
+    )
+    parser.add_argument(
+        "--validator", required=True, help="Approved validator agent ID."
+    )
     parser.add_argument(
         "--mode",
         choices=PHASE_1_GATES,
@@ -233,9 +246,7 @@ def main(argv: Iterable[str] | None = None) -> int:
         failures.extend(_check_current_pe_metadata(repo_root, packet))
         missing = validate_scoped_files(repo_root)
         if missing:
-            failures.append(
-                "Missing approved PE artefacts: " + ", ".join(missing)
-            )
+            failures.append("Missing approved PE artefacts: " + ", ".join(missing))
 
     if args.mode == "generate":
         json_text = render_contract_json(packet)

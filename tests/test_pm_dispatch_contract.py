@@ -31,11 +31,16 @@ def test_handoff_contains_status_packet_and_no_live_dispatch_statement() -> None
     assert "Files Changed" in text
     assert "Acceptance Criteria" in text
     assert "Validation Commands" in text
-    assert "Phase 1 only generates and checks dispatch contracts and does not call live dispatch APIs." in text
+    assert (
+        "Phase 1 only generates and checks dispatch contracts and does not call live dispatch APIs."
+        in text
+    )
 
 
 def test_governance_doc_states_the_wrapper_contract() -> None:
-    text = Path("docs/governance/ELIS_PM_Dispatch_Wrapper.md").read_text(encoding="utf-8")
+    text = Path("docs/governance/ELIS_PM_Dispatch_Wrapper.md").read_text(
+        encoding="utf-8"
+    )
 
     assert "dry-run" in text
     assert "check" in text
