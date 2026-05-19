@@ -116,7 +116,9 @@ def test_render_contract_json_includes_allowlist_and_required_rules() -> None:
 
     payload = json.loads(MODULE.render_contract_json(packet))
     assert payload["pe_id"] == "PE-OPS-DISPATCH-WRAPPER-HARDENING-01"
-    assert payload["runtime_bootstrap_allowlist"] == list(MODULE.RUNTIME_BOOTSTRAP_ALLOWLIST)
+    assert payload["runtime_bootstrap_allowlist"] == list(
+        MODULE.RUNTIME_BOOTSTRAP_ALLOWLIST
+    )
     assert payload["required_rules"] == list(MODULE.REQUIRED_RULES)
     assert payload["tests"] == list(MODULE.EXPECTED_TESTS)
     assert payload["live_dispatch_statement"] == MODULE.PHASE_1_ONLY_STATEMENT
@@ -136,7 +138,9 @@ def test_classify_workspace_line_blocks_untracked_dirty_files_outside_scope() ->
     assert "outside approved scope" in finding.reason.lower()
 
 
-def test_check_mode_passes_when_only_approved_scope_and_allowed_noise_exist(tmp_path: Path) -> None:
+def test_check_mode_passes_when_only_approved_scope_and_allowed_noise_exist(
+    tmp_path: Path,
+) -> None:
     _init_git_repo(tmp_path)
     _make_scoped_files(tmp_path, include_runtime_noise=True)
 

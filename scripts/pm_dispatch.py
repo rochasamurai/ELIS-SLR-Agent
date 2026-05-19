@@ -214,7 +214,9 @@ def classify_workspace_line(line: str) -> WorkspaceFinding:
         return WorkspaceFinding(code, path, "clean", "No change")
 
     if path in APPROVED_FILE_SCOPE:
-        return WorkspaceFinding(code, path, "approved-scope", "Change is inside the approved PE scope")
+        return WorkspaceFinding(
+            code, path, "approved-scope", "Change is inside the approved PE scope"
+        )
 
     if code == "??" and is_preserved_runtime_bootstrap_path(path):
         return WorkspaceFinding(
@@ -286,7 +288,9 @@ def assess_workspace_state(repo_root: Path) -> WorkspaceAssessment:
         finding for finding in findings if finding.category == "approved-scope"
     )
     preserved_runtime_bootstrap = tuple(
-        finding for finding in findings if finding.category == "preserved-runtime-bootstrap"
+        finding
+        for finding in findings
+        if finding.category == "preserved-runtime-bootstrap"
     )
     blockers = tuple(finding for finding in findings if finding.category == "blocker")
     return WorkspaceAssessment(
@@ -313,8 +317,13 @@ def _check_current_pe_metadata(repo_root: Path, packet: DispatchPacket) -> list[
         failures.append(
             "CURRENT_PE.md does not assign the approved implementer/validator roles"
         )
-    if "Phase 1 dry-run/check/generate only" not in content and "dry-run / check / generate only" not in content:
-        failures.append("CURRENT_PE.md does not state the Phase 1 dry-run/check/generate constraint")
+    if (
+        "Phase 1 dry-run/check/generate only" not in content
+        and "dry-run / check / generate only" not in content
+    ):
+        failures.append(
+            "CURRENT_PE.md does not state the Phase 1 dry-run/check/generate constraint"
+        )
     return failures
 
 
@@ -351,7 +360,9 @@ def validate_packet(packet: DispatchPacket) -> list[str]:
             "Approved file scope does not match the controlled PE opening packet"
         )
     if packet.runtime_bootstrap_allowlist != RUNTIME_BOOTSTRAP_ALLOWLIST:
-        failures.append("Runtime/bootstrap allow-list does not match the approved safety policy")
+        failures.append(
+            "Runtime/bootstrap allow-list does not match the approved safety policy"
+        )
     if packet.required_rules != REQUIRED_RULES:
         failures.append("Required governance rules do not match the approved packet")
     if packet.phase_1_gates != PHASE_1_GATES:

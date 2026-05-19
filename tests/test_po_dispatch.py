@@ -38,7 +38,9 @@ def test_build_packet_uses_the_approved_safe_start_sequence() -> None:
     assert len(packet.sequence_steps) == 6
     assert packet.sequence_steps[0].action == "Ask PM to create a dedicated PE thread"
     assert packet.sequence_steps[1].action == "Send /reset in that PE thread"
-    assert packet.sequence_steps[2].action == "Require complete RESET_BINDING_ACK_FORMAT"
+    assert (
+        packet.sequence_steps[2].action == "Require complete RESET_BINDING_ACK_FORMAT"
+    )
     assert packet.sequence_steps[5].action.startswith(
         "Remind that opening starts from current origin/main"
     )
@@ -59,11 +61,17 @@ def test_render_contract_json_includes_ack_and_baseline_reminders() -> None:
 
     payload = json.loads(MODULE.render_contract_json(packet))
     assert payload["pe_id"] == "PE-OPS-DISPATCH-WRAPPER-HARDENING-01"
-    assert payload["sequence_steps"][2]["action"] == "Require complete RESET_BINDING_ACK_FORMAT"
+    assert (
+        payload["sequence_steps"][2]["action"]
+        == "Require complete RESET_BINDING_ACK_FORMAT"
+    )
     assert payload["request_templates"]["open_instruction"].startswith(
         "Only after a valid RESET_BINDING_ACK_FORMAT"
     )
-    assert "CURRENT_PE.md must be plan-complete" in payload["request_templates"]["baseline_reminder"]
+    assert (
+        "CURRENT_PE.md must be plan-complete"
+        in payload["request_templates"]["baseline_reminder"]
+    )
 
 
 def test_validate_packet_rejects_non_strict_lane() -> None:
@@ -76,7 +84,9 @@ def test_validate_packet_rejects_non_strict_lane() -> None:
         validator="infra-val-a",
     )
 
-    assert any("Lane must be 'Strict'" in item for item in MODULE.validate_packet(packet))
+    assert any(
+        "Lane must be 'Strict'" in item for item in MODULE.validate_packet(packet)
+    )
 
 
 def test_dry_run_emits_phase_one_statement() -> None:

@@ -17,9 +17,9 @@ def test_current_pe_marks_the_active_pe_and_roles() -> None:
 
 
 def test_pe_task_documents_phase_one_only_and_scope() -> None:
-    text = Path(
-        ".elis/pe/PE-OPS-DISPATCH-WRAPPER-HARDENING-01/PE_TASK.md"
-    ).read_text(encoding="utf-8")
+    text = Path(".elis/pe/PE-OPS-DISPATCH-WRAPPER-HARDENING-01/PE_TASK.md").read_text(
+        encoding="utf-8"
+    )
 
     assert "Phase 1 dry-run / check / generate only" in text
     assert "scripts/pm_dispatch.py" in text
@@ -28,9 +28,9 @@ def test_pe_task_documents_phase_one_only_and_scope() -> None:
 
 
 def test_handoff_contains_status_packet_and_phase_one_constraints() -> None:
-    text = Path(
-        ".elis/pe/PE-OPS-DISPATCH-WRAPPER-HARDENING-01/HANDOFF.md"
-    ).read_text(encoding="utf-8")
+    text = Path(".elis/pe/PE-OPS-DISPATCH-WRAPPER-HARDENING-01/HANDOFF.md").read_text(
+        encoding="utf-8"
+    )
 
     assert "Summary" in text
     assert "Files Changed" in text

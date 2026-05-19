@@ -19,9 +19,7 @@ from pathlib import Path
 from typing import Iterable
 
 PE_ID = "PE-OPS-DISPATCH-WRAPPER-HARDENING-01"
-OBJECTIVE = (
-    "Provide a dry-run helper that verifies the PO→PM start sequence for safe new PE/task flows."
-)
+OBJECTIVE = "Provide a dry-run helper that verifies the PO→PM start sequence for safe new PE/task flows."
 APPROVED_BRANCH = "feature/pe-ops-dispatch-wrapper-hardening-01"
 APPROVED_BASELINE_PATTERN = re.compile(r"^origin/main @ [0-9a-f]{40}$")
 APPROVED_IMPLEMENTER = "infra-impl-b"
@@ -83,9 +81,7 @@ REQUEST_TEMPLATE_PATTERNS = {
     "open_instruction": "Only after a valid {ack_format} do you send/open the PE instruction.",
     "baseline_reminder": "Opening must begin from current origin/main ({baseline}) and CURRENT_PE.md must be plan-complete unless this is an explicit PE resumption.",
 }
-PHASE_1_ONLY_STATEMENT = (
-    "Phase 1 only generates and checks the PO→PM sequence and acknowledgement structure; it does not call live automation."
-)
+PHASE_1_ONLY_STATEMENT = "Phase 1 only generates and checks the PO→PM sequence and acknowledgement structure; it does not call live automation."
 EXPECTED_SEQUENCE = tuple(step[2] for step in SEQUENCE_STEPS)
 EXPECTED_ACTORS = tuple(step[1] for step in SEQUENCE_STEPS)
 EXPECTED_ORDERS = tuple(step[0] for step in SEQUENCE_STEPS)
@@ -93,7 +89,9 @@ EXPECTED_ORDERS = tuple(step[0] for step in SEQUENCE_STEPS)
 
 def _expected_request_templates(pe_id: str, baseline: str) -> dict[str, str]:
     return {
-        "dedicated_thread": REQUEST_TEMPLATE_PATTERNS["dedicated_thread"].format(pe_id=pe_id),
+        "dedicated_thread": REQUEST_TEMPLATE_PATTERNS["dedicated_thread"].format(
+            pe_id=pe_id
+        ),
         "reset": REQUEST_TEMPLATE_PATTERNS["reset"],
         "ack_required": (
             f"Require the full {PM_RESET_BINDING_ACK_FORMAT}; a generic reset acknowledgement is insufficient."
@@ -203,7 +201,9 @@ def validate_packet(packet: POStartPacket) -> list[str]:
         failures.append("Phase 1 gates do not match the approved helper contract")
     if packet.live_dispatch_statement != PHASE_1_ONLY_STATEMENT:
         failures.append("Live dispatch statement is missing or altered")
-    if packet.request_templates != _expected_request_templates(packet.pe_id, packet.baseline):
+    if packet.request_templates != _expected_request_templates(
+        packet.pe_id, packet.baseline
+    ):
         failures.append("Request templates do not match the approved helper contract")
     return failures
 
@@ -260,7 +260,9 @@ def _emit_summary(packet: POStartPacket) -> None:
 
 
 def _parse_args(argv: Iterable[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Dry-run PO→PM safe start-sequence helper.")
+    parser = argparse.ArgumentParser(
+        description="Dry-run PO→PM safe start-sequence helper."
+    )
     parser.add_argument("--pe-id", required=True, help="Approved PE identifier.")
     parser.add_argument("--branch", required=True, help="Approved feature branch.")
     parser.add_argument(
