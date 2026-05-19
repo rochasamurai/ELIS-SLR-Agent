@@ -24,7 +24,7 @@
 | PE      | — |
 | Branch  | — |
 
-> **Plan-complete / no active PE.**
+> **plan-complete / no active PE.**
 
 ---
 
@@ -35,7 +35,7 @@
 | — | — |
 | — | — |
 
-> No active PE roles.
+> no active PE roles.
 
 ---
 
