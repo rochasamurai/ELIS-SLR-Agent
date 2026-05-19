@@ -23,35 +23,71 @@ def _load():
 MODULE = _load()
 
 
-def _make_scoped_files(root: Path) -> None:
-    for rel in MODULE.APPROVED_FILE_SCOPE:
-        path = root / rel
-        path.parent.mkdir(parents=True, exist_ok=True)
-        if rel == "CURRENT_PE.md":
-            path.write_text(
-                """# Current PE Assignment
+def _write_scope_file(root: Path, rel: str, content: str = "placeholder\n") -> None:
+    path = root / rel
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content, encoding="utf-8")
+
+
+def _make_scoped_files(root: Path, include_runtime_noise: bool = True) -> None:
+    _write_scope_file(
+        root,
+        "CURRENT_PE.md",
+        """# Current PE Assignment
+
+## Current PE
 
 | Field   | Value |
 |---------|-------|
-| PE      | PE-OPS-PM-DISPATCH-01 |
-| Branch  | feature/pe-ops-pm-dispatch-01-deterministic-pm-dispatch-wrapper |
+| PE      | PE-OPS-DISPATCH-WRAPPER-HARDENING-01 |
+| Branch  | feature/pe-ops-dispatch-wrapper-hardening-01 |
 
-| Agent       | Role |
-|-------------|------|
+## Agent roles
+
+| Agent | Role |
+|-------|------|
 | infra-impl-b | Implementer |
 | infra-val-a | Validator |
+
+Phase 1 dry-run/check/generate only.
 """,
-                encoding="utf-8",
-            )
-        else:
-            path.write_text(f"placeholder for {rel}\n", encoding="utf-8")
+    )
+    _write_scope_file(
+        root,
+        ".elis/pe/PE-OPS-DISPATCH-WRAPPER-HARDENING-01/PE_TASK.md",
+        "Phase 1 dry-run / check / generate only.\n- scripts/pm_dispatch.py\n- scripts/po_dispatch.py\n",
+    )
+    _write_scope_file(
+        root,
+        ".elis/pe/PE-OPS-DISPATCH-WRAPPER-HARDENING-01/HANDOFF.md",
+        "Summary\nFiles Changed\nAcceptance Criteria\nValidation Commands\n",
+    )
+    _write_scope_file(
+        root,
+        "docs/governance/ELIS_Dispatch_Wrapper_Hardening.md",
+        "Approved dispatch wrapper hardening note.\n",
+    )
+    _write_scope_file(root, "scripts/pm_dispatch.py")
+    _write_scope_file(root, "scripts/po_dispatch.py")
+    _write_scope_file(root, "tests/test_pm_dispatch.py")
+    _write_scope_file(root, "tests/test_pm_dispatch_contract.py")
+    _write_scope_file(root, "tests/test_po_dispatch.py")
+
+    if include_runtime_noise:
+        _write_scope_file(root, "AGENTS.md")
+        _write_scope_file(root, ".openclaw/workspace-state.json")
+        _write_scope_file(root, "memory/runtime-note.md")
 
 
-def test_build_packet_uses_approved_scope_and_phase_one_only() -> None:
+def _init_git_repo(root: Path) -> None:
+    subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+
+
+def test_build_packet_uses_the_approved_phase_one_contract() -> None:
     packet = MODULE.build_packet(
-        pe_id="PE-OPS-PM-DISPATCH-01",
-        branch="feature/pe-ops-pm-dispatch-01-deterministic-pm-dispatch-wrapper",
-        baseline="origin/main @ a790d605b673aa42fec7f17c805d8c7ce88c4aa2",
+        pe_id="PE-OPS-DISPATCH-WRAPPER-HARDENING-01",
+        branch="feature/pe-ops-dispatch-wrapper-hardening-01",
+        baseline="origin/main @ a486f05e8376afd227595b9f1ccad3f88369cf74",
         lane="Strict",
         implementer="infra-impl-b",
         validator="infra-val-a",
@@ -60,54 +96,59 @@ def test_build_packet_uses_approved_scope_and_phase_one_only() -> None:
     assert packet.phase == "Phase 1"
     assert packet.mode == "dry-run"
     assert packet.file_scope == MODULE.APPROVED_FILE_SCOPE
+    assert packet.runtime_bootstrap_allowlist == MODULE.RUNTIME_BOOTSTRAP_ALLOWLIST
+    assert packet.required_rules == MODULE.REQUIRED_RULES
     assert packet.phase_1_gates == MODULE.PHASE_1_GATES
-    assert packet.live_dispatch_statement == MODULE.LIVE_DISPATCH_STATEMENT
+    assert packet.tests == MODULE.EXPECTED_TESTS
+    assert packet.live_dispatch_statement == MODULE.PHASE_1_ONLY_STATEMENT
+    assert packet.runtime_bootstrap_policy == MODULE.RUNTIME_BOOTSTRAP_POLICY
 
 
-def test_validate_packet_rejects_wrong_lane() -> None:
+def test_render_contract_json_includes_allowlist_and_required_rules() -> None:
     packet = MODULE.build_packet(
-        pe_id="PE-OPS-PM-DISPATCH-01",
-        branch="feature/pe-ops-pm-dispatch-01-deterministic-pm-dispatch-wrapper",
-        baseline="origin/main @ a790d605b673aa42fec7f17c805d8c7ce88c4aa2",
-        lane="Loose",
-        implementer="infra-impl-b",
-        validator="infra-val-a",
-    )
-
-    assert any(
-        "Lane must be 'Strict'" in item for item in MODULE.validate_packet(packet)
-    )
-
-
-def test_render_contract_json_is_deterministic() -> None:
-    packet = MODULE.build_packet(
-        pe_id="PE-OPS-PM-DISPATCH-01",
-        branch="feature/pe-ops-pm-dispatch-01-deterministic-pm-dispatch-wrapper",
-        baseline="origin/main @ a790d605b673aa42fec7f17c805d8c7ce88c4aa2",
+        pe_id="PE-OPS-DISPATCH-WRAPPER-HARDENING-01",
+        branch="feature/pe-ops-dispatch-wrapper-hardening-01",
+        baseline="origin/main @ a486f05e8376afd227595b9f1ccad3f88369cf74",
         lane="Strict",
         implementer="infra-impl-b",
         validator="infra-val-a",
     )
 
     payload = json.loads(MODULE.render_contract_json(packet))
-    assert payload["pe_id"] == "PE-OPS-PM-DISPATCH-01"
-    assert payload["file_scope"] == list(MODULE.APPROVED_FILE_SCOPE)
-    assert payload["phase_1_gates"] == list(MODULE.PHASE_1_GATES)
-    assert payload["live_dispatch_statement"] == MODULE.LIVE_DISPATCH_STATEMENT
+    assert payload["pe_id"] == "PE-OPS-DISPATCH-WRAPPER-HARDENING-01"
+    assert payload["runtime_bootstrap_allowlist"] == list(MODULE.RUNTIME_BOOTSTRAP_ALLOWLIST)
+    assert payload["required_rules"] == list(MODULE.REQUIRED_RULES)
+    assert payload["tests"] == list(MODULE.EXPECTED_TESTS)
+    assert payload["live_dispatch_statement"] == MODULE.PHASE_1_ONLY_STATEMENT
 
 
-def test_check_mode_passes_when_approved_files_exist(tmp_path: Path) -> None:
-    _make_scoped_files(tmp_path)
+def test_classify_workspace_line_allows_preserved_runtime_bootstrap_noise() -> None:
+    finding = MODULE.classify_workspace_line("?? AGENTS.md")
+
+    assert finding.category == "preserved-runtime-bootstrap"
+    assert "allowed" in finding.reason.lower()
+
+
+def test_classify_workspace_line_blocks_untracked_dirty_files_outside_scope() -> None:
+    finding = MODULE.classify_workspace_line("?? notes/todo.txt")
+
+    assert finding.category == "blocker"
+    assert "outside approved scope" in finding.reason.lower()
+
+
+def test_check_mode_passes_when_only_approved_scope_and_allowed_noise_exist(tmp_path: Path) -> None:
+    _init_git_repo(tmp_path)
+    _make_scoped_files(tmp_path, include_runtime_noise=True)
 
     result = subprocess.run(
         [
             str(SCRIPT),
             "--pe-id",
-            "PE-OPS-PM-DISPATCH-01",
+            "PE-OPS-DISPATCH-WRAPPER-HARDENING-01",
             "--branch",
-            "feature/pe-ops-pm-dispatch-01-deterministic-pm-dispatch-wrapper",
+            "feature/pe-ops-dispatch-wrapper-hardening-01",
             "--baseline",
-            "origin/main @ a790d605b673aa42fec7f17c805d8c7ce88c4aa2",
+            "origin/main @ a486f05e8376afd227595b9f1ccad3f88369cf74",
             "--lane",
             "Strict",
             "--implementer",
@@ -122,13 +163,48 @@ def test_check_mode_passes_when_approved_files_exist(tmp_path: Path) -> None:
         capture_output=True,
         text=True,
         timeout=30,
+        cwd=tmp_path,
     )
 
     assert result.returncode == 0, result.stdout + result.stderr
-    assert (
-        "PASS: Phase 1 packet is well-formed and does not call live dispatch APIs."
-        in result.stdout
+    assert "PASS: Phase 1 packet is well-formed" in result.stdout
+    assert "Phase 1 only generates and checks dispatch contracts" in result.stdout
+
+
+def test_check_mode_fails_on_dirty_files_outside_scope(tmp_path: Path) -> None:
+    _init_git_repo(tmp_path)
+    _make_scoped_files(tmp_path, include_runtime_noise=True)
+    _write_scope_file(tmp_path, "notes/todo.txt")
+
+    result = subprocess.run(
+        [
+            str(SCRIPT),
+            "--pe-id",
+            "PE-OPS-DISPATCH-WRAPPER-HARDENING-01",
+            "--branch",
+            "feature/pe-ops-dispatch-wrapper-hardening-01",
+            "--baseline",
+            "origin/main @ a486f05e8376afd227595b9f1ccad3f88369cf74",
+            "--lane",
+            "Strict",
+            "--implementer",
+            "infra-impl-b",
+            "--validator",
+            "infra-val-a",
+            "--mode",
+            "check",
+            "--repo-root",
+            str(tmp_path),
+        ],
+        capture_output=True,
+        text=True,
+        timeout=30,
+        cwd=tmp_path,
     )
+
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert "Dispatch blockers detected" in result.stdout
+    assert "notes/todo.txt" in result.stdout
 
 
 def test_dry_run_emits_phase_one_statement() -> None:
@@ -136,11 +212,11 @@ def test_dry_run_emits_phase_one_statement() -> None:
         [
             str(SCRIPT),
             "--pe-id",
-            "PE-OPS-PM-DISPATCH-01",
+            "PE-OPS-DISPATCH-WRAPPER-HARDENING-01",
             "--branch",
-            "feature/pe-ops-pm-dispatch-01-deterministic-pm-dispatch-wrapper",
+            "feature/pe-ops-dispatch-wrapper-hardening-01",
             "--baseline",
-            "origin/main @ a790d605b673aa42fec7f17c805d8c7ce88c4aa2",
+            "origin/main @ a486f05e8376afd227595b9f1ccad3f88369cf74",
             "--lane",
             "Strict",
             "--implementer",
@@ -156,5 +232,5 @@ def test_dry_run_emits_phase_one_statement() -> None:
     )
 
     assert result.returncode == 0, result.stdout + result.stderr
-    assert MODULE.LIVE_DISPATCH_STATEMENT in result.stdout
+    assert MODULE.PHASE_1_ONLY_STATEMENT in result.stdout
     assert "PM DISPATCH OPENING PACKET" in result.stdout
