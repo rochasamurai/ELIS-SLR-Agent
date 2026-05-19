@@ -21,21 +21,20 @@
 
 | Field   | Value |
 |---------|-------|
-| PE      | PE-OPS-PM-DISPATCH-01 |
-| Branch  | feature/pe-ops-pm-dispatch-01-deterministic-pm-dispatch-wrapper |
+| PE      | — |
+| Branch  | — |
 
-> **PE opened with PM approval.** Phase 1 is dry-run / check / generate only for PE-OPS-PM-DISPATCH-01.
+> **Plan-complete mode restored.** PE and Branch cleared; no active PE.
 
 ---
 
 ## Agent roles
 
-| Agent       | Role |
-|-------------|------|
-| infra-impl-b | Implementer |
-| infra-val-a | Validator |
+| Agent | Role |
+|-------|------|
+| —     | — |
 
-> Active PE roles assigned for PE-OPS-PM-DISPATCH-01.
+> No active PE roles assigned.
 
 ---
 
@@ -43,7 +42,7 @@
 
 | PE-ID       | Domain          | Implementer-agentId  | Validator-agentId  | Branch                                            | Status          | Last-updated |
 |-------------|-----------------|----------------------|--------------------|---------------------------------------------------|-----------------|--------------|
-| PE-OPS-PM-DISPATCH-01 | ops | infra-impl-b | infra-val-a | feature/pe-ops-pm-dispatch-01-deterministic-pm-dispatch-wrapper | implementing | 2026-05-19 |
+| PE-OPS-PM-DISPATCH-01 | ops | infra-impl-b | infra-val-a | feature/pe-ops-pm-dispatch-01-deterministic-pm-dispatch-wrapper | merged | 2026-05-19 |
 | PE-GOV-01   | governance      | infra-impl-b         | infra-val-a        | feature/pe-gov-01-operating-protocol-templates    | merged          | 2026-05-03   |
 | PE-GOV-RISK-TIER-01 | governance | infra-impl-a         | infra-val-b        | feature/pe-gov-risk-tier-01-add-risk-tiered-pe-protocol | blocked         | 2026-05-06   |
 | PE-OPS-FIXED-WORKSPACES-01 | fixed-workspaces | infra-impl-b | infra-val-a | feature/pe-ops-fixed-workspaces-01-adopt-fixed-agent-workspace-and-github-write-boundary-model | merged | 2026-05-07 |
