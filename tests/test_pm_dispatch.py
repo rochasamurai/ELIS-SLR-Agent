@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-"""Tests for scripts/pm_dispatch.py — dispatch gate orchestration."""
+"""Tests for scripts/pm_dispatch.py — deterministic PM opening packet wrapper."""
 
 from __future__ import annotations
 
 import importlib.util
+import json
 import subprocess
+import sys
 from pathlib import Path
 
 SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "pm_dispatch.py"
@@ -13,6 +15,7 @@ SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "pm_dispatch.py"
 def _load():
     spec = importlib.util.spec_from_file_location("pm_dispatch", SCRIPT)
     module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
     spec.loader.exec_module(module)
     return module
 
@@ -20,135 +23,138 @@ def _load():
 MODULE = _load()
 
 
-def test_handoff_check_missing_handoff(tmp_path):
-    """Missing HANDOFF.md should produce failures."""
-    import os as _os
+def _make_scoped_files(root: Path) -> None:
+    for rel in MODULE.APPROVED_FILE_SCOPE:
+        path = root / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        if rel == "CURRENT_PE.md":
+            path.write_text(
+                """# Current PE Assignment
 
-    orig_cwd = _os.getcwd()
-    try:
-        _os.chdir(str(tmp_path))
-        failures = MODULE._check_handoff_for_validator("PE-TEST-01")
-        assert any("HANDOFF.md not found" in f for f in failures)
-    finally:
-        _os.chdir(str(orig_cwd))
+| Field   | Value |
+|---------|-------|
+| PE      | PE-OPS-PM-DISPATCH-01 |
+| Branch  | feature/pe-ops-pm-dispatch-01-deterministic-pm-dispatch-wrapper |
+
+| Agent       | Role |
+|-------------|------|
+| infra-impl-b | Implementer |
+| infra-val-a | Validator |
+""",
+                encoding="utf-8",
+            )
+        else:
+            path.write_text(f"placeholder for {rel}\n", encoding="utf-8")
 
 
-def test_handoff_check_missing_evidence_dir(tmp_path):
-    """Missing PE evidence directory should produce failures."""
-    cwd = Path(tmp_path)
-    handoff = cwd / "HANDOFF.md"
-    handoff.write_text(
-        "## Summary\n\n...\n\n## Files Changed\n\n...\n\n"
-        "## Acceptance Criteria\n\n...\n\n## Validation Commands\n\n..."
+def test_build_packet_uses_approved_scope_and_phase_one_only() -> None:
+    packet = MODULE.build_packet(
+        pe_id="PE-OPS-PM-DISPATCH-01",
+        branch="feature/pe-ops-pm-dispatch-01-deterministic-pm-dispatch-wrapper",
+        baseline="origin/main @ a790d605b673aa42fec7f17c805d8c7ce88c4aa2",
+        lane="Strict",
+        implementer="infra-impl-b",
+        validator="infra-val-a",
     )
-    orig_cwd = Path.cwd()
-    try:
-        __import__("os").chdir(str(cwd))
-        failures = MODULE._check_handoff_for_validator("PE-NO-EVIDENCE-01")
-        assert any("evidence directory not found" in f for f in failures)
-    finally:
-        __import__("os").chdir(str(orig_cwd))
+
+    assert packet.phase == "Phase 1"
+    assert packet.mode == "dry-run"
+    assert packet.file_scope == MODULE.APPROVED_FILE_SCOPE
+    assert packet.phase_1_gates == MODULE.PHASE_1_GATES
+    assert packet.live_dispatch_statement == MODULE.LIVE_DISPATCH_STATEMENT
 
 
-def test_handoff_check_pass(tmp_path):
-    """Complete HANDOFF.md and evidence dir should pass."""
-    cwd = Path(tmp_path)
-    handoff = cwd / "HANDOFF.md"
-    handoff.write_text(
-        "## Summary\n\n...\n\n## Files Changed\n\n...\n\n"
-        "## Acceptance Criteria\n\n...\n\n## Validation Commands\n\n..."
+def test_validate_packet_rejects_wrong_lane() -> None:
+    packet = MODULE.build_packet(
+        pe_id="PE-OPS-PM-DISPATCH-01",
+        branch="feature/pe-ops-pm-dispatch-01-deterministic-pm-dispatch-wrapper",
+        baseline="origin/main @ a790d605b673aa42fec7f17c805d8c7ce88c4aa2",
+        lane="Loose",
+        implementer="infra-impl-b",
+        validator="infra-val-a",
     )
-    ev_dir = cwd / ".elis" / "pe" / "PE-EVIDENCE-PASS" / "evidence"
-    ev_dir.mkdir(parents=True)
-    (ev_dir / "implementation_evidence.md").write_text("evidence")
 
-    orig_cwd = Path.cwd()
-    try:
-        __import__("os").chdir(str(cwd))
-        failures = MODULE._check_handoff_for_validator("PE-EVIDENCE-PASS")
-        assert len(failures) == 0, f"Expected 0 failures, got: {failures}"
-    finally:
-        __import__("os").chdir(str(orig_cwd))
+    assert any(
+        "Lane must be 'Strict'" in item for item in MODULE.validate_packet(packet)
+    )
 
 
-def test_script_with_unknown_agent():
-    """Calling with unknown agent should exit 1."""
+def test_render_contract_json_is_deterministic() -> None:
+    packet = MODULE.build_packet(
+        pe_id="PE-OPS-PM-DISPATCH-01",
+        branch="feature/pe-ops-pm-dispatch-01-deterministic-pm-dispatch-wrapper",
+        baseline="origin/main @ a790d605b673aa42fec7f17c805d8c7ce88c4aa2",
+        lane="Strict",
+        implementer="infra-impl-b",
+        validator="infra-val-a",
+    )
+
+    payload = json.loads(MODULE.render_contract_json(packet))
+    assert payload["pe_id"] == "PE-OPS-PM-DISPATCH-01"
+    assert payload["file_scope"] == list(MODULE.APPROVED_FILE_SCOPE)
+    assert payload["phase_1_gates"] == list(MODULE.PHASE_1_GATES)
+    assert payload["live_dispatch_statement"] == MODULE.LIVE_DISPATCH_STATEMENT
+
+
+def test_check_mode_passes_when_approved_files_exist(tmp_path: Path) -> None:
+    _make_scoped_files(tmp_path)
+
     result = subprocess.run(
         [
             str(SCRIPT),
             "--pe-id",
-            "PE-TEST",
-            "--agent",
-            "nonexistent-agent",
-            "--dry-run",
+            "PE-OPS-PM-DISPATCH-01",
+            "--branch",
+            "feature/pe-ops-pm-dispatch-01-deterministic-pm-dispatch-wrapper",
+            "--baseline",
+            "origin/main @ a790d605b673aa42fec7f17c805d8c7ce88c4aa2",
+            "--lane",
+            "Strict",
+            "--implementer",
+            "infra-impl-b",
+            "--validator",
+            "infra-val-a",
+            "--mode",
+            "check",
+            "--repo-root",
+            str(tmp_path),
         ],
         capture_output=True,
         text=True,
         timeout=30,
     )
-    assert result.returncode == 1
-    # Should mention the agent in output
-    assert "nonexistent" in result.stdout or result.stderr
 
-
-def test_script_dry_run_no_crash():
-    """Dry run should not crash."""
-    result = subprocess.run(
-        [
-            str(SCRIPT),
-            "--pe-id",
-            "PE-OPS-WORKTREE-BINDING-02",
-            "--agent",
-            "infra-impl-b",
-            "--dry-run",
-        ],
-        capture_output=True,
-        text=True,
-        timeout=60,
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert (
+        "PASS: Phase 1 packet is well-formed and does not call live dispatch APIs."
+        in result.stdout
     )
-    # The script may pass or fail depending on environment, but must not crash
-    assert result.returncode in (0, 1), f"Unexpected return code: {result.returncode}"
-    assert "PM DISPATCH GATE" in result.stdout
 
 
-def test_skip_worktree_check():
-    """--skip-worktree-check should still run other gates."""
+def test_dry_run_emits_phase_one_statement() -> None:
     result = subprocess.run(
         [
             str(SCRIPT),
             "--pe-id",
-            "PE-TEST-SKIP",
-            "--agent",
+            "PE-OPS-PM-DISPATCH-01",
+            "--branch",
+            "feature/pe-ops-pm-dispatch-01-deterministic-pm-dispatch-wrapper",
+            "--baseline",
+            "origin/main @ a790d605b673aa42fec7f17c805d8c7ce88c4aa2",
+            "--lane",
+            "Strict",
+            "--implementer",
             "infra-impl-b",
-            "--dry-run",
-            "--skip-worktree-check",
-        ],
-        capture_output=True,
-        text=True,
-        timeout=60,
-    )
-    assert result.returncode in (0, 1)
-    assert "SKIPPED (--skip-worktree-check)" in result.stdout
-
-
-def test_validator_role_checks_handoff():
-    """Validator role should trigger HANDOFF/evidence check."""
-    result = subprocess.run(
-        [
-            str(SCRIPT),
-            "--pe-id",
-            "PE-TEST-VAL",
-            "--agent",
+            "--validator",
             "infra-val-a",
-            "--role",
-            "validator",
-            "--dry-run",
-            "--skip-worktree-check",
-            "--skip-handoff-check",
+            "--mode",
+            "dry-run",
         ],
         capture_output=True,
         text=True,
-        timeout=60,
+        timeout=30,
     )
-    # With --skip-handoff-check, gate 5 should be skipped
-    assert result.returncode in (0, 1)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert MODULE.LIVE_DISPATCH_STATEMENT in result.stdout
+    assert "PM DISPATCH OPENING PACKET" in result.stdout
