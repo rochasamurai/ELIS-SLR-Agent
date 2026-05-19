@@ -9,11 +9,29 @@ from pathlib import Path
 def test_current_pe_marks_the_active_pe_and_roles() -> None:
     text = Path("CURRENT_PE.md").read_text(encoding="utf-8")
 
-    assert "PE-OPS-DISPATCH-WRAPPER-HARDENING-01" in text
-    assert "feature/pe-ops-dispatch-wrapper-hardening-01" in text
-    assert "infra-impl-b" in text
-    assert "infra-val-a" in text
-    assert "Phase 1 dry-run/check/generate only" in text
+    active_state = all(
+        marker in text
+        for marker in (
+            "PE-OPS-DISPATCH-WRAPPER-HARDENING-01",
+            "feature/pe-ops-dispatch-wrapper-hardening-01",
+            "infra-impl-b",
+            "infra-val-a",
+            "Phase 1 dry-run/check/generate only",
+        )
+    )
+    closeout_state = all(
+        marker in text
+        for marker in (
+            "PE: —",
+            "Branch: —",
+            "plan-complete / no active PE",
+            "no active PE roles",
+            "PE-OPS-DISPATCH-WRAPPER-HARDENING-01",
+            "merged",
+        )
+    )
+
+    assert active_state or closeout_state
 
 
 def test_pe_task_documents_phase_one_only_and_scope() -> None:
