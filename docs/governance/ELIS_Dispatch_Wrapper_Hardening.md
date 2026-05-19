@@ -73,6 +73,35 @@ The PO helper must:
 - block generic reset acknowledgements;
 - remind that the opening starts from current `origin/main` and `CURRENT_PE.md` must be plan-complete unless explicitly resuming a PE.
 
+## Reporting mode governance
+### `ELIS_AGENT_REPORTING_MODE_RULE`
+Agents must support reporting modes based on audience and operational context.
+
+**Default production mode: PO Mode.**
+
+#### PO Mode
+- concise
+- decision-oriented
+- evidence-focused
+- report state changes, blockers, approvals needed, scope risks, final evidence, and exceptions
+- avoid low-level narration of routine edits, repeated test reruns, file-reading, line-level fixes, or helper-debugging unless it affects governance risk
+
+#### Teaching Mode
+- detailed, step-by-step, suitable for ELIS AI Business Management Lab education
+- may explain why checks are run, why Git worktrees matter, how tests fail and are fixed, how commits are prepared, and how governance gates prevent unsafe work
+- should be labelled clearly as Teaching Mode or Learning Trace
+
+#### Recommended future implementation
+- Add default reporting model to each agent’s `AGENTS.md` / role file.
+- Add the cross-agent rule to governance docs.
+- Optionally create learning artefacts such as:
+  - `.elis/pe/<PE-ID>/agent-narrative.md`
+  - `.elis/pe/<PE-ID>/learning-log.md`
+
+For this PE:
+- do not add `AGENTS.md` unless PO explicitly expands the approved file scope.
+- this governance note belongs only in `docs/governance/ELIS_Dispatch_Wrapper_Hardening.md`.
+
 ## Phase 1 gates
 1. Approved runtime/bootstrap residue does not block safe dispatch.
 2. `po_dispatch.py` only generates/checks the start sequence and acknowledgement contract.
