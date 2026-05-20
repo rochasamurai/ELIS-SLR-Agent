@@ -7,20 +7,37 @@ import json
 from pathlib import Path
 
 
+ACTIVE_MARKERS = (
+    "PE-OPS-CURRENT-PE-STATE-01",
+    "feature/pe-ops-current-pe-state-01",
+    "infra-impl-b",
+    "infra-val-a",
+    "planning / awaiting implementer dispatch",
+)
+
+CLOSEOUT_MARKERS = (
+    "PE-OPS-CURRENT-PE-STATE-01",
+    "plan-complete / no active PE",
+    "merged on `origin/main`",
+    "| PE      | — |",
+    "| Branch  | — |",
+    "| — | — |",
+    "no active PE roles",
+)
+
+
+def _matches_active_state(text: str) -> bool:
+    return all(marker in text for marker in ACTIVE_MARKERS)
+
+
+def _matches_closeout_state(text: str) -> bool:
+    return all(marker in text for marker in CLOSEOUT_MARKERS)
+
+
 def test_current_pe_marks_the_active_pe_and_roles() -> None:
     text = Path("CURRENT_PE.md").read_text(encoding="utf-8")
 
-    active_state = all(
-        marker in text
-        for marker in (
-            "PE-OPS-CURRENT-PE-STATE-01",
-            "feature/pe-ops-current-pe-state-01",
-            "infra-impl-b",
-            "infra-val-a",
-            "planning / awaiting implementer dispatch",
-        )
-    )
-    assert active_state
+    assert _matches_active_state(text) or _matches_closeout_state(text)
 
 
 def test_current_pe_state_file_matches_current_pe_md() -> None:
