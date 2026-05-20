@@ -409,32 +409,76 @@ def test_check_mode_fails_on_dirty_files_outside_scope(tmp_path: Path) -> None:
     assert "notes/todo.txt" in result.stdout
 
 
-def test_generate_emits_current_state_json() -> None:
+@pytest.mark.parametrize("state", STATE_CASES)
+def test_generate_emits_current_state_json(
+    tmp_path: Path, state: dict[str, object]
+) -> None:
+    _init_git_repo(tmp_path)
+    _make_scoped_files(tmp_path, state=state, include_runtime_noise=False)
+
     result = subprocess.run(
         [
             str(SCRIPT),
             "--pe-id",
-            str(ACTIVE_STATE["pe_id"]),
+            str(state["pe_id"]),
             "--branch",
-            str(ACTIVE_STATE["branch"]),
+            str(state["branch"]),
             "--baseline",
-            str(ACTIVE_STATE["baseline"]),
+            str(state["baseline"]),
             "--lane",
-            str(ACTIVE_STATE["lane"]),
+            str(state["lane"]),
             "--implementer",
-            str(ACTIVE_STATE["implementer"]),
+            str(state["implementer"]),
             "--validator",
-            str(ACTIVE_STATE["validator"]),
+            str(state["validator"]),
             "--mode",
             "generate",
+            "--repo-root",
+            str(tmp_path),
         ],
         capture_output=True,
         text=True,
         timeout=30,
+        cwd=tmp_path,
     )
 
     assert result.returncode == 0, result.stdout + result.stderr
     payload = json.loads(result.stdout)
-    assert payload["pe_id"] == ACTIVE_STATE["pe_id"]
-    assert payload["branch"] == ACTIVE_STATE["branch"]
-    assert payload["objective"] == ACTIVE_STATE["objective"]
+    assert payload["pe_id"] == state["pe_id"]
+    assert payload["branch"] == state["branch"]
+    assert payload["objective"] == state["objective"]
+    assert payload["phase"] == state["current_state"]
+
+
+def test_check_mode_rejects_closeout_state(tmp_path: Path) -> None:
+    _init_git_repo(tmp_path)
+    _make_scoped_files(tmp_path, state=CLOSEOUT_STATE, include_runtime_noise=False)
+
+    result = subprocess.run(
+        [
+            str(SCRIPT),
+            "--pe-id",
+            str(CLOSEOUT_STATE["pe_id"]),
+            "--branch",
+            str(CLOSEOUT_STATE["branch"]),
+            "--baseline",
+            str(CLOSEOUT_STATE["baseline"]),
+            "--lane",
+            str(CLOSEOUT_STATE["lane"]),
+            "--implementer",
+            str(CLOSEOUT_STATE["implementer"]),
+            "--validator",
+            str(CLOSEOUT_STATE["validator"]),
+            "--mode",
+            "check",
+            "--repo-root",
+            str(tmp_path),
+        ],
+        capture_output=True,
+        text=True,
+        timeout=30,
+        cwd=tmp_path,
+    )
+
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert "closeout state has no dispatch contract" in result.stdout

@@ -547,7 +547,10 @@ def _parse_args(argv: Iterable[str] | None = None) -> argparse.Namespace:
         "--baseline", required=True, help="Approved baseline ref and commit."
     )
     parser.add_argument(
-        "--lane", required=True, choices=["Strict"], help="Approved execution lane."
+        "--lane",
+        required=True,
+        choices=["Strict", "—"],
+        help="Approved execution lane.",
     )
     parser.add_argument(
         "--implementer", required=True, help="Approved implementer agent ID."
@@ -590,21 +593,26 @@ def main(argv: Iterable[str] | None = None) -> int:
 
     failures = validate_packet(packet, state)
     if args.mode == "check":
-        failures.extend(_check_current_pe_metadata(repo_root, state))
-        missing = validate_scoped_files(repo_root, state)
-        if missing:
-            failures.append("Missing approved PE artefacts: " + ", ".join(missing))
-        assessment = assess_workspace_state(
-            repo_root, tuple(str(item) for item in state["file_scope"])
-        )
-        if assessment.blockers:
+        if state["current_state"] != "planning":
             failures.append(
-                "Dispatch blockers detected: "
-                + "; ".join(
-                    f"{finding.status} {finding.path} ({finding.reason})"
-                    for finding in assessment.blockers
-                )
+                "Check mode only supports an active PE; closeout state has no dispatch contract"
             )
+        else:
+            failures.extend(_check_current_pe_metadata(repo_root, state))
+            missing = validate_scoped_files(repo_root, state)
+            if missing:
+                failures.append("Missing approved PE artefacts: " + ", ".join(missing))
+            assessment = assess_workspace_state(
+                repo_root, tuple(str(item) for item in state["file_scope"])
+            )
+            if assessment.blockers:
+                failures.append(
+                    "Dispatch blockers detected: "
+                    + "; ".join(
+                        f"{finding.status} {finding.path} ({finding.reason})"
+                        for finding in assessment.blockers
+                    )
+                )
 
     if args.mode == "generate":
         json_text = render_contract_json(packet)
