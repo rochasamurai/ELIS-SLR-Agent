@@ -122,7 +122,10 @@ CLOSEOUT_STATE = {
     ],
     "required_rules": [],
     "phase_1_gates": [],
-    "tests": ["tests/test_check_current_pe.py", "tests/test_check_pe_opening_context.py"],
+    "tests": [
+        "tests/test_check_current_pe.py",
+        "tests/test_check_pe_opening_context.py",
+    ],
     "rollback": "Restore CURRENT_PE.md and .elis/state/current_pe.json to the merged closeout snapshot if needed.",
     "hard_stops": [
         "do not change runtime/config/auth/service files",
@@ -233,7 +236,9 @@ def _make_scoped_files(
     include_runtime_noise: bool = True,
 ) -> None:
     _write_scope_file(root, "CURRENT_PE.md", _state_markdown(state))
-    _write_scope_file(root, ".elis/state/current_pe.json", json.dumps(state, indent=2) + "\n")
+    _write_scope_file(
+        root, ".elis/state/current_pe.json", json.dumps(state, indent=2) + "\n"
+    )
     _write_scope_file(
         root,
         ".elis/pe/PE-OPS-CURRENT-PE-STATE-01/PE_TASK.md",
