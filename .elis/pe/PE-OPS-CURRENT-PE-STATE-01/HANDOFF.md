@@ -15,6 +15,7 @@ opening-complete-awaiting-dispatch
 - Lane: `Strict`
 - Implementer: `infra-impl-b`
 - Validator: `infra-val-a`
+- Wrapper status: `scripts/pm_dispatch.py` now reads `.elis/state/current_pe.json` deterministically and passes the PE opening check in this worktree.
 
 ## Opening state
 
@@ -36,9 +37,18 @@ opening-complete-awaiting-dispatch
 ## Approved opening files
 
 - `CURRENT_PE.md`
+- `.elis/state/current_pe.json`
+- `schemas/current_pe.schema.json`
+- `scripts/check_current_pe.py`
+- `scripts/check_pe_opening_context.py`
+- `scripts/pm_dispatch.py`
+- `tests/test_check_current_pe.py`
+- `tests/test_check_pe_opening_context.py`
+- `tests/test_pm_dispatch.py`
+- `tests/test_pm_dispatch_contract.py`
+- `docs/governance/ELIS_Current_PE_State_Model.md`
 - `.elis/pe/PE-OPS-CURRENT-PE-STATE-01/PE_TASK.md`
 - `.elis/pe/PE-OPS-CURRENT-PE-STATE-01/HANDOFF.md`
-- `docs/governance/ELIS_Current_PE_State_Model.md`
 
 ## Acceptance snapshot
 

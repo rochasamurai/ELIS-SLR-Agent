@@ -18,26 +18,63 @@ from dataclasses import asdict, dataclass
 from pathlib import Path, PurePosixPath
 from typing import Iterable
 
-PE_ID = "PE-OPS-DISPATCH-WRAPPER-HARDENING-01"
-OBJECTIVE = (
-    "Harden the deterministic PM dispatch wrapper so approved OpenClaw runtime/bootstrap "
-    "artefacts in fixed agent workspaces do not trigger false dispatch blocks, and add a "
-    "PO-side helper to verify the safe PM start sequence for new PE/task flows."
-)
-APPROVED_BRANCH = "feature/pe-ops-dispatch-wrapper-hardening-01"
+CURRENT_PE_STATE_PATH = ".elis/state/current_pe.json"
+CURRENT_PE_MD_PATH = "CURRENT_PE.md"
 APPROVED_BASELINE_PATTERN = re.compile(r"^origin/main @ [0-9a-f]{40}$")
-APPROVED_IMPLEMENTER = "infra-impl-b"
-APPROVED_VALIDATOR = "infra-val-a"
-APPROVED_FILE_SCOPE: tuple[str, ...] = (
-    "CURRENT_PE.md",
-    ".elis/pe/PE-OPS-DISPATCH-WRAPPER-HARDENING-01/PE_TASK.md",
-    ".elis/pe/PE-OPS-DISPATCH-WRAPPER-HARDENING-01/HANDOFF.md",
-    "docs/governance/ELIS_Dispatch_Wrapper_Hardening.md",
-    "scripts/pm_dispatch.py",
-    "scripts/po_dispatch.py",
-    "tests/test_pm_dispatch.py",
-    "tests/test_pm_dispatch_contract.py",
-    "tests/test_po_dispatch.py",
+RUNTIME_BOOTSTRAP_ALLOWLIST_NAMES: tuple[str, ...] = (
+    "AGENTS.md",
+    "TOOLS.md",
+    "USER.md",
+    "HEARTBEAT.md",
+    "SOUL.md",
+    "IDENTITY.md",
+)
+RUNTIME_BOOTSTRAP_ALLOWLIST_PREFIXES: tuple[str, ...] = (
+    ".openclaw/",
+    "memory/",
+    "skills/",
+    "canvas/",
+)
+RUNTIME_BOOTSTRAP_ALLOWLIST: tuple[str, ...] = (
+    *RUNTIME_BOOTSTRAP_ALLOWLIST_NAMES,
+    *RUNTIME_BOOTSTRAP_ALLOWLIST_PREFIXES,
+)
+SECRET_BEARING_HINTS: tuple[str, ...] = (
+    ".env",
+    "auth.json",
+    "credentials.json",
+    "secret",
+    "secrets",
+    "token",
+    "tokens",
+    "password",
+    "private_key",
+)
+REQUIRED_RULES: tuple[str, ...] = (
+    "PRESERVED_RUNTIME_BOOTSTRAP_FILES_ARE_NOT_DISPATCH_BLOCKERS_RULE",
+    "NEW_PE_REQUIRES_FRESH_THREAD_AND_RESET_ACK_RULE",
+    "DISPATCH_CONTRACT_MUST_USE_TARGET_AGENT_WORKSPACE_RULE",
+    "FRESH_VALIDATOR_SUBAGENT_DISPATCH_RULE",
+    "VALIDATOR_MUST_NOT_USE_PM_WORKTREE_RULE",
+    "VALIDATION_PASS_REQUIRES_PRIOR_RESET_ACK_RULE",
+    "TARGET_REF_AVAILABLE_BEFORE_AGENT_BINDING_RULE",
+    "FIXED_AGENT_WORKTREE_READINESS_BEFORE_DISPATCH_RULE",
+    "ROLE_CORRECT_GIT_AUTHOR_IDENTITY_RULE",
+    "COMPLETE_BRANCH_FILE_SCOPE_EVIDENCE_RULE",
+)
+PHASE_1_GATES: tuple[str, ...] = ("dry-run", "check", "generate")
+HARD_STOPS: tuple[str, ...] = (
+    "do not create the branch here",
+    "do not call Discord APIs",
+    "do not send live messages",
+    "do not call OpenClaw live dispatch actions",
+    "do not mutate repo state outside approved scope",
+    "do not alter CURRENT_PE.md outside approved scope",
+    "do not change OpenClaw/Hermes config",
+    "do not change auth or secret state",
+    "do not restart services",
+    "do not replace live dispatch behaviour",
+    "do not push, open PRs, or merge without PO approval",
 )
 RUNTIME_BOOTSTRAP_ALLOWLIST_NAMES: tuple[str, ...] = (
     "AGENTS.md",
@@ -123,17 +160,17 @@ class DispatchPacket:
     lane: str
     implementer: str
     validator: str
-    phase: str = "Phase 1"
+    phase: str = "Opening packet"
     mode: str = "dry-run"
-    file_scope: tuple[str, ...] = APPROVED_FILE_SCOPE
-    runtime_bootstrap_allowlist: tuple[str, ...] = RUNTIME_BOOTSTRAP_ALLOWLIST
-    required_rules: tuple[str, ...] = REQUIRED_RULES
-    phase_1_gates: tuple[str, ...] = PHASE_1_GATES
-    tests: tuple[str, ...] = EXPECTED_TESTS
-    rollback: str = ROLLBACK_PLAN
-    hard_stops: tuple[str, ...] = HARD_STOPS
-    live_dispatch_statement: str = PHASE_1_ONLY_STATEMENT
-    runtime_bootstrap_policy: str = RUNTIME_BOOTSTRAP_POLICY
+    file_scope: tuple[str, ...] = ()
+    runtime_bootstrap_allowlist: tuple[str, ...] = ()
+    required_rules: tuple[str, ...] = ()
+    phase_1_gates: tuple[str, ...] = ()
+    tests: tuple[str, ...] = ()
+    rollback: str = ""
+    hard_stops: tuple[str, ...] = ()
+    live_dispatch_statement: str = ""
+    runtime_bootstrap_policy: str = ""
 
 
 @dataclass(frozen=True)
@@ -152,8 +189,42 @@ class WorkspaceAssessment:
     blockers: tuple[WorkspaceFinding, ...]
 
 
+def _load_current_pe_state(repo_root: Path) -> dict[str, object]:
+    state_path = repo_root / CURRENT_PE_STATE_PATH
+    if not state_path.exists():
+        raise ValueError(f"Missing current PE state file: {CURRENT_PE_STATE_PATH}")
+
+    state = json.loads(state_path.read_text(encoding="utf-8"))
+    required = (
+        "pe_id",
+        "objective",
+        "branch",
+        "baseline",
+        "lane",
+        "implementer",
+        "validator",
+        "current_state",
+        "file_scope",
+        "runtime_bootstrap_allowlist",
+        "required_rules",
+        "phase_1_gates",
+        "tests",
+        "rollback",
+        "hard_stops",
+        "live_dispatch_statement",
+        "runtime_bootstrap_policy",
+    )
+    missing = [key for key in required if key not in state]
+    if missing:
+        raise ValueError(
+            "Current PE state is missing required keys: " + ", ".join(missing)
+        )
+    return state
+
+
 def build_packet(
     *,
+    state: dict[str, object],
     pe_id: str,
     branch: str,
     baseline: str,
@@ -162,17 +233,29 @@ def build_packet(
     validator: str,
     mode: str = "dry-run",
 ) -> DispatchPacket:
-    """Build the immutable Phase 1 opening packet."""
+    """Build the immutable opening packet from the current PE state."""
 
     return DispatchPacket(
         pe_id=pe_id,
-        objective=OBJECTIVE,
+        objective=str(state["objective"]),
         branch=branch,
         baseline=baseline,
         lane=lane,
         implementer=implementer,
         validator=validator,
+        phase=str(state["current_state"]),
         mode=mode,
+        file_scope=tuple(str(item) for item in state["file_scope"]),
+        runtime_bootstrap_allowlist=tuple(
+            str(item) for item in state["runtime_bootstrap_allowlist"]
+        ),
+        required_rules=tuple(str(item) for item in state["required_rules"]),
+        phase_1_gates=tuple(str(item) for item in state["phase_1_gates"]),
+        tests=tuple(str(item) for item in state["tests"]),
+        rollback=str(state["rollback"]),
+        hard_stops=tuple(str(item) for item in state["hard_stops"]),
+        live_dispatch_statement=str(state["live_dispatch_statement"]),
+        runtime_bootstrap_policy=str(state["runtime_bootstrap_policy"]),
     )
 
 
@@ -194,9 +277,9 @@ def _looks_secret_bearing(path: str) -> bool:
     return any(hint in lower or hint in basename for hint in SECRET_BEARING_HINTS)
 
 
-def is_preserved_runtime_bootstrap_path(path: str) -> bool:
+def is_preserved_runtime_bootstrap_path(path: str, approved_scope: tuple[str, ...] = ()) -> bool:
     normalised = _normalise_path(path)
-    if normalised in APPROVED_FILE_SCOPE:
+    if normalised in approved_scope:
         return False
     if _looks_secret_bearing(normalised):
         return False
@@ -208,17 +291,17 @@ def is_preserved_runtime_bootstrap_path(path: str) -> bool:
     )
 
 
-def classify_workspace_line(line: str) -> WorkspaceFinding:
+def classify_workspace_line(line: str, approved_scope: tuple[str, ...] = ()) -> WorkspaceFinding:
     code, path = _parse_porcelain_line(line)
     if not code.strip():
         return WorkspaceFinding(code, path, "clean", "No change")
 
-    if path in APPROVED_FILE_SCOPE:
+    if path in approved_scope:
         return WorkspaceFinding(
             code, path, "approved-scope", "Change is inside the approved PE scope"
         )
 
-    if code == "??" and is_preserved_runtime_bootstrap_path(path):
+    if code == "??" and is_preserved_runtime_bootstrap_path(path, approved_scope):
         return WorkspaceFinding(
             code,
             path,
@@ -261,7 +344,7 @@ def classify_workspace_line(line: str) -> WorkspaceFinding:
     return WorkspaceFinding(code, path, "clean", "No change")
 
 
-def assess_workspace_state(repo_root: Path) -> WorkspaceAssessment:
+def assess_workspace_state(repo_root: Path, approved_scope: tuple[str, ...]) -> WorkspaceAssessment:
     result = subprocess.run(
         [
             "git",
@@ -280,7 +363,7 @@ def assess_workspace_state(repo_root: Path) -> WorkspaceAssessment:
         return WorkspaceAssessment((), (), (), ())
 
     findings = tuple(
-        classify_workspace_line(line)
+        classify_workspace_line(line, approved_scope)
         for line in result.stdout.splitlines()
         if line.strip()
     )
@@ -302,81 +385,87 @@ def assess_workspace_state(repo_root: Path) -> WorkspaceAssessment:
 
 
 def _read_current_pe(repo_root: Path) -> str:
-    current_pe = repo_root / "CURRENT_PE.md"
+    current_pe = repo_root / CURRENT_PE_MD_PATH
     return current_pe.read_text(encoding="utf-8") if current_pe.exists() else ""
 
 
-def _check_current_pe_metadata(repo_root: Path, packet: DispatchPacket) -> list[str]:
+def _check_current_pe_metadata(repo_root: Path, state: dict[str, object]) -> list[str]:
     content = _read_current_pe(repo_root)
     failures: list[str] = []
-    if packet.pe_id not in content:
-        failures.append("CURRENT_PE.md does not reference the approved PE ID")
-    if packet.branch not in content:
-        failures.append("CURRENT_PE.md does not reference the approved branch")
-    if packet.implementer not in content or packet.validator not in content:
-        failures.append(
-            "CURRENT_PE.md does not assign the approved implementer/validator roles"
-        )
+    if str(state["pe_id"]) not in content:
+        failures.append("CURRENT_PE.md does not reference the current PE ID")
+    if str(state["branch"]) not in content:
+        failures.append("CURRENT_PE.md does not reference the current PE branch")
     if (
-        "Phase 1 dry-run/check/generate only" not in content
-        and "dry-run / check / generate only" not in content
+        str(state["implementer"]) not in content
+        or str(state["validator"]) not in content
     ):
         failures.append(
-            "CURRENT_PE.md does not state the Phase 1 dry-run/check/generate constraint"
+            "CURRENT_PE.md does not assign the current implementer/validator roles"
         )
+    if str(state["current_state"]) not in content:
+        failures.append("CURRENT_PE.md does not reflect the current PE state")
     return failures
 
 
-def validate_packet(packet: DispatchPacket) -> list[str]:
-    """Validate the deterministic Phase 1 packet shape."""
+def validate_packet(packet: DispatchPacket, state: dict[str, object]) -> list[str]:
+    """Validate the deterministic opening packet shape against current state."""
 
     failures: list[str] = []
-    if packet.pe_id != PE_ID:
-        failures.append(f"PE ID must be {PE_ID!r}, got {packet.pe_id!r}")
-    if packet.objective != OBJECTIVE:
+    if packet.pe_id != state["pe_id"]:
+        failures.append(
+            f"PE ID must be {state['pe_id']!r}, got {packet.pe_id!r}"
+        )
+    if packet.objective != state["objective"]:
         failures.append("Objective text is missing or altered")
-    if packet.branch != APPROVED_BRANCH:
-        failures.append(f"Branch must be {APPROVED_BRANCH!r}, got {packet.branch!r}")
+    if packet.branch != state["branch"]:
+        failures.append(
+            f"Branch must be {state['branch']!r}, got {packet.branch!r}"
+        )
     if not APPROVED_BASELINE_PATTERN.fullmatch(packet.baseline):
         failures.append(
             "Baseline must be expressed as 'origin/main @ <full-commit-sha>'"
         )
-    if packet.lane != "Strict":
-        failures.append(f"Lane must be 'Strict', got {packet.lane!r}")
-    if packet.implementer != APPROVED_IMPLEMENTER:
+    if packet.lane != state["lane"]:
+        failures.append(f"Lane must be {state['lane']!r}, got {packet.lane!r}")
+    if packet.implementer != state["implementer"]:
         failures.append(
-            f"Implementer must be {APPROVED_IMPLEMENTER!r}, got {packet.implementer!r}"
+            f"Implementer must be {state['implementer']!r}, got {packet.implementer!r}"
         )
-    if packet.validator != APPROVED_VALIDATOR:
+    if packet.validator != state["validator"]:
         failures.append(
-            f"Validator must be {APPROVED_VALIDATOR!r}, got {packet.validator!r}"
+            f"Validator must be {state['validator']!r}, got {packet.validator!r}"
         )
-    if packet.phase != "Phase 1":
-        failures.append(f"Phase must be 'Phase 1', got {packet.phase!r}")
+    if packet.phase != state["current_state"]:
+        failures.append(
+            f"Phase must be {state['current_state']!r}, got {packet.phase!r}"
+        )
     if packet.mode not in PHASE_1_GATES:
         failures.append(f"Unsupported mode {packet.mode!r}")
-    if packet.file_scope != APPROVED_FILE_SCOPE:
+    if packet.file_scope != tuple(str(item) for item in state["file_scope"]):
         failures.append(
-            "Approved file scope does not match the controlled PE opening packet"
+            "Approved file scope does not match the current PE state packet"
         )
-    if packet.runtime_bootstrap_allowlist != RUNTIME_BOOTSTRAP_ALLOWLIST:
+    if packet.runtime_bootstrap_allowlist != tuple(
+        str(item) for item in state["runtime_bootstrap_allowlist"]
+    ):
         failures.append(
-            "Runtime/bootstrap allow-list does not match the approved safety policy"
+            "Runtime/bootstrap allow-list does not match the current PE state packet"
         )
-    if packet.required_rules != REQUIRED_RULES:
-        failures.append("Required governance rules do not match the approved packet")
-    if packet.phase_1_gates != PHASE_1_GATES:
-        failures.append("Phase 1 gates do not match the controlled wrapper contract")
-    if packet.tests != EXPECTED_TESTS:
-        failures.append("Test plan does not match the approved Phase 1 scope")
-    if packet.live_dispatch_statement != PHASE_1_ONLY_STATEMENT:
+    if packet.required_rules != tuple(str(item) for item in state["required_rules"]):
+        failures.append("Required governance rules do not match the current PE packet")
+    if packet.phase_1_gates != tuple(str(item) for item in state["phase_1_gates"]):
+        failures.append("Phase 1 gates do not match the current PE packet")
+    if packet.tests != tuple(str(item) for item in state["tests"]):
+        failures.append("Test plan does not match the current PE packet")
+    if packet.live_dispatch_statement != state["live_dispatch_statement"]:
         failures.append("Live dispatch statement is missing or altered")
-    if packet.runtime_bootstrap_policy != RUNTIME_BOOTSTRAP_POLICY:
+    if packet.runtime_bootstrap_policy != state["runtime_bootstrap_policy"]:
         failures.append("Runtime/bootstrap policy text is missing or altered")
-    if packet.hard_stops != HARD_STOPS:
-        failures.append("Hard stops do not match the approved Phase 1 boundary")
-    if packet.rollback != ROLLBACK_PLAN:
-        failures.append("Rollback plan does not match the approved scope")
+    if packet.hard_stops != tuple(str(item) for item in state["hard_stops"]):
+        failures.append("Hard stops do not match the current PE packet")
+    if packet.rollback != state["rollback"]:
+        failures.append("Rollback plan does not match the current PE packet")
     return failures
 
 
@@ -433,10 +522,12 @@ def render_contract_json(packet: DispatchPacket) -> str:
     return json.dumps(_packet_payload(packet), indent=2, sort_keys=True)
 
 
-def validate_scoped_files(repo_root: Path) -> list[str]:
-    """Confirm the approved PE artefacts exist in the PE worktree."""
+def validate_scoped_files(repo_root: Path, state: dict[str, object]) -> list[str]:
+    """Confirm the current PE artefacts exist in the PE worktree."""
 
-    missing = [path for path in APPROVED_FILE_SCOPE if not (repo_root / path).exists()]
+    missing = [
+        path for path in state["file_scope"] if not (repo_root / str(path)).exists()
+    ]
     return missing
 
 
@@ -483,7 +574,9 @@ def _parse_args(argv: Iterable[str] | None = None) -> argparse.Namespace:
 def main(argv: Iterable[str] | None = None) -> int:
     args = _parse_args(argv)
     repo_root = Path(args.repo_root).resolve()
+    state = _load_current_pe_state(repo_root)
     packet = build_packet(
+        state=state,
         pe_id=args.pe_id,
         branch=args.branch,
         baseline=args.baseline,
@@ -493,13 +586,15 @@ def main(argv: Iterable[str] | None = None) -> int:
         mode=args.mode,
     )
 
-    failures = validate_packet(packet)
+    failures = validate_packet(packet, state)
     if args.mode == "check":
-        failures.extend(_check_current_pe_metadata(repo_root, packet))
-        missing = validate_scoped_files(repo_root)
+        failures.extend(_check_current_pe_metadata(repo_root, state))
+        missing = validate_scoped_files(repo_root, state)
         if missing:
             failures.append("Missing approved PE artefacts: " + ", ".join(missing))
-        assessment = assess_workspace_state(repo_root)
+        assessment = assess_workspace_state(
+            repo_root, tuple(str(item) for item in state["file_scope"])
+        )
         if assessment.blockers:
             failures.append(
                 "Dispatch blockers detected: "
@@ -522,7 +617,7 @@ def main(argv: Iterable[str] | None = None) -> int:
             print(f"FAIL: {failure}")
         return 1
 
-    print("PASS: Phase 1 packet is well-formed and does not call live dispatch APIs.")
+    print("PASS: Current PE packet is well-formed and does not call live dispatch APIs.")
     return 0
 
 

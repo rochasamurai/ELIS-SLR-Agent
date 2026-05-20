@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Contract tests for the deterministic PM dispatch opening packet."""
+"""Contract tests for the current PE opening packet."""
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 
@@ -12,79 +13,80 @@ def test_current_pe_marks_the_active_pe_and_roles() -> None:
     active_state = all(
         marker in text
         for marker in (
-            "PE-OPS-DISPATCH-WRAPPER-HARDENING-01",
-            "feature/pe-ops-dispatch-wrapper-hardening-01",
+            "PE-OPS-CURRENT-PE-STATE-01",
+            "feature/pe-ops-current-pe-state-01",
             "infra-impl-b",
             "infra-val-a",
-            "Phase 1 dry-run/check/generate only",
+            "planning / awaiting implementer dispatch",
         )
     )
-    closeout_state = all(
-        marker in text
-        for marker in (
-            "| PE      | — |",
-            "| Branch  | — |",
-            "plan-complete / no active PE",
-            "no active PE roles",
-            "PE-OPS-DISPATCH-WRAPPER-HARDENING-01",
-            "merged",
-        )
+    assert active_state
+
+
+def test_current_pe_state_file_matches_current_pe_md() -> None:
+    current_state = json.loads(
+        Path(".elis/state/current_pe.json").read_text(encoding="utf-8")
     )
+    text = Path("CURRENT_PE.md").read_text(encoding="utf-8")
 
-    assert active_state or closeout_state
+    assert current_state["pe_id"] in text
+    assert current_state["branch"] in text
+    assert current_state["implementer"] in text
+    assert current_state["validator"] in text
+    assert current_state["current_state"] in text
 
 
-def test_pe_task_documents_phase_one_only_and_scope() -> None:
-    text = Path(".elis/pe/PE-OPS-DISPATCH-WRAPPER-HARDENING-01/PE_TASK.md").read_text(
+def test_pe_task_documents_scope_and_state_model() -> None:
+    text = Path(".elis/pe/PE-OPS-CURRENT-PE-STATE-01/PE_TASK.md").read_text(
         encoding="utf-8"
     )
 
-    assert "Phase 1 dry-run / check / generate only" in text
-    assert "scripts/pm_dispatch.py" in text
-    assert "scripts/po_dispatch.py" in text
-    assert "PRESERVED_RUNTIME_BOOTSTRAP_FILES_ARE_NOT_DISPATCH_BLOCKERS_RULE" in text
+    assert "Move canonical PE machine state out of `CURRENT_PE.md`" in text
+    assert ".elis/state/current_pe.json" in text
+    assert "schemas/current_pe.schema.json" in text
+    assert "`CURRENT_PE.md` becomes a validated human-readable summary only." in text
+    assert "`scripts/check_current_pe.py` validates schema + JSON/CURRENT_PE consistency." in text
 
 
-def test_handoff_contains_status_packet_and_phase_one_constraints() -> None:
-    text = Path(".elis/pe/PE-OPS-DISPATCH-WRAPPER-HARDENING-01/HANDOFF.md").read_text(
+def test_handoff_contains_current_state_and_opening_constraints() -> None:
+    text = Path(".elis/pe/PE-OPS-CURRENT-PE-STATE-01/HANDOFF.md").read_text(
         encoding="utf-8"
     )
 
-    assert "Summary" in text
-    assert "Files Changed" in text
-    assert "Acceptance Criteria" in text
-    assert "Validation Commands" not in text or "Validation Commands" in text
-    assert "Phase 1 dry-run / check / generate only" in text
-    assert "OpenClaw/Hermes config changes" in text or "OpenClaw/Hermes config" in text
+    assert "opening-complete-awaiting-dispatch" in text
+    assert "PE-OPS-CURRENT-PE-STATE-01" in text
+    assert "infra-impl-b" in text
+    assert "infra-val-a" in text
+    assert "No runtime/config/auth/service changes" in text
+    assert "No service restart" in text
 
 
-def test_governance_doc_states_the_wrapper_contract() -> None:
-    text = Path("docs/governance/ELIS_Dispatch_Wrapper_Hardening.md").read_text(
+def test_governance_doc_states_the_state_model() -> None:
+    text = Path("docs/governance/ELIS_Current_PE_State_Model.md").read_text(
         encoding="utf-8"
     )
 
-    assert "dry-run" in text
-    assert "check" in text
-    assert "generate" in text
-    assert "does not call live dispatch APIs" in text or "live dispatch" in text
-    assert "approved runtime/bootstrap residue" in text.lower()
-    assert "PRESERVED_RUNTIME_BOOTSTRAP_FILES_ARE_NOT_DISPATCH_BLOCKERS_RULE" in text
+    assert "structured machine-readable source of truth" in text
+    assert ".elis/state/current_pe.json" in text
+    assert "schemas/current_pe.schema.json" in text
+    assert "`CURRENT_PE.md` is a rendered human-readable summary and must remain consistent with the JSON state" in text
+    assert "Markdown string matching must not be the canonical validation mechanism" in text
 
 
-def test_script_mentions_phase_one_only() -> None:
+def test_script_mentions_current_pe_state_and_json() -> None:
     text = Path("scripts/pm_dispatch.py").read_text(encoding="utf-8")
 
-    assert "Phase 1 only" in text
-    assert "does not call live dispatch APIs" in text
-    assert "dry-run / check / generate" in text
-    assert "APPROVED_FILE_SCOPE" in text
-    assert "RUNTIME_BOOTSTRAP_ALLOWLIST" in text
+    assert "CURRENT_PE_STATE_PATH" in text
+    assert "_load_current_pe_state" in text
+    assert "Current PE packet" in text or "current PE packet" in text
+    assert "Phase 1 only generates and checks dispatch contracts" in text
 
 
-def test_po_helper_mentions_phase_one_only() -> None:
-    text = Path("scripts/po_dispatch.py").read_text(encoding="utf-8")
+def test_current_state_schema_exists_and_requires_core_keys() -> None:
+    text = Path("schemas/current_pe.schema.json").read_text(encoding="utf-8")
 
-    assert "Phase 1 only" in text
-    assert "RESET_BINDING_ACK_FORMAT" in text
-    assert "do not call Discord APIs" in text
-    assert "dedicated PE thread" in text
+    assert '"pe_id"' in text
+    assert '"current_state"' in text
+    assert '"file_scope"' in text
+    assert '"runtime_bootstrap_allowlist"' in text
+    assert '"live_dispatch_statement"' in text
