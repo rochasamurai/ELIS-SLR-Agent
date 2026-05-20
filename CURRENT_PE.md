@@ -21,10 +21,10 @@
 
 | Field   | Value |
 |---------|-------|
-| PE      | — |
-| Branch  | — |
+| PE      | PE-OPS-CURRENT-PE-STATE-01 |
+| Branch  | feature/pe-ops-current-pe-state-01 |
 
-> **plan-complete / no active PE.**
+> **planning / awaiting implementer dispatch.**
 
 ---
 
@@ -32,10 +32,10 @@
 
 | Agent | Role |
 |-------|------|
-| — | — |
-| — | — |
+| infra-impl-b | Implementer |
+| infra-val-a | Validator |
 
-> no active PE roles.
+> active PE roles assigned for PE-OPS-CURRENT-PE-STATE-01.
 
 ---
 
@@ -43,6 +43,7 @@
 
 | PE-ID       | Domain          | Implementer-agentId  | Validator-agentId  | Branch                                            | Status          | Last-updated |
 |-------------|-----------------|----------------------|--------------------|---------------------------------------------------|-----------------|--------------|
+| PE-OPS-CURRENT-PE-STATE-01 | ops | infra-impl-b | infra-val-a | feature/pe-ops-current-pe-state-01 | planning | 2026-05-19 |
 | PE-OPS-PM-DISPATCH-01 | ops | infra-impl-b | infra-val-a | feature/pe-ops-pm-dispatch-01-deterministic-pm-dispatch-wrapper | merged | 2026-05-19 |
 | PE-OPS-DISPATCH-WRAPPER-HARDENING-01 | ops | infra-impl-b | infra-val-a | feature/pe-ops-dispatch-wrapper-hardening-01 | merged | 2026-05-19 |
 | PE-GOV-01   | governance      | infra-impl-b         | infra-val-a        | feature/pe-gov-01-operating-protocol-templates    | merged          | 2026-05-03   |

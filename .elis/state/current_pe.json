@@ -1,0 +1,71 @@
+{
+  "pe_id": "PE-OPS-CURRENT-PE-STATE-01",
+  "objective": "Move canonical PE machine state out of CURRENT_PE.md into structured state. CURRENT_PE.md becomes a validated human-readable summary only.",
+  "branch": "feature/pe-ops-current-pe-state-01",
+  "baseline": "origin/main @ f686e92ac64f9d174d2cf64b781ce95312d7a090",
+  "lane": "Strict",
+  "implementer": "infra-impl-b",
+  "validator": "infra-val-a",
+  "current_state": "planning",
+  "file_scope": [
+    "CURRENT_PE.md",
+    ".elis/state/current_pe.json",
+    "schemas/current_pe.schema.json",
+    "scripts/check_current_pe.py",
+    "scripts/check_pe_opening_context.py",
+    "scripts/pm_dispatch.py",
+    "tests/test_check_current_pe.py",
+    "tests/test_check_pe_opening_context.py",
+    "tests/test_pm_dispatch.py",
+    "tests/test_pm_dispatch_contract.py",
+    "docs/governance/ELIS_Current_PE_State_Model.md",
+    ".elis/pe/PE-OPS-CURRENT-PE-STATE-01/PE_TASK.md",
+    ".elis/pe/PE-OPS-CURRENT-PE-STATE-01/HANDOFF.md"
+  ],
+  "runtime_bootstrap_allowlist": [
+    "AGENTS.md",
+    "TOOLS.md",
+    "USER.md",
+    "HEARTBEAT.md",
+    "SOUL.md",
+    "IDENTITY.md",
+    ".openclaw/",
+    "memory/",
+    "skills/",
+    "canvas/"
+  ],
+  "required_rules": [
+    "PRESERVED_RUNTIME_BOOTSTRAP_FILES_ARE_NOT_DISPATCH_BLOCKERS_RULE",
+    "NEW_PE_REQUIRES_FRESH_THREAD_AND_RESET_ACK_RULE",
+    "DISPATCH_CONTRACT_MUST_USE_TARGET_AGENT_WORKSPACE_RULE",
+    "FRESH_VALIDATOR_SUBAGENT_DISPATCH_RULE",
+    "VALIDATOR_MUST_NOT_USE_PM_WORKTREE_RULE",
+    "VALIDATION_PASS_REQUIRES_PRIOR_RESET_ACK_RULE",
+    "TARGET_REF_AVAILABLE_BEFORE_AGENT_BINDING_RULE",
+    "FIXED_AGENT_WORKTREE_READINESS_BEFORE_DISPATCH_RULE",
+    "ROLE_CORRECT_GIT_AUTHOR_IDENTITY_RULE",
+    "COMPLETE_BRANCH_FILE_SCOPE_EVIDENCE_RULE"
+  ],
+  "phase_1_gates": ["dry-run", "check", "generate"],
+  "tests": [
+    "tests/test_pm_dispatch.py",
+    "tests/test_pm_dispatch_contract.py",
+    "tests/test_po_dispatch.py"
+  ],
+  "rollback": "Revert only the approved scoped files to the accepted origin/main baseline and keep OpenClaw/Hermes configuration unchanged.",
+  "hard_stops": [
+    "do not create the branch here",
+    "do not call Discord APIs",
+    "do not send live messages",
+    "do not call OpenClaw live dispatch actions",
+    "do not mutate repo state outside approved scope",
+    "do not alter CURRENT_PE.md outside approved scope",
+    "do not change OpenClaw/Hermes config",
+    "do not change auth or secret state",
+    "do not restart services",
+    "do not replace live dispatch behaviour",
+    "do not push, open PRs, or merge without PO approval"
+  ],
+  "live_dispatch_statement": "Phase 1 only generates and checks dispatch contracts; it does not call live dispatch APIs or Discord APIs.",
+  "runtime_bootstrap_policy": "Approved OpenClaw runtime/bootstrap files are non-blocking only when they are untracked or workspace-local, not staged, not part of the PE-approved file scope, not secret-bearing, not modified tracked repository files, not being committed, and not masking unsafe PE residue."
+}
