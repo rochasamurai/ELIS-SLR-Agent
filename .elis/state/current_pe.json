@@ -1,26 +1,15 @@
 {
-  "pe_id": "PE-OPS-CURRENT-PE-STATE-01",
-  "objective": "Move canonical PE machine state out of CURRENT_PE.md into structured state. CURRENT_PE.md becomes a validated human-readable summary only.",
-  "branch": "feature/pe-ops-current-pe-state-01",
-  "baseline": "origin/main @ f686e92ac64f9d174d2cf64b781ce95312d7a090",
-  "lane": "Strict",
-  "implementer": "infra-impl-b",
-  "validator": "infra-val-a",
-  "current_state": "planning",
+  "pe_id": "\u2014",
+  "objective": "PE-OPS-CURRENT-PE-STATE-01 is merged; no active PE remains.",
+  "branch": "\u2014",
+  "baseline": "origin/main @ 26254d3556526ef9ef59f399f51d5a7c0e837c6a",
+  "lane": "\u2014",
+  "implementer": "\u2014",
+  "validator": "\u2014",
+  "current_state": "plan-complete",
   "file_scope": [
     "CURRENT_PE.md",
-    ".elis/state/current_pe.json",
-    "schemas/current_pe.schema.json",
-    "scripts/check_current_pe.py",
-    "scripts/check_pe_opening_context.py",
-    "scripts/pm_dispatch.py",
-    "tests/test_check_current_pe.py",
-    "tests/test_check_pe_opening_context.py",
-    "tests/test_pm_dispatch.py",
-    "tests/test_pm_dispatch_contract.py",
-    "docs/governance/ELIS_Current_PE_State_Model.md",
-    ".elis/pe/PE-OPS-CURRENT-PE-STATE-01/PE_TASK.md",
-    ".elis/pe/PE-OPS-CURRENT-PE-STATE-01/HANDOFF.md"
+    ".elis/state/current_pe.json"
   ],
   "runtime_bootstrap_allowlist": [
     "AGENTS.md",
@@ -34,38 +23,28 @@
     "skills/",
     "canvas/"
   ],
-  "required_rules": [
-    "PRESERVED_RUNTIME_BOOTSTRAP_FILES_ARE_NOT_DISPATCH_BLOCKERS_RULE",
-    "NEW_PE_REQUIRES_FRESH_THREAD_AND_RESET_ACK_RULE",
-    "DISPATCH_CONTRACT_MUST_USE_TARGET_AGENT_WORKSPACE_RULE",
-    "FRESH_VALIDATOR_SUBAGENT_DISPATCH_RULE",
-    "VALIDATOR_MUST_NOT_USE_PM_WORKTREE_RULE",
-    "VALIDATION_PASS_REQUIRES_PRIOR_RESET_ACK_RULE",
-    "TARGET_REF_AVAILABLE_BEFORE_AGENT_BINDING_RULE",
-    "FIXED_AGENT_WORKTREE_READINESS_BEFORE_DISPATCH_RULE",
-    "ROLE_CORRECT_GIT_AUTHOR_IDENTITY_RULE",
-    "COMPLETE_BRANCH_FILE_SCOPE_EVIDENCE_RULE"
-  ],
-  "phase_1_gates": ["dry-run", "check", "generate"],
+  "required_rules": [],
+  "phase_1_gates": [],
   "tests": [
-    "tests/test_pm_dispatch.py",
-    "tests/test_pm_dispatch_contract.py",
-    "tests/test_po_dispatch.py"
+    "tests/test_check_current_pe.py",
+    "tests/test_check_pe_opening_context.py"
   ],
-  "rollback": "Revert only the approved scoped files to the accepted origin/main baseline and keep OpenClaw/Hermes configuration unchanged.",
+  "rollback": "Restore CURRENT_PE.md and .elis/state/current_pe.json to the merged closeout snapshot if needed.",
   "hard_stops": [
-    "do not create the branch here",
-    "do not call Discord APIs",
-    "do not send live messages",
-    "do not call OpenClaw live dispatch actions",
-    "do not mutate repo state outside approved scope",
-    "do not alter CURRENT_PE.md outside approved scope",
-    "do not change OpenClaw/Hermes config",
-    "do not change auth or secret state",
+    "do not change runtime/config/auth/service files",
     "do not restart services",
-    "do not replace live dispatch behaviour",
-    "do not push, open PRs, or merge without PO approval"
+    "do not resume PE-OPS-A2A-RUNTIME-01 yet"
   ],
-  "live_dispatch_statement": "Phase 1 only generates and checks dispatch contracts; it does not call live dispatch APIs or Discord APIs.",
-  "runtime_bootstrap_policy": "Approved OpenClaw runtime/bootstrap files are non-blocking only when they are untracked or workspace-local, not staged, not part of the PE-approved file scope, not secret-bearing, not modified tracked repository files, not being committed, and not masking unsafe PE residue."
+  "live_dispatch_statement": "No active PE remains; the structured state is now a closeout snapshot.",
+  "runtime_bootstrap_policy": "Approved OpenClaw runtime/bootstrap files remain non-blocking only when they are untracked or workspace-local, not staged, not part of the closeout scope, not secret-bearing, not modified tracked repository files, not being committed, and not masking unsafe residue.",
+  "completed_pe": {
+    "pe_id": "PE-OPS-CURRENT-PE-STATE-01",
+    "status": "merged",
+    "branch": "feature/pe-ops-current-pe-state-01",
+    "implementation_commit": "61d30ed934d98027a3d6b2f156e7b7f7552d7f0b",
+    "review_commit": "37f26f793570d853e2d9039c9013f259b96f03f9",
+    "merge_commit": "26254d3556526ef9ef59f399f51d5a7c0e837c6a",
+    "merged_at": "2026-05-20T22:39:16Z",
+    "summary": "Structured current PE state landed and PM dispatch now consumes structured state."
+  }
 }
