@@ -45,7 +45,10 @@ def test_pe_task_documents_scope_and_state_model() -> None:
     assert ".elis/state/current_pe.json" in text
     assert "schemas/current_pe.schema.json" in text
     assert "`CURRENT_PE.md` becomes a validated human-readable summary only." in text
-    assert "`scripts/check_current_pe.py` validates schema + JSON/CURRENT_PE consistency." in text
+    assert (
+        "`scripts/check_current_pe.py` validates schema + JSON/CURRENT_PE consistency."
+        in text
+    )
 
 
 def test_handoff_contains_current_state_and_opening_constraints() -> None:
@@ -69,8 +72,14 @@ def test_governance_doc_states_the_state_model() -> None:
     assert "structured machine-readable source of truth" in text
     assert ".elis/state/current_pe.json" in text
     assert "schemas/current_pe.schema.json" in text
-    assert "`CURRENT_PE.md` is a rendered human-readable summary and must remain consistent with the JSON state" in text
-    assert "Markdown string matching must not be the canonical validation mechanism" in text
+    assert (
+        "`CURRENT_PE.md` is a rendered human-readable summary and must remain consistent with the JSON state"
+        in text
+    )
+    assert (
+        "Markdown string matching must not be the canonical validation mechanism"
+        in text
+    )
 
 
 def test_script_mentions_current_pe_state_and_json() -> None:

@@ -277,7 +277,9 @@ def _looks_secret_bearing(path: str) -> bool:
     return any(hint in lower or hint in basename for hint in SECRET_BEARING_HINTS)
 
 
-def is_preserved_runtime_bootstrap_path(path: str, approved_scope: tuple[str, ...] = ()) -> bool:
+def is_preserved_runtime_bootstrap_path(
+    path: str, approved_scope: tuple[str, ...] = ()
+) -> bool:
     normalised = _normalise_path(path)
     if normalised in approved_scope:
         return False
@@ -291,7 +293,9 @@ def is_preserved_runtime_bootstrap_path(path: str, approved_scope: tuple[str, ..
     )
 
 
-def classify_workspace_line(line: str, approved_scope: tuple[str, ...] = ()) -> WorkspaceFinding:
+def classify_workspace_line(
+    line: str, approved_scope: tuple[str, ...] = ()
+) -> WorkspaceFinding:
     code, path = _parse_porcelain_line(line)
     if not code.strip():
         return WorkspaceFinding(code, path, "clean", "No change")
@@ -344,7 +348,9 @@ def classify_workspace_line(line: str, approved_scope: tuple[str, ...] = ()) -> 
     return WorkspaceFinding(code, path, "clean", "No change")
 
 
-def assess_workspace_state(repo_root: Path, approved_scope: tuple[str, ...]) -> WorkspaceAssessment:
+def assess_workspace_state(
+    repo_root: Path, approved_scope: tuple[str, ...]
+) -> WorkspaceAssessment:
     result = subprocess.run(
         [
             "git",
@@ -413,15 +419,11 @@ def validate_packet(packet: DispatchPacket, state: dict[str, object]) -> list[st
 
     failures: list[str] = []
     if packet.pe_id != state["pe_id"]:
-        failures.append(
-            f"PE ID must be {state['pe_id']!r}, got {packet.pe_id!r}"
-        )
+        failures.append(f"PE ID must be {state['pe_id']!r}, got {packet.pe_id!r}")
     if packet.objective != state["objective"]:
         failures.append("Objective text is missing or altered")
     if packet.branch != state["branch"]:
-        failures.append(
-            f"Branch must be {state['branch']!r}, got {packet.branch!r}"
-        )
+        failures.append(f"Branch must be {state['branch']!r}, got {packet.branch!r}")
     if not APPROVED_BASELINE_PATTERN.fullmatch(packet.baseline):
         failures.append(
             "Baseline must be expressed as 'origin/main @ <full-commit-sha>'"
@@ -617,7 +619,9 @@ def main(argv: Iterable[str] | None = None) -> int:
             print(f"FAIL: {failure}")
         return 1
 
-    print("PASS: Current PE packet is well-formed and does not call live dispatch APIs.")
+    print(
+        "PASS: Current PE packet is well-formed and does not call live dispatch APIs."
+    )
     return 0
 
 
